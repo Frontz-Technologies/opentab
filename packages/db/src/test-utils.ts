@@ -18,14 +18,14 @@ export async function createTestDb(): Promise<{
 }
 
 async function pushSchema(pglite: PGlite) {
-  await pglite.query(`
-    DO $$ BEGIN
+  const statements = [
+    `DO $$ BEGIN
       CREATE TYPE org_role AS ENUM ('owner', 'admin', 'member', 'accountant');
     EXCEPTION
       WHEN duplicate_object THEN null;
-    END $$;
+    END $$`,
 
-    CREATE TABLE IF NOT EXISTS "user" (
+    `CREATE TABLE IF NOT EXISTS "user" (
       "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       "email" varchar(255) NOT NULL UNIQUE,
       "name" varchar(255) NOT NULL,
@@ -36,9 +36,9 @@ async function pushSchema(pglite: PGlite) {
       "image" text,
       "created_at" timestamp NOT NULL DEFAULT now(),
       "updated_at" timestamp NOT NULL DEFAULT now()
-    );
+    )`,
 
-    CREATE TABLE IF NOT EXISTS "organisation" (
+    `CREATE TABLE IF NOT EXISTS "organisation" (
       "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       "name" varchar(255) NOT NULL,
       "slug" varchar(100) NOT NULL UNIQUE,
@@ -57,9 +57,9 @@ async function pushSchema(pglite: PGlite) {
       "setup_completed_steps" jsonb NOT NULL DEFAULT '[]',
       "created_at" timestamp NOT NULL DEFAULT now(),
       "updated_at" timestamp NOT NULL DEFAULT now()
-    );
+    )`,
 
-    CREATE TABLE IF NOT EXISTS "org_membership" (
+    `CREATE TABLE IF NOT EXISTS "org_membership" (
       "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       "user_id" uuid NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
       "org_id" uuid NOT NULL REFERENCES "organisation"("id") ON DELETE CASCADE,
@@ -67,9 +67,9 @@ async function pushSchema(pglite: PGlite) {
       "invited_at" timestamp,
       "accepted_at" timestamp,
       CONSTRAINT "org_membership_user_id_unique" UNIQUE ("user_id")
-    );
+    )`,
 
-    CREATE TABLE IF NOT EXISTS "session" (
+    `CREATE TABLE IF NOT EXISTS "session" (
       "id" text PRIMARY KEY,
       "user_id" uuid NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
       "expires_at" timestamp NOT NULL,
@@ -77,9 +77,9 @@ async function pushSchema(pglite: PGlite) {
       "user_agent" text,
       "created_at" timestamp NOT NULL DEFAULT now(),
       "updated_at" timestamp NOT NULL DEFAULT now()
-    );
+    )`,
 
-    CREATE TABLE IF NOT EXISTS "account" (
+    `CREATE TABLE IF NOT EXISTS "account" (
       "id" text PRIMARY KEY,
       "user_id" uuid NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
       "account_id" text NOT NULL,
@@ -93,15 +93,19 @@ async function pushSchema(pglite: PGlite) {
       "password" text,
       "created_at" timestamp NOT NULL DEFAULT now(),
       "updated_at" timestamp NOT NULL DEFAULT now()
-    );
+    )`,
 
-    CREATE TABLE IF NOT EXISTS "verification" (
+    `CREATE TABLE IF NOT EXISTS "verification" (
       "id" text PRIMARY KEY,
       "identifier" text NOT NULL,
       "value" text NOT NULL,
       "expires_at" timestamp NOT NULL,
       "created_at" timestamp NOT NULL DEFAULT now(),
       "updated_at" timestamp NOT NULL DEFAULT now()
-    );
-  `);
+    )`,
+  ];
+
+  for (const sql of statements) {
+    await pglite.query(sql);
+  }
 }
