@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+@source "../components";
+@source "../lib";
+@source "../hooks";
+
 @custom-variant dark (&:is(.dark *));
 
 /* shadcn keyframes */
@@ -49,10 +53,54 @@
 }
 
 @theme {
+  /* Typography */
   --font-headline: "Manrope", sans-serif;
   --font-body: "Inter", sans-serif;
   --font-label: "Space Grotesk", monospace;
   --font-mono: "JetBrains Mono", monospace;
+
+  /* Surface hierarchy (warm dark) */
+  --color-surface-dim: #131313;
+  --color-surface-container-lowest: #0E0E0E;
+  --color-surface-container-low: #1C1B1B;
+  --color-surface-container: #201F1F;
+  --color-surface-container-high: #2A2A2A;
+  --color-surface-container-highest: #353534;
+  --color-surface: #131313;
+  --color-surface-bright: #3A3939;
+
+  /* Primary (emerald) */
+  --color-primary: #4EDEA3;
+  --color-primary-container: #10B981;
+  --color-on-primary: #003824;
+
+  /* Secondary */
+  --color-secondary: #9ED2B5;
+  --color-secondary-container: #21523C;
+  --color-on-secondary-container: #91C4A8;
+
+  /* Tertiary / danger */
+  --color-tertiary: #FFB3AF;
+  --color-tertiary-container: #FC7C78;
+  --color-on-tertiary-container: #711419;
+
+  /* Text */
+  --color-on-surface: #E5E2E1;
+  --color-on-surface-variant: #BBCABF;
+  --color-on-background: #E5E2E1;
+
+  /* Borders */
+  --color-outline: #86948A;
+  --color-outline-variant: #3C4A42;
+
+  /* Error */
+  --color-error: #FFB4AB;
+  --color-error-container: #93000A;
+
+  /* Inverse */
+  --color-inverse-surface: #E5E2E1;
+  --color-inverse-on-surface: #313030;
+  --color-inverse-primary: #006C49;
 }
 
 body {

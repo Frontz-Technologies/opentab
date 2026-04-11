@@ -10,6 +10,20 @@ const nextConfig: NextConfig = {
       ".js": [".ts", ".js"],
       ".mjs": [".mts", ".mjs"],
     };
+    // Ensure PostCSS runs before css-loader resolves @import "tailwindcss"
+    config.module.rules.forEach((rule: any) => {
+      if (rule.oneOf) {
+        rule.oneOf.forEach((r: any) => {
+          if (r.use && Array.isArray(r.use)) {
+            r.use.forEach((use: any) => {
+              if (use.loader?.includes("css-loader") && use.options) {
+                use.options.importLoaders = 1;
+              }
+            });
+          }
+        });
+      }
+    });
     return config;
   },
 };

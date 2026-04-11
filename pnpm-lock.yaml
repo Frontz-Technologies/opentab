@@ -111,6 +111,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.1.0
         version: 19.2.3(@types/react@19.2.14)
+      postcss:
+        specifier: ^8.5.9
+        version: 8.5.9
       tailwindcss:
         specifier: ^4.1.0
         version: 4.2.2
