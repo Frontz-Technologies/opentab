@@ -28,7 +28,7 @@ After Phase 1, a user can register, log in, see the dashboard empty state, confi
 | Charts | Recharts | Lightweight, React-native |
 | Test DB | PGlite (in-process PostgreSQL via WASM) | Zero infrastructure, full PG compat |
 | Unit tests | Vitest + Testing Library | Fast, ESM-native |
-| E2E tests | Playwright | Multi-viewport, real browser |
+| Visual verification | Playwright MCP + subagent skill | Real browser, manual-style navigation, screenshot evidence |
 | Org model | One org per user, org context from session | Simplifies routing and data scoping |
 | Routing | Clean URLs (/dashboard, /settings) — no slug | Single-org-per-user removes need for org in URL |
 | App URL | app.opentab.tech (marketing site is separate project) | Standard SaaS pattern |
@@ -404,13 +404,25 @@ On save: update organisation record, mark Quick Setup steps as completed, show s
 
 ## 8. Testing Strategy
 
-### 8.1 Approach: TDD First, Playwright Verification
+### 8.1 Approach: TDD + Visual Verification via Playwright MCP
 
-Every feature follows this cycle:
-1. Write failing unit tests (Vitest)
-2. Write failing E2E tests (Playwright)
-3. Implement until all tests pass
-4. Verify visually via Playwright screenshots
+Every feature follows this two-layer cycle:
+
+**Layer 1 — TDD (automated unit/integration tests):**
+1. Write failing unit tests (Vitest + PGlite)
+2. Implement until all tests pass
+3. Tests cover logic, data layer, and component rendering
+
+**Layer 2 — Visual Verification (Playwright MCP skill):**
+1. A subagent reads the acceptance criteria from the spec
+2. Starts the local dev server (`pnpm dev`)
+3. Uses Playwright MCP to navigate the app like a real user
+4. Tests each acceptance criterion: navigate, click, fill forms, check elements
+5. Takes screenshots as evidence of pass/fail
+6. Reports results with screenshots
+7. Stops the dev server when done
+
+This is NOT automated E2E test suites (@playwright/test). It is manual-style browser verification driven by a subagent + Playwright MCP, invoked as a reusable skill after every feature implementation.
 
 ### 8.2 Test Database: PGlite
 
@@ -441,33 +453,26 @@ PGlite provides in-process PostgreSQL via WebAssembly:
 - Company settings form validates required fields
 - Mobile bottom nav renders at small viewports
 
-### 8.4 E2E Tests (Playwright)
+### 8.4 Visual Verification Skill (Playwright MCP)
 
-Run against `pnpm dev` with PGlite test database.
+A reusable skill invoked after every feature implementation. The skill:
 
-**Test suites:**
-1. Registration: fill form → submit → lands on dashboard with Quick Setup at 0%
-2. Login: existing user → email/password → dashboard loads
-3. Login failure: wrong password → error message shown
-4. Protected routes: visit /dashboard unauthenticated → redirect to /login
-5. Company setup: settings → fill company name + VAT → save → Quick Setup updates
-6. Logout: avatar menu → logout → redirect to /login
-7. Mobile responsive: all flows at 375px viewport, bottom nav visible, sidebar hidden
+1. **Reads acceptance criteria** from the relevant spec or task
+2. **Starts dev server** (`pnpm dev` in background, waits for ready)
+3. **Navigates with Playwright MCP** — browser_navigate, browser_click, browser_fill_form, browser_snapshot
+4. **Tests each criterion** like a real user:
+   - Registration: navigate to /register → fill form → submit → verify dashboard loads with Quick Setup
+   - Login: navigate to /login → fill credentials → verify redirect to /dashboard
+   - Login failure: wrong password → verify error message visible
+   - Protected routes: navigate to /dashboard without auth → verify redirect to /login
+   - Company setup: navigate to /settings/company → fill company name + VAT → save → verify toast + Quick Setup progress
+   - Logout: click avatar → logout → verify redirect to /login
+   - Mobile: resize to 375px → verify bottom nav visible, sidebar hidden
+5. **Takes screenshots** as evidence (browser_take_screenshot)
+6. **Reports pass/fail** with screenshot paths for each criterion
+7. **Stops dev server** when verification is complete
 
-**Playwright config:**
-- Base URL: http://localhost:3000
-- Projects: desktop (1280x720) + mobile (375x812)
-- Setup: seed test user via direct DB insert
-- Teardown: stop dev server, cleanup
-
-### 8.5 Testing Skill
-
-A custom skill will be created to codify the test verification workflow:
-1. Run unit tests for changed code (`pnpm test`)
-2. Start dev server (`pnpm dev` with PGlite)
-3. Run relevant Playwright E2E tests (`pnpm test:e2e`)
-4. Stop dev server after tests complete
-5. Report pass/fail — never mark feature complete if tests fail
+**Key principle:** No feature is marked complete until the skill runs and all criteria pass with screenshot evidence.
 
 ---
 
@@ -535,7 +540,7 @@ TEST_COMMAND: pnpm test
 FORMAT_COMMAND: pnpm format
 LINT_COMMAND: pnpm lint
 DEV_COMMAND: pnpm dev
-E2E_COMMAND: pnpm test:e2e
+VERIFY_COMMAND: invoke visual-verification skill (Playwright MCP)
 ```
 
 ---
@@ -589,7 +594,7 @@ Phase 1 is complete when:
 11. Mobile bottom nav appears at <768px viewport
 12. All design tokens match spec (fonts, colours, glassmorphism, gradients)
 13. All Vitest unit tests pass
-14. All Playwright E2E tests pass (desktop + mobile viewports)
+14. Visual verification skill passes all criteria with screenshot evidence (desktop + mobile)
 15. `docker compose up` runs the full stack
 16. docs/DESIGN.md, ARCHITECTURE.md, CONVENTIONS.md are written
-17. CLAUDE.md has correct build/test/format commands
+17. CLAUDE.md has correct build/test/format/verify commands
