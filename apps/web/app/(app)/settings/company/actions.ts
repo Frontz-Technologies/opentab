@@ -2,39 +2,81 @@
 
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/session";
-import { createDb, organisations } from "@opentab/db";
+import { organisations } from "@opentab/db";
 import { eq } from "drizzle-orm";
 import { detectCountryFromTaxId } from "@/lib/utils";
+import { db } from "@/lib/db";
+import { z } from "zod";
 
-const db = createDb(process.env.DATABASE_URL!);
+const companySettingsSchema = z.object({
+  name: z.string().min(1).max(255),
+  defaultCurrency: z.enum(["EUR","USD","GBP","CHF","SEK","DKK","NOK","PLN","CZK","HUF","RON","BGN"]),
+  fiscalYearStart: z.coerce.number().int().min(1).max(12),
+  taxId: z.string().max(50).optional().default(""),
+  taxAuthority: z.string().max(255).optional().default(""),
+  country: z.string().max(2).optional().default(""),
+  addressLine1: z.string().max(255).optional().default(""),
+  addressLine2: z.string().max(255).optional().default(""),
+  city: z.string().max(100).optional().default(""),
+  postalCode: z.string().max(20).optional().default(""),
+  region: z.string().max(100).optional().default(""),
+  phone: z.string().max(50).optional().default(""),
+});
 
 export async function updateCompanySettings(formData: FormData) {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
 
-  const name = formData.get("name") as string;
-  const defaultCurrency = formData.get("defaultCurrency") as string;
-  const fiscalYearStart = parseInt(formData.get("fiscalYearStart") as string);
-  const taxId = formData.get("taxId") as string;
-  const taxAuthority = formData.get("taxAuthority") as string;
-  const addressLine1 = formData.get("addressLine1") as string;
-  const addressLine2 = formData.get("addressLine2") as string;
-  const city = formData.get("city") as string;
-  const postalCode = formData.get("postalCode") as string;
-  const region = formData.get("region") as string;
-  const phone = formData.get("phone") as string;
-  const countryManual = formData.get("country") as string;
+  if (session.role !== "owner" && session.role !== "admin") {
+    throw new Error("Forbidden");
+  }
+
+  const parsed = companySettingsSchema.safeParse({
+    name: formData.get("name"),
+    defaultCurrency: formData.get("defaultCurrency"),
+    fiscalYearStart: formData.get("fiscalYearStart"),
+    taxId: formData.get("taxId"),
+    taxAuthority: formData.get("taxAuthority"),
+    country: formData.get("country"),
+    addressLine1: formData.get("addressLine1"),
+    addressLine2: formData.get("addressLine2"),
+    city: formData.get("city"),
+    postalCode: formData.get("postalCode"),
+    region: formData.get("region"),
+    phone: formData.get("phone"),
+  });
+
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.flatten().fieldErrors };
+  }
+
+  const {
+    name,
+    defaultCurrency,
+    fiscalYearStart,
+    taxId,
+    taxAuthority,
+    country: countryManual,
+    addressLine1,
+    addressLine2,
+    city,
+    postalCode,
+    region,
+    phone,
+  } = parsed.data;
 
   const detectedCountry = taxId ? detectCountryFromTaxId(taxId) : null;
   const countryCode = detectedCountry || countryManual || null;
 
-  const completedSteps: string[] = [];
+  const existingSteps = session.org.setupCompletedSteps || [];
+  const newSteps = new Set(existingSteps);
   if (name && name !== `${session.user.name}'s Company`) {
-    completedSteps.push("company_info");
+    newSteps.add("company_info");
   }
   if (taxId) {
-    completedSteps.push("vat_number");
+    newSteps.add("vat_number");
   }
+  const completedSteps = Array.from(newSteps);
 
   await db
     .update(organisations)

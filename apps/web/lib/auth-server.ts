@@ -1,10 +1,8 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { createDb } from "@opentab/db";
 import * as schema from "@opentab/db/schema";
 import { generateUniqueSlug } from "./utils";
-
-const db = createDb(process.env.DATABASE_URL!);
+import { db } from "./db";
 
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",

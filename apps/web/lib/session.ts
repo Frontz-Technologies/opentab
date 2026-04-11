@@ -1,8 +1,8 @@
 import { headers } from "next/headers";
 import { auth } from "./auth-server";
-import { createDb } from "@opentab/db";
 import { orgMemberships, organisations } from "@opentab/db/schema";
 import { eq } from "drizzle-orm";
+import { db } from "./db";
 
 export type SessionContext = {
   user: { id: string; name: string; email: string; locale: string };
@@ -16,8 +16,6 @@ export type SessionContext = {
   };
   role: "owner" | "admin" | "member" | "accountant";
 };
-
-const db = createDb(process.env.DATABASE_URL!);
 
 export async function getSession(): Promise<SessionContext | null> {
   const session = await auth.api.getSession({

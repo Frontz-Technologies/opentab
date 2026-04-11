@@ -34,6 +34,6 @@ describe("slugify", () => {
 describe("generateUniqueSlug", () => {
   it("generates a slug with random suffix", () => {
     const slug = generateUniqueSlug("Test Company");
-    expect(slug).toMatch(/^test-company-[a-z0-9]{4}$/);
+    expect(slug).toMatch(/^test-company-[a-f0-9]{8}$/);
   });
 });

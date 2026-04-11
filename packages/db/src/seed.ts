@@ -9,6 +9,7 @@ async function seed() {
   const [user] = await db
     .insert(users)
     .values({
+      id: "demo-user-001",
       email: "demo@opentab.tech",
       name: "Demo User",
       emailVerified: true,

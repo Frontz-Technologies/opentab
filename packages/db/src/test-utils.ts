@@ -68,6 +68,7 @@ async function pushSchema(pglite: PGlite) {
     `CREATE TABLE IF NOT EXISTS "session" (
       "id" text PRIMARY KEY,
       "user_id" text NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
+      "token" text NOT NULL UNIQUE,
       "expires_at" timestamp NOT NULL,
       "ip_address" text,
       "user_agent" text,
