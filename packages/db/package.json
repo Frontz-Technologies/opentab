@@ -1,0 +1,28 @@
+{
+  "name": "@opentab/db",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema/index.ts",
+    "./test-utils": "./src/test-utils.ts"
+  },
+  "scripts": {
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.44.0",
+    "postgres": "^3.4.0"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.2.0",
+    "drizzle-kit": "^0.30.0",
+    "vitest": "^3.1.0",
+    "typescript": "^5.8.0"
+  }
+}
