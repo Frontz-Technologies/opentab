@@ -1,0 +1,82 @@
+{
+  "common": {
+    "appName": "OpenTab",
+    "tagline": "Keep tabs on your business",
+    "save": "Save changes",
+    "cancel": "Cancel",
+    "loading": "Loading...",
+    "comingSoon": "Coming soon"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "invoices": "Invoices",
+    "expenses": "Expenses",
+    "contacts": "Contacts",
+    "projects": "Projects",
+    "settings": "Settings",
+    "support": "Support",
+    "createNew": "Create New"
+  },
+  "auth": {
+    "login": "Sign in",
+    "register": "Create account",
+    "logout": "Log out",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "name": "Full name",
+    "forgotPassword": "Forgot password?",
+    "resetPassword": "Reset password",
+    "sendResetLink": "Send reset link",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "welcomeBack": "Welcome back",
+    "createYourAccount": "Create your account",
+    "checkEmail": "Check your email for a reset link",
+    "invalidCredentials": "Invalid email or password",
+    "passwordMismatch": "Passwords do not match"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome to OpenTab",
+    "revenue": "Revenue",
+    "outstanding": "Outstanding",
+    "expenses": "Expenses",
+    "noData": "No data yet",
+    "createFirstInvoice": "Create your first invoice to get started"
+  },
+  "quickSetup": {
+    "title": "Get Started",
+    "companyInfo": "Set up your company",
+    "vatNumber": "Add your VAT number",
+    "uploadLogo": "Upload your logo",
+    "connectMydata": "Connect myDATA",
+    "inviteTeam": "Invite your team",
+    "complete": "complete"
+  },
+  "settings": {
+    "company": "Company",
+    "companyInfo": "Company Information",
+    "taxInfo": "Tax Information",
+    "address": "Address",
+    "contact": "Contact",
+    "branding": "Branding",
+    "companyName": "Company name",
+    "defaultCurrency": "Default currency",
+    "fiscalYearStart": "Fiscal year start",
+    "taxId": "VAT / Tax ID number",
+    "taxAuthority": "Tax authority",
+    "country": "Country",
+    "addressLine1": "Address line 1",
+    "addressLine2": "Address line 2",
+    "city": "City",
+    "postalCode": "Postal code",
+    "region": "Region",
+    "phone": "Phone",
+    "logo": "Logo",
+    "logoPlaceholder": "Logo upload coming soon",
+    "greekAfmDetected": "Greek business detected — Greek features will be available in future updates",
+    "euVatDetected": "EU VAT number detected",
+    "saved": "Changes saved successfully"
+  }
+}
