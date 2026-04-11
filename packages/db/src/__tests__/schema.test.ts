@@ -20,10 +20,10 @@ describe("Database Schema", () => {
     it("creates a user with required fields", async () => {
       const [user] = await db
         .insert(users)
-        .values({ email: "test@example.com", name: "Test User" })
+        .values({ id: "user-1", email: "test@example.com", name: "Test User" })
         .returning();
 
-      expect(user.id).toBeDefined();
+      expect(user.id).toBe("user-1");
       expect(user.email).toBe("test@example.com");
       expect(user.name).toBe("Test User");
       expect(user.locale).toBe("en");
@@ -33,9 +33,9 @@ describe("Database Schema", () => {
     });
 
     it("enforces unique email", async () => {
-      await db.insert(users).values({ email: "unique@example.com", name: "User 1" });
+      await db.insert(users).values({ id: "user-2", email: "unique@example.com", name: "User 1" });
       await expect(
-        db.insert(users).values({ email: "unique@example.com", name: "User 2" })
+        db.insert(users).values({ id: "user-3", email: "unique@example.com", name: "User 2" })
       ).rejects.toThrow();
     });
   });
@@ -67,7 +67,7 @@ describe("Database Schema", () => {
     it("creates membership linking user to org", async () => {
       const [user] = await db
         .insert(users)
-        .values({ email: "member@example.com", name: "Member" })
+        .values({ id: "member-1", email: "member@example.com", name: "Member" })
         .returning();
       const [org] = await db
         .insert(organisations)
@@ -87,7 +87,7 @@ describe("Database Schema", () => {
     it("enforces one org per user", async () => {
       const [user] = await db
         .insert(users)
-        .values({ email: "oneorg@example.com", name: "One Org" })
+        .values({ id: "oneorg-1", email: "oneorg@example.com", name: "One Org" })
         .returning();
       const [org1] = await db
         .insert(organisations)

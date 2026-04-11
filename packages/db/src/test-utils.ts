@@ -19,14 +19,10 @@ export async function createTestDb(): Promise<{
 
 async function pushSchema(pglite: PGlite) {
   const statements = [
-    `DO $$ BEGIN
-      CREATE TYPE org_role AS ENUM ('owner', 'admin', 'member', 'accountant');
-    EXCEPTION
-      WHEN duplicate_object THEN null;
-    END $$`,
+    `CREATE TYPE org_role AS ENUM ('owner', 'admin', 'member', 'accountant')`,
 
     `CREATE TABLE IF NOT EXISTS "user" (
-      "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      "id" text PRIMARY KEY,
       "email" varchar(255) NOT NULL UNIQUE,
       "name" varchar(255) NOT NULL,
       "password_hash" text NOT NULL DEFAULT '',
@@ -61,7 +57,7 @@ async function pushSchema(pglite: PGlite) {
 
     `CREATE TABLE IF NOT EXISTS "org_membership" (
       "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-      "user_id" uuid NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
+      "user_id" text NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
       "org_id" uuid NOT NULL REFERENCES "organisation"("id") ON DELETE CASCADE,
       "role" org_role NOT NULL DEFAULT 'owner',
       "invited_at" timestamp,
@@ -71,7 +67,7 @@ async function pushSchema(pglite: PGlite) {
 
     `CREATE TABLE IF NOT EXISTS "session" (
       "id" text PRIMARY KEY,
-      "user_id" uuid NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
+      "user_id" text NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
       "expires_at" timestamp NOT NULL,
       "ip_address" text,
       "user_agent" text,
@@ -81,7 +77,7 @@ async function pushSchema(pglite: PGlite) {
 
     `CREATE TABLE IF NOT EXISTS "account" (
       "id" text PRIMARY KEY,
-      "user_id" uuid NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
+      "user_id" text NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
       "account_id" text NOT NULL,
       "provider_id" text NOT NULL,
       "access_token" text,
