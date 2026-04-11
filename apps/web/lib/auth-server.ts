@@ -30,11 +30,11 @@ export const auth = betterAuth({
           const slug = generateUniqueSlug(orgName);
 
           const [org] = await db
-            .insert(organisations)
+            .insert(schema.organisations)
             .values({ name: orgName, slug })
             .returning();
 
-          await db.insert(orgMemberships).values({
+          await db.insert(schema.orgMemberships).values({
             userId: user.id,
             orgId: org.id,
             role: "owner",
