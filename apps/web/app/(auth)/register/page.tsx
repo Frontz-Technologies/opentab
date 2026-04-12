@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { signUp } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,7 @@ import { Label } from "@/components/ui/label";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const t = useTranslations("auth");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -57,7 +59,7 @@ export default function RegisterPage() {
         <span className="font-headline text-xl font-bold text-on-surface">OpenTab</span>
       </div>
 
-      <h1 className="font-headline text-3xl font-bold text-on-surface mb-2">Create your account</h1>
+      <h1 className="font-headline text-3xl font-bold text-on-surface mb-2">{t("createYourAccount")}</h1>
       <p className="text-on-surface-variant mb-8">Get started with OpenTab for free.</p>
 
       {error && (
@@ -68,7 +70,7 @@ export default function RegisterPage() {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-2">
-          <Label htmlFor="name" className="text-on-surface-variant">Full name</Label>
+          <Label htmlFor="name" className="text-on-surface-variant">{t("name")}</Label>
           <Input
             id="name"
             type="text"
@@ -81,7 +83,7 @@ export default function RegisterPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="email" className="text-on-surface-variant">Email</Label>
+          <Label htmlFor="email" className="text-on-surface-variant">{t("email")}</Label>
           <Input
             id="email"
             type="email"
@@ -94,7 +96,7 @@ export default function RegisterPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="password" className="text-on-surface-variant">Password</Label>
+          <Label htmlFor="password" className="text-on-surface-variant">{t("password")}</Label>
           <Input
             id="password"
             type="password"
@@ -107,7 +109,7 @@ export default function RegisterPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="confirmPassword" className="text-on-surface-variant">Confirm password</Label>
+          <Label htmlFor="confirmPassword" className="text-on-surface-variant">{t("confirmPassword")}</Label>
           <Input
             id="confirmPassword"
             type="password"
@@ -124,14 +126,14 @@ export default function RegisterPage() {
           disabled={loading}
           className="w-full h-12 btn-gradient text-on-primary font-bold text-base border-none hover:opacity-90"
         >
-          {loading ? "Creating account…" : "Create account"}
+          {loading ? "Creating account…" : t("register")}
         </Button>
       </form>
 
       <p className="mt-6 text-center text-on-surface-variant text-sm">
-        Already have an account?{" "}
+        {t("hasAccount")}{" "}
         <Link href="/login" className="text-primary hover:text-primary-container transition-colors font-medium">
-          Sign in
+          {t("login")}
         </Link>
       </p>
     </div>

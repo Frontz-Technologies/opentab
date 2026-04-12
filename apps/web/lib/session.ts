@@ -12,6 +12,15 @@ export type SessionContext = {
     slug: string;
     countryCode: string | null;
     defaultCurrency: string;
+    fiscalYearStart: number;
+    taxId: string | null;
+    taxAuthority: string | null;
+    addressLine1: string | null;
+    addressLine2: string | null;
+    city: string | null;
+    postalCode: string | null;
+    region: string | null;
+    phone: string | null;
     setupCompletedSteps: string[];
   };
   role: "owner" | "admin" | "member" | "accountant";
@@ -53,6 +62,15 @@ export async function getSession(): Promise<SessionContext | null> {
       slug: org.slug,
       countryCode: org.countryCode ?? null,
       defaultCurrency: org.defaultCurrency,
+      fiscalYearStart: org.fiscalYearStart,
+      taxId: org.taxId ?? null,
+      taxAuthority: org.taxAuthority ?? null,
+      addressLine1: org.addressLine1 ?? null,
+      addressLine2: org.addressLine2 ?? null,
+      city: org.city ?? null,
+      postalCode: org.postalCode ?? null,
+      region: org.region ?? null,
+      phone: org.phone ?? null,
       setupCompletedSteps: (org.setupCompletedSteps as string[]) || [],
     },
     role: membership.role as SessionContext["role"],

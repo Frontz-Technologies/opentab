@@ -44,47 +44,97 @@ opentab/
 - pnpm 10+
 - PostgreSQL 16 (or use Docker)
 
-### Development
+### Environment Setup
 
 ```bash
-# Clone and install
-git clone https://github.com/user/opentab.git
+# Clone the repository
+git clone https://github.com/Frontz-Technologies/opentab.git
 cd opentab
 pnpm install
 
-# Start PostgreSQL (option A: Docker)
+# Copy the sample env file and edit with your values
+cp docker/.env.sample apps/web/.env
+```
+
+Edit `apps/web/.env` with the following required variables:
+
+| Variable | Description | Example |
+|---|---|---|
+| `DATABASE_URL` | PostgreSQL connection string | `postgresql://opentab:opentab_dev@localhost:5432/opentab_dev` |
+| `BETTER_AUTH_SECRET` | Random 64-char string for session signing | Generate with `openssl rand -base64 48` |
+| `BETTER_AUTH_URL` | Public URL of the app | `http://localhost:3000` |
+| `NEXT_PUBLIC_APP_URL` | Same as above, exposed to client | `http://localhost:3000` |
+
+See `docker/.env.sample` for all available configuration options including email (Resend / SMTP) and Redis.
+
+### Development with Docker Compose
+
+The easiest way to get PostgreSQL and Redis running locally:
+
+```bash
+# Start PostgreSQL 16 + Redis 7 in the background
 docker compose -f docker/docker-compose.dev.yml up -d
 
-# Set up environment
-cp docker/.env.sample apps/web/.env
-
-# Push schema to database
+# Push the Drizzle schema to the database
 pnpm db:push
 
-# Start dev server
+# Start the Next.js dev server
 pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to see the app.
 
+To stop the dev services:
+
+```bash
+docker compose -f docker/docker-compose.dev.yml down
+```
+
+### Production with Docker Compose
+
+The production compose file includes the app, worker, PostgreSQL, Redis, and a Caddy reverse proxy with automatic HTTPS:
+
+```bash
+cd docker
+
+# Copy and configure environment
+cp .env.sample .env
+# Edit .env — POSTGRES_PASSWORD is required, set BETTER_AUTH_SECRET to a random value
+
+# Build and start all services
+docker compose up -d --build
+```
+
+Services started:
+- **app** — Next.js production server on port 3000
+- **worker** — Background job processor
+- **postgres** — PostgreSQL 16 with persistent volume
+- **redis** — Redis 7 with persistent volume
+- **caddy** — Reverse proxy with automatic TLS (ports 80/443)
+
 ### Testing
 
 ```bash
-# Run all unit tests (uses PGlite — no database needed)
+# Run all unit tests (uses PGlite — no external database needed)
 pnpm test
+
+# Run tests for a specific package
+pnpm --filter @opentab/db test
+pnpm --filter @opentab/web test
 ```
 
-## Self-Hosting
+## Roadmap
 
-OpenTab is designed to be self-hosted from day one. The entire stack runs via Docker Compose:
-
-```bash
-cp docker/.env.sample docker/.env
-# Edit docker/.env with your settings
-docker compose -f docker/docker-compose.yml up -d
-```
-
-See `docker/.env.sample` for all configuration options.
+| Phase | Description | Status |
+|---|---|---|
+| 1 | Foundation — Auth, dashboard, company settings, design system | In progress |
+| 2 | Invoicing — Create, send, and track invoices | Planned |
+| 3 | Expenses — Receipt capture and categorisation | Planned |
+| 4 | Contacts — Client and supplier management | Planned |
+| 5 | Projects — Time tracking and project-based billing | Planned |
+| 6 | Reporting — Revenue, expenses, tax summaries | Planned |
+| 7 | Integrations — myDATA (AADE), bank feeds, Stripe | Planned |
+| 8 | AI Assistant — Natural language queries on financial data | Planned |
 
 ## Documentation
 

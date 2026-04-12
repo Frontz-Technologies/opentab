@@ -6,8 +6,9 @@ import { usePathname } from "next/navigation";
 const navItems = [
   { icon: "dashboard", label: "Dashboard", href: "/dashboard" },
   { icon: "receipt_long", label: "Invoices", href: "/invoices" },
-  { icon: "payments", label: "Expenses", href: "/expenses" },
-  { icon: "folder", label: "Projects", href: "/projects" },
+  { icon: "account_balance_wallet", label: "Expenses", href: "/expenses" },
+  { icon: "contacts", label: "Contacts", href: "/contacts" },
+  { icon: "account_tree", label: "Projects", href: "/projects" },
 ] as const;
 
 export function MobileNav() {
