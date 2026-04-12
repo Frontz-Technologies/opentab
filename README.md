@@ -69,17 +69,15 @@ See `docker/.env.sample` for all available configuration options including email
 
 ### Development with Docker Compose
 
-The easiest way to get started:
+One command to start everything — PostgreSQL, Redis, schema migration, and the dev server:
 
 ```bash
-# Start PostgreSQL 16 + Redis 7 in the background
-docker compose -f docker/docker-compose.dev.yml up -d
-
-# Start the dev server (automatically pushes the database schema)
-pnpm dev
+docker compose -f docker/docker-compose.dev.yml up
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to see the app.
+
+The app container automatically waits for PostgreSQL, pushes the database schema, and starts the Next.js dev server. Source code is mounted as a volume so changes are reflected immediately.
 
 To stop everything:
 
@@ -87,7 +85,14 @@ To stop everything:
 docker compose -f docker/docker-compose.dev.yml down
 ```
 
-> **Tip:** `pnpm dev` automatically runs database migrations on start. Use `pnpm dev:only` to skip this step if the schema hasn't changed.
+#### Without Docker (app only)
+
+If you prefer running the app natively and only use Docker for the database:
+
+```bash
+docker compose -f docker/docker-compose.dev.yml up -d postgres redis
+pnpm dev
+```
 
 ### Production with Docker Compose
 

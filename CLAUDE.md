@@ -4,8 +4,8 @@ AI-native financial platform for freelancers & startups.
 
 ## Commands
 
-- `pnpm dev` — Push DB schema + start Next.js dev server
-- `pnpm dev:only` — Start Next.js dev server (skip schema push)
+- `docker compose -f docker/docker-compose.dev.yml up` — Start everything (DB + Redis + app with auto-migration)
+- `pnpm dev` — Start Next.js dev server only (requires DB running separately)
 - `pnpm build` — Build all packages
 - `pnpm test` — Run all Vitest tests
 - `pnpm format` — Format all files with Prettier

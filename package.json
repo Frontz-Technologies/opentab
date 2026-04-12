@@ -2,8 +2,7 @@
   "name": "opentab",
   "private": true,
   "scripts": {
-    "dev": "pnpm db:push && turbo dev",
-    "dev:only": "turbo dev",
+    "dev": "turbo dev",
     "build": "turbo build",
     "test": "turbo test",
     "lint": "turbo lint",
