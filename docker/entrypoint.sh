@@ -8,7 +8,7 @@ done
 echo "PostgreSQL is ready."
 
 echo "Running database migrations..."
-pnpm db:push
+pnpm --filter @opentab/db db:push
 
 echo "Starting OpenTab..."
 exec "$@"

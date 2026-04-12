@@ -8,7 +8,7 @@ done
 echo "PostgreSQL is ready."
 
 echo "Pushing database schema..."
-pnpm db:push
+pnpm --filter @opentab/db db:push
 
 echo "Starting dev server..."
 exec pnpm dev
