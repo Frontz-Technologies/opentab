@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { createTestDb, type TestDatabase } from "../test-utils.js";
-import { users, organisations, orgMemberships } from "../schema/index.js";
+import { createTestDb, type TestDatabase } from "../test-utils";
+import { users, organisations, orgMemberships } from "../schema/index";
 
 describe("Database Schema", () => {
   let db: TestDatabase;

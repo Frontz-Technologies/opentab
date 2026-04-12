@@ -1,2 +1,2 @@
-export { createDb, type Database } from "./client.js";
-export * from "./schema/index.js";
+export { createDb, type Database } from "./client";
+export * from "./schema/index";

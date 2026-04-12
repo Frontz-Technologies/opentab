@@ -1,5 +1,5 @@
-import { createDb } from "./client.js";
-import { users, organisations, orgMemberships } from "./schema/index.js";
+import { createDb } from "./client";
+import { users, organisations, orgMemberships } from "./schema/index";
 
 const db = createDb(process.env.DATABASE_URL!);
 
