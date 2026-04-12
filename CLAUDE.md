@@ -4,7 +4,8 @@ AI-native financial platform for freelancers & startups.
 
 ## Commands
 
-- `pnpm dev` — Start Next.js dev server
+- `pnpm dev` — Push DB schema + start Next.js dev server
+- `pnpm dev:only` — Start Next.js dev server (skip schema push)
 - `pnpm build` — Build all packages
 - `pnpm test` — Run all Vitest tests
 - `pnpm format` — Format all files with Prettier

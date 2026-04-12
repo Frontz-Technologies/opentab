@@ -69,26 +69,25 @@ See `docker/.env.sample` for all available configuration options including email
 
 ### Development with Docker Compose
 
-The easiest way to get PostgreSQL and Redis running locally:
+The easiest way to get started:
 
 ```bash
 # Start PostgreSQL 16 + Redis 7 in the background
 docker compose -f docker/docker-compose.dev.yml up -d
 
-# Push the Drizzle schema to the database
-pnpm db:push
-
-# Start the Next.js dev server
+# Start the dev server (automatically pushes the database schema)
 pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to see the app.
 
-To stop the dev services:
+To stop everything:
 
 ```bash
 docker compose -f docker/docker-compose.dev.yml down
 ```
+
+> **Tip:** `pnpm dev` automatically runs database migrations on start. Use `pnpm dev:only` to skip this step if the schema hasn't changed.
 
 ### Production with Docker Compose
 
