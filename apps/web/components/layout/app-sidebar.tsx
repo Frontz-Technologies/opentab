@@ -22,7 +22,7 @@ const navItems = [
   { icon: "receipt_long", labelKey: "invoices", href: "/invoices" },
   { icon: "account_balance_wallet", labelKey: "expenses", href: "/expenses" },
   { icon: "contacts", labelKey: "contacts", href: "/contacts" },
-  { icon: "account_tree", labelKey: "projects", href: "/projects" },
+  { icon: "inventory_2", labelKey: "products", href: "/products" },
 ] as const;
 
 export function AppSidebar({ orgName }: AppSidebarProps) {

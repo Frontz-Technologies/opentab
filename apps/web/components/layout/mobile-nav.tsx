@@ -8,7 +8,7 @@ const navItems = [
   { icon: "receipt_long", label: "Invoices", href: "/invoices" },
   { icon: "account_balance_wallet", label: "Expenses", href: "/expenses" },
   { icon: "contacts", label: "Contacts", href: "/contacts" },
-  { icon: "account_tree", label: "Projects", href: "/projects" },
+  { icon: "inventory_2", label: "Products", href: "/products" },
 ] as const;
 
 export function MobileNav() {

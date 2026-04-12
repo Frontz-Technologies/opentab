@@ -11,3 +11,16 @@ export {
   type NewOrgMembership,
 } from "./org-memberships";
 export { session, account, verification } from "./auth";
+export {
+  contacts,
+  contactTypeEnum,
+  contactClassificationEnum,
+  type Contact,
+  type NewContact,
+} from "./contacts";
+export {
+  products,
+  taxCategoryEnum,
+  type Product,
+  type NewProduct,
+} from "./products";

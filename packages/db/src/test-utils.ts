@@ -102,6 +102,54 @@ async function pushSchema(pglite: PGlite) {
       "created_at" timestamp NOT NULL DEFAULT now(),
       "updated_at" timestamp NOT NULL DEFAULT now()
     )`,
+
+    `CREATE TYPE contact_type AS ENUM ('client', 'supplier', 'both')`,
+
+    `CREATE TYPE contact_classification AS ENUM ('individual', 'business', 'government')`,
+
+    `CREATE TABLE IF NOT EXISTS "contact" (
+      "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      "org_id" uuid NOT NULL REFERENCES "organisation"("id") ON DELETE CASCADE,
+      "type" contact_type NOT NULL DEFAULT 'client',
+      "classification" contact_classification NOT NULL DEFAULT 'business',
+      "company" varchar(255),
+      "first_name" varchar(255),
+      "last_name" varchar(255),
+      "display_name" varchar(255) NOT NULL,
+      "email" varchar(255),
+      "phone" varchar(50),
+      "vat_number" varchar(50),
+      "vat_validated" boolean NOT NULL DEFAULT false,
+      "country_code" varchar(2),
+      "tax_office" varchar(255),
+      "address_line1" varchar(255),
+      "address_line2" varchar(255),
+      "city" varchar(100),
+      "postal_code" varchar(20),
+      "region" varchar(100),
+      "default_currency" varchar(3),
+      "default_language" varchar(5),
+      "default_payment_terms" integer,
+      "notes" text,
+      "created_at" timestamp NOT NULL DEFAULT now(),
+      "updated_at" timestamp NOT NULL DEFAULT now()
+    )`,
+
+    `CREATE TYPE tax_category AS ENUM ('standard', 'reduced', 'super_reduced', 'zero_rated', 'exempt', 'reverse_charge')`,
+
+    `CREATE TABLE IF NOT EXISTS "product" (
+      "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      "org_id" uuid NOT NULL REFERENCES "organisation"("id") ON DELETE CASCADE,
+      "name" varchar(255) NOT NULL,
+      "description" text,
+      "unit_price" numeric(12,2) NOT NULL DEFAULT '0.00',
+      "unit" varchar(50) NOT NULL DEFAULT 'item',
+      "tax_category" tax_category NOT NULL DEFAULT 'standard',
+      "vat_rate" numeric(5,2),
+      "active" boolean NOT NULL DEFAULT true,
+      "created_at" timestamp NOT NULL DEFAULT now(),
+      "updated_at" timestamp NOT NULL DEFAULT now()
+    )`,
   ];
 
   for (const sql of statements) {
