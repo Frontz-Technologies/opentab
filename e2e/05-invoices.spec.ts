@@ -44,7 +44,7 @@ test.describe("Invoices", () => {
   });
 
   test("invoice form has client selector and line items", async () => {
-    await expect(page.getByText("Select a client")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Client" })).toBeVisible();
     await expect(
       page.getByRole("heading", { name: "Line Items" }),
     ).toBeVisible();
