@@ -105,6 +105,12 @@ export default function LoginPage() {
           {t("register")}
         </Link>
       </p>
+
+      <p className="mt-4 text-center text-on-surface-variant/40 text-xs">
+        <a href="https://opentab.tech/terms" target="_blank" rel="noopener noreferrer" className="hover:text-on-surface-variant transition-colors">Terms</a>
+        {" · "}
+        <a href="https://opentab.tech/privacy" target="_blank" rel="noopener noreferrer" className="hover:text-on-surface-variant transition-colors">Privacy</a>
+      </p>
     </div>
   );
 }

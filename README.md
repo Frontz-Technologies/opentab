@@ -144,4 +144,4 @@ pnpm --filter @opentab/web test
 
 ## License
 
-MIT
+AGPLv3 — see [LICENSE](LICENSE) for details.

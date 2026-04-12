@@ -121,6 +121,13 @@ export default function RegisterPage() {
           />
         </div>
 
+        <p className="text-xs text-on-surface-variant/60 text-center">
+          By creating an account you agree to our{" "}
+          <a href="https://opentab.tech/terms" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary-container transition-colors">Terms of Service</a>
+          {" "}and{" "}
+          <a href="https://opentab.tech/privacy" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary-container transition-colors">Privacy Policy</a>.
+        </p>
+
         <Button
           type="submit"
           disabled={loading}
