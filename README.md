@@ -94,27 +94,35 @@ docker compose -f docker/docker-compose.dev.yml up -d postgres redis
 pnpm dev
 ```
 
-### Production with Docker Compose
+### Production Deployment
 
-The production compose file includes the app, worker, PostgreSQL, Redis, and a Caddy reverse proxy with automatic HTTPS:
+Deploy on any Linux server (e.g. Hetzner CX32 for ~$10/month):
 
 ```bash
-cd docker
+git clone https://github.com/Frontz-Technologies/opentab.git
+cd opentab/docker
 
-# Copy and configure environment
+# Configure environment
 cp .env.sample .env
-# Edit .env — POSTGRES_PASSWORD is required, set BETTER_AUTH_SECRET to a random value
+# Edit .env:
+#   POSTGRES_PASSWORD=<strong random password>
+#   BETTER_AUTH_SECRET=<openssl rand -base64 48>
+#   DOMAIN=app.yourdomain.com
+#   BETTER_AUTH_URL=https://app.yourdomain.com
+#   NEXT_PUBLIC_APP_URL=https://app.yourdomain.com
+#   NODE_ENV=production
 
-# Build and start all services
+# Build and start everything
 docker compose up -d --build
 ```
 
-Services started:
-- **app** — Next.js production server on port 3000
-- **worker** — Background job processor
+Caddy automatically provisions HTTPS certificates for your domain. Point your DNS A record to the server IP and you're live.
+
+Services:
+- **app** — Next.js production server (auto-migrates DB on start)
 - **postgres** — PostgreSQL 16 with persistent volume
 - **redis** — Redis 7 with persistent volume
-- **caddy** — Reverse proxy with automatic TLS (ports 80/443)
+- **caddy** — Reverse proxy with automatic HTTPS (ports 80/443)
 
 ### Testing
 
