@@ -1,0 +1,36 @@
+# VCS and local tooling
+.git
+.gitignore
+.github
+.env*
+.claude
+.research
+
+# Node workspace artifacts
+node_modules
+**/node_modules
+dist
+.vite
+.next
+.turbo
+
+# Test and output artifacts
+coverage
+test-results
+playwright-report
+
+# Generated assets and caches
+*.tsbuildinfo
+*.log
+tmp
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode
+
+# Documentation (not needed in image)
+docs
+*.md
+!README.md
+LICENSE
