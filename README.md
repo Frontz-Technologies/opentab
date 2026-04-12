@@ -38,36 +38,98 @@ opentab/
 
 ## Getting Started
 
-### Prerequisites
+### Building from Source
 
-- Node.js 22+
-- pnpm 10+
-- PostgreSQL 16 (or use Docker)
+#### Prerequisites
 
-### Environment Setup
+- [Node.js](https://nodejs.org/) 22+
+- [pnpm](https://pnpm.io/) 10+
+- [PostgreSQL](https://www.postgresql.org/) 16+
+
+#### Setup
+
+1. **Clone the repository**:
+
+   ```bash
+   git clone https://github.com/Frontz-Technologies/opentab.git
+   cd opentab
+   ```
+
+2. **Install dependencies**:
+
+   ```bash
+   pnpm install
+   ```
+
+3. **Create a PostgreSQL database**:
+
+   ```bash
+   createdb opentab_dev
+   ```
+
+   Or via `psql`:
+
+   ```sql
+   CREATE USER opentab WITH PASSWORD 'opentab_dev';
+   CREATE DATABASE opentab_dev OWNER opentab;
+   ```
+
+4. **Configure environment**:
+
+   ```bash
+   cp docker/.env.sample apps/web/.env
+   ```
+
+   Edit `apps/web/.env` with your values:
+
+   | Variable | Description | Example |
+   |---|---|---|
+   | `DATABASE_URL` | PostgreSQL connection string | `postgresql://opentab:opentab_dev@localhost:5432/opentab_dev` |
+   | `BETTER_AUTH_SECRET` | Random string for session signing | Generate with `openssl rand -base64 48` |
+   | `BETTER_AUTH_URL` | Public URL of the app | `http://localhost:3000` |
+   | `NEXT_PUBLIC_APP_URL` | Same as above, exposed to client | `http://localhost:3000` |
+
+   See `docker/.env.sample` for all available options including email (Resend / SMTP) and Redis.
+
+5. **Push the database schema**:
+
+   ```bash
+   pnpm db:push
+   ```
+
+6. **Start the dev server**:
+
+   ```bash
+   pnpm dev
+   ```
+
+   Open [http://localhost:3000](http://localhost:3000) to see the app.
+
+### Docker
+
+You can either pull a pre-built Docker image or build it yourself locally.
+
+<!-- TODO: Publish Docker image to a container registry (e.g. Docker Hub or GHCR) -->
+
+#### Using a Pre-built Image
+
+> **Note:** A pre-built image is not yet available. For now, build from source or use the Docker Compose setup below.
+
+#### Building the Image
+
+Build the Docker image directly from source:
 
 ```bash
-# Clone the repository
-git clone https://github.com/Frontz-Technologies/opentab.git
-cd opentab
-pnpm install
-
-# Copy the sample env file and edit with your values
-cp docker/.env.sample apps/web/.env
+docker build -t opentab -f docker/Dockerfile .
 ```
 
-Edit `apps/web/.env` with the following required variables:
+The build process:
 
-| Variable | Description | Example |
-|---|---|---|
-| `DATABASE_URL` | PostgreSQL connection string | `postgresql://opentab:opentab_dev@localhost:5432/opentab_dev` |
-| `BETTER_AUTH_SECRET` | Random 64-char string for session signing | Generate with `openssl rand -base64 48` |
-| `BETTER_AUTH_URL` | Public URL of the app | `http://localhost:3000` |
-| `NEXT_PUBLIC_APP_URL` | Same as above, exposed to client | `http://localhost:3000` |
+1. Installs dependencies (`pnpm install --frozen-lockfile`)
+2. Builds the Next.js application (`pnpm build`)
+3. Creates a minimal Alpine-based image with only the runtime artifacts
 
-See `docker/.env.sample` for all available configuration options including email (Resend / SMTP) and Redis.
-
-### Development with Docker Compose
+#### Running with Docker Compose (Development)
 
 One command to start everything — PostgreSQL, Redis, schema migration, and the dev server:
 
@@ -85,38 +147,16 @@ To stop everything:
 docker compose -f docker/docker-compose.dev.yml down
 ```
 
-#### Without Docker (app only)
+#### Running with Docker Compose (Production)
 
-If you prefer running the app natively and only use Docker for the database:
-
-```bash
-docker compose -f docker/docker-compose.dev.yml up -d postgres redis
-pnpm dev
-```
-
-### Production Deployment
-
-Deploy on any Linux server (e.g. Hetzner CX32 for ~$10/month):
+A production compose file is included with Caddy for automatic HTTPS:
 
 ```bash
-git clone https://github.com/Frontz-Technologies/opentab.git
-cd opentab/docker
-
-# Configure environment
+cd docker
 cp .env.sample .env
-# Edit .env:
-#   POSTGRES_PASSWORD=<strong random password>
-#   BETTER_AUTH_SECRET=<openssl rand -base64 48>
-#   DOMAIN=app.yourdomain.com
-#   BETTER_AUTH_URL=https://app.yourdomain.com
-#   NEXT_PUBLIC_APP_URL=https://app.yourdomain.com
-#   NODE_ENV=production
-
-# Build and start everything
+# Edit .env with production values (strong passwords, your domain, etc.)
 docker compose up -d --build
 ```
-
-Caddy automatically provisions HTTPS certificates for your domain. Point your DNS A record to the server IP and you're live.
 
 Services:
 - **app** — Next.js production server (auto-migrates DB on start)
