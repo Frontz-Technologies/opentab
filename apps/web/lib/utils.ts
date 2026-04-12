@@ -1,9 +1,9 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
-import { randomBytes } from "crypto"
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+import { randomBytes } from "crypto";
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
 export function slugify(text: string): string {
@@ -27,9 +27,33 @@ export function detectCountryFromTaxId(taxId: string): string | null {
   const euMatch = cleaned.match(/^([A-Z]{2})\d/);
   if (euMatch) {
     const euCountries = [
-      "AT","BE","BG","HR","CY","CZ","DK","EE","FI","FR",
-      "DE","GR","HU","IE","IT","LV","LT","LU","MT","NL",
-      "PL","PT","RO","SK","SI","ES","SE",
+      "AT",
+      "BE",
+      "BG",
+      "HR",
+      "CY",
+      "CZ",
+      "DK",
+      "EE",
+      "FI",
+      "FR",
+      "DE",
+      "GR",
+      "HU",
+      "IE",
+      "IT",
+      "LV",
+      "LT",
+      "LU",
+      "MT",
+      "NL",
+      "PL",
+      "PT",
+      "RO",
+      "SK",
+      "SI",
+      "ES",
+      "SE",
     ];
     if (euCountries.includes(euMatch[1])) return euMatch[1];
   }

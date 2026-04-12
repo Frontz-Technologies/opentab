@@ -13,6 +13,7 @@
 ## File Map
 
 ### Root
+
 - Create: `package.json` — root workspace config, shared scripts
 - Create: `pnpm-workspace.yaml` — workspace definition
 - Create: `turbo.json` — Turborepo pipeline config
@@ -21,6 +22,7 @@
 - Create: `CLAUDE.md` — AI agent build/test/format commands
 
 ### packages/db
+
 - Create: `packages/db/package.json` — db package config
 - Create: `packages/db/tsconfig.json` — TypeScript config
 - Create: `packages/db/drizzle.config.ts` — Drizzle config
@@ -34,6 +36,7 @@
 - Create: `packages/db/src/test-utils.ts` — PGlite test helper
 
 ### apps/web
+
 - Create: `apps/web/package.json` — Next.js app dependencies
 - Create: `apps/web/tsconfig.json` — TypeScript config
 - Create: `apps/web/next.config.ts` — Next.js config with next-intl
@@ -57,11 +60,13 @@
 - Create: Company settings page + server action
 
 ### docker
+
 - Create: `docker/docker-compose.dev.yml` — Dev postgres + redis
 - Create: `docker/docker-compose.yml` — Production compose
 - Create: `docker/.env.sample` — All env vars with descriptions
 
 ### docs
+
 - Create: `docs/DESIGN.md` — Living design system document
 - Create: `docs/ARCHITECTURE.md` — System architecture
 - Create: `docs/CONVENTIONS.md` — Code conventions
@@ -71,6 +76,7 @@
 ## Task 1: Monorepo Scaffold
 
 **Files:**
+
 - Create: `package.json`
 - Create: `pnpm-workspace.yaml`
 - Create: `turbo.json`
@@ -217,6 +223,7 @@ git commit -m "chore: scaffold monorepo with Turborepo + pnpm workspaces"
 ## Task 2: Database Package (packages/db)
 
 **Files:**
+
 - Create: `packages/db/package.json`
 - Create: `packages/db/tsconfig.json`
 - Create: `packages/db/drizzle.config.ts`
@@ -463,6 +470,7 @@ git commit -m "feat: add database package with Drizzle schema and PGlite test ut
 ## Task 3: Database Schema + Tests
 
 **Files:**
+
 - Create: `packages/db/src/schema/users.ts`
 - Create: `packages/db/src/schema/organisations.ts`
 - Create: `packages/db/src/schema/org-memberships.ts`
@@ -509,9 +517,13 @@ describe("Database Schema", () => {
     });
 
     it("enforces unique email", async () => {
-      await db.insert(users).values({ email: "unique@example.com", name: "User 1" });
+      await db
+        .insert(users)
+        .values({ email: "unique@example.com", name: "User 1" });
       await expect(
-        db.insert(users).values({ email: "unique@example.com", name: "User 2" })
+        db
+          .insert(users)
+          .values({ email: "unique@example.com", name: "User 2" }),
       ).rejects.toThrow();
     });
   });
@@ -532,9 +544,11 @@ describe("Database Schema", () => {
     });
 
     it("enforces unique slug", async () => {
-      await db.insert(organisations).values({ name: "Org A", slug: "unique-slug" });
+      await db
+        .insert(organisations)
+        .values({ name: "Org A", slug: "unique-slug" });
       await expect(
-        db.insert(organisations).values({ name: "Org B", slug: "unique-slug" })
+        db.insert(organisations).values({ name: "Org B", slug: "unique-slug" }),
       ).rejects.toThrow();
     });
   });
@@ -574,9 +588,13 @@ describe("Database Schema", () => {
         .values({ name: "Org 2", slug: "org-two" })
         .returning();
 
-      await db.insert(orgMemberships).values({ userId: user.id, orgId: org1.id, role: "owner" });
+      await db
+        .insert(orgMemberships)
+        .values({ userId: user.id, orgId: org1.id, role: "owner" });
       await expect(
-        db.insert(orgMemberships).values({ userId: user.id, orgId: org2.id, role: "member" })
+        db
+          .insert(orgMemberships)
+          .values({ userId: user.id, orgId: org2.id, role: "member" }),
       ).rejects.toThrow();
     });
   });
@@ -588,13 +606,22 @@ describe("Database Schema", () => {
 ```bash
 pnpm --filter @opentab/db test
 ```
+
 Expected: FAIL — schema modules don't exist yet
 
 - [ ] **Step 3: Create schema files**
 
 Create `packages/db/src/schema/users.ts`:
+
 ```typescript
-import { pgTable, uuid, varchar, text, boolean, timestamp } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  uuid,
+  varchar,
+  text,
+  boolean,
+  timestamp,
+} from "drizzle-orm/pg-core";
 
 export const users = pgTable("user", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -614,8 +641,17 @@ export type NewUser = typeof users.$inferInsert;
 ```
 
 Create `packages/db/src/schema/organisations.ts`:
+
 ```typescript
-import { pgTable, uuid, varchar, text, integer, jsonb, timestamp } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  uuid,
+  varchar,
+  text,
+  integer,
+  jsonb,
+  timestamp,
+} from "drizzle-orm/pg-core";
 
 export const organisations = pgTable("organisation", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -624,7 +660,9 @@ export const organisations = pgTable("organisation", {
   taxId: varchar("tax_id", { length: 50 }),
   taxAuthority: varchar("tax_authority", { length: 255 }),
   countryCode: varchar("country_code", { length: 2 }),
-  defaultCurrency: varchar("default_currency", { length: 3 }).notNull().default("EUR"),
+  defaultCurrency: varchar("default_currency", { length: 3 })
+    .notNull()
+    .default("EUR"),
   fiscalYearStart: integer("fiscal_year_start").notNull().default(1),
   addressLine1: varchar("address_line1", { length: 255 }),
   addressLine2: varchar("address_line2", { length: 255 }),
@@ -633,7 +671,10 @@ export const organisations = pgTable("organisation", {
   region: varchar("region", { length: 100 }),
   phone: varchar("phone", { length: 50 }),
   logoUrl: text("logo_url"),
-  setupCompletedSteps: jsonb("setup_completed_steps").notNull().$type<string[]>().default([]),
+  setupCompletedSteps: jsonb("setup_completed_steps")
+    .notNull()
+    .$type<string[]>()
+    .default([]),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -643,24 +684,34 @@ export type NewOrganisation = typeof organisations.$inferInsert;
 ```
 
 Create `packages/db/src/schema/org-memberships.ts`:
+
 ```typescript
 import { pgTable, uuid, pgEnum, timestamp, unique } from "drizzle-orm/pg-core";
 import { users } from "./users.js";
 import { organisations } from "./organisations.js";
 
-export const orgRoleEnum = pgEnum("org_role", ["owner", "admin", "member", "accountant"]);
+export const orgRoleEnum = pgEnum("org_role", [
+  "owner",
+  "admin",
+  "member",
+  "accountant",
+]);
 
 export const orgMemberships = pgTable(
   "org_membership",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-    orgId: uuid("org_id").notNull().references(() => organisations.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    orgId: uuid("org_id")
+      .notNull()
+      .references(() => organisations.id, { onDelete: "cascade" }),
     role: orgRoleEnum("role").notNull().default("owner"),
     invitedAt: timestamp("invited_at"),
     acceptedAt: timestamp("accepted_at"),
   },
-  (table) => [unique("org_membership_user_id_unique").on(table.userId)]
+  (table) => [unique("org_membership_user_id_unique").on(table.userId)],
 );
 
 export type OrgMembership = typeof orgMemberships.$inferSelect;
@@ -668,10 +719,20 @@ export type NewOrgMembership = typeof orgMemberships.$inferInsert;
 ```
 
 Create `packages/db/src/schema/index.ts`:
+
 ```typescript
 export { users, type User, type NewUser } from "./users.js";
-export { organisations, type Organisation, type NewOrganisation } from "./organisations.js";
-export { orgMemberships, orgRoleEnum, type OrgMembership, type NewOrgMembership } from "./org-memberships.js";
+export {
+  organisations,
+  type Organisation,
+  type NewOrganisation,
+} from "./organisations.js";
+export {
+  orgMemberships,
+  orgRoleEnum,
+  type OrgMembership,
+  type NewOrgMembership,
+} from "./org-memberships.js";
 ```
 
 - [ ] **Step 4: Run tests to verify they pass**
@@ -679,6 +740,7 @@ export { orgMemberships, orgRoleEnum, type OrgMembership, type NewOrgMembership 
 ```bash
 pnpm --filter @opentab/db test
 ```
+
 Expected: ALL PASS (5 tests)
 
 - [ ] **Step 5: Commit**
@@ -693,6 +755,7 @@ git commit -m "feat: add user, organisation, org_membership schemas with tests"
 ## Task 4: Docker Compose + Environment
 
 **Files:**
+
 - Create: `docker/docker-compose.dev.yml`
 - Create: `docker/docker-compose.yml`
 - Create: `docker/.env.sample`
@@ -904,7 +967,7 @@ git commit -m "feat: install shadcn/ui components for app shell"
 
 **Files:** auth-server.ts, auth-client.ts, session.ts, use-session.ts, API route, middleware, VAT detection tests
 
-- [ ] **Step 1: Write VAT detection tests** (apps/web/__tests__/vat-detection.test.ts) — tests for detectCountryFromTaxId, slugify, generateUniqueSlug
+- [ ] **Step 1: Write VAT detection tests** (apps/web/**tests**/vat-detection.test.ts) — tests for detectCountryFromTaxId, slugify, generateUniqueSlug
 - [ ] **Step 2: Run tests to verify they pass** (utils already implemented in Task 5)
 - [ ] **Step 3: Create apps/web/lib/auth-server.ts** — Better Auth config with Drizzle adapter, email/password, session config, databaseHooks for auto-org creation on signup
 - [ ] **Step 4: Create apps/web/lib/auth-client.ts** — Better Auth React client with signIn, signUp, signOut, useSession exports

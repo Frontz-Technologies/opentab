@@ -7,28 +7,33 @@ AI agent guide for the OpenTab repository.
 ## Behavioral Guidelines
 
 ### 1. Think Before Coding
+
 - State assumptions explicitly. If uncertain, ask.
 - If multiple approaches exist, present them — don't pick silently.
 - If a simpler approach exists, say so.
 
 ### 2. Simplicity First
+
 - No features beyond what was asked.
 - No abstractions for single-use code.
 - No error handling for impossible scenarios.
 - If 200 lines could be 50, rewrite it.
 
 ### 3. Surgical Changes
+
 - Don't "improve" adjacent code, comments, or formatting.
 - Don't refactor things that aren't broken.
 - Match existing style, even if you'd do it differently.
 - If you notice unrelated issues, mention them — don't fix them.
 
 ### 4. Goal-Driven Execution
+
 - Transform tasks into verifiable goals.
 - For multi-step tasks, state a brief plan with verification steps.
 - Unverified work is incomplete work.
 
 ### 5. Output Precision
+
 - Lead with findings, not process descriptions.
 - Include absolute file paths — never relative.
 - Always stop dev servers after testing to free ports.
@@ -68,30 +73,30 @@ packages/db/
 
 ## Commands
 
-| Task | Command |
-|------|---------|
+| Task             | Command                                              |
+| ---------------- | ---------------------------------------------------- |
 | Start everything | `docker compose -f docker/docker-compose.dev.yml up` |
-| Dev server only | `pnpm dev` (requires DB running separately) |
-| Build | `pnpm build` |
-| Tests | `pnpm test` |
-| Format | `pnpm format` |
-| Lint | `pnpm lint` |
-| DB schema push | `pnpm db:push` |
-| DB migrations | `pnpm db:generate` |
+| Dev server only  | `pnpm dev` (requires DB running separately)          |
+| Build            | `pnpm build`                                         |
+| Tests            | `pnpm test`                                          |
+| Format           | `pnpm format`                                        |
+| Lint             | `pnpm lint`                                          |
+| DB schema push   | `pnpm db:push`                                       |
+| DB migrations    | `pnpm db:generate`                                   |
 
 ---
 
 ## Documentation References
 
-| Topic | File |
-|-------|------|
-| Design system (colours, typography, components) | `docs/DESIGN.md` |
-| System architecture and data flow | `docs/ARCHITECTURE.md` |
-| Code conventions and patterns | `docs/CONVENTIONS.md` |
-| Product specification | `.research/PRODUCT_SPEC.md` |
-| Data model design | `.research/BRAINSTORM_DATA_MODEL.md` |
-| Tech stack decisions | `.research/BRAINSTORM_TECH_STACK.md` |
-| Hosting and auth strategy | `.research/BRAINSTORM_HOSTING_AUTH.md` |
+| Topic                                           | File                                   |
+| ----------------------------------------------- | -------------------------------------- |
+| Design system (colours, typography, components) | `docs/DESIGN.md`                       |
+| System architecture and data flow               | `docs/ARCHITECTURE.md`                 |
+| Code conventions and patterns                   | `docs/CONVENTIONS.md`                  |
+| Product specification                           | `.research/PRODUCT_SPEC.md`            |
+| Data model design                               | `.research/BRAINSTORM_DATA_MODEL.md`   |
+| Tech stack decisions                            | `.research/BRAINSTORM_TECH_STACK.md`   |
+| Hosting and auth strategy                       | `.research/BRAINSTORM_HOSTING_AUTH.md` |
 
 ---
 

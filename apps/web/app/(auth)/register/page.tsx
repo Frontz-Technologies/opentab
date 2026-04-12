@@ -54,13 +54,21 @@ export default function RegisterPage() {
       {/* Mobile logo — hidden on desktop */}
       <div className="flex lg:hidden items-center gap-3 mb-8">
         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#4EDEA3] to-[#10b981] flex items-center justify-center">
-          <span className="material-symbols-outlined text-[#131313] text-lg">account_balance</span>
+          <span className="material-symbols-outlined text-[#131313] text-lg">
+            account_balance
+          </span>
         </div>
-        <span className="font-headline text-xl font-bold text-on-surface">OpenTab</span>
+        <span className="font-headline text-xl font-bold text-on-surface">
+          OpenTab
+        </span>
       </div>
 
-      <h1 className="font-headline text-3xl font-bold text-on-surface mb-2">{t("createYourAccount")}</h1>
-      <p className="text-on-surface-variant mb-8">Get started with OpenTab for free.</p>
+      <h1 className="font-headline text-3xl font-bold text-on-surface mb-2">
+        {t("createYourAccount")}
+      </h1>
+      <p className="text-on-surface-variant mb-8">
+        Get started with OpenTab for free.
+      </p>
 
       {error && (
         <div className="p-4 rounded-xl bg-error-container/20 text-tertiary-container text-sm mb-6">
@@ -70,7 +78,9 @@ export default function RegisterPage() {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-2">
-          <Label htmlFor="name" className="text-on-surface-variant">{t("name")}</Label>
+          <Label htmlFor="name" className="text-on-surface-variant">
+            {t("name")}
+          </Label>
           <Input
             id="name"
             type="text"
@@ -83,7 +93,9 @@ export default function RegisterPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="email" className="text-on-surface-variant">{t("email")}</Label>
+          <Label htmlFor="email" className="text-on-surface-variant">
+            {t("email")}
+          </Label>
           <Input
             id="email"
             type="email"
@@ -96,7 +108,9 @@ export default function RegisterPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="password" className="text-on-surface-variant">{t("password")}</Label>
+          <Label htmlFor="password" className="text-on-surface-variant">
+            {t("password")}
+          </Label>
           <Input
             id="password"
             type="password"
@@ -109,7 +123,9 @@ export default function RegisterPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="confirmPassword" className="text-on-surface-variant">{t("confirmPassword")}</Label>
+          <Label htmlFor="confirmPassword" className="text-on-surface-variant">
+            {t("confirmPassword")}
+          </Label>
           <Input
             id="confirmPassword"
             type="password"
@@ -123,9 +139,24 @@ export default function RegisterPage() {
 
         <p className="text-xs text-on-surface-variant/60 text-center">
           By creating an account you agree to our{" "}
-          <a href="https://opentab.tech/terms" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary-container transition-colors">Terms of Service</a>
-          {" "}and{" "}
-          <a href="https://opentab.tech/privacy" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary-container transition-colors">Privacy Policy</a>.
+          <a
+            href="https://opentab.tech/terms"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:text-primary-container transition-colors"
+          >
+            Terms of Service
+          </a>{" "}
+          and{" "}
+          <a
+            href="https://opentab.tech/privacy"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:text-primary-container transition-colors"
+          >
+            Privacy Policy
+          </a>
+          .
         </p>
 
         <Button
@@ -139,7 +170,10 @@ export default function RegisterPage() {
 
       <p className="mt-6 text-center text-on-surface-variant text-sm">
         {t("hasAccount")}{" "}
-        <Link href="/login" className="text-primary hover:text-primary-container transition-colors font-medium">
+        <Link
+          href="/login"
+          className="text-primary hover:text-primary-container transition-colors font-medium"
+        >
           {t("login")}
         </Link>
       </p>

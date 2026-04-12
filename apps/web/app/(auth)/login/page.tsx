@@ -41,13 +41,21 @@ export default function LoginPage() {
       {/* Mobile logo — hidden on desktop */}
       <div className="flex lg:hidden items-center gap-3 mb-8">
         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#4EDEA3] to-[#10b981] flex items-center justify-center">
-          <span className="material-symbols-outlined text-[#131313] text-lg">account_balance</span>
+          <span className="material-symbols-outlined text-[#131313] text-lg">
+            account_balance
+          </span>
         </div>
-        <span className="font-headline text-xl font-bold text-on-surface">OpenTab</span>
+        <span className="font-headline text-xl font-bold text-on-surface">
+          OpenTab
+        </span>
       </div>
 
-      <h1 className="font-headline text-3xl font-bold text-on-surface mb-2">{t("welcomeBack")}</h1>
-      <p className="text-on-surface-variant mb-8">Sign in to your account to continue.</p>
+      <h1 className="font-headline text-3xl font-bold text-on-surface mb-2">
+        {t("welcomeBack")}
+      </h1>
+      <p className="text-on-surface-variant mb-8">
+        Sign in to your account to continue.
+      </p>
 
       {error && (
         <div className="p-4 rounded-xl bg-error-container/20 text-tertiary-container text-sm mb-6">
@@ -57,7 +65,9 @@ export default function LoginPage() {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-2">
-          <Label htmlFor="email" className="text-on-surface-variant">{t("email")}</Label>
+          <Label htmlFor="email" className="text-on-surface-variant">
+            {t("email")}
+          </Label>
           <Input
             id="email"
             type="email"
@@ -71,7 +81,9 @@ export default function LoginPage() {
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="password" className="text-on-surface-variant">{t("password")}</Label>
+            <Label htmlFor="password" className="text-on-surface-variant">
+              {t("password")}
+            </Label>
             <Link
               href="/forgot-password"
               className="text-sm text-primary hover:text-primary-container transition-colors"
@@ -101,15 +113,32 @@ export default function LoginPage() {
 
       <p className="mt-6 text-center text-on-surface-variant text-sm">
         {t("noAccount")}{" "}
-        <Link href="/register" className="text-primary hover:text-primary-container transition-colors font-medium">
+        <Link
+          href="/register"
+          className="text-primary hover:text-primary-container transition-colors font-medium"
+        >
           {t("register")}
         </Link>
       </p>
 
       <p className="mt-4 text-center text-on-surface-variant/40 text-xs">
-        <a href="https://opentab.tech/terms" target="_blank" rel="noopener noreferrer" className="hover:text-on-surface-variant transition-colors">Terms</a>
+        <a
+          href="https://opentab.tech/terms"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:text-on-surface-variant transition-colors"
+        >
+          Terms
+        </a>
         {" · "}
-        <a href="https://opentab.tech/privacy" target="_blank" rel="noopener noreferrer" className="hover:text-on-surface-variant transition-colors">Privacy</a>
+        <a
+          href="https://opentab.tech/privacy"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:text-on-surface-variant transition-colors"
+        >
+          Privacy
+        </a>
       </p>
     </div>
   );

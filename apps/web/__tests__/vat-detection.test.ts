@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { detectCountryFromTaxId, slugify, generateUniqueSlug } from "@/lib/utils";
+import {
+  detectCountryFromTaxId,
+  slugify,
+  generateUniqueSlug,
+} from "@/lib/utils";
 
 describe("detectCountryFromTaxId", () => {
   it("detects Greek AFM (9 digits)", () => {

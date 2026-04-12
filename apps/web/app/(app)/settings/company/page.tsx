@@ -17,7 +17,9 @@ export default async function CompanySettingsPage() {
         userEmail={session.user.email}
       />
       <main className="px-8 py-8 max-w-3xl mx-auto">
-        <h2 className="font-headline text-3xl font-extrabold tracking-tight text-on-surface mb-8">Company Settings</h2>
+        <h2 className="font-headline text-3xl font-extrabold tracking-tight text-on-surface mb-8">
+          Company Settings
+        </h2>
         <CompanyForm
           initialData={{
             name: session.org.name,

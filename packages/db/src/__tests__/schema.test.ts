@@ -33,9 +33,17 @@ describe("Database Schema", () => {
     });
 
     it("enforces unique email", async () => {
-      await db.insert(users).values({ id: "user-2", email: "unique@example.com", name: "User 1" });
+      await db
+        .insert(users)
+        .values({ id: "user-2", email: "unique@example.com", name: "User 1" });
       await expect(
-        db.insert(users).values({ id: "user-3", email: "unique@example.com", name: "User 2" })
+        db
+          .insert(users)
+          .values({
+            id: "user-3",
+            email: "unique@example.com",
+            name: "User 2",
+          }),
       ).rejects.toThrow();
     });
   });
@@ -56,9 +64,11 @@ describe("Database Schema", () => {
     });
 
     it("enforces unique slug", async () => {
-      await db.insert(organisations).values({ name: "Org A", slug: "unique-slug" });
+      await db
+        .insert(organisations)
+        .values({ name: "Org A", slug: "unique-slug" });
       await expect(
-        db.insert(organisations).values({ name: "Org B", slug: "unique-slug" })
+        db.insert(organisations).values({ name: "Org B", slug: "unique-slug" }),
       ).rejects.toThrow();
     });
   });
@@ -87,7 +97,11 @@ describe("Database Schema", () => {
     it("enforces one org per user", async () => {
       const [user] = await db
         .insert(users)
-        .values({ id: "oneorg-1", email: "oneorg@example.com", name: "One Org" })
+        .values({
+          id: "oneorg-1",
+          email: "oneorg@example.com",
+          name: "One Org",
+        })
         .returning();
       const [org1] = await db
         .insert(organisations)
@@ -98,9 +112,13 @@ describe("Database Schema", () => {
         .values({ name: "Org 2", slug: "org-two" })
         .returning();
 
-      await db.insert(orgMemberships).values({ userId: user.id, orgId: org1.id, role: "owner" });
+      await db
+        .insert(orgMemberships)
+        .values({ userId: user.id, orgId: org1.id, role: "owner" });
       await expect(
-        db.insert(orgMemberships).values({ userId: user.id, orgId: org2.id, role: "member" })
+        db
+          .insert(orgMemberships)
+          .values({ userId: user.id, orgId: org2.id, role: "member" }),
       ).rejects.toThrow();
     });
   });

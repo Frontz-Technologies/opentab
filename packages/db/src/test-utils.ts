@@ -13,7 +13,9 @@ export async function createTestDb(): Promise<{
   await pushSchema(pglite);
   return {
     db,
-    teardown: async () => { await pglite.close(); },
+    teardown: async () => {
+      await pglite.close();
+    },
   };
 }
 

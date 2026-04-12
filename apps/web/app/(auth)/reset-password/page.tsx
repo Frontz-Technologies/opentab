@@ -40,9 +40,15 @@ function ResetPasswordForm() {
     setLoading(true);
 
     try {
-      const result = await authClient.resetPassword({ newPassword: password, token });
+      const result = await authClient.resetPassword({
+        newPassword: password,
+        token,
+      });
       if (result.error) {
-        setError(result.error.message ?? "Failed to reset password. The link may have expired.");
+        setError(
+          result.error.message ??
+            "Failed to reset password. The link may have expired.",
+        );
       } else {
         router.push("/login");
       }
@@ -58,11 +64,17 @@ function ResetPasswordForm() {
       <div className="bg-surface-container-low rounded-2xl p-8">
         <div className="flex items-center gap-3 mb-8">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#4EDEA3] to-[#10b981] flex items-center justify-center">
-            <span className="material-symbols-outlined text-[#131313] text-lg">account_balance</span>
+            <span className="material-symbols-outlined text-[#131313] text-lg">
+              account_balance
+            </span>
           </div>
-          <span className="font-headline text-xl font-bold text-on-surface">OpenTab</span>
+          <span className="font-headline text-xl font-bold text-on-surface">
+            OpenTab
+          </span>
         </div>
-        <h1 className="font-headline text-3xl font-bold text-on-surface mb-2">Invalid link</h1>
+        <h1 className="font-headline text-3xl font-bold text-on-surface mb-2">
+          Invalid link
+        </h1>
         <p className="text-on-surface-variant mb-6">
           This password reset link is invalid or has expired.
         </p>
@@ -81,13 +93,21 @@ function ResetPasswordForm() {
       {/* Logo */}
       <div className="flex items-center gap-3 mb-8">
         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#4EDEA3] to-[#10b981] flex items-center justify-center">
-          <span className="material-symbols-outlined text-[#131313] text-lg">account_balance</span>
+          <span className="material-symbols-outlined text-[#131313] text-lg">
+            account_balance
+          </span>
         </div>
-        <span className="font-headline text-xl font-bold text-on-surface">OpenTab</span>
+        <span className="font-headline text-xl font-bold text-on-surface">
+          OpenTab
+        </span>
       </div>
 
-      <h1 className="font-headline text-3xl font-bold text-on-surface mb-2">Set new password</h1>
-      <p className="text-on-surface-variant mb-8">Choose a strong password for your account.</p>
+      <h1 className="font-headline text-3xl font-bold text-on-surface mb-2">
+        Set new password
+      </h1>
+      <p className="text-on-surface-variant mb-8">
+        Choose a strong password for your account.
+      </p>
 
       {error && (
         <div className="p-4 rounded-xl bg-error-container/20 text-tertiary-container text-sm mb-6">
@@ -97,7 +117,9 @@ function ResetPasswordForm() {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-2">
-          <Label htmlFor="password" className="text-on-surface-variant">New password</Label>
+          <Label htmlFor="password" className="text-on-surface-variant">
+            New password
+          </Label>
           <Input
             id="password"
             type="password"
@@ -110,7 +132,9 @@ function ResetPasswordForm() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="confirmPassword" className="text-on-surface-variant">Confirm new password</Label>
+          <Label htmlFor="confirmPassword" className="text-on-surface-variant">
+            Confirm new password
+          </Label>
           <Input
             id="confirmPassword"
             type="password"
@@ -132,7 +156,10 @@ function ResetPasswordForm() {
       </form>
 
       <p className="mt-6 text-center text-on-surface-variant text-sm">
-        <Link href="/login" className="text-primary hover:text-primary-container transition-colors font-medium">
+        <Link
+          href="/login"
+          className="text-primary hover:text-primary-container transition-colors font-medium"
+        >
           ← Back to sign in
         </Link>
       </p>
@@ -142,11 +169,15 @@ function ResetPasswordForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={
-      <div className="bg-surface-container-low rounded-2xl p-8 flex items-center justify-center h-48">
-        <span className="material-symbols-outlined text-on-surface-variant animate-spin">progress_activity</span>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="bg-surface-container-low rounded-2xl p-8 flex items-center justify-center h-48">
+          <span className="material-symbols-outlined text-on-surface-variant animate-spin">
+            progress_activity
+          </span>
+        </div>
+      }
+    >
       <ResetPasswordForm />
     </Suspense>
   );

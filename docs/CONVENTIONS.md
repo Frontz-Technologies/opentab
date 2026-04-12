@@ -6,22 +6,22 @@
 
 ## File Naming
 
-| What | Convention | Example |
-|---|---|---|
-| Component files | kebab-case | `user-menu.tsx`, `invoice-card.tsx` |
-| Page files | Next.js convention | `page.tsx`, `layout.tsx`, `loading.tsx` |
-| Hook files | kebab-case, `use-` prefix | `use-session.ts`, `use-invoices.ts` |
-| Utility files | kebab-case | `format-currency.ts`, `cn.ts` |
-| Server action files | kebab-case | `create-invoice.ts` |
-| Test files | same name + `.test` | `invoice-card.test.tsx` |
+| What                | Convention                | Example                                 |
+| ------------------- | ------------------------- | --------------------------------------- |
+| Component files     | kebab-case                | `user-menu.tsx`, `invoice-card.tsx`     |
+| Page files          | Next.js convention        | `page.tsx`, `layout.tsx`, `loading.tsx` |
+| Hook files          | kebab-case, `use-` prefix | `use-session.ts`, `use-invoices.ts`     |
+| Utility files       | kebab-case                | `format-currency.ts`, `cn.ts`           |
+| Server action files | kebab-case                | `create-invoice.ts`                     |
+| Test files          | same name + `.test`       | `invoice-card.test.tsx`                 |
 
 ## Component Naming
 
-| What | Convention | Example |
-|---|---|---|
-| React components | PascalCase | `UserMenu`, `InvoiceCard` |
-| Component props type | `ComponentNameProps` | `InvoiceCardProps` |
-| Context providers | `ComponentNameProvider` | `OrganisationProvider` |
+| What                 | Convention              | Example                   |
+| -------------------- | ----------------------- | ------------------------- |
+| React components     | PascalCase              | `UserMenu`, `InvoiceCard` |
+| Component props type | `ComponentNameProps`    | `InvoiceCardProps`        |
+| Context providers    | `ComponentNameProvider` | `OrganisationProvider`    |
 
 ---
 
@@ -32,6 +32,7 @@
 All components are Server Components unless they need interactivity. Do not add `"use client"` speculatively.
 
 **When to add `"use client"`:**
+
 - Uses React state (`useState`, `useReducer`)
 - Uses effects (`useEffect`, `useLayoutEffect`)
 - Handles browser events (`onClick`, `onChange`, `onSubmit`)
@@ -101,6 +102,7 @@ import { formatCurrency } from "./format-currency";
 **Strict mode is always on.** `tsconfig.json` in every package sets `"strict": true`. Never disable strict mode or add `@ts-ignore` without a comment explaining why.
 
 **Explicit return types on exported functions:**
+
 ```typescript
 // Good
 export async function getInvoices(): Promise<Invoice[]> { ... }
@@ -138,17 +140,18 @@ OpenTab uses [Conventional Commits](https://www.conventionalcommits.org/).
 [optional body]
 ```
 
-| Type | When to use |
-|---|---|
-| `feat:` | New user-facing feature |
-| `fix:` | Bug fix |
+| Type        | When to use                                     |
+| ----------- | ----------------------------------------------- |
+| `feat:`     | New user-facing feature                         |
+| `fix:`      | Bug fix                                         |
 | `refactor:` | Code change that is neither a fix nor a feature |
-| `test:` | Adding or updating tests |
-| `docs:` | Documentation changes |
-| `chore:` | Tooling, config, dependency updates |
-| `style:` | Formatting only, no logic change |
+| `test:`     | Adding or updating tests                        |
+| `docs:`     | Documentation changes                           |
+| `chore:`    | Tooling, config, dependency updates             |
+| `style:`    | Formatting only, no logic change                |
 
 **Examples:**
+
 ```
 feat: add invoice creation form (#14)
 fix: correct VAT calculation for EU companies (#18)
@@ -159,6 +162,7 @@ chore: upgrade Drizzle ORM to 0.41
 ```
 
 Breaking changes: append `!` after the type and explain in the body:
+
 ```
 feat!: change org membership to support multiple roles
 
@@ -254,6 +258,7 @@ The only place hex values appear is `tailwind.config.ts` and `globals.css`.
 ### No Inline Styles
 
 Inline `style={{}}` props are banned except for:
+
 - Dynamically computed values that cannot be expressed as a Tailwind class (e.g. a CSS variable set from JS, a chart colour from data)
 - Third-party components that require style props
 
@@ -284,6 +289,7 @@ import { cn } from "@/lib/utils";
 shadcn components are installed into `apps/web/components/ui/` and owned by this project. They are not upstream dependencies — edit them freely.
 
 **Rules for customising shadcn components:**
+
 - Override defaults to match the design system (surfaces, fonts, colours)
 - Remove all light mode CSS variables — we are dark-only
 - Replace default buttons with gradient or surface variants
@@ -301,6 +307,7 @@ All user-facing strings go through `next-intl`. No hardcoded English strings in 
 **Adding a string:**
 
 1. Add the key to `apps/web/messages/en.json` under the appropriate namespace:
+
 ```json
 {
   "invoices": {
@@ -311,6 +318,7 @@ All user-facing strings go through `next-intl`. No hardcoded English strings in 
 ```
 
 2. Use in a Server Component:
+
 ```typescript
 import { getTranslations } from "next-intl/server";
 
@@ -319,6 +327,7 @@ return <button>{t("createButton")}</button>;
 ```
 
 3. Use in a Client Component:
+
 ```typescript
 "use client";
 import { useTranslations } from "next-intl";

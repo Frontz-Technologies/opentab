@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
-import { Manrope, Inter, Space_Grotesk, JetBrains_Mono, Geist } from "next/font/google";
+import {
+  Manrope,
+  Inter,
+  Space_Grotesk,
+  JetBrains_Mono,
+  Geist,
+} from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
 const manrope = Manrope({
   subsets: ["latin", "greek"],
@@ -47,7 +53,15 @@ export default async function RootLayout({
   return (
     <html
       lang={locale}
-      className={cn("dark", manrope.variable, inter.variable, spaceGrotesk.variable, jetbrainsMono.variable, "font-sans", geist.variable)}
+      className={cn(
+        "dark",
+        manrope.variable,
+        inter.variable,
+        spaceGrotesk.variable,
+        jetbrainsMono.variable,
+        "font-sans",
+        geist.variable,
+      )}
     >
       <head>
         <link

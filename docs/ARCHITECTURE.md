@@ -38,23 +38,23 @@ opentab/
 
 ## Tech Stack
 
-| Layer | Technology | Version |
-|---|---|---|
-| Framework | Next.js App Router | 15.x |
-| Runtime | Node.js | >=22 |
-| Language | TypeScript | 5.8 (strict) |
-| Auth | Better Auth | 1.x |
-| ORM | Drizzle ORM | latest |
-| Database (prod) | PostgreSQL | 16 |
-| Database (test) | PGlite | in-process |
-| Styling | Tailwind CSS | v4 |
-| Components | shadcn/ui + Base UI | latest |
-| State | Zustand | 5.x |
-| Data fetching | TanStack Query | 5.x |
-| Internationalisation | next-intl | 4.x |
-| Build orchestration | Turborepo | 2.x |
-| Package manager | pnpm | 10.x |
-| Test runner | Vitest | 3.x |
+| Layer                | Technology          | Version      |
+| -------------------- | ------------------- | ------------ |
+| Framework            | Next.js App Router  | 15.x         |
+| Runtime              | Node.js             | >=22         |
+| Language             | TypeScript          | 5.8 (strict) |
+| Auth                 | Better Auth         | 1.x          |
+| ORM                  | Drizzle ORM         | latest       |
+| Database (prod)      | PostgreSQL          | 16           |
+| Database (test)      | PGlite              | in-process   |
+| Styling              | Tailwind CSS        | v4           |
+| Components           | shadcn/ui + Base UI | latest       |
+| State                | Zustand             | 5.x          |
+| Data fetching        | TanStack Query      | 5.x          |
+| Internationalisation | next-intl           | 4.x          |
+| Build orchestration  | Turborepo           | 2.x          |
+| Package manager      | pnpm                | 10.x         |
+| Test runner          | Vitest              | 3.x          |
 
 ---
 
@@ -84,6 +84,7 @@ Browser
 Better Auth is used **as a library**, not a hosted service. The auth logic runs inside the Next.js app process.
 
 **Key characteristics:**
+
 - Session stored in an `httpOnly` cookie (no localStorage, no JWTs in JS-accessible storage)
 - Email/password as the primary credential method
 - On first sign-up, Better Auth automatically creates an organisation for the user
@@ -91,10 +92,12 @@ Better Auth is used **as a library**, not a hosted service. The auth logic runs 
 - Session expiry and rotation are handled by Better Auth internally
 
 **Auth files:**
+
 - `apps/web/lib/auth.ts` — server-side Better Auth configuration
 - `apps/web/lib/auth-client.ts` — client-side Better Auth hooks/methods
 
 **Getting the session in a server component:**
+
 ```typescript
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
@@ -112,10 +115,10 @@ const { user, session: sessionData } = session;
 
 Three core tables:
 
-| Table | Purpose |
-|---|---|
-| `users` | Authentication identity, profile data |
-| `organisations` | One per user — the financial entity |
+| Table             | Purpose                                        |
+| ----------------- | ---------------------------------------------- |
+| `users`           | Authentication identity, profile data          |
+| `organisations`   | One per user — the financial entity            |
 | `org_memberships` | Links users to orgs with a role (owner/member) |
 
 Better Auth manages its own session/account tables alongside these. Drizzle schema types are exported and used throughout `apps/web` for type-safe queries.
@@ -129,12 +132,13 @@ user (users table)
 ```
 
 - `org_memberships.user_id` has a unique constraint — one user, one org
-- No multi-tenancy in the traditional sense; each user *is* their own financial entity
+- No multi-tenancy in the traditional sense; each user _is_ their own financial entity
 - Org context is loaded from the session and passed down through server components; it never comes from a URL segment
 
 ### Country Detection
 
 Organisation country is inferred from VAT/tax ID format at creation time:
+
 - 9 digits → Greek AFM (Greece)
 - 2-letter EU prefix (e.g. `DE`, `FR`, `IT`) → corresponding EU country
 - This drives VAT rate lookups and invoice compliance rules
@@ -146,6 +150,7 @@ Organisation country is inferred from VAT/tax ID format at creation time:
 ### PGlite for Testing
 
 Tests use `@electric-sql/pglite` — an in-process WebAssembly PostgreSQL build. This means:
+
 - No external database needed for tests
 - Tests run in CI without Docker
 - Schema is applied fresh per test suite via Drizzle migrations
@@ -155,15 +160,16 @@ Tests use `@electric-sql/pglite` — an in-process WebAssembly PostgreSQL build.
 
 ## Testing Strategy
 
-| Type | Tool | What it tests |
-|---|---|---|
-| Unit | Vitest | Pure functions, utilities, schema types |
-| Integration | Vitest + PGlite | DB queries, auth flows, server actions |
-| Visual | Playwright MCP | UI rendering, user journeys |
+| Type        | Tool            | What it tests                           |
+| ----------- | --------------- | --------------------------------------- |
+| Unit        | Vitest          | Pure functions, utilities, schema types |
+| Integration | Vitest + PGlite | DB queries, auth flows, server actions  |
+| Visual      | Playwright MCP  | UI rendering, user journeys             |
 
 **Philosophy:** TDD. Tests are written before implementation code. The test suite is the living specification of behaviour.
 
 Run tests:
+
 ```bash
 pnpm test            # all packages via Turborepo
 pnpm test --filter=web  # web app only
@@ -175,11 +181,11 @@ pnpm test --filter=web  # web app only
 
 The codebase is identical between the open-source self-hosted version and any hosted cloud offering. Environment variables switch the external service providers:
 
-| Concern | OSS / Self-hosted | Cloud |
-|---|---|---|
-| Email | SMTP (any provider) | Resend |
-| File storage | MinIO | Cloudflare R2 |
-| Database | PostgreSQL (self-managed) | Managed PostgreSQL |
+| Concern      | OSS / Self-hosted         | Cloud              |
+| ------------ | ------------------------- | ------------------ |
+| Email        | SMTP (any provider)       | Resend             |
+| File storage | MinIO                     | Cloudflare R2      |
+| Database     | PostgreSQL (self-managed) | Managed PostgreSQL |
 
 No feature flags, no separate branches. The same `apps/web` build runs both variants.
 

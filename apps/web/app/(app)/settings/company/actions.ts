@@ -10,7 +10,20 @@ import { z } from "zod";
 
 const companySettingsSchema = z.object({
   name: z.string().min(1).max(255),
-  defaultCurrency: z.enum(["EUR","USD","GBP","CHF","SEK","DKK","NOK","PLN","CZK","HUF","RON","BGN"]),
+  defaultCurrency: z.enum([
+    "EUR",
+    "USD",
+    "GBP",
+    "CHF",
+    "SEK",
+    "DKK",
+    "NOK",
+    "PLN",
+    "CZK",
+    "HUF",
+    "RON",
+    "BGN",
+  ]),
   fiscalYearStart: z.coerce.number().int().min(1).max(12),
   taxId: z.string().max(50).optional().default(""),
   taxAuthority: z.string().max(255).optional().default(""),

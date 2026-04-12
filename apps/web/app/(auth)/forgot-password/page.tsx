@@ -34,19 +34,30 @@ export default function ForgotPasswordPage() {
       {/* Logo */}
       <div className="flex items-center gap-3 mb-8">
         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#4EDEA3] to-[#10b981] flex items-center justify-center">
-          <span className="material-symbols-outlined text-[#131313] text-lg">account_balance</span>
+          <span className="material-symbols-outlined text-[#131313] text-lg">
+            account_balance
+          </span>
         </div>
-        <span className="font-headline text-xl font-bold text-on-surface">OpenTab</span>
+        <span className="font-headline text-xl font-bold text-on-surface">
+          OpenTab
+        </span>
       </div>
 
       {submitted ? (
         <div>
           <div className="w-12 h-12 rounded-full bg-[#4EDEA3]/10 flex items-center justify-center mb-6">
-            <span className="material-symbols-outlined text-[#4EDEA3] text-2xl">mark_email_read</span>
+            <span className="material-symbols-outlined text-[#4EDEA3] text-2xl">
+              mark_email_read
+            </span>
           </div>
-          <h1 className="font-headline text-3xl font-bold text-on-surface mb-2">Check your email</h1>
+          <h1 className="font-headline text-3xl font-bold text-on-surface mb-2">
+            Check your email
+          </h1>
           <p className="text-on-surface-variant mb-8 leading-relaxed">
-            If an account exists for <span className="text-on-surface font-medium">{email}</span>, we&apos;ve sent a password reset link. Check your inbox and spam folder.
+            If an account exists for{" "}
+            <span className="text-on-surface font-medium">{email}</span>,
+            we&apos;ve sent a password reset link. Check your inbox and spam
+            folder.
           </p>
           <Link
             href="/login"
@@ -57,14 +68,18 @@ export default function ForgotPasswordPage() {
         </div>
       ) : (
         <div>
-          <h1 className="font-headline text-3xl font-bold text-on-surface mb-2">Reset password</h1>
+          <h1 className="font-headline text-3xl font-bold text-on-surface mb-2">
+            Reset password
+          </h1>
           <p className="text-on-surface-variant mb-8">
             Enter your email and we&apos;ll send you a reset link.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-on-surface-variant">Email</Label>
+              <Label htmlFor="email" className="text-on-surface-variant">
+                Email
+              </Label>
               <Input
                 id="email"
                 type="email"
@@ -87,7 +102,10 @@ export default function ForgotPasswordPage() {
 
           <p className="mt-6 text-center text-on-surface-variant text-sm">
             Remembered it?{" "}
-            <Link href="/login" className="text-primary hover:text-primary-container transition-colors font-medium">
+            <Link
+              href="/login"
+              className="text-primary hover:text-primary-container transition-colors font-medium"
+            >
               Sign in
             </Link>
           </p>

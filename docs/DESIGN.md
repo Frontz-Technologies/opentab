@@ -8,7 +8,7 @@
 
 OpenTab occupies a precise aesthetic intersection: the editorial rigour of a well-typeset financial publication, the density-tolerance of a developer tool, and the tactile warmth of high-end stationery. Think a Moleskine ledger rendered in dark glass — structured, premium, purposeful.
 
-Every visual decision should answer: *does this feel like a tool a serious freelancer trusts with their money?*
+Every visual decision should answer: _does this feel like a tool a serious freelancer trusts with their money?_
 
 ---
 
@@ -24,58 +24,61 @@ Never use a 1px border to separate sections or define layout regions. Separation
 
 Surfaces stack from darkest (base/floor) to lightest (most elevated):
 
-| Token | Hex | Role |
-|---|---|---|
-| `surface-dim` | `#131313` | Page background — the floor |
-| `surface-container-lowest` | `#0E0E0E` | Recessed wells, input fills |
-| `surface-container-low` | `#1C1B1B` | Subtle inset sections |
-| `surface-container` | `#201F1F` | Default card surface |
-| `surface-container-high` | `#2A2A2A` | Raised cards, hover states |
+| Token                       | Hex       | Role                              |
+| --------------------------- | --------- | --------------------------------- |
+| `surface-dim`               | `#131313` | Page background — the floor       |
+| `surface-container-lowest`  | `#0E0E0E` | Recessed wells, input fills       |
+| `surface-container-low`     | `#1C1B1B` | Subtle inset sections             |
+| `surface-container`         | `#201F1F` | Default card surface              |
+| `surface-container-high`    | `#2A2A2A` | Raised cards, hover states        |
 | `surface-container-highest` | `#353534` | Tooltips, popovers, most elevated |
-| `surface-bright` | `#3A3939` | Highlighted / selected rows |
+| `surface-bright`            | `#3A3939` | Highlighted / selected rows       |
 
 Use one step up the hierarchy to create lift. Never skip two steps — the contrast differential becomes harsh.
 
 ### Primary & Accent
 
-| Token | Hex | Usage |
-|---|---|---|
-| `primary` | `#4EDEA3` | Active states, links, focus rings, key data |
-| `primary-container` | `#10B981` | Gradient endpoint, filled chip backgrounds |
-| `on-primary` | `#003824` | Text on primary-coloured surfaces |
-| `secondary` | `#9ED2B5` | Secondary interactive elements |
-| `secondary-container` | `#21523C` | Secondary chip/badge backgrounds |
+| Token                 | Hex       | Usage                                       |
+| --------------------- | --------- | ------------------------------------------- |
+| `primary`             | `#4EDEA3` | Active states, links, focus rings, key data |
+| `primary-container`   | `#10B981` | Gradient endpoint, filled chip backgrounds  |
+| `on-primary`          | `#003824` | Text on primary-coloured surfaces           |
+| `secondary`           | `#9ED2B5` | Secondary interactive elements              |
+| `secondary-container` | `#21523C` | Secondary chip/badge backgrounds            |
 
 ### Tertiary / Danger
 
-| Token | Hex | Usage |
-|---|---|---|
-| `tertiary` | `#FFB3AF` | Soft warnings, overdue indicators |
-| `tertiary-container` | `#FC7C78` | Error fills, destructive action states |
-| `on-tertiary-container` | `#711419` | Text on error fills |
+| Token                   | Hex       | Usage                                  |
+| ----------------------- | --------- | -------------------------------------- |
+| `tertiary`              | `#FFB3AF` | Soft warnings, overdue indicators      |
+| `tertiary-container`    | `#FC7C78` | Error fills, destructive action states |
+| `on-tertiary-container` | `#711419` | Text on error fills                    |
 
 ### Text
 
-| Token | Hex | Usage |
-|---|---|---|
-| `on-surface` | `#E5E2E1` | Primary body text — warm near-white |
-| `on-surface-variant` | `#BBCABF` | Secondary text, placeholders, captions |
-| `outline` | `#86948A` | Disabled states, decorative separators (use sparingly) |
-| `outline-variant` | `#3C4A42` | Ghost border fallback |
+| Token                | Hex       | Usage                                                  |
+| -------------------- | --------- | ------------------------------------------------------ |
+| `on-surface`         | `#E5E2E1` | Primary body text — warm near-white                    |
+| `on-surface-variant` | `#BBCABF` | Secondary text, placeholders, captions                 |
+| `outline`            | `#86948A` | Disabled states, decorative separators (use sparingly) |
+| `outline-variant`    | `#3C4A42` | Ghost border fallback                                  |
 
 Avoid pure `#FFFFFF`. `on-surface` (#E5E2E1) has a warm tint that reads more natural against the dark palette.
 
 ### Glass & Gradient Rule
 
 **Floating elements** (modals, dropdowns, sidebars, tooltips) use glassmorphism:
+
 - Background opacity: 70% of the underlying surface token
 - Backdrop blur: `blur(24px)` (`backdrop-filter: blur(24px)`)
 - Combined with a ghost border at `outline-variant` 15% opacity to define the edge
 
 **Call-to-action buttons** use the gradient:
+
 ```css
-background: linear-gradient(135deg, #4EDEA3, #10B981);
+background: linear-gradient(135deg, #4edea3, #10b981);
 ```
+
 This gradient is reserved for the single primary action per screen. Don't apply it to secondary or tertiary buttons.
 
 ---
@@ -84,16 +87,17 @@ This gradient is reserved for the single primary action per screen. Don't apply 
 
 Four typefaces, each with a precise role. Never swap them.
 
-| Family | Token | Role | Why |
-|---|---|---|---|
-| **Manrope** | `font-headline` | Display text, page headings, section titles | Geometric, high x-height, authoritative at large sizes |
-| **Inter** | `font-body` | Body copy, paragraphs, form labels, prose | Optimised for screen legibility in dense financial UIs |
-| **Space Grotesk** | `font-label` | Financial figures, status badges, table headers, metadata | Monospace-leaning — numbers align in columns without true mono overhead |
-| **JetBrains Mono** | `font-mono` | Invoice numbers, API keys, code snippets, IBANs | True monospace for values where every character position matters |
+| Family             | Token           | Role                                                      | Why                                                                     |
+| ------------------ | --------------- | --------------------------------------------------------- | ----------------------------------------------------------------------- |
+| **Manrope**        | `font-headline` | Display text, page headings, section titles               | Geometric, high x-height, authoritative at large sizes                  |
+| **Inter**          | `font-body`     | Body copy, paragraphs, form labels, prose                 | Optimised for screen legibility in dense financial UIs                  |
+| **Space Grotesk**  | `font-label`    | Financial figures, status badges, table headers, metadata | Monospace-leaning — numbers align in columns without true mono overhead |
+| **JetBrains Mono** | `font-mono`     | Invoice numbers, API keys, code snippets, IBANs           | True monospace for values where every character position matters        |
 
 ### Scale Guidance
 
 Use extreme scale contrast to create editorial hierarchy. A dashboard page might have:
+
 - A `text-4xl font-headline font-bold` KPI figure
 - A `text-xs font-label uppercase tracking-widest` label beneath it
 - A `text-sm font-body` description paragraph
@@ -122,22 +126,26 @@ OpenTab uses **tonal layering** — not box shadows — to communicate elevation
 ### Buttons
 
 **Primary (gradient):**
+
 - Background: `linear-gradient(135deg, #4EDEA3, #10B981)` via `.btn-gradient`
 - Text: `on-primary` (`#003824`), `font-label`, medium weight
 - Border radius: `rounded-lg` (0.5rem)
 - One per page region — do not scatter gradient buttons
 
 **Secondary (surface):**
+
 - Background: `surface-container-high`
 - Text: `on-surface`
 - No border. Hover shifts to `surface-container-highest`
 
 **Destructive:**
+
 - Background: `tertiary-container` (`#FC7C78`)
 - Text: `on-tertiary-container`
 - Confirm destructive actions with an intermediate step — never a single click
 
 **Ghost / text button:**
+
 - No background, no border
 - Text: `primary` on hover, `on-surface-variant` at rest
 
@@ -169,14 +177,15 @@ OpenTab uses **tonal layering** — not box shadows — to communicate elevation
 ### Status Badges
 
 Implemented via `.status-badge` utility class:
+
 ```css
 font-family: Space Grotesk;
-font-size: 0.625rem;     /* 10px */
+font-size: 0.625rem; /* 10px */
 font-weight: 700;
 text-transform: uppercase;
 letter-spacing: 0.05em;
 padding: 0.25rem 0.75rem;
-border-radius: 9999px;   /* pill */
+border-radius: 9999px; /* pill */
 ```
 
 Common variants:
@@ -194,10 +203,12 @@ Common variants:
 Two icon systems, each for a distinct context:
 
 **Material Symbols Outlined** — navigation, feature icons, section markers
+
 - Use the `outlined` weight for consistency with the open, airy aesthetic
 - Size at 20px or 24px; never smaller than 16px
 
 **Lucide React** — small in-line UI icons (via shadcn)
+
 - Inline icons inside buttons, inputs, table cells
 - Stroke-based, pairs cleanly with Inter at small sizes
 
@@ -212,7 +223,7 @@ Never mix the two systems within a single UI region. Navigation uses Material; i
 - Use **extreme typographic scale** — large display figures feel premium
 - Layer surfaces tonally — depth without shadows
 - Apply **asymmetric padding** in layouts: wider gutters on the right, compressed on the left creates editorial tension
-- Keep the emerald primary as the *only* saturated colour anchor on a dark screen
+- Keep the emerald primary as the _only_ saturated colour anchor on a dark screen
 - Reserve the gradient CTA for the single most important action
 
 ### Don't

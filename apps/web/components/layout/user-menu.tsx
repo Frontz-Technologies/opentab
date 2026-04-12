@@ -54,11 +54,18 @@ export function UserMenu({ name, email }: UserMenuProps) {
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel className="flex flex-col gap-0.5">
           <span className="font-semibold text-on-surface text-sm">{name}</span>
-          <span className="text-on-surface/50 text-xs font-normal">{email}</span>
+          <span className="text-on-surface/50 text-xs font-normal">
+            {email}
+          </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem render={<Link href="/settings/company" />} className="flex items-center gap-2 cursor-pointer">
-          <span className="material-symbols-outlined text-[16px] leading-none">settings</span>
+        <DropdownMenuItem
+          render={<Link href="/settings/company" />}
+          className="flex items-center gap-2 cursor-pointer"
+        >
+          <span className="material-symbols-outlined text-[16px] leading-none">
+            settings
+          </span>
           Settings
         </DropdownMenuItem>
         <DropdownMenuSeparator />
@@ -66,7 +73,9 @@ export function UserMenu({ name, email }: UserMenuProps) {
           onClick={handleLogout}
           className="flex items-center gap-2 cursor-pointer text-tertiary-container focus:text-tertiary-container"
         >
-          <span className="material-symbols-outlined text-[16px] leading-none">logout</span>
+          <span className="material-symbols-outlined text-[16px] leading-none">
+            logout
+          </span>
           {t("logout")}
         </DropdownMenuItem>
       </DropdownMenuContent>

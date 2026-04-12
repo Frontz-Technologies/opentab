@@ -13,8 +13,18 @@ const CURRENCIES = [
 ];
 
 const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
 const EU_COUNTRIES = [
@@ -62,7 +72,9 @@ interface FieldProps {
 function Field({ label, children, hint }: FieldProps) {
   return (
     <div className="space-y-1.5">
-      <label className="block font-medium text-sm text-on-surface">{label}</label>
+      <label className="block font-medium text-sm text-on-surface">
+        {label}
+      </label>
       {children}
       {hint && <p className="text-xs text-on-surface-variant/70">{hint}</p>}
     </div>
@@ -70,7 +82,11 @@ function Field({ label, children, hint }: FieldProps) {
 }
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
-  return <h3 className="font-headline text-lg font-bold text-on-surface mb-4">{children}</h3>;
+  return (
+    <h3 className="font-headline text-lg font-bold text-on-surface mb-4">
+      {children}
+    </h3>
+  );
 }
 
 export interface CompanyFormData {
@@ -99,7 +115,10 @@ export function CompanyForm({ initialData }: CompanyFormProps) {
   const [detectedCountry, setDetectedCountry] = useState<string | null>(
     initialData.country || null,
   );
-  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [toast, setToast] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
 
   function handleTaxIdBlur(e: React.FocusEvent<HTMLInputElement>) {
     const value = e.target.value;
@@ -115,7 +134,10 @@ export function CompanyForm({ initialData }: CompanyFormProps) {
         await updateCompanySettings(formData);
         setToast({ type: "success", message: t("saved") });
       } catch {
-        setToast({ type: "error", message: "Failed to save settings. Please try again." });
+        setToast({
+          type: "error",
+          message: "Failed to save settings. Please try again.",
+        });
       }
       setTimeout(() => setToast(null), 4000);
     });
@@ -152,9 +174,15 @@ export function CompanyForm({ initialData }: CompanyFormProps) {
             </Field>
             <Field label={t("defaultCurrency")}>
               <div className="relative">
-                <select name="defaultCurrency" className={selectClass} defaultValue={initialData.defaultCurrency}>
+                <select
+                  name="defaultCurrency"
+                  className={selectClass}
+                  defaultValue={initialData.defaultCurrency}
+                >
                   {CURRENCIES.map((c) => (
-                    <option key={c.code} value={c.code}>{c.label}</option>
+                    <option key={c.code} value={c.code}>
+                      {c.label}
+                    </option>
                   ))}
                 </select>
                 <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-base text-on-surface-variant">
@@ -164,9 +192,15 @@ export function CompanyForm({ initialData }: CompanyFormProps) {
             </Field>
             <Field label={t("fiscalYearStart")}>
               <div className="relative">
-                <select name="fiscalYearStart" className={selectClass} defaultValue={String(initialData.fiscalYearStart)}>
+                <select
+                  name="fiscalYearStart"
+                  className={selectClass}
+                  defaultValue={String(initialData.fiscalYearStart)}
+                >
                   {MONTHS.map((month, index) => (
-                    <option key={index + 1} value={index + 1}>{month}</option>
+                    <option key={index + 1} value={index + 1}>
+                      {month}
+                    </option>
                   ))}
                 </select>
                 <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-base text-on-surface-variant">
@@ -183,7 +217,11 @@ export function CompanyForm({ initialData }: CompanyFormProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <Field
               label={t("taxId")}
-              hint={detectedCountry ? `Detected country: ${EU_COUNTRIES.find(c => c.code === detectedCountry)?.name ?? detectedCountry}` : "Enter your VAT number (e.g. EL123456789 or 123456789)"}
+              hint={
+                detectedCountry
+                  ? `Detected country: ${EU_COUNTRIES.find((c) => c.code === detectedCountry)?.name ?? detectedCountry}`
+                  : "Enter your VAT number (e.g. EL123456789 or 123456789)"
+              }
             >
               <input
                 type="text"
@@ -220,7 +258,9 @@ export function CompanyForm({ initialData }: CompanyFormProps) {
                 >
                   <option value="">Select country…</option>
                   {EU_COUNTRIES.map((c) => (
-                    <option key={c.code} value={c.code}>{c.name}</option>
+                    <option key={c.code} value={c.code}>
+                      {c.name}
+                    </option>
                   ))}
                 </select>
                 <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-base text-on-surface-variant">
@@ -248,13 +288,31 @@ export function CompanyForm({ initialData }: CompanyFormProps) {
             </Field>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               <Field label={t("city")}>
-                <input type="text" name="city" className={inputClass} placeholder="Athens" defaultValue={initialData.city} />
+                <input
+                  type="text"
+                  name="city"
+                  className={inputClass}
+                  placeholder="Athens"
+                  defaultValue={initialData.city}
+                />
               </Field>
               <Field label={t("postalCode")}>
-                <input type="text" name="postalCode" className={inputClass} placeholder="10431" defaultValue={initialData.postalCode} />
+                <input
+                  type="text"
+                  name="postalCode"
+                  className={inputClass}
+                  placeholder="10431"
+                  defaultValue={initialData.postalCode}
+                />
               </Field>
               <Field label={t("region")}>
-                <input type="text" name="region" className={inputClass} placeholder="Attica" defaultValue={initialData.region} />
+                <input
+                  type="text"
+                  name="region"
+                  className={inputClass}
+                  placeholder="Attica"
+                  defaultValue={initialData.region}
+                />
               </Field>
             </div>
           </div>

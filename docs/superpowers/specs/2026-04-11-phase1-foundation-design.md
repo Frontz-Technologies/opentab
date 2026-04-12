@@ -16,23 +16,23 @@ After Phase 1, a user can register, log in, see the dashboard empty state, confi
 
 ## 2. Decisions Log
 
-| Decision | Choice | Rationale |
-|---|---|---|
-| Monorepo | apps/web + packages/db, expand later | Avoids empty package overhead |
-| Framework | Next.js 15 App Router | RSC, AI streaming, largest ecosystem |
-| Auth | Better Auth (email/password only) | MIT, self-hosted, built-in org/RBAC for later |
-| DB ORM | Drizzle ORM | SQL-first, auditable migrations, lighter than Prisma |
-| UI | shadcn/ui + Tailwind CSS v4 | Copy-paste ownership, Radix primitives |
-| State | Zustand + TanStack Query v5 | Minimal client state + server cache |
-| i18n | next-intl (English only, infrastructure wired) | Translation-ready from day one |
-| Charts | Recharts | Lightweight, React-native |
-| Test DB | PGlite (in-process PostgreSQL via WASM) | Zero infrastructure, full PG compat |
-| Unit tests | Vitest + Testing Library | Fast, ESM-native |
-| Visual verification | Playwright MCP + subagent skill | Real browser, manual-style navigation, screenshot evidence |
-| Org model | One org per user, org context from session | Simplifies routing and data scoping |
-| Routing | Clean URLs (/dashboard, /settings) — no slug | Single-org-per-user removes need for org in URL |
-| App URL | app.opentab.tech (marketing site is separate project) | Standard SaaS pattern |
-| Dev environment | Docker Compose for full stack, pnpm dev for fast iteration | Docker is source of truth |
+| Decision            | Choice                                                     | Rationale                                                  |
+| ------------------- | ---------------------------------------------------------- | ---------------------------------------------------------- |
+| Monorepo            | apps/web + packages/db, expand later                       | Avoids empty package overhead                              |
+| Framework           | Next.js 15 App Router                                      | RSC, AI streaming, largest ecosystem                       |
+| Auth                | Better Auth (email/password only)                          | MIT, self-hosted, built-in org/RBAC for later              |
+| DB ORM              | Drizzle ORM                                                | SQL-first, auditable migrations, lighter than Prisma       |
+| UI                  | shadcn/ui + Tailwind CSS v4                                | Copy-paste ownership, Radix primitives                     |
+| State               | Zustand + TanStack Query v5                                | Minimal client state + server cache                        |
+| i18n                | next-intl (English only, infrastructure wired)             | Translation-ready from day one                             |
+| Charts              | Recharts                                                   | Lightweight, React-native                                  |
+| Test DB             | PGlite (in-process PostgreSQL via WASM)                    | Zero infrastructure, full PG compat                        |
+| Unit tests          | Vitest + Testing Library                                   | Fast, ESM-native                                           |
+| Visual verification | Playwright MCP + subagent skill                            | Real browser, manual-style navigation, screenshot evidence |
+| Org model           | One org per user, org context from session                 | Simplifies routing and data scoping                        |
+| Routing             | Clean URLs (/dashboard, /settings) — no slug               | Single-org-per-user removes need for org in URL            |
+| App URL             | app.opentab.tech (marketing site is separate project)      | Standard SaaS pattern                                      |
+| Dev environment     | Docker Compose for full stack, pnpm dev for fast iteration | Docker is source of truth                                  |
 
 ---
 
@@ -124,54 +124,54 @@ opentab/
 
 ### 4.1 User
 
-| Column | Type | Constraints |
-|---|---|---|
-| id | uuid | PK, default gen_random_uuid() |
-| email | varchar(255) | unique, not null |
-| name | varchar(255) | not null |
-| password_hash | text | not null (managed by Better Auth) |
-| email_verified | boolean | default false |
-| locale | varchar(5) | default 'en' |
-| timezone | varchar(50) | default 'UTC' |
-| image | text | nullable (avatar URL) |
-| created_at | timestamp | default now() |
-| updated_at | timestamp | default now() |
+| Column         | Type         | Constraints                       |
+| -------------- | ------------ | --------------------------------- |
+| id             | uuid         | PK, default gen_random_uuid()     |
+| email          | varchar(255) | unique, not null                  |
+| name           | varchar(255) | not null                          |
+| password_hash  | text         | not null (managed by Better Auth) |
+| email_verified | boolean      | default false                     |
+| locale         | varchar(5)   | default 'en'                      |
+| timezone       | varchar(50)  | default 'UTC'                     |
+| image          | text         | nullable (avatar URL)             |
+| created_at     | timestamp    | default now()                     |
+| updated_at     | timestamp    | default now()                     |
 
 Note: Better Auth also creates `session`, `account`, and `verification` tables automatically. We define the `user` table ourselves to add our custom fields, and configure Better Auth to use it.
 
 ### 4.2 Organisation
 
-| Column | Type | Constraints |
-|---|---|---|
-| id | uuid | PK, default gen_random_uuid() |
-| name | varchar(255) | not null |
-| slug | varchar(100) | unique, not null |
-| tax_id | varchar(50) | nullable |
-| tax_authority | varchar(255) | nullable |
-| country_code | varchar(2) | nullable (auto-detected from tax_id) |
-| default_currency | varchar(3) | default 'EUR' |
-| fiscal_year_start | integer | default 1 (January) |
-| address_line1 | varchar(255) | nullable |
-| address_line2 | varchar(255) | nullable |
-| city | varchar(100) | nullable |
-| postal_code | varchar(20) | nullable |
-| region | varchar(100) | nullable |
-| phone | varchar(50) | nullable |
-| logo_url | text | nullable |
-| setup_completed_steps | jsonb | default '[]' |
-| created_at | timestamp | default now() |
-| updated_at | timestamp | default now() |
+| Column                | Type         | Constraints                          |
+| --------------------- | ------------ | ------------------------------------ |
+| id                    | uuid         | PK, default gen_random_uuid()        |
+| name                  | varchar(255) | not null                             |
+| slug                  | varchar(100) | unique, not null                     |
+| tax_id                | varchar(50)  | nullable                             |
+| tax_authority         | varchar(255) | nullable                             |
+| country_code          | varchar(2)   | nullable (auto-detected from tax_id) |
+| default_currency      | varchar(3)   | default 'EUR'                        |
+| fiscal_year_start     | integer      | default 1 (January)                  |
+| address_line1         | varchar(255) | nullable                             |
+| address_line2         | varchar(255) | nullable                             |
+| city                  | varchar(100) | nullable                             |
+| postal_code           | varchar(20)  | nullable                             |
+| region                | varchar(100) | nullable                             |
+| phone                 | varchar(50)  | nullable                             |
+| logo_url              | text         | nullable                             |
+| setup_completed_steps | jsonb        | default '[]'                         |
+| created_at            | timestamp    | default now()                        |
+| updated_at            | timestamp    | default now()                        |
 
 ### 4.3 OrgMembership
 
-| Column | Type | Constraints |
-|---|---|---|
-| id | uuid | PK, default gen_random_uuid() |
-| user_id | uuid | FK → user.id, not null, **unique** (one org per user) |
-| org_id | uuid | FK → organisation.id, not null |
-| role | enum | 'owner', 'admin', 'member', 'accountant' — not null |
-| invited_at | timestamp | nullable |
-| accepted_at | timestamp | nullable |
+| Column      | Type      | Constraints                                           |
+| ----------- | --------- | ----------------------------------------------------- |
+| id          | uuid      | PK, default gen_random_uuid()                         |
+| user_id     | uuid      | FK → user.id, not null, **unique** (one org per user) |
+| org_id      | uuid      | FK → organisation.id, not null                        |
+| role        | enum      | 'owner', 'admin', 'member', 'accountant' — not null   |
+| invited_at  | timestamp | nullable                                              |
+| accepted_at | timestamp | nullable                                              |
 
 The `unique(user_id)` constraint enforces the one-org-per-user rule. If a user needs access to multiple organisations, they create separate accounts.
 
@@ -184,6 +184,7 @@ The `unique(user_id)` constraint enforces the one-org-per-user rule. If a user n
 Better Auth runs as a library inside the Next.js app. Auth data lives in our Postgres alongside business data. No external auth service.
 
 Server config (`lib/auth-server.ts`):
+
 - Database adapter: Drizzle (points to packages/db)
 - Email provider: configurable via env vars
   - Cloud: Resend (RESEND_API_KEY)
@@ -192,6 +193,7 @@ Server config (`lib/auth-server.ts`):
 - Custom hook on user creation: auto-create Organisation + OrgMembership
 
 Client config (`lib/auth.ts`):
+
 - Better Auth client for React hooks (useSession, signIn, signUp, signOut)
 
 ### 5.2 Registration Flow
@@ -217,10 +219,16 @@ Available in all server components and server actions:
 
 ```typescript
 type SessionContext = {
-  user: { id: string; name: string; email: string; locale: string }
-  org: { id: string; name: string; slug: string; countryCode: string | null; defaultCurrency: string }
-  role: 'owner' | 'admin' | 'member' | 'accountant'
-}
+  user: { id: string; name: string; email: string; locale: string };
+  org: {
+    id: string;
+    name: string;
+    slug: string;
+    countryCode: string | null;
+    defaultCurrency: string;
+  };
+  role: "owner" | "admin" | "member" | "accountant";
+};
 ```
 
 ### 5.5 Middleware
@@ -235,6 +243,7 @@ File: `apps/web/middleware.ts`
 ### 5.6 Password Reset
 
 Better Auth built-in:
+
 1. /forgot-password: enter email → sends reset link
 2. /reset-password?token=xxx: new password form → updates password
 3. Email sent via configured provider (Resend or SMTP)
@@ -274,6 +283,7 @@ An editorial-inspired dark environment combining developer-tool rigor with high-
 | outline-variant | #3C4A42 | Ghost borders (15% opacity only) |
 
 **Rules:**
+
 - No 1px borders for sectioning — use tonal surface colour shifts
 - Glassmorphism for floating elements: 70% opacity + 24px backdrop blur
 - Gradient CTA buttons: 135deg from #4EDEA3 to #10B981
@@ -287,6 +297,7 @@ An editorial-inspired dark environment combining developer-tool rigor with high-
 sidebar, breadcrumb, avatar, button, card, input, label, dropdown-menu, tooltip, separator, badge, skeleton, toast, form, dialog
 
 **Customizations over shadcn defaults:**
+
 1. Dark-only theme (no light mode CSS variables)
 2. Glassmorphism on sidebar (backdrop-blur-[24px] + bg-opacity-70)
 3. No borders rule — override shadcn border defaults with tonal shifts
@@ -297,6 +308,7 @@ sidebar, breadcrumb, avatar, button, card, input, label, dropdown-menu, tooltip,
 ### 6.4 Layout Architecture
 
 **Desktop (>= 768px):**
+
 - shadcn SidebarProvider + Sidebar + SidebarInset pattern
 - Sidebar: fixed 240px width (--sidebar-width: 240px)
 - Glassmorphic background with subtle right edge (outline-variant at 10% opacity)
@@ -304,6 +316,7 @@ sidebar, breadcrumb, avatar, button, card, input, label, dropdown-menu, tooltip,
 - Content area: centered, max-w-7xl, px-8, pt for top bar offset
 
 **Sidebar contents:**
+
 - Header: OpenTab logo + org name
 - Nav items (with Material Symbols icons):
   - Dashboard (dashboard icon)
@@ -315,6 +328,7 @@ sidebar, breadcrumb, avatar, button, card, input, label, dropdown-menu, tooltip,
 - Built-in: SidebarTrigger for collapse, Cmd+B keyboard shortcut, cookie-based state
 
 **Mobile (< 768px):**
+
 - Sidebar hidden (no slide-over sheet)
 - Custom bottom nav bar: fixed bottom, glassmorphic blur bg
 - 4 items: Dash, Invoices, Ledger, Projects (Space Grotesk labels, Material Symbols icons)
@@ -324,6 +338,7 @@ sidebar, breadcrumb, avatar, button, card, input, label, dropdown-menu, tooltip,
 ### 6.5 Key Deviation from Reference Designs
 
 The reference HTML (design-reference.html) is a starting point. We may deviate where:
+
 - shadcn components provide better accessibility than hand-rolled HTML
 - The reference uses static positioning where shadcn's SidebarProvider gives responsive behavior for free
 - Mobile bottom nav is custom (shadcn doesn't have this pattern)
@@ -337,28 +352,33 @@ All deviations must still respect the design system tokens and rules defined abo
 ### 7.1 Auth Pages (no sidebar)
 
 **Login (/login):**
+
 - Split layout: left atmospheric panel (logo + tagline) + right form panel
 - Form: email, password, "Forgot password?" link, gradient "Sign in" CTA
 - Below: "Don't have an account? Register" link
 - Typography: Manrope heading, Inter body
 
 **Register (/register):**
+
 - Same split layout
 - Form: name, email, password, confirm password, gradient "Create account" CTA
 - Below: "Already have an account? Sign in" link
 
 **Forgot Password (/forgot-password):**
+
 - Centered card on dark background
 - Email input + "Send reset link" CTA
 - Success state: "Check your email for a reset link"
 
 **Reset Password (/reset-password):**
+
 - Centered card
 - New password + confirm password + "Reset password" CTA
 
 ### 7.2 Dashboard (/dashboard)
 
 **Empty state (new user):**
+
 - Page title: "Dashboard" (Manrope display-lg)
 - Quick Setup widget (right side or top):
   - Card with progress bar (emerald gradient fill)
@@ -374,11 +394,13 @@ All deviations must still respect the design system tokens and rules defined abo
 ### 7.3 Settings — Company (/settings/company)
 
 **Company Information section:**
-- Company name* (pre-filled with "[User's name]'s Company")
+
+- Company name\* (pre-filled with "[User's name]'s Company")
 - Default currency (dropdown, default EUR)
 - Fiscal year start (dropdown, default January)
 
 **Tax Information section:**
+
 - VAT / Tax ID number (text input)
   - On blur: detect country from format pattern
   - Greek AFM (9 digits): auto-set country_code to 'GR', show confirmation message
@@ -388,12 +410,15 @@ All deviations must still respect the design system tokens and rules defined abo
 - Country (auto-detected or manual dropdown)
 
 **Address section:**
+
 - Address line 1, line 2, city, postal code, region (all optional)
 
 **Contact section:**
+
 - Phone (optional)
 
 **Branding section:**
+
 - Logo upload zone (placeholder — "Coming soon", no file storage in Phase 1)
 
 **Footer:** Gradient "Save changes" CTA
@@ -409,11 +434,13 @@ On save: update organisation record, mark Quick Setup steps as completed, show s
 Every feature follows this two-layer cycle:
 
 **Layer 1 — TDD (automated unit/integration tests):**
+
 1. Write failing unit tests (Vitest + PGlite)
 2. Implement until all tests pass
 3. Tests cover logic, data layer, and component rendering
 
 **Layer 2 — Visual Verification (Playwright MCP skill):**
+
 1. A subagent reads the acceptance criteria from the spec
 2. Starts the local dev server (`pnpm dev`)
 3. Uses Playwright MCP to navigate the app like a real user
@@ -427,6 +454,7 @@ This is NOT automated E2E test suites (@playwright/test). It is manual-style bro
 ### 8.2 Test Database: PGlite
 
 PGlite provides in-process PostgreSQL via WebAssembly:
+
 - No Docker needed for tests
 - Full PostgreSQL compatibility (not SQLite compromise)
 - Each test suite gets a fresh database instance
@@ -436,18 +464,21 @@ PGlite provides in-process PostgreSQL via WebAssembly:
 ### 8.3 Unit Tests (Vitest + Testing Library)
 
 **Auth logic:**
+
 - Registration creates user + organisation + membership
 - Login returns session with org context
 - Protected routes redirect to /login without session
 - Password reset flow sends email (mocked)
 
 **Data layer:**
+
 - Organisation CRUD (create, update, read)
 - OrgMembership enforces unique(user_id) constraint
 - Quick Setup step completion tracking (jsonb array)
 - VAT number country detection (pattern matching)
 
 **Components:**
+
 - Sidebar renders nav items, highlights active route
 - Quick Setup widget shows correct progress percentage
 - Company settings form validates required fields
@@ -481,6 +512,7 @@ A reusable skill invoked after every feature implementation. The skill:
 ### 9.1 Docker Compose (Development)
 
 `docker/docker-compose.dev.yml`:
+
 ```yaml
 services:
   postgres:
@@ -505,6 +537,7 @@ volumes:
 ### 9.2 Environment Variables
 
 `docker/.env.sample`:
+
 ```env
 # Database
 DATABASE_URL=postgresql://opentab:opentab_dev@localhost:5432/opentab_dev
@@ -534,6 +567,7 @@ NODE_ENV=development
 ### 9.3 CLAUDE.md
 
 Project-specific commands for the AI agent:
+
 ```
 BUILD_COMMAND: pnpm build
 TEST_COMMAND: pnpm test
@@ -550,6 +584,7 @@ VERIFY_COMMAND: invoke visual-verification skill (Playwright MCP)
 Phase 1 is 100% identical for OSS and cloud. No feature gating yet.
 
 Architecture decisions that preserve future OSS/cloud split:
+
 - Email provider via env var (Resend vs SMTP) — already handled
 - Better Auth is a library, not a service — zero vendor lock-in
 - Docker Compose is the deployment unit for both
@@ -563,6 +598,7 @@ When premium features arrive (later phases), we'll add a simple `plan` field to 
 ## 11. Out of Scope for Phase 1
 
 Explicitly deferred to later phases:
+
 - Social login (Google, GitHub OAuth)
 - 2FA, passkeys
 - AADE VAT number auto-lookup
