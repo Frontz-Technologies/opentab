@@ -37,13 +37,11 @@ describe("Database Schema", () => {
         .insert(users)
         .values({ id: "user-2", email: "unique@example.com", name: "User 1" });
       await expect(
-        db
-          .insert(users)
-          .values({
-            id: "user-3",
-            email: "unique@example.com",
-            name: "User 2",
-          }),
+        db.insert(users).values({
+          id: "user-3",
+          email: "unique@example.com",
+          name: "User 2",
+        }),
       ).rejects.toThrow();
     });
   });
