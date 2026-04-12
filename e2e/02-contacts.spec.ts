@@ -36,13 +36,17 @@ test.describe("Contacts", () => {
   test("navigate to create contact page", async () => {
     await page.getByRole("link", { name: "Add Contact" }).click();
     await page.waitForURL("**/contacts/new");
-    await expect(page.getByRole("heading", { name: "Add Contact" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Add Contact" }),
+    ).toBeVisible();
   });
 
   test("contact form has all required sections", async () => {
     await expect(page.getByRole("heading", { name: "Type" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Company" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "VAT / Tax ID" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "VAT / Tax ID" }),
+    ).toBeVisible();
     await expect(page.getByRole("heading", { name: "Address" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Defaults" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Notes" })).toBeVisible();
@@ -60,7 +64,9 @@ test.describe("Contacts", () => {
 
   test("create a client contact", async () => {
     await page.locator('select[name="type"]').selectOption("client");
-    await page.locator('select[name="classification"]').selectOption("business");
+    await page
+      .locator('select[name="classification"]')
+      .selectOption("business");
     await page.locator('input[name="company"]').fill("Acme Corp");
     await page.locator('input[name="firstName"]').fill("John");
     await page.locator('input[name="lastName"]').fill("Doe");
@@ -82,7 +88,9 @@ test.describe("Contacts", () => {
     if (!page.url().endsWith("/contacts")) {
       await page.goto("/contacts");
     }
-    await expect(page.getByRole("link", { name: "Acme Corp" })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole("link", { name: "Acme Corp" })).toBeVisible({
+      timeout: 10000,
+    });
     await expect(page.getByText("john@acme.com")).toBeVisible();
   });
 
@@ -100,40 +108,58 @@ test.describe("Contacts", () => {
 
   test("both contacts appear in list", async () => {
     await expect(page.getByRole("link", { name: "Acme Corp" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Office Supplies Ltd" })).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Office Supplies Ltd" }),
+    ).toBeVisible();
   });
 
   test("filter contacts by type - clients only", async () => {
     await page.getByRole("button", { name: "Clients" }).click();
     await expect(page.getByRole("link", { name: "Acme Corp" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Office Supplies Ltd" })).not.toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Office Supplies Ltd" }),
+    ).not.toBeVisible();
   });
 
   test("filter contacts by type - suppliers only", async () => {
     await page.getByRole("button", { name: "Suppliers" }).click();
-    await expect(page.getByRole("link", { name: "Office Supplies Ltd" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Acme Corp" })).not.toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Office Supplies Ltd" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Acme Corp" }),
+    ).not.toBeVisible();
   });
 
   test("filter contacts - show all again", async () => {
     await page.getByRole("button", { name: "All" }).click();
     await expect(page.getByRole("link", { name: "Acme Corp" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Office Supplies Ltd" })).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Office Supplies Ltd" }),
+    ).toBeVisible();
   });
 
   test("search contacts by name", async () => {
     await page.getByPlaceholder("Search contacts...").fill("Acme");
     await expect(page.getByRole("link", { name: "Acme Corp" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Office Supplies Ltd" })).not.toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Office Supplies Ltd" }),
+    ).not.toBeVisible();
     await page.getByPlaceholder("Search contacts...").clear();
   });
 
   test("edit contact - page loads with data", async () => {
     await page.getByRole("link", { name: "Acme Corp" }).click();
     await page.waitForURL("**/contacts/**");
-    await expect(page.getByRole("heading", { name: "Edit Contact" })).toBeVisible();
-    await expect(page.locator('input[name="company"]')).toHaveValue("Acme Corp");
+    await expect(
+      page.getByRole("heading", { name: "Edit Contact" }),
+    ).toBeVisible();
+    await expect(page.locator('input[name="company"]')).toHaveValue(
+      "Acme Corp",
+    );
     await expect(page.locator('input[name="firstName"]')).toHaveValue("John");
-    await expect(page.locator('input[name="email"]')).toHaveValue("john@acme.com");
+    await expect(page.locator('input[name="email"]')).toHaveValue(
+      "john@acme.com",
+    );
   });
 });

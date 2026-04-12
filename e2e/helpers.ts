@@ -26,7 +26,9 @@ export async function registerTestUser(page: Page): Promise<void> {
 export async function loginTestUser(page: Page): Promise<void> {
   await page.goto("/login");
   await page.getByRole("textbox", { name: "Email" }).fill(TEST_USER.email);
-  await page.getByRole("textbox", { name: "Password" }).fill(TEST_USER.password);
+  await page
+    .getByRole("textbox", { name: "Password" })
+    .fill(TEST_USER.password);
   await page.getByRole("button", { name: "Sign in" }).click();
   await page.waitForURL("**/dashboard");
   await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible({

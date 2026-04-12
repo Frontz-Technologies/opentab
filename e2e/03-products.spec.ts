@@ -78,9 +78,13 @@ test.describe("Products", () => {
     if (!page.url().endsWith("/products")) {
       await page.goto("/products");
     }
-    await expect(page.getByRole("link", { name: "Web Development" })).toBeVisible({ timeout: 10000 });
+    await expect(
+      page.getByRole("link", { name: "Web Development" }),
+    ).toBeVisible({ timeout: 10000 });
     await expect(page.getByText("85.00")).toBeVisible();
-    await expect(page.getByRole("cell", { name: "hour", exact: true })).toBeVisible();
+    await expect(
+      page.getByRole("cell", { name: "hour", exact: true }),
+    ).toBeVisible();
   });
 
   test("create a second product", async () => {
@@ -100,8 +104,12 @@ test.describe("Products", () => {
   });
 
   test("both products appear in list", async () => {
-    await expect(page.getByRole("link", { name: "Web Development" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Monthly Hosting" })).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Web Development" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Monthly Hosting" }),
+    ).toBeVisible();
   });
 
   test("search products by name", async () => {

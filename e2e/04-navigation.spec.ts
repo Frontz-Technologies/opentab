@@ -22,7 +22,9 @@ test.describe("Navigation", () => {
   test("sidebar shows all nav items", async () => {
     await page.goto("/dashboard");
     const sidebar = page.locator('[data-slot="sidebar"]');
-    await expect(sidebar.getByRole("link", { name: /Dashboard/ })).toBeVisible();
+    await expect(
+      sidebar.getByRole("link", { name: /Dashboard/ }),
+    ).toBeVisible();
     await expect(sidebar.getByRole("link", { name: /Invoices/ })).toBeVisible();
     await expect(sidebar.getByRole("link", { name: /Expenses/ })).toBeVisible();
     await expect(sidebar.getByRole("link", { name: /Contacts/ })).toBeVisible();
@@ -45,7 +47,9 @@ test.describe("Navigation", () => {
 
     await sidebar.getByRole("link", { name: /Dashboard/ }).click();
     await page.waitForURL("**/dashboard");
-    await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Dashboard" }),
+    ).toBeVisible();
   });
 
   test("settings page is accessible", async () => {
