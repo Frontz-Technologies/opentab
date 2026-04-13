@@ -12,25 +12,39 @@ export function createGetVatSummaryTool(orgId: string) {
   });
 
   return tool({
-    description: "Get output VAT, input VAT, and net VAT payable for a time period.",
+    description:
+      "Get output VAT, input VAT, and net VAT payable for a time period.",
     parameters: zodSchema(parameters),
     execute: async (args) => {
       const { period, year, quarter, month } = parameters.parse(args);
-      const { start, end } = resolvePeriodRange({ period, year, quarter, month });
+      const { start, end } = resolvePeriodRange({
+        period,
+        year,
+        quarter,
+        month,
+      });
       const [outputVatRows, inputVatRows] = await Promise.all([
         getOutputVat(orgId, start, end),
         getInputVat(orgId, start, end),
       ]);
 
-      const outputVat = outputVatRows.reduce((sum, row) => sum + row.vatAmount, 0);
-      const inputVat = inputVatRows.reduce((sum, row) => sum + row.vatAmount, 0);
+      const outputVat = outputVatRows.reduce(
+        (sum, row) => sum + row.vatAmount,
+        0,
+      );
+      const inputVat = inputVatRows.reduce(
+        (sum, row) => sum + row.vatAmount,
+        0,
+      );
 
       return {
         outputVat,
         inputVat,
         netPayable: outputVat - inputVat,
         byRate: outputVatRows.map((row) => {
-          const input = inputVatRows.find((inputRow) => inputRow.rate === row.rate);
+          const input = inputVatRows.find(
+            (inputRow) => inputRow.rate === row.rate,
+          );
           return {
             rate: row.rate,
             output: row.vatAmount,

@@ -30,9 +30,7 @@ export default async function AiSettingsPage() {
         <h2 className="mb-2 font-headline text-3xl font-extrabold tracking-tight text-on-surface">
           {t("title")}
         </h2>
-        <p className="mb-8 text-sm text-on-surface/60">
-          {t("description")}
-        </p>
+        <p className="mb-8 text-sm text-on-surface/60">{t("description")}</p>
         <AiSettingsForm
           orgId={session.org.id}
           initialData={

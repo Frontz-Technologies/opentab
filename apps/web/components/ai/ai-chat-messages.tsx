@@ -19,10 +19,10 @@ export function AiChatMessages() {
               forum
             </span>
           </div>
-          <p className="text-sm font-medium text-on-surface">{t("emptyTitle")}</p>
-          <p className="text-xs text-on-surface/60">
-            {t("emptyDescription")}
+          <p className="text-sm font-medium text-on-surface">
+            {t("emptyTitle")}
           </p>
+          <p className="text-xs text-on-surface/60">{t("emptyDescription")}</p>
         </div>
       </div>
     );

@@ -39,7 +39,9 @@ async function getAiSettingsRow(orgId: string) {
   return settings ?? null;
 }
 
-export async function getAiSettings(orgId: string): Promise<AiSettingsPublic | null> {
+export async function getAiSettings(
+  orgId: string,
+): Promise<AiSettingsPublic | null> {
   const settings = await getAiSettingsRow(orgId);
   if (!settings) return null;
 
@@ -77,9 +79,7 @@ export async function updateAiSettings(input: unknown) {
   const existing = await getAiSettingsRow(session.org.id);
   const next = parsed.data;
 
-  const encryptedKey = next.apiKey
-    ? encryptApiKey(next.apiKey)
-    : null;
+  const encryptedKey = next.apiKey ? encryptApiKey(next.apiKey) : null;
 
   if (existing) {
     await db
@@ -121,7 +121,9 @@ export async function deleteApiKey(orgId: string) {
       apiKeyLast4: null,
       updatedAt: new Date(),
     })
-    .where(and(eq(aiSettings.orgId, orgId), eq(aiSettings.orgId, session.org.id)));
+    .where(
+      and(eq(aiSettings.orgId, orgId), eq(aiSettings.orgId, session.org.id)),
+    );
 
   revalidatePath("/settings/ai");
   return { success: true };

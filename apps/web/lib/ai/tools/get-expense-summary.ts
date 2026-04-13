@@ -16,7 +16,12 @@ export function createGetExpenseSummaryTool(orgId: string) {
     parameters: zodSchema(parameters),
     execute: async (args) => {
       const { period, year, quarter, month } = parameters.parse(args);
-      const { start, end } = resolvePeriodRange({ period, year, quarter, month });
+      const { start, end } = resolvePeriodRange({
+        period,
+        year,
+        quarter,
+        month,
+      });
       const [summary, categories] = await Promise.all([
         getExpenseTotal(orgId, start, end),
         getExpensesByCategory(orgId, start, end),

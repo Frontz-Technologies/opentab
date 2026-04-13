@@ -16,7 +16,12 @@ export function createGetRevenueSummaryTool(orgId: string) {
     parameters: zodSchema(parameters),
     execute: async (args) => {
       const { period, year, quarter, month } = parameters.parse(args);
-      const { start, end } = resolvePeriodRange({ period, year, quarter, month });
+      const { start, end } = resolvePeriodRange({
+        period,
+        year,
+        quarter,
+        month,
+      });
       const [summary, topClients] = await Promise.all([
         getRevenue(orgId, start, end),
         getRevenueByClient(orgId, start, end),

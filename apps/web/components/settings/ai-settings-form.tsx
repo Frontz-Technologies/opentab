@@ -2,7 +2,11 @@
 
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
-import { updateAiSettings, testAiConnection, deleteApiKey } from "@/lib/actions/ai-settings";
+import {
+  updateAiSettings,
+  testAiConnection,
+  deleteApiKey,
+} from "@/lib/actions/ai-settings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,7 +41,9 @@ export function AiSettingsForm({ orgId, initialData }: AiSettingsFormProps) {
   function handleTest() {
     startTransition(async () => {
       const result = await testAiConnection(orgId);
-      setStatus(result.success ? t("testSuccess") : result.error ?? t("testFailed"));
+      setStatus(
+        result.success ? t("testSuccess") : (result.error ?? t("testFailed")),
+      );
     });
   }
 
@@ -49,13 +55,24 @@ export function AiSettingsForm({ orgId, initialData }: AiSettingsFormProps) {
   }
 
   return (
-    <form action={handleSubmit} className="space-y-6 rounded-2xl border border-on-surface/10 bg-surface-container-low p-6">
+    <form
+      action={handleSubmit}
+      className="space-y-6 rounded-2xl border border-on-surface/10 bg-surface-container-low p-6"
+    >
       <div className="space-y-2">
-        <Label htmlFor="enabled" className="text-sm font-medium text-on-surface">
+        <Label
+          htmlFor="enabled"
+          className="text-sm font-medium text-on-surface"
+        >
           {t("enabled")}
         </Label>
         <label className="flex items-center gap-3 rounded-xl bg-surface-container-high px-4 py-3 text-sm text-on-surface">
-          <input id="enabled" name="enabled" type="checkbox" defaultChecked={initialData.enabled} />
+          <input
+            id="enabled"
+            name="enabled"
+            type="checkbox"
+            defaultChecked={initialData.enabled}
+          />
           {t("enabledHelp")}
         </label>
       </div>
@@ -93,11 +110,21 @@ export function AiSettingsForm({ orgId, initialData }: AiSettingsFormProps) {
         <Button type="submit" disabled={isPending}>
           {t("save")}
         </Button>
-        <Button type="button" variant="outline" disabled={isPending} onClick={handleTest}>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={isPending}
+          onClick={handleTest}
+        >
           {t("test")}
         </Button>
         {initialData.hasApiKey && (
-          <Button type="button" variant="outline" disabled={isPending} onClick={handleDelete}>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isPending}
+            onClick={handleDelete}
+          >
             {t("delete")}
           </Button>
         )}
