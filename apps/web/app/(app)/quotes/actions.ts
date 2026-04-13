@@ -77,18 +77,32 @@ async function generateNextNumber(
   orgId: string,
   type: string,
 ): Promise<string> {
-  const seq = await getOrCreateSequence(orgId, type);
-  const number = formatInvoiceNumber({
-    prefix: seq.prefix,
-    nextNumber: seq.nextNumber,
-    digitCount: seq.digitCount,
-    includeYear: seq.includeYear,
+  // Ensure sequence exists before entering the locking transaction
+  await getOrCreateSequence(orgId, type);
+
+  return await db.transaction(async (tx) => {
+    const [seq] = await tx
+      .select()
+      .from(invoiceSequences)
+      .where(
+        and(eq(invoiceSequences.orgId, orgId), eq(invoiceSequences.type, type)),
+      )
+      .for("update");
+
+    const number = formatInvoiceNumber({
+      prefix: seq.prefix,
+      nextNumber: seq.nextNumber,
+      digitCount: seq.digitCount,
+      includeYear: seq.includeYear,
+    });
+
+    await tx
+      .update(invoiceSequences)
+      .set({ nextNumber: seq.nextNumber + 1 })
+      .where(eq(invoiceSequences.id, seq.id));
+
+    return number;
   });
-  await db
-    .update(invoiceSequences)
-    .set({ nextNumber: seq.nextNumber + 1 })
-    .where(eq(invoiceSequences.id, seq.id));
-  return number;
 }
 
 export async function createQuote(formData: FormData) {
