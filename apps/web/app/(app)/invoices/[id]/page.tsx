@@ -3,10 +3,18 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { getSession } from "@/lib/session";
 import { db } from "@/lib/db";
-import { invoices, invoiceItems, INVOICE_STATUS } from "@opentab/db/schema";
-import { eq, and, asc } from "drizzle-orm";
+import {
+  invoices,
+  invoiceItems,
+  mydataTransmissions,
+  mydataCredentials,
+  INVOICE_STATUS,
+  MYDATA_TRANSMISSION_STATUS,
+} from "@opentab/db/schema";
+import { eq, and, asc, desc } from "drizzle-orm";
 import { Badge } from "@/components/ui/badge";
 import { InvoiceActions } from "./invoice-actions";
+import { MYDATA_DOCUMENT_TYPES } from "@/lib/mydata/document-types";
 
 const statusColors: Record<number, string> = {
   [INVOICE_STATUS.DRAFT]: "bg-zinc-500/20 text-zinc-400",
@@ -39,6 +47,21 @@ export default async function InvoiceDetailPage({
     .from(invoiceItems)
     .where(eq(invoiceItems.invoiceId, id))
     .orderBy(asc(invoiceItems.sortOrder));
+
+  // Check if org has myDATA enabled
+  const hasMyData =
+    session.org.countryCode === "GR" && invoice.mydataStatus !== null;
+
+  let latestTransmission = null;
+  if (hasMyData) {
+    const [tx] = await db
+      .select()
+      .from(mydataTransmissions)
+      .where(eq(mydataTransmissions.invoiceId, id))
+      .orderBy(desc(mydataTransmissions.createdAt))
+      .limit(1);
+    latestTransmission = tx ?? null;
+  }
 
   const statusLabels: Record<number, string> = {
     [INVOICE_STATUS.DRAFT]: t("statusDraft"),
@@ -219,6 +242,72 @@ export default async function InvoiceDetailPage({
               <p className="text-on-surface text-sm whitespace-pre-wrap">
                 {invoice.terms}
               </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {hasMyData && (
+        <div className="bg-surface-container rounded-xl p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-headline text-lg font-semibold text-on-surface">
+              myDATA
+            </h3>
+            <Badge
+              className={
+                invoice.mydataStatus === MYDATA_TRANSMISSION_STATUS.CONFIRMED
+                  ? "bg-emerald-500/20 text-emerald-400"
+                  : invoice.mydataStatus ===
+                        MYDATA_TRANSMISSION_STATUS.PENDING ||
+                      invoice.mydataStatus ===
+                        MYDATA_TRANSMISSION_STATUS.SUBMITTED
+                    ? "bg-blue-500/20 text-blue-400"
+                    : invoice.mydataStatus ===
+                        MYDATA_TRANSMISSION_STATUS.CANCELLED
+                      ? "bg-zinc-500/20 text-zinc-400"
+                      : "bg-red-500/20 text-red-400"
+              }
+              variant="outline"
+            >
+              {invoice.mydataStatus === MYDATA_TRANSMISSION_STATUS.CONFIRMED
+                ? t("mydataConfirmed")
+                : invoice.mydataStatus === MYDATA_TRANSMISSION_STATUS.PENDING
+                  ? t("mydataPending")
+                  : invoice.mydataStatus ===
+                      MYDATA_TRANSMISSION_STATUS.CANCELLED
+                    ? t("mydataCancelled")
+                    : t("mydataFailed")}
+            </Badge>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            {invoice.mydataMark && (
+              <div>
+                <span className="font-label text-sm text-on-surface/60">
+                  MARK:
+                </span>{" "}
+                <span className="text-on-surface text-sm font-mono">
+                  {invoice.mydataMark}
+                </span>
+              </div>
+            )}
+            {invoice.mydataDocumentType && (
+              <div>
+                <span className="font-label text-sm text-on-surface/60">
+                  {t("mydataDocumentType")}:
+                </span>{" "}
+                <span className="text-on-surface text-sm">
+                  {invoice.mydataDocumentType}{" "}
+                  {MYDATA_DOCUMENT_TYPES[invoice.mydataDocumentType]?.nameEn ??
+                    ""}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {latestTransmission?.errorMessage && (
+            <div className="rounded-lg bg-red-500/10 p-3 text-sm text-red-400">
+              {latestTransmission.errorMessage}
             </div>
           )}
         </div>

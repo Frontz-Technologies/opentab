@@ -5,6 +5,7 @@ import { invoices, invoiceItems, organisations } from "@opentab/db/schema";
 import { eq, and, asc } from "drizzle-orm";
 import { generatePdfFromHtml } from "@/lib/invoicing/pdf";
 import { renderInvoicePdfHtml } from "@/components/invoicing/invoice-pdf-template";
+import { generateMyDataQR } from "@/lib/mydata/qr";
 
 export async function GET(
   _request: Request,
@@ -36,7 +37,12 @@ export async function GET(
     .from(organisations)
     .where(eq(organisations.id, session.org.id));
 
-  const html = renderInvoicePdfHtml({ invoice, items, org });
+  let mydataQrDataUrl: string | undefined;
+  if (invoice.mydataQrUrl) {
+    mydataQrDataUrl = await generateMyDataQR(invoice.mydataQrUrl);
+  }
+
+  const html = renderInvoicePdfHtml({ invoice, items, org, mydataQrDataUrl });
   const pdf = await generatePdfFromHtml(html);
 
   return new NextResponse(new Uint8Array(pdf), {

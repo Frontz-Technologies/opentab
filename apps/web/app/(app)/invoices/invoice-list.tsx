@@ -4,13 +4,14 @@ import { useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import type { Invoice } from "@opentab/db/schema";
-import { INVOICE_STATUS } from "@opentab/db/schema";
+import { INVOICE_STATUS, MYDATA_TRANSMISSION_STATUS } from "@opentab/db/schema";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 interface InvoiceListProps {
   invoices: Invoice[];
+  showMyData?: boolean;
 }
 
 const statusColors: Record<number, string> = {
@@ -49,7 +50,53 @@ function getStatusColor(invoice: Invoice): string {
 
 type StatusFilter = "all" | "draft" | "sent" | "paid" | "overdue";
 
-export function InvoiceList({ invoices }: InvoiceListProps) {
+function MyDataStatusIcon({ status }: { status: number | null }) {
+  if (status === null) return null;
+  if (status === MYDATA_TRANSMISSION_STATUS.CONFIRMED) {
+    return (
+      <span
+        className="material-symbols-outlined text-[16px] text-emerald-400"
+        title="myDATA confirmed"
+      >
+        check_circle
+      </span>
+    );
+  }
+  if (
+    status === MYDATA_TRANSMISSION_STATUS.PENDING ||
+    status === MYDATA_TRANSMISSION_STATUS.SUBMITTED ||
+    status === MYDATA_TRANSMISSION_STATUS.RETRY_SCHEDULED
+  ) {
+    return (
+      <span
+        className="material-symbols-outlined text-[16px] text-blue-400 animate-spin"
+        title="myDATA pending"
+      >
+        sync
+      </span>
+    );
+  }
+  if (status === MYDATA_TRANSMISSION_STATUS.CANCELLED) {
+    return (
+      <span
+        className="material-symbols-outlined text-[16px] text-zinc-400"
+        title="myDATA cancelled"
+      >
+        cancel
+      </span>
+    );
+  }
+  return (
+    <span
+      className="material-symbols-outlined text-[16px] text-red-400"
+      title="myDATA failed"
+    >
+      error
+    </span>
+  );
+}
+
+export function InvoiceList({ invoices, showMyData }: InvoiceListProps) {
   const t = useTranslations("invoices");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
@@ -134,6 +181,11 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
                 <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
                   {t("status")}
                 </th>
+                {showMyData && (
+                  <th className="text-center px-4 py-3 font-label text-sm text-on-surface/60">
+                    myDATA
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -170,6 +222,11 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
                       {getStatusLabel(invoice, t)}
                     </Badge>
                   </td>
+                  {showMyData && (
+                    <td className="px-4 py-3 text-center">
+                      <MyDataStatusIcon status={invoice.mydataStatus} />
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

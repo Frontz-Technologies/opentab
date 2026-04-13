@@ -35,7 +35,10 @@ export default async function InvoicesPage() {
           {t("addInvoice")}
         </Link>
       </div>
-      <InvoiceList invoices={allInvoices} />
+      <InvoiceList
+        invoices={allInvoices}
+        showMyData={session.org.countryCode === "GR"}
+      />
     </div>
   );
 }

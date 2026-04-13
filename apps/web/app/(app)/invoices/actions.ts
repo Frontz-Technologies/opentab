@@ -6,8 +6,10 @@ import {
   invoices,
   invoiceItems,
   invoiceSequences,
+  mydataCredentials,
   INVOICE_STATUS,
 } from "@opentab/db/schema";
+import { getCountryProvider } from "@/lib/country";
 import { eq, and } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { z } from "zod";
@@ -318,6 +320,30 @@ export async function sendInvoice(id: string) {
     })
     .where(eq(invoices.id, id));
 
+  // myDATA submission (non-blocking)
+  const provider = getCountryProvider(session.org.countryCode);
+  if (provider.capabilities.eInvoicing) {
+    const [creds] = await db
+      .select()
+      .from(mydataCredentials)
+      .where(
+        and(
+          eq(mydataCredentials.orgId, session.org.id),
+          eq(mydataCredentials.isActive, true),
+        ),
+      );
+    if (creds) {
+      const { submitToMyData } = await import("./mydata-actions");
+      const result = await submitToMyData(id);
+      if (!result.success) {
+        console.error(
+          "myDATA submission failed, queued for retry:",
+          result.error,
+        );
+      }
+    }
+  }
+
   revalidatePath("/invoices");
   revalidatePath(`/invoices/${id}`);
   return { success: true };
@@ -380,6 +406,15 @@ export async function cancelInvoice(id: string) {
       updatedAt: new Date(),
     })
     .where(eq(invoices.id, id));
+
+  // Cancel on myDATA if submitted
+  if (invoice.mydataMark) {
+    const { cancelOnMyData } = await import("./mydata-actions");
+    const result = await cancelOnMyData(id);
+    if (!result.success) {
+      console.error("myDATA cancellation failed:", result.error);
+    }
+  }
 
   revalidatePath("/invoices");
   revalidatePath(`/invoices/${id}`);
