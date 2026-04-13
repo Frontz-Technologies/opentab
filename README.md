@@ -29,6 +29,16 @@ Invoice clients, track expenses, and understand your finances — without callin
 - Encrypted credentials management (AES-256-GCM)
 - 15 document types with auto-resolution logic
 
+### Expenses
+
+- Expense tracking with line items and status flow (draft/confirmed/cancelled)
+- AI receipt extraction from PDF/photo uploads (OpenRouter Vision API)
+- 27 pre-seeded hierarchical categories (translated EN/ES/EL)
+- Supplier auto-matching from extracted VAT numbers
+- Duplicate detection via file hash
+- Recurring expenses with configurable frequency
+- Email inbox for forwarded supplier invoices
+
 ### Foundation
 
 - Email/password authentication with auto-organisation creation
@@ -221,7 +231,7 @@ pnpm e2e
 | 2     | Contacts + Products — CRUD, VAT lookup, country abstraction       | Done      |
 | 3     | Invoicing — Creation, PDF, AI emails, estimates, recurring        | Done      |
 | 4     | myDATA — API client, transmission, ΜΑΡΚ/QR on PDFs                | In review |
-| 5     | Expenses — AI extraction, categories, recurring, email inbox      | Specced   |
+| 5     | Expenses — AI extraction, categories, recurring, email inbox      | In review |
 | 6     | Reports & Dashboard — KPIs, charts, P&L, VAT, tax projection      | Specced   |
 | 7     | AI Assistant — Chat panel, function calling, financial Q&A        | Specced   |
 | 8     | Polish — Multi-user/roles, API docs, MCP server, i18n, responsive | Specced   |
