@@ -7,6 +7,7 @@ export type {
   VatRate,
   TaxOffice,
   CompanyLookupResult,
+  TaxCodeMapping,
 } from "./types";
 
 const providers = new Map<string, CountryProvider>();

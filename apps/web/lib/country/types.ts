@@ -58,6 +58,14 @@ export interface DocumentTypeParams {
   relatedInvoiceId: string | null;
 }
 
+export interface TaxCodeMapping {
+  taxCode: string;
+  taxCodeLabel: string;
+  eurLine?: string;
+  deductibility: "full" | "partial" | "none" | "varies";
+  deductibilityNote?: string;
+}
+
 export interface CountryProvider {
   code: string;
   name: string;
@@ -85,6 +93,9 @@ export interface CountryProvider {
     documentType: string,
     isService: boolean,
   ): { category: string; type: string };
+
+  // Expense classification (Phase 5+)
+  mapGroupToTaxCode?(groupCode: string): TaxCodeMapping | null;
 
   // Tax data (Phase 4 defines, Phase 6 uses)
   incomeTaxBrackets?: TaxBracket[];
