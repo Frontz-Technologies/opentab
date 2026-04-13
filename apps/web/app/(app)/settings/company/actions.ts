@@ -115,3 +115,37 @@ export async function updateCompanySettings(formData: FormData) {
   revalidatePath("/settings/company");
   return { success: true };
 }
+
+const taxSettingsSchema = z.object({
+  entityType: z.enum(["freelancer", "ike", "epe", "ae"]).optional(),
+  efkaCategory: z.number().int().min(1).max(6).optional(),
+  ownerBirthDate: z.string().date().optional(),
+  isFirstYear: z.boolean().optional(),
+});
+
+export async function updateOrgTaxSettings(
+  settings: z.infer<typeof taxSettingsSchema>,
+) {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+  if (session.role !== "owner" && session.role !== "admin") {
+    throw new Error("Forbidden");
+  }
+
+  const parsed = taxSettingsSchema.safeParse(settings);
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.flatten().fieldErrors };
+  }
+
+  await db
+    .update(organisations)
+    .set({
+      taxSettings: parsed.data,
+      updatedAt: new Date(),
+    })
+    .where(eq(organisations.id, session.org.id));
+
+  revalidatePath("/reports/tax-projection");
+  revalidatePath("/settings/company");
+  return { success: true };
+}

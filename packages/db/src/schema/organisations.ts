@@ -26,6 +26,7 @@ export const organisations = pgTable("organisation", {
   region: varchar("region", { length: 100 }),
   phone: varchar("phone", { length: 50 }),
   logoUrl: text("logo_url"),
+  taxSettings: jsonb("tax_settings"),
   setupCompletedSteps: jsonb("setup_completed_steps")
     .notNull()
     .$type<string[]>()

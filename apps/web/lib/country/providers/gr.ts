@@ -1,6 +1,7 @@
 import type { CountryProvider, TaxOffice, TaxCodeMapping } from "../types";
 import { resolveDocumentType } from "@/lib/mydata/document-types";
 import { resolveClassification } from "@/lib/mydata/classification-codes";
+import { calculateGreekTax } from "@/lib/reports/tax/gr-tax-calculator";
 
 const greekTaxOffices: TaxOffice[] = [
   { code: "1101", name: "Α' Αθηνών" },
@@ -203,8 +204,8 @@ export const greeceProvider: CountryProvider = {
     companyLookup: true,
     taxOfficeList: true,
     eInvoicing: true,
-    taxProjection: false,
-    vatReport: false,
+    taxProjection: true,
+    vatReport: true,
     expenseClassification: true,
   },
 
@@ -232,6 +233,8 @@ export const greeceProvider: CountryProvider = {
   mapGroupToTaxCode(groupCode: string): TaxCodeMapping | null {
     return GREEK_GROUP_TAX_MAP[groupCode] ?? null;
   },
+
+  calculateTax: calculateGreekTax,
 
   incomeTaxBrackets: GREEK_INCOME_TAX_BRACKETS_2026,
   corporateTax: GREEK_CORPORATE_TAX,
