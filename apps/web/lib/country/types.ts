@@ -19,6 +19,45 @@ export interface CompanyLookupResult {
   activity?: string;
 }
 
+export interface TaxBracket {
+  min: number;
+  max: number;
+  rate: number;
+}
+
+export interface CorporateTaxRates {
+  corporateRate: number;
+  dividendRate: number;
+  prepaymentRate: number;
+  prepaymentFirstYear: number;
+}
+
+export interface SocialSecurityCategory {
+  level: number;
+  monthly: number;
+  label: string;
+}
+
+export interface SocialSecurityConfig {
+  selfEmployed: {
+    categories: SocialSecurityCategory[];
+    defaultCategory: number;
+  };
+  employed: {
+    employerRate: number;
+    employeeRate: number;
+    monthlyCap: number;
+  };
+}
+
+export interface DocumentTypeParams {
+  contactCountryCode: string | null;
+  contactVatNumber: string | null;
+  isService: boolean;
+  isCreditNote: boolean;
+  relatedInvoiceId: string | null;
+}
+
 export interface CountryProvider {
   code: string;
   name: string;
@@ -39,4 +78,16 @@ export interface CountryProvider {
   getDefaultVatRate(): number;
 
   lookupCompany?(taxId: string): Promise<CompanyLookupResult>;
+
+  // E-Invoicing (Phase 4)
+  resolveDocumentType?(params: DocumentTypeParams): string;
+  resolveClassification?(
+    documentType: string,
+    isService: boolean,
+  ): { category: string; type: string };
+
+  // Tax data (Phase 4 defines, Phase 6 uses)
+  incomeTaxBrackets?: TaxBracket[];
+  corporateTax?: CorporateTaxRates;
+  socialSecurity?: SocialSecurityConfig;
 }

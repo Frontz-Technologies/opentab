@@ -4,7 +4,7 @@ import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import type { Invoice } from "@opentab/db/schema";
-import { INVOICE_STATUS } from "@opentab/db/schema";
+import { INVOICE_STATUS, MYDATA_TRANSMISSION_STATUS } from "@opentab/db/schema";
 import { Button } from "@/components/ui/button";
 import {
   sendInvoice,
@@ -12,6 +12,7 @@ import {
   cancelInvoice,
   deleteInvoice,
 } from "../actions";
+import { submitToMyData, cancelOnMyData } from "../mydata-actions";
 
 interface InvoiceActionsProps {
   invoice: Invoice;
@@ -99,6 +100,43 @@ export function InvoiceActions({ invoice }: InvoiceActionsProps) {
         </span>
         {t("downloadPdf")}
       </Button>
+      {invoice.mydataStatus !== null &&
+        invoice.mydataStatus !== MYDATA_TRANSMISSION_STATUS.CONFIRMED &&
+        invoice.mydataStatus !== MYDATA_TRANSMISSION_STATUS.CANCELLED &&
+        invoice.status !== INVOICE_STATUS.DRAFT && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              startTransition(async () => {
+                await submitToMyData(invoice.id);
+                router.refresh();
+              });
+            }}
+            disabled={isPending}
+          >
+            <span className="material-symbols-outlined text-[16px] mr-1">
+              refresh
+            </span>
+            {t("mydataRetry")}
+          </Button>
+        )}
+      {invoice.mydataStatus === MYDATA_TRANSMISSION_STATUS.CONFIRMED && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            if (!confirm(t("mydataCancelConfirm"))) return;
+            startTransition(async () => {
+              await cancelOnMyData(invoice.id);
+              router.refresh();
+            });
+          }}
+          disabled={isPending}
+        >
+          {t("mydataCancel")}
+        </Button>
+      )}
     </div>
   );
 }

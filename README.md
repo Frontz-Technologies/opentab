@@ -4,36 +4,70 @@
 
 Invoice clients, track expenses, and understand your finances — without calling your accountant for every question.
 
-## Features (Phase 1 — Foundation)
+## Features
+
+### Contacts & Products
+
+- Contact management (clients/suppliers) with VAT lookup (Greek ΑΑΔΕ + EU VIES)
+- Product/service catalogue with tax categories
+- Country provider architecture — capability-based feature gating (Greece first)
+
+### Invoicing
+
+- Invoice CRUD with line items and status flow (Draft → Sent → Paid → Cancelled)
+- Quotes/estimates with one-click conversion to invoices
+- Recurring invoices with configurable frequency
+- Auto-numbering with configurable prefix, digits, and year
+- PDF generation via Gotenberg
+- AI-generated email content via OpenRouter
+
+### myDATA (Greek E-Invoicing)
+
+- ΑΑΔΕ SendInvoices / CancelInvoice API client
+- Transmission queue with retry logic and exponential backoff
+- ΜΑΡΚ number storage and QR code generation
+- Encrypted credentials management (AES-256-GCM)
+- 15 document types with auto-resolution logic
+
+### Foundation
 
 - Email/password authentication with auto-organisation creation
 - Dashboard with Quick Setup onboarding widget
 - Company settings with VAT/tax ID country detection
-- Full design system: "The Digital Ledger" — dark theme, glassmorphism, emerald accents
+- Design system: "The Digital Ledger" — dark theme, glassmorphism, emerald accents
 - Responsive layout: sidebar (desktop) + bottom nav (mobile)
 - i18n infrastructure (English, ready for Spanish & Greek)
+- CI/CD with GitHub Actions (format, lint, test, build)
+- E2E test suite with Playwright
 
 ## Tech Stack
 
-| Layer     | Technology                                    |
-| --------- | --------------------------------------------- |
-| Framework | Next.js 15 (App Router)                       |
-| Auth      | Better Auth (email/password, self-hosted)     |
-| Database  | PostgreSQL 16 + Drizzle ORM                   |
-| UI        | shadcn/ui + Tailwind CSS v4                   |
-| Fonts     | Manrope, Inter, Space Grotesk, JetBrains Mono |
-| i18n      | next-intl                                     |
-| Testing   | Vitest + PGlite (in-process PostgreSQL)       |
-| Monorepo  | Turborepo + pnpm workspaces                   |
+| Layer     | Technology                                |
+| --------- | ----------------------------------------- |
+| Framework | Next.js 15 (App Router)                   |
+| Auth      | Better Auth (email/password, self-hosted) |
+| Database  | PostgreSQL 16 + Drizzle ORM               |
+| UI        | shadcn/ui + Tailwind CSS v4               |
+| PDF       | Gotenberg (Chromium-based)                |
+| AI        | OpenRouter SDK (model-agnostic)           |
+| i18n      | next-intl                                 |
+| Testing   | Vitest + PGlite + Playwright              |
+| Monorepo  | Turborepo + pnpm workspaces               |
 
 ## Project Structure
 
 ```
 opentab/
-├── apps/web/          # Next.js application
-├── packages/db/       # Drizzle ORM schema + migrations
-├── docker/            # Docker Compose (dev + production)
-└── docs/              # Design system, architecture, conventions
+├── apps/web/              # Next.js application
+│   ├── app/(app)/         # Authenticated pages (invoices, contacts, products, etc.)
+│   ├── app/(auth)/        # Public auth pages (login, register)
+│   ├── components/        # UI components (invoicing, layout, onboarding)
+│   ├── lib/               # Business logic (country, invoicing, mydata)
+│   └── messages/          # i18n translation files
+├── packages/db/           # Drizzle ORM schema + migrations
+├── e2e/                   # Playwright end-to-end tests
+├── docker/                # Docker Compose (dev + production)
+└── docs/                  # Design system, architecture, conventions
 ```
 
 ## Getting Started
@@ -174,20 +208,23 @@ pnpm test
 # Run tests for a specific package
 pnpm --filter @opentab/db test
 pnpm --filter @opentab/web test
+
+# Run end-to-end tests (requires PostgreSQL + Redis running)
+pnpm e2e
 ```
 
 ## Roadmap
 
-| Phase | Description                                                   | Status      |
-| ----- | ------------------------------------------------------------- | ----------- |
-| 1     | Foundation — Auth, dashboard, company settings, design system | In progress |
-| 2     | Invoicing — Create, send, and track invoices                  | Planned     |
-| 3     | Expenses — Receipt capture and categorisation                 | Planned     |
-| 4     | Contacts — Client and supplier management                     | Planned     |
-| 5     | Projects — Time tracking and project-based billing            | Planned     |
-| 6     | Reporting — Revenue, expenses, tax summaries                  | Planned     |
-| 7     | Integrations — myDATA (AADE), bank feeds, Stripe              | Planned     |
-| 8     | AI Assistant — Natural language queries on financial data     | Planned     |
+| Phase | Description                                                       | Status    |
+| ----- | ----------------------------------------------------------------- | --------- |
+| 1     | Foundation — Auth, dashboard, company settings, design system     | Done      |
+| 2     | Contacts + Products — CRUD, VAT lookup, country abstraction       | Done      |
+| 3     | Invoicing — Creation, PDF, AI emails, estimates, recurring        | Done      |
+| 4     | myDATA — API client, transmission, ΜΑΡΚ/QR on PDFs                | In review |
+| 5     | Expenses — AI extraction, categories, recurring, email inbox      | Specced   |
+| 6     | Reports & Dashboard — KPIs, charts, P&L, VAT, tax projection      | Specced   |
+| 7     | AI Assistant — Chat panel, function calling, financial Q&A        | Specced   |
+| 8     | Polish — Multi-user/roles, API docs, MCP server, i18n, responsive | Specced   |
 
 ## Documentation
 

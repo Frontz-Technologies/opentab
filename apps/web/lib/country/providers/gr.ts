@@ -1,4 +1,6 @@
 import type { CountryProvider, TaxOffice } from "../types";
+import { resolveDocumentType } from "@/lib/mydata/document-types";
+import { resolveClassification } from "@/lib/mydata/classification-codes";
 
 const greekTaxOffices: TaxOffice[] = [
   { code: "1101", name: "Α' Αθηνών" },
@@ -71,6 +73,41 @@ const greekTaxOffices: TaxOffice[] = [
   { code: "1172", name: "Χολαργού" },
 ];
 
+export const GREEK_INCOME_TAX_BRACKETS_2026 = [
+  { min: 0, max: 10000, rate: 0.09 },
+  { min: 10001, max: 20000, rate: 0.2 },
+  { min: 20001, max: 30000, rate: 0.26 },
+  { min: 30001, max: 40000, rate: 0.34 },
+  { min: 40001, max: 60000, rate: 0.39 },
+  { min: 60001, max: Infinity, rate: 0.44 },
+];
+
+export const GREEK_CORPORATE_TAX = {
+  corporateRate: 0.22,
+  dividendRate: 0.05,
+  prepaymentRate: 0.55,
+  prepaymentFirstYear: 0.5,
+};
+
+export const GREEK_EFKA_2026 = {
+  selfEmployed: {
+    categories: [
+      { level: 1, monthly: 220.08, label: "Κατηγορία 1 (ελάχιστη)" },
+      { level: 2, monthly: 275.1, label: "Κατηγορία 2" },
+      { level: 3, monthly: 343.88, label: "Κατηγορία 3" },
+      { level: 4, monthly: 412.65, label: "Κατηγορία 4" },
+      { level: 5, monthly: 515.82, label: "Κατηγορία 5" },
+      { level: 6, monthly: 644.77, label: "Κατηγορία 6 (μέγιστη)" },
+    ],
+    defaultCategory: 1,
+  },
+  employed: {
+    employerRate: 0.2179,
+    employeeRate: 0.1387,
+    monthlyCap: 7761.14,
+  },
+};
+
 export const greeceProvider: CountryProvider = {
   code: "GR",
   name: "Greece",
@@ -78,10 +115,10 @@ export const greeceProvider: CountryProvider = {
   capabilities: {
     companyLookup: true,
     taxOfficeList: true,
-    eInvoicing: false,
+    eInvoicing: true,
     taxProjection: false,
     vatReport: false,
-    expenseClassification: false,
+    expenseClassification: true,
   },
 
   vatRates: [
@@ -101,4 +138,11 @@ export const greeceProvider: CountryProvider = {
   getDefaultVatRate(): number {
     return 24;
   },
+
+  resolveDocumentType,
+  resolveClassification,
+
+  incomeTaxBrackets: GREEK_INCOME_TAX_BRACKETS_2026,
+  corporateTax: GREEK_CORPORATE_TAX,
+  socialSecurity: GREEK_EFKA_2026,
 };

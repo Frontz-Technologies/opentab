@@ -178,6 +178,10 @@ async function pushSchema(pglite: PGlite) {
       "paid_at" timestamp,
       "recurring_invoice_id" uuid,
       "quote_id" uuid,
+      "mydata_mark" varchar(50),
+      "mydata_qr_url" text,
+      "mydata_document_type" varchar(10),
+      "mydata_status" integer,
       "created_at" timestamp NOT NULL DEFAULT now(),
       "updated_at" timestamp NOT NULL DEFAULT now()
     )`,
@@ -292,6 +296,44 @@ async function pushSchema(pglite: PGlite) {
       "tax_amount" numeric(12,2) NOT NULL DEFAULT '0.00',
       "line_total" numeric(12,2) NOT NULL DEFAULT '0.00',
       "created_at" timestamp NOT NULL DEFAULT now()
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS "mydata_credentials" (
+      "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      "org_id" uuid NOT NULL REFERENCES "organisation"("id") ON DELETE CASCADE,
+      "aade_user_id" varchar(100) NOT NULL,
+      "subscription_key" text NOT NULL,
+      "environment" varchar(20) NOT NULL DEFAULT 'sandbox',
+      "is_active" boolean NOT NULL DEFAULT true,
+      "last_validated_at" timestamp,
+      "created_at" timestamp NOT NULL DEFAULT now(),
+      "updated_at" timestamp NOT NULL DEFAULT now()
+    )`,
+
+    `CREATE UNIQUE INDEX "mydata_credentials_org_id_idx" ON "mydata_credentials" ("org_id")`,
+
+    `CREATE TABLE IF NOT EXISTS "mydata_transmission" (
+      "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      "org_id" uuid NOT NULL REFERENCES "organisation"("id") ON DELETE CASCADE,
+      "invoice_id" uuid NOT NULL REFERENCES "invoice"("id") ON DELETE CASCADE,
+      "status" integer NOT NULL DEFAULT 1,
+      "document_type" varchar(10) NOT NULL,
+      "classification_category" varchar(50),
+      "classification_type" varchar(50),
+      "payment_method" integer,
+      "request_xml" text,
+      "response_xml" text,
+      "invoice_uid" varchar(100),
+      "invoice_mark" varchar(50),
+      "qr_url" text,
+      "cancellation_mark" varchar(50),
+      "error_code" varchar(50),
+      "error_message" text,
+      "attempt_count" integer NOT NULL DEFAULT 0,
+      "next_retry_at" timestamp,
+      "submitted_at" timestamp,
+      "created_at" timestamp NOT NULL DEFAULT now(),
+      "updated_at" timestamp NOT NULL DEFAULT now()
     )`,
   ];
 

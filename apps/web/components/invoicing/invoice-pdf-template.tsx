@@ -4,12 +4,14 @@ interface InvoicePdfTemplateProps {
   invoice: Invoice;
   items: InvoiceItem[];
   org: Organisation;
+  mydataQrDataUrl?: string;
 }
 
 export function renderInvoicePdfHtml({
   invoice,
   items,
   org,
+  mydataQrDataUrl,
 }: InvoicePdfTemplateProps): string {
   const itemRows = items
     .map(
@@ -52,6 +54,11 @@ export function renderInvoicePdfHtml({
     .notes { margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
     .notes h3 { font-size: 11px; text-transform: uppercase; color: #6b7280; margin: 0 0 4px; }
     .notes p { font-size: 12px; color: #374151; white-space: pre-wrap; }
+    .mydata-stamp { background: #f3f4f6; border-radius: 6px; padding: 8px 12px; display: inline-block; margin-top: 4px; }
+    .mydata-stamp .mark-label { font-size: 10px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; }
+    .mydata-stamp .mark-number { font-family: monospace; font-size: 14px; color: #1a1a2e; font-weight: 600; }
+    .mydata-footer { margin-top: 30px; display: flex; justify-content: flex-end; align-items: flex-end; gap: 12px; }
+    .mydata-footer .qr-label { font-size: 9px; color: #6b7280; display: block; text-align: center; margin-top: 4px; }
   </style>
 </head>
 <body>
@@ -66,6 +73,14 @@ export function renderInvoicePdfHtml({
     <div class="header-right">
       <h2>INVOICE</h2>
       <p style="font-family: monospace; font-size: 16px;">${escapeHtml(invoice.invoiceNumber)}</p>
+      ${
+        invoice.mydataMark
+          ? `<div class="mydata-stamp">
+        <div class="mark-label">MARK</div>
+        <div class="mark-number">${escapeHtml(invoice.mydataMark)}</div>
+      </div>`
+          : ""
+      }
     </div>
   </div>
 
@@ -113,6 +128,17 @@ export function renderInvoicePdfHtml({
       ? `<div class="notes">
     ${invoice.notes ? `<h3>Notes</h3><p>${escapeHtml(invoice.notes)}</p>` : ""}
     ${invoice.terms ? `<h3>Terms &amp; Conditions</h3><p>${escapeHtml(invoice.terms)}</p>` : ""}
+  </div>`
+      : ""
+  }
+
+  ${
+    mydataQrDataUrl
+      ? `<div class="mydata-footer">
+    <div>
+      <img src="${mydataQrDataUrl}" alt="myDATA QR" width="80" height="80" />
+      <span class="qr-label">Verify on myDATA</span>
+    </div>
   </div>`
       : ""
   }
