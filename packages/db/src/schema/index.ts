@@ -69,6 +69,31 @@ export {
   type NewExpenseCategory,
 } from "./expense-categories";
 export {
+  expenses,
+  expenseItems,
+  EXPENSE_STATUS,
+  EXPENSE_SOURCE,
+  type Expense,
+  type NewExpense,
+  type ExpenseItem,
+  type NewExpenseItem,
+} from "./expenses";
+export {
+  expenseAttachments,
+  type ExpenseAttachment,
+  type NewExpenseAttachment,
+} from "./expense-attachments";
+export {
+  recurringExpenses,
+  recurringExpenseItems,
+  RECURRING_EXPENSE_STATUS,
+  EXPENSE_FREQUENCY,
+  type RecurringExpense,
+  type NewRecurringExpense,
+  type RecurringExpenseItem,
+  type NewRecurringExpenseItem,
+} from "./recurring-expenses";
+export {
   mydataCredentials,
   mydataTransmissions,
   MYDATA_TRANSMISSION_STATUS,

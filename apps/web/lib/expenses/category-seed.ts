@@ -287,6 +287,14 @@ export async function seedExpenseCategories(
 
   if (result.value > 0) return;
 
+  // Ensure expense groups are seeded (system table, idempotent)
+  const { expenseGroups, EXPENSE_GROUPS_SEED } =
+    await import("@opentab/db/schema");
+  const [groupCount] = await db.select({ value: count() }).from(expenseGroups);
+  if (groupCount.value === 0) {
+    await db.insert(expenseGroups).values(EXPENSE_GROUPS_SEED);
+  }
+
   const seed = COUNTRY_SEED_MAP[countryCode ?? ""] ?? INTL_CATEGORIES;
 
   await db.insert(expenseCategories).values(

@@ -21,6 +21,18 @@ Invoice clients, track expenses, and understand your finances — without callin
 - PDF generation via Gotenberg
 - AI-generated email content via OpenRouter
 
+### Expenses
+
+- Expense CRUD with line items and status flow (Draft → Confirmed → Cancelled)
+- Two-layer categories: 16 universal expense groups with per-org categories
+- Country-aware category seeding (Greece, Germany, international)
+- AI receipt extraction with PDF-to-image conversion
+- Supplier auto-matching from extracted VAT numbers
+- Duplicate detection via SHA-256 file hash
+- Recurring expenses with configurable frequency
+- Email inbox webhook endpoint for receipt forwarding
+- Authenticated file serving API route
+
 ### myDATA (Greek E-Invoicing)
 
 - ΑΑΔΕ SendInvoices / CancelInvoice API client
@@ -221,7 +233,7 @@ pnpm e2e
 | 2     | Contacts + Products — CRUD, VAT lookup, country abstraction       | Done      |
 | 3     | Invoicing — Creation, PDF, AI emails, estimates, recurring        | Done      |
 | 4     | myDATA — API client, transmission, ΜΑΡΚ/QR on PDFs                | In review |
-| 5     | Expenses — AI extraction, categories, recurring, email inbox      | Specced   |
+| 5     | Expenses — AI extraction, categories, recurring, email inbox      | In review |
 | 6     | Reports & Dashboard — KPIs, charts, P&L, VAT, tax projection      | Specced   |
 | 7     | AI Assistant — Chat panel, function calling, financial Q&A        | Specced   |
 | 8     | Polish — Multi-user/roles, API docs, MCP server, i18n, responsive | Specced   |

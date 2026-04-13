@@ -127,6 +127,13 @@ const { user, session: sessionData } = session;
 | `recurring_invoices`       | Recurring invoice templates with frequency               |
 | `recurring_invoice_items`  | Line items per recurring template                        |
 | `invoice_number_sequences` | Auto-numbering configuration per org                     |
+| `expense_groups`           | 16 universal expense groups (string PK)                  |
+| `expense_categories`       | Per-org categories linked to groups                      |
+| `expenses`                 | Expense records with status flow and category            |
+| `expense_items`            | Line items per expense                                   |
+| `expense_attachments`      | File attachments with AI extraction status               |
+| `recurring_expenses`       | Recurring expense templates with frequency               |
+| `recurring_expense_items`  | Line items per recurring expense template                |
 | `mydata_credentials`       | Encrypted ΑΑΔΕ API credentials per org                   |
 | `mydata_transmissions`     | myDATA submission queue with retry tracking              |
 
