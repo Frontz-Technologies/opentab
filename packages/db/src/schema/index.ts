@@ -58,6 +58,17 @@ export {
   type NewRecurringInvoiceItem,
 } from "./recurring-invoices";
 export {
+  expenseGroups,
+  EXPENSE_GROUPS_SEED,
+  type ExpenseGroup,
+  type NewExpenseGroup,
+} from "./expense-groups";
+export {
+  expenseCategories,
+  type ExpenseCategory,
+  type NewExpenseCategory,
+} from "./expense-categories";
+export {
   mydataCredentials,
   mydataTransmissions,
   MYDATA_TRANSMISSION_STATUS,

@@ -1,4 +1,4 @@
-import type { CountryProvider, TaxOffice } from "../types";
+import type { CountryProvider, TaxOffice, TaxCodeMapping } from "../types";
 import { resolveDocumentType } from "@/lib/mydata/document-types";
 import { resolveClassification } from "@/lib/mydata/classification-codes";
 
@@ -108,6 +108,93 @@ export const GREEK_EFKA_2026 = {
   },
 };
 
+const GREEK_GROUP_TAX_MAP: Record<string, TaxCodeMapping> = {
+  rent: {
+    taxCode: "E3_585_003",
+    taxCodeLabel: "Ενοίκια",
+    deductibility: "full",
+  },
+  utilities: {
+    taxCode: "E3_585_007",
+    taxCodeLabel: "Ύδρευση - Τηλεπικοινωνίες - Ηλεκτρικό",
+    deductibility: "full",
+  },
+  telecom: {
+    taxCode: "E3_585_007",
+    taxCodeLabel: "Ύδρευση - Τηλεπικοινωνίες - Ηλεκτρικό",
+    deductibility: "full",
+    deductibilityNote: "50-75% if mixed personal use",
+  },
+  office_supplies: {
+    taxCode: "E3_585_001",
+    taxCodeLabel: "Αναλώσιμα",
+    deductibility: "full",
+  },
+  software: {
+    taxCode: "E3_585_016",
+    taxCodeLabel: "Λοιπά έξοδα",
+    deductibility: "full",
+  },
+  hardware: {
+    taxCode: "E3_585_016",
+    taxCodeLabel: "Λοιπά έξοδα",
+    deductibility: "full",
+    deductibilityNote: "Over EUR 1,500 net: depreciated",
+  },
+  professional_services: {
+    taxCode: "E3_585_004",
+    taxCodeLabel: "Ενοίκια - leasing",
+    deductibility: "full",
+  },
+  marketing: {
+    taxCode: "E3_585_010",
+    taxCodeLabel: "Διαφήμιση - προβολή",
+    deductibility: "full",
+  },
+  travel: {
+    taxCode: "E3_585_009",
+    taxCodeLabel: "Έξοδα ταξιδιών",
+    deductibility: "full",
+  },
+  transport: {
+    taxCode: "E3_585_008",
+    taxCodeLabel: "Μεταφορικά",
+    deductibility: "full",
+  },
+  insurance: {
+    taxCode: "E3_585_005",
+    taxCodeLabel: "Ασφάλιστρα",
+    deductibility: "full",
+  },
+  meals_entertainment: {
+    taxCode: "E3_585_016",
+    taxCodeLabel: "Λοιπά έξοδα",
+    deductibility: "partial",
+    deductibilityNote: "Deductible if business-related, entertainment limited",
+  },
+  bank_fees: {
+    taxCode: "E3_585_011",
+    taxCodeLabel: "Τραπεζικά έξοδα",
+    deductibility: "full",
+  },
+  training: {
+    taxCode: "E3_585_016",
+    taxCodeLabel: "Λοιπά έξοδα",
+    deductibility: "full",
+  },
+  taxes_contributions: {
+    taxCode: "E3_585_016",
+    taxCodeLabel: "Λοιπά έξοδα",
+    deductibility: "varies",
+    deductibilityNote: "EFKA deductible, income tax NOT deductible",
+  },
+  other: {
+    taxCode: "E3_585_016",
+    taxCodeLabel: "Λοιπά έξοδα",
+    deductibility: "varies",
+  },
+};
+
 export const greeceProvider: CountryProvider = {
   code: "GR",
   name: "Greece",
@@ -141,6 +228,10 @@ export const greeceProvider: CountryProvider = {
 
   resolveDocumentType,
   resolveClassification,
+
+  mapGroupToTaxCode(groupCode: string): TaxCodeMapping | null {
+    return GREEK_GROUP_TAX_MAP[groupCode] ?? null;
+  },
 
   incomeTaxBrackets: GREEK_INCOME_TAX_BRACKETS_2026,
   corporateTax: GREEK_CORPORATE_TAX,

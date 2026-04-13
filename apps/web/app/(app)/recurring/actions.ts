@@ -47,7 +47,12 @@ export async function createRecurring(formData: FormData) {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
 
-  const rawItems = JSON.parse(formData.get("items") as string);
+  let rawItems: unknown;
+  try {
+    rawItems = JSON.parse((formData.get("items") as string) ?? "[]");
+  } catch {
+    return { success: false, error: { items: ["Invalid line items data"] } };
+  }
   const parsed = recurringSchema.safeParse({
     contactId: formData.get("contactId"),
     frequency: formData.get("frequency"),
@@ -118,7 +123,12 @@ export async function updateRecurring(id: string, formData: FormData) {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
 
-  const rawItems = JSON.parse(formData.get("items") as string);
+  let rawItems: unknown;
+  try {
+    rawItems = JSON.parse((formData.get("items") as string) ?? "[]");
+  } catch {
+    return { success: false, error: { items: ["Invalid line items data"] } };
+  }
   const parsed = recurringSchema.safeParse({
     contactId: formData.get("contactId"),
     frequency: formData.get("frequency"),

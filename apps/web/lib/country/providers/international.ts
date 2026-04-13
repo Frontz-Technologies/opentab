@@ -1,4 +1,4 @@
-import type { CountryProvider } from "../types";
+import type { CountryProvider, TaxCodeMapping } from "../types";
 
 export const internationalProvider: CountryProvider = {
   code: "INTL",
@@ -21,5 +21,9 @@ export const internationalProvider: CountryProvider = {
 
   getDefaultVatRate(): number {
     return 0;
+  },
+
+  mapGroupToTaxCode(_groupCode: string): TaxCodeMapping | null {
+    return null;
   },
 };

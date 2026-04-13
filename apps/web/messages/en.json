@@ -309,6 +309,31 @@
     "generatedInvoices": "Generated Invoices",
     "selectClient": "Select a client"
   },
+  "expenseGroups": {
+    "rent": "Rent & Leasing",
+    "utilities": "Utilities",
+    "telecom": "Telecommunications",
+    "office_supplies": "Office Supplies",
+    "software": "Software & Subscriptions",
+    "hardware": "Hardware & Equipment",
+    "professional_services": "Professional Services",
+    "marketing": "Marketing & Advertising",
+    "travel": "Travel",
+    "transport": "Transport",
+    "insurance": "Insurance",
+    "meals_entertainment": "Meals & Entertainment",
+    "bank_fees": "Bank & Financial Fees",
+    "training": "Training & Education",
+    "taxes_contributions": "Taxes & Contributions",
+    "other": "Other"
+  },
+  "expenses": {
+    "title": "Expenses",
+    "categoryGroup": "Category Group",
+    "allGroups": "All Groups",
+    "seedingCategories": "Setting up expense categories...",
+    "noCategories": "No categories found"
+  },
   "mydata": {
     "title": "myDATA Integration",
     "settings": "Settings",
