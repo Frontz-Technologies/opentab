@@ -23,6 +23,7 @@ const navItems = [
   { icon: "account_balance_wallet", labelKey: "expenses", href: "/expenses" },
   { icon: "contacts", labelKey: "contacts", href: "/contacts" },
   { icon: "inventory_2", labelKey: "products", href: "/products" },
+  { icon: "bar_chart", labelKey: "reports", href: "/reports" },
 ] as const;
 
 export function AppSidebar({ orgName }: AppSidebarProps) {

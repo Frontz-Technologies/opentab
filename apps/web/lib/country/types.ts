@@ -1,3 +1,8 @@
+import type {
+  TaxProjectionInput,
+  TaxProjectionResult,
+} from "@/lib/reports/tax/types";
+
 export interface VatRate {
   rate: number;
   label: string;
@@ -96,6 +101,9 @@ export interface CountryProvider {
 
   // Expense classification (Phase 5+)
   mapGroupToTaxCode?(groupCode: string): TaxCodeMapping | null;
+
+  // Tax projection (Phase 6)
+  calculateTax?(input: TaxProjectionInput): TaxProjectionResult;
 
   // Tax data (Phase 4 defines, Phase 6 uses)
   incomeTaxBrackets?: TaxBracket[];
