@@ -55,20 +55,40 @@ AI agent guide for the OpenTab repository.
 apps/web/
 ├── app/
 │   ├── (auth)/         # Public auth pages (login, register, forgot/reset)
-│   ├── (app)/          # Authenticated pages (dashboard, settings)
-│   └── api/auth/       # Better Auth API handler
+│   ├── (app)/          # Authenticated pages
+│   │   ├── contacts/   # Contact CRUD + VAT lookup
+│   │   ├── products/   # Product/service CRUD
+│   │   ├── invoices/   # Invoice CRUD + myDATA actions
+│   │   ├── quotes/     # Estimate CRUD + conversion
+│   │   ├── recurring/  # Recurring invoice management
+│   │   ├── settings/   # Company settings, myDATA credentials
+│   │   └── dashboard/  # Dashboard with KPIs
+│   └── api/            # Auth handler, PDF route
 ├── components/
 │   ├── ui/             # shadcn components
 │   ├── layout/         # Sidebar, top bar, mobile nav, user menu
+│   ├── invoicing/      # Line items builder, PDF template
 │   └── onboarding/     # Quick Setup widget
-├── lib/                # Auth config, DB instance, utilities
+├── lib/
+│   ├── country/        # Country provider (GR, international)
+│   ├── invoicing/      # Calculations, numbering, PDF, email
+│   ├── mydata/         # ΑΑΔΕ API client, XML builder, encryption
+│   └── ...             # Auth, DB, session, utils
 ├── hooks/              # Client-side hooks
 └── messages/           # i18n translation files
 
 packages/db/
-├── src/schema/         # Drizzle table definitions
+├── src/schema/         # Drizzle table definitions (14 tables)
 ├── src/test-utils.ts   # PGlite test helpers
 └── src/seed.ts         # Development seed data
+
+e2e/                    # Playwright end-to-end tests
+├── helpers.ts          # Shared test utilities
+├── 01-auth.spec.ts     # Authentication flows
+├── 02-contacts.spec.ts # Contact CRUD
+├── 03-products.spec.ts # Product CRUD
+├── 04-navigation.spec.ts # Sidebar navigation
+└── 05-invoices.spec.ts # Invoice creation
 ```
 
 ## Commands
@@ -78,7 +98,8 @@ packages/db/
 | Start everything | `docker compose -f docker/docker-compose.dev.yml up` |
 | Dev server only  | `pnpm dev` (requires DB running separately)          |
 | Build            | `pnpm build`                                         |
-| Tests            | `pnpm test`                                          |
+| Unit tests       | `pnpm test`                                          |
+| E2E tests        | `pnpm e2e` (requires DB + server running)            |
 | Format           | `pnpm format`                                        |
 | Lint             | `pnpm lint`                                          |
 | DB schema push   | `pnpm db:push`                                       |

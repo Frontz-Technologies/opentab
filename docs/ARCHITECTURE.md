@@ -113,15 +113,24 @@ const { user, session: sessionData } = session;
 
 ### Schema (packages/db)
 
-Three core tables:
+| Table                      | Purpose                                                  |
+| -------------------------- | -------------------------------------------------------- |
+| `users`                    | Authentication identity, profile data                    |
+| `organisations`            | One per user — the financial entity                      |
+| `org_memberships`          | Links users to orgs with a role (owner/member)           |
+| `contacts`                 | Clients and suppliers with VAT, address, defaults        |
+| `products`                 | Product/service catalogue with tax categories            |
+| `invoices`                 | Sales invoices with status flow and denormalized contact |
+| `invoice_items`            | Line items per invoice (separate table, not JSON)        |
+| `quotes`                   | Estimates with conversion to invoice                     |
+| `quote_items`              | Line items per quote                                     |
+| `recurring_invoices`       | Recurring invoice templates with frequency               |
+| `recurring_invoice_items`  | Line items per recurring template                        |
+| `invoice_number_sequences` | Auto-numbering configuration per org                     |
+| `mydata_credentials`       | Encrypted ΑΑΔΕ API credentials per org                   |
+| `mydata_transmissions`     | myDATA submission queue with retry tracking              |
 
-| Table             | Purpose                                        |
-| ----------------- | ---------------------------------------------- |
-| `users`           | Authentication identity, profile data          |
-| `organisations`   | One per user — the financial entity            |
-| `org_memberships` | Links users to orgs with a role (owner/member) |
-
-Better Auth manages its own session/account tables alongside these. Drizzle schema types are exported and used throughout `apps/web` for type-safe queries.
+Better Auth manages its own session/account/verification tables alongside these. Drizzle schema types are exported and used throughout `apps/web` for type-safe queries.
 
 ### One-Org-Per-User Model
 
