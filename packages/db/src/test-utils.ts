@@ -312,6 +312,54 @@ async function pushSchema(pglite: PGlite) {
 
     `CREATE UNIQUE INDEX "mydata_credentials_org_id_idx" ON "mydata_credentials" ("org_id")`,
 
+    `CREATE TABLE IF NOT EXISTS "expense_group" (
+      "code" varchar(30) PRIMARY KEY,
+      "name_en" varchar(100) NOT NULL,
+      "name_es" varchar(100),
+      "name_el" varchar(100),
+      "name_de" varchar(100),
+      "description_en" text,
+      "icon" varchar(50),
+      "sort_order" integer NOT NULL DEFAULT 0,
+      "active" boolean NOT NULL DEFAULT true,
+      "created_at" timestamp NOT NULL DEFAULT now()
+    )`,
+
+    `INSERT INTO "expense_group" ("code", "name_en", "sort_order") VALUES
+      ('rent', 'Rent & Leasing', 1),
+      ('utilities', 'Utilities', 2),
+      ('telecom', 'Telecommunications', 3),
+      ('office_supplies', 'Office Supplies & Materials', 4),
+      ('software', 'Software & Subscriptions', 5),
+      ('hardware', 'Hardware & Equipment', 6),
+      ('professional_services', 'Professional Services', 7),
+      ('marketing', 'Marketing & Advertising', 8),
+      ('travel', 'Travel', 9),
+      ('transport', 'Local Transport', 10),
+      ('insurance', 'Insurance', 11),
+      ('meals_entertainment', 'Meals & Entertainment', 12),
+      ('bank_fees', 'Bank & Financial Fees', 13),
+      ('training', 'Training & Education', 14),
+      ('taxes_contributions', 'Taxes & Social Contributions', 15),
+      ('other', 'Other Expenses', 16)
+    ON CONFLICT DO NOTHING`,
+
+    `CREATE TABLE IF NOT EXISTS "expense_category" (
+      "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      "org_id" uuid NOT NULL REFERENCES "organisation"("id") ON DELETE CASCADE,
+      "group_code" varchar(30) NOT NULL REFERENCES "expense_group"("code"),
+      "code" varchar(50) NOT NULL,
+      "name" varchar(255) NOT NULL,
+      "color" varchar(7),
+      "icon" varchar(50),
+      "sort_order" integer NOT NULL DEFAULT 0,
+      "active" boolean NOT NULL DEFAULT true,
+      "is_default" boolean NOT NULL DEFAULT false,
+      "created_at" timestamp NOT NULL DEFAULT now(),
+      "updated_at" timestamp NOT NULL DEFAULT now(),
+      UNIQUE("org_id", "code")
+    )`,
+
     `CREATE TABLE IF NOT EXISTS "mydata_transmission" (
       "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       "org_id" uuid NOT NULL REFERENCES "organisation"("id") ON DELETE CASCADE,
