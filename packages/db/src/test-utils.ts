@@ -360,6 +360,97 @@ async function pushSchema(pglite: PGlite) {
       UNIQUE("org_id", "code")
     )`,
 
+    `CREATE TABLE IF NOT EXISTS "expense" (
+      "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      "org_id" uuid NOT NULL REFERENCES "organisation"("id") ON DELETE CASCADE,
+      "contact_id" uuid REFERENCES "contact"("id"),
+      "category_id" uuid REFERENCES "expense_category"("id"),
+      "status" integer NOT NULL DEFAULT 1,
+      "expense_number" varchar(50) NOT NULL,
+      "supplier_invoice_number" varchar(100),
+      "expense_date" date NOT NULL,
+      "payment_date" date,
+      "currency_code" varchar(3) NOT NULL DEFAULT 'EUR',
+      "exchange_rate" numeric(12,6) NOT NULL DEFAULT '1.000000',
+      "subtotal" numeric(12,2) NOT NULL DEFAULT '0.00',
+      "tax_amount" numeric(12,2) NOT NULL DEFAULT '0.00',
+      "total" numeric(12,2) NOT NULL DEFAULT '0.00',
+      "uses_inclusive_tax" boolean NOT NULL DEFAULT false,
+      "contact_name" varchar(255),
+      "contact_vat_number" varchar(50),
+      "description" text,
+      "notes" text,
+      "recurring_expense_id" uuid,
+      "source" varchar(20) NOT NULL DEFAULT 'manual',
+      "file_hash" varchar(64),
+      "created_at" timestamp NOT NULL DEFAULT now(),
+      "updated_at" timestamp NOT NULL DEFAULT now(),
+      UNIQUE("org_id", "expense_number")
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS "expense_item" (
+      "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      "expense_id" uuid NOT NULL REFERENCES "expense"("id") ON DELETE CASCADE,
+      "sort_order" integer NOT NULL DEFAULT 0,
+      "name" varchar(255) NOT NULL,
+      "description" text,
+      "quantity" numeric(12,4) NOT NULL DEFAULT '1',
+      "unit_price" numeric(12,2) NOT NULL DEFAULT '0.00',
+      "tax_rate" numeric(5,2) NOT NULL DEFAULT '0.00',
+      "tax_amount" numeric(12,2) NOT NULL DEFAULT '0.00',
+      "line_total" numeric(12,2) NOT NULL DEFAULT '0.00',
+      "created_at" timestamp NOT NULL DEFAULT now()
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS "expense_attachment" (
+      "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      "expense_id" uuid NOT NULL REFERENCES "expense"("id") ON DELETE CASCADE,
+      "file_path" text NOT NULL,
+      "file_name" varchar(255) NOT NULL,
+      "mime_type" varchar(100) NOT NULL,
+      "file_size" integer NOT NULL,
+      "file_hash" varchar(64) NOT NULL,
+      "ai_status" varchar(20) NOT NULL DEFAULT 'pending',
+      "extracted_data" jsonb,
+      "ai_confidence" numeric(3,2),
+      "uploaded_at" timestamp NOT NULL DEFAULT now(),
+      "ai_processed_at" timestamp
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS "recurring_expense" (
+      "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      "org_id" uuid NOT NULL REFERENCES "organisation"("id") ON DELETE CASCADE,
+      "contact_id" uuid REFERENCES "contact"("id"),
+      "category_id" uuid REFERENCES "expense_category"("id"),
+      "status" integer NOT NULL DEFAULT 1,
+      "frequency" integer NOT NULL DEFAULT 4,
+      "start_date" date NOT NULL,
+      "end_date" date,
+      "next_run_date" date NOT NULL,
+      "remaining_cycles" integer,
+      "auto_confirm" boolean NOT NULL DEFAULT false,
+      "currency_code" varchar(3) NOT NULL DEFAULT 'EUR',
+      "uses_inclusive_tax" boolean NOT NULL DEFAULT false,
+      "description" text,
+      "notes" text,
+      "created_at" timestamp NOT NULL DEFAULT now(),
+      "updated_at" timestamp NOT NULL DEFAULT now()
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS "recurring_expense_item" (
+      "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      "recurring_expense_id" uuid NOT NULL REFERENCES "recurring_expense"("id") ON DELETE CASCADE,
+      "sort_order" integer NOT NULL DEFAULT 0,
+      "name" varchar(255) NOT NULL,
+      "description" text,
+      "quantity" numeric(12,4) NOT NULL DEFAULT '1',
+      "unit_price" numeric(12,2) NOT NULL DEFAULT '0.00',
+      "tax_rate" numeric(5,2) NOT NULL DEFAULT '0.00',
+      "tax_amount" numeric(12,2) NOT NULL DEFAULT '0.00',
+      "line_total" numeric(12,2) NOT NULL DEFAULT '0.00',
+      "created_at" timestamp NOT NULL DEFAULT now()
+    )`,
+
     `CREATE TABLE IF NOT EXISTS "mydata_transmission" (
       "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       "org_id" uuid NOT NULL REFERENCES "organisation"("id") ON DELETE CASCADE,
