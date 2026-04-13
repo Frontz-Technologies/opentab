@@ -4,6 +4,7 @@ dist/
 .turbo/
 .env
 .env.local
+.research/
 .env.dev
 *.log
 .DS_Store
