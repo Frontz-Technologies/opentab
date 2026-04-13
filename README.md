@@ -144,8 +144,7 @@ opentab/
    | --------------------- | --------------------------------- | ------------------------------------------------------------- |
    | `DATABASE_URL`        | PostgreSQL connection string      | `postgresql://opentab:opentab_dev@localhost:5432/opentab_dev` |
    | `BETTER_AUTH_SECRET`  | Random string for session signing | Generate with `openssl rand -base64 48`                       |
-   | `BETTER_AUTH_URL`     | Public URL of the app             | `http://localhost:3000`                                       |
-   | `NEXT_PUBLIC_APP_URL` | Same as above, exposed to client  | `http://localhost:3000`                                       |
+   | `NEXT_PUBLIC_APP_URL` | Public URL of the app             | `http://localhost:3000`                                       |
 
    See `docker/.env.sample` for all available options including email (Resend / SMTP) and Redis.
 
