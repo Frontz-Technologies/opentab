@@ -40,7 +40,7 @@ export async function GET(
 
   try {
     const file = await retrieveFile(filePath);
-    return new NextResponse(file, {
+    return new NextResponse(new Uint8Array(file), {
       headers: {
         "Content-Type": attachment.mimeType,
         "Content-Disposition": `inline; filename="${attachment.fileName}"`,

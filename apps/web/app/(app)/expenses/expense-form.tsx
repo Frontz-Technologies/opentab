@@ -145,9 +145,8 @@ export function ExpenseForm({
       if (result.success) {
         router.push("/expenses");
       } else {
-        setError(
-          typeof result.error === "string" ? result.error : "Validation failed",
-        );
+        const err = "error" in result ? result.error : undefined;
+        setError(typeof err === "string" ? err : "Validation failed");
       }
     });
   }
