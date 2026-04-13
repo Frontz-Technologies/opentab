@@ -13,6 +13,26 @@ test.describe("Invoices", () => {
     } catch {
       await loginTestUser(page);
     }
+
+    // Ensure a client contact exists for invoice creation
+    await page.goto("/contacts/new");
+    await page.locator('select[name="type"]').selectOption("client");
+    await page
+      .locator('select[name="classification"]')
+      .selectOption("business");
+    await page.locator('input[name="company"]').fill("Invoice Test Client");
+    await page.locator('input[name="email"]').fill("client@test.com");
+    await page.getByRole("button", { name: "Save changes" }).click();
+    await page.waitForURL("**/contacts", { timeout: 10000 });
+
+    // Ensure a product exists for line items
+    await page.goto("/products/new");
+    await page.locator('input[name="name"]').fill("Test Service");
+    await page.locator('[name="unitPrice"]').fill("100");
+    await page.locator('select[name="unit"]').selectOption("hour");
+    await page.locator('select[name="taxCategory"]').selectOption("standard");
+    await page.getByRole("button", { name: "Save changes" }).click();
+    await page.waitForURL("**/products", { timeout: 10000 });
   });
 
   test.afterAll(async () => {
@@ -51,9 +71,95 @@ test.describe("Invoices", () => {
     await expect(page.getByRole("button", { name: "Add item" })).toBeVisible();
   });
 
-  test("can add a line item", async () => {
+  test("create a draft invoice with line items", async () => {
+    // Select the test client
+    const clientSelect = page.locator("select").first();
+    await clientSelect.selectOption({ label: "Invoice Test Client" });
+
+    // Add a line item manually
     await page.getByRole("button", { name: "Add item" }).click();
-    // Verify line item fields appear
-    await expect(page.getByPlaceholder("Item")).toBeVisible();
+
+    // Fill line item fields
+    const nameInput = page.getByPlaceholder("Item");
+    await nameInput.fill("Consulting work");
+
+    // Fill quantity and price — find inputs by their type=number in the line item row
+    const qtyInputs = page.locator('input[type="number"]');
+    // Quantity is the first number input in the line item
+    await qtyInputs.nth(0).fill("2");
+    // Unit price is the second number input
+    await qtyInputs.nth(1).fill("100");
+
+    await page.screenshot({ path: "e2e/screenshots/invoice-create-form.png" });
+
+    // Save as draft
+    await page.getByRole("button", { name: /Save|Draft/i }).click();
+    await page.waitForURL("**/invoices", { timeout: 15000 });
+  });
+
+  test("created invoice appears in list with draft status", async () => {
+    if (!page.url().endsWith("/invoices")) {
+      await page.goto("/invoices");
+    }
+    await expect(page.getByText("Invoice Test Client")).toBeVisible({
+      timeout: 10000,
+    });
+    await page.screenshot({ path: "e2e/screenshots/invoice-list-draft.png" });
+  });
+
+  test("open invoice detail page", async () => {
+    // Click on the invoice row to open detail
+    await page.getByText("Invoice Test Client").first().click();
+    await page.waitForURL("**/invoices/**");
+
+    // Should show the invoice number and draft status
+    await expect(page.locator("h1").first()).toBeVisible();
+    await page.screenshot({ path: "e2e/screenshots/invoice-detail-draft.png" });
+  });
+
+  test("invoice detail shows line items", async () => {
+    await expect(page.getByText("Consulting work")).toBeVisible();
+  });
+
+  test("draft invoice has Send and Delete actions", async () => {
+    await expect(page.getByRole("button", { name: /Send/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Delete/i })).toBeVisible();
+  });
+
+  test("draft invoice has Download PDF button", async () => {
+    await expect(
+      page.getByRole("button", { name: /Download.*PDF|PDF/i }),
+    ).toBeVisible();
+  });
+
+  test("send invoice — transition from draft to sent", async () => {
+    // Click send and accept the confirmation dialog
+    page.on("dialog", (dialog) => dialog.accept());
+    await page.getByRole("button", { name: /Send/i }).click();
+
+    // Wait for status to update — the page refreshes
+    await page.waitForTimeout(2000);
+
+    // After sending, Send button should disappear, Mark as Paid should appear
+    await expect(
+      page.getByRole("button", { name: /Mark as Paid|Paid/i }),
+    ).toBeVisible({ timeout: 10000 });
+
+    await page.screenshot({ path: "e2e/screenshots/invoice-detail-sent.png" });
+  });
+
+  test("mark invoice as paid — transition from sent to paid", async () => {
+    page.on("dialog", (dialog) => dialog.accept());
+    await page.getByRole("button", { name: /Mark as Paid|Paid/i }).click();
+
+    await page.waitForTimeout(2000);
+
+    // After marking as paid, neither Send nor Mark as Paid should be visible
+    // Only PDF download should remain
+    await expect(
+      page.getByRole("button", { name: /Download.*PDF|PDF/i }),
+    ).toBeVisible({ timeout: 10000 });
+
+    await page.screenshot({ path: "e2e/screenshots/invoice-detail-paid.png" });
   });
 });

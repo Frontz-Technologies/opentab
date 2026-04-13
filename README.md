@@ -24,7 +24,7 @@ Invoice clients, track expenses, and understand your finances — without callin
 ### Expenses
 
 - Expense CRUD with line items and status flow (Draft → Confirmed → Cancelled)
-- Two-layer categories: 16 universal expense groups with per-org categories
+- Two-layer category system: 16 universal expense groups → per-org categories with country-specific tax code mapping (`mapGroupToTaxCode`)
 - Country-aware category seeding (Greece, Germany, international)
 - AI receipt extraction with PDF-to-image conversion
 - Supplier auto-matching from extracted VAT numbers
@@ -32,6 +32,17 @@ Invoice clients, track expenses, and understand your finances — without callin
 - Recurring expenses with configurable frequency
 - Email inbox webhook endpoint for receipt forwarding
 - Authenticated file serving API route
+
+### Reports & Dashboard
+
+- KPI cards: revenue, expenses, net income, outstanding invoices
+- Recharts-powered charts: revenue trend, expense breakdown, income vs expenses
+- Profit & Loss statement with date-range filtering
+- VAT report with input/output breakdown
+- Greek tax projection with bracket visualisation and slider
+- AI-powered financial insights (OpenRouter)
+- Period selector with month/quarter/year presets
+- Optional Redis cache layer for aggregated queries
 
 ### myDATA (Greek E-Invoicing)
 
@@ -62,6 +73,7 @@ Invoice clients, track expenses, and understand your finances — without callin
 | UI        | shadcn/ui + Tailwind CSS v4               |
 | PDF       | Gotenberg (Chromium-based)                |
 | AI        | OpenRouter SDK (model-agnostic)           |
+| Charts    | Recharts                                  |
 | i18n      | next-intl                                 |
 | Testing   | Vitest + PGlite + Playwright              |
 | Monorepo  | Turborepo + pnpm workspaces               |
@@ -227,16 +239,16 @@ pnpm e2e
 
 ## Roadmap
 
-| Phase | Description                                                       | Status    |
-| ----- | ----------------------------------------------------------------- | --------- |
-| 1     | Foundation — Auth, dashboard, company settings, design system     | Done      |
-| 2     | Contacts + Products — CRUD, VAT lookup, country abstraction       | Done      |
-| 3     | Invoicing — Creation, PDF, AI emails, estimates, recurring        | Done      |
-| 4     | myDATA — API client, transmission, ΜΑΡΚ/QR on PDFs                | In review |
-| 5     | Expenses — AI extraction, categories, recurring, email inbox      | In review |
-| 6     | Reports & Dashboard — KPIs, charts, P&L, VAT, tax projection      | Specced   |
-| 7     | AI Assistant — Chat panel, function calling, financial Q&A        | Specced   |
-| 8     | Polish — Multi-user/roles, API docs, MCP server, i18n, responsive | Specced   |
+| Phase | Description                                                       | Status      |
+| ----- | ----------------------------------------------------------------- | ----------- |
+| 1     | Foundation — Auth, dashboard, company settings, design system     | Done        |
+| 2     | Contacts + Products — CRUD, VAT lookup, country abstraction       | Done        |
+| 3     | Invoicing — Creation, PDF, AI emails, estimates, recurring        | Done        |
+| 4     | myDATA — API client, transmission, ΜΑΡΚ/QR on PDFs                | Done        |
+| 5     | Expenses — AI extraction, categories, recurring, email inbox      | Done        |
+| 6     | Reports & Dashboard — KPIs, charts, P&L, VAT, tax projection      | Done        |
+| 7     | AI Assistant — Chat panel, function calling, financial Q&A        | In progress |
+| 8     | Polish — Multi-user/roles, API docs, MCP server, i18n, responsive | Specced     |
 
 ## Documentation
 

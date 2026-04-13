@@ -61,6 +61,8 @@ apps/web/
 │   │   ├── invoices/   # Invoice CRUD + myDATA actions
 │   │   ├── quotes/     # Estimate CRUD + conversion
 │   │   ├── recurring/  # Recurring invoice management
+│   │   ├── recurring-expenses/ # Recurring expense management
+│   │   ├── reports/    # Reports overview, P&L, VAT, tax projection
 │   │   ├── settings/   # Company settings, myDATA credentials
 │   │   └── dashboard/  # Dashboard with KPIs
 │   └── api/            # Auth handler, PDF route
@@ -68,17 +70,20 @@ apps/web/
 │   ├── ui/             # shadcn components
 │   ├── layout/         # Sidebar, top bar, mobile nav, user menu
 │   ├── invoicing/      # Line items builder, PDF template
-│   └── onboarding/     # Quick Setup widget
+│   ├── onboarding/     # Quick Setup widget
+│   └── reports/        # KPI cards, charts, period selector, tax tables
 ├── lib/
 │   ├── country/        # Country provider (GR, international)
+│   ├── expenses/       # AI extraction, category seeding, duplicate detection
 │   ├── invoicing/      # Calculations, numbering, PDF, email
 │   ├── mydata/         # ΑΑΔΕ API client, XML builder, encryption
+│   ├── reports/        # Aggregation queries, cache, tax, insights, export
 │   └── ...             # Auth, DB, session, utils
 ├── hooks/              # Client-side hooks
 └── messages/           # i18n translation files
 
 packages/db/
-├── src/schema/         # Drizzle table definitions (14 tables)
+├── src/schema/         # Drizzle table definitions (20 tables)
 ├── src/test-utils.ts   # PGlite test helpers
 └── src/seed.ts         # Development seed data
 
@@ -88,7 +93,8 @@ e2e/                    # Playwright end-to-end tests
 ├── 02-contacts.spec.ts # Contact CRUD
 ├── 03-products.spec.ts # Product CRUD
 ├── 04-navigation.spec.ts # Sidebar navigation
-└── 05-invoices.spec.ts # Invoice creation
+├── 05-invoices.spec.ts # Invoice creation
+└── 06-expenses.spec.ts # Expense creation
 ```
 
 ## Commands
@@ -118,6 +124,8 @@ e2e/                    # Playwright end-to-end tests
 | Data model design                               | `.research/BRAINSTORM_DATA_MODEL.md`   |
 | Tech stack decisions                            | `.research/BRAINSTORM_TECH_STACK.md`   |
 | Hosting and auth strategy                       | `.research/BRAINSTORM_HOSTING_AUTH.md` |
+| Report queries and aggregation                  | `apps/web/lib/reports/`                |
+| Country provider architecture                   | `apps/web/lib/country/`                |
 
 ---
 
@@ -155,6 +163,16 @@ e2e/                    # Playwright end-to-end tests
 2. Component lands in `apps/web/components/ui/`
 3. Customise to match design system (dark theme, no borders, emerald accents)
 4. See `docs/DESIGN.md` for token values
+
+### Adding a report
+
+1. Add query function in `apps/web/lib/reports/queries.ts` (scoped by orgId + date range)
+2. If the report needs a dedicated page, create route in `apps/web/app/(app)/reports/<report>/page.tsx`
+3. For chart components, add to `apps/web/components/reports/charts/` using Recharts
+4. Add i18n strings to `apps/web/messages/en.json` under the `Reports` namespace
+5. Wire up the period selector (`components/reports/period-selector.tsx`) for date filtering
+6. If the query is expensive, add cache key to `apps/web/lib/reports/cache.ts`
+7. Add link to the report in the reports overview page (`apps/web/app/(app)/reports/page.tsx`)
 
 ### Testing
 
