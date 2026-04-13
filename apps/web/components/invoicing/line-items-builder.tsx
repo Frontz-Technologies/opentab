@@ -1,0 +1,319 @@
+"use client";
+
+import { useState, useCallback } from "react";
+import { useTranslations } from "next-intl";
+import type { Product } from "@opentab/db/schema";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { calculateLineTotal } from "@/lib/invoicing/calculations";
+
+export interface LineItem {
+  id: string;
+  productId: string;
+  sortOrder: number;
+  name: string;
+  description: string;
+  quantity: string;
+  unitPrice: string;
+  unit: string;
+  taxCategory: string;
+  taxRate: string;
+  taxAmount: string;
+  lineTotal: string;
+}
+
+interface LineItemsBuilderProps {
+  items: LineItem[];
+  onChange: (items: LineItem[]) => void;
+  products?: Product[];
+  defaultTaxRate: string;
+  usesInclusiveTax: boolean;
+}
+
+function createEmptyItem(sortOrder: number, defaultTaxRate: string): LineItem {
+  return {
+    id: crypto.randomUUID(),
+    productId: "",
+    sortOrder,
+    name: "",
+    description: "",
+    quantity: "1",
+    unitPrice: "0.00",
+    unit: "",
+    taxCategory: "standard",
+    taxRate: defaultTaxRate,
+    taxAmount: "0.00",
+    lineTotal: "0.00",
+  };
+}
+
+function recalcItem(item: LineItem, usesInclusiveTax: boolean): LineItem {
+  const result = calculateLineTotal({
+    quantity: item.quantity || "0",
+    unitPrice: item.unitPrice || "0",
+    taxRate: item.taxRate || "0",
+    usesInclusiveTax,
+  });
+  return { ...item, taxAmount: result.taxAmount, lineTotal: result.lineTotal };
+}
+
+export function LineItemsBuilder({
+  items,
+  onChange,
+  products,
+  defaultTaxRate,
+  usesInclusiveTax,
+}: LineItemsBuilderProps) {
+  const t = useTranslations("invoices");
+
+  const updateItem = useCallback(
+    (index: number, field: keyof LineItem, value: string) => {
+      const updated = [...items];
+      updated[index] = { ...updated[index], [field]: value };
+      updated[index] = recalcItem(updated[index], usesInclusiveTax);
+      onChange(updated);
+    },
+    [items, onChange, usesInclusiveTax],
+  );
+
+  const addItem = useCallback(() => {
+    const newItem = createEmptyItem(items.length, defaultTaxRate);
+    onChange([...items, newItem]);
+  }, [items, onChange, defaultTaxRate]);
+
+  const addFromProduct = useCallback(
+    (product: Product) => {
+      const newItem: LineItem = {
+        id: crypto.randomUUID(),
+        productId: product.id,
+        sortOrder: items.length,
+        name: product.name,
+        description: product.description ?? "",
+        quantity: "1",
+        unitPrice: product.unitPrice,
+        unit: product.unit,
+        taxCategory: product.taxCategory,
+        taxRate: product.vatRate ?? defaultTaxRate,
+        taxAmount: "0.00",
+        lineTotal: "0.00",
+      };
+      const recalced = recalcItem(newItem, usesInclusiveTax);
+      onChange([...items, recalced]);
+    },
+    [items, onChange, defaultTaxRate, usesInclusiveTax],
+  );
+
+  const removeItem = useCallback(
+    (index: number) => {
+      const updated = items.filter((_, i) => i !== index);
+      updated.forEach((item, i) => (item.sortOrder = i));
+      onChange(updated);
+    },
+    [items, onChange],
+  );
+
+  const moveItem = useCallback(
+    (from: number, to: number) => {
+      if (to < 0 || to >= items.length) return;
+      const updated = [...items];
+      const [moved] = updated.splice(from, 1);
+      updated.splice(to, 0, moved);
+      updated.forEach((item, i) => (item.sortOrder = i));
+      onChange(updated);
+    },
+    [items, onChange],
+  );
+
+  const [showProductPicker, setShowProductPicker] = useState(false);
+
+  // Calculate totals
+  const subtotal = items.reduce((sum, item) => {
+    const net = usesInclusiveTax
+      ? parseFloat(item.lineTotal || "0") - parseFloat(item.taxAmount || "0")
+      : parseFloat(item.quantity || "0") * parseFloat(item.unitPrice || "0");
+    return sum + net;
+  }, 0);
+  const totalTax = items.reduce(
+    (sum, item) => sum + parseFloat(item.taxAmount || "0"),
+    0,
+  );
+  const total = subtotal + totalTax;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="font-headline text-lg font-semibold text-on-surface">
+          {t("lineItems")}
+        </h3>
+        <div className="flex gap-2">
+          {products && products.length > 0 && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowProductPicker(!showProductPicker)}
+            >
+              <span className="material-symbols-outlined text-[16px] mr-1">
+                inventory_2
+              </span>
+              {t("addFromCatalogue")}
+            </Button>
+          )}
+          <Button type="button" variant="outline" size="sm" onClick={addItem}>
+            <span className="material-symbols-outlined text-[16px] mr-1">
+              add
+            </span>
+            {t("addItem")}
+          </Button>
+        </div>
+      </div>
+
+      {showProductPicker && products && (
+        <div className="bg-surface-container-low rounded-lg p-3 space-y-1">
+          {products
+            .filter((p) => p.active)
+            .map((product) => (
+              <button
+                key={product.id}
+                type="button"
+                className="w-full text-left px-3 py-2 rounded hover:bg-surface-container transition-colors text-sm"
+                onClick={() => {
+                  addFromProduct(product);
+                  setShowProductPicker(false);
+                }}
+              >
+                <span className="font-medium text-on-surface">
+                  {product.name}
+                </span>
+                <span className="text-on-surface/50 ml-2">
+                  {product.unitPrice} / {product.unit}
+                </span>
+              </button>
+            ))}
+        </div>
+      )}
+
+      {items.length === 0 ? (
+        <div className="text-center py-8 text-on-surface/50 text-sm">
+          No line items yet. Click &quot;Add item&quot; to get started.
+        </div>
+      ) : (
+        <div className="space-y-2">
+          <div className="grid grid-cols-[1fr_80px_100px_80px_100px_100px_40px] gap-2 px-2 text-xs font-label text-on-surface/60">
+            <span>{t("itemName")}</span>
+            <span>{t("quantity")}</span>
+            <span>{t("unitPrice")}</span>
+            <span>{t("taxRate")}</span>
+            <span>{t("taxAmount")}</span>
+            <span className="text-right">{t("lineTotal")}</span>
+            <span />
+          </div>
+
+          {items.map((item, index) => (
+            <div
+              key={item.id}
+              className="grid grid-cols-[1fr_80px_100px_80px_100px_100px_40px] gap-2 items-center bg-surface-container rounded-lg p-2"
+            >
+              <div className="space-y-1">
+                <Input
+                  value={item.name}
+                  onChange={(e) => updateItem(index, "name", e.target.value)}
+                  placeholder={t("itemName")}
+                  className="h-8 text-sm"
+                />
+                <Input
+                  value={item.description}
+                  onChange={(e) =>
+                    updateItem(index, "description", e.target.value)
+                  }
+                  placeholder={t("itemDescription")}
+                  className="h-7 text-xs text-on-surface/60"
+                />
+              </div>
+              <Input
+                type="number"
+                value={item.quantity}
+                onChange={(e) => updateItem(index, "quantity", e.target.value)}
+                className="h-8 text-sm text-right font-mono"
+                min="0"
+                step="0.01"
+              />
+              <Input
+                type="number"
+                value={item.unitPrice}
+                onChange={(e) => updateItem(index, "unitPrice", e.target.value)}
+                className="h-8 text-sm text-right font-mono"
+                min="0"
+                step="0.01"
+              />
+              <Input
+                type="number"
+                value={item.taxRate}
+                onChange={(e) => updateItem(index, "taxRate", e.target.value)}
+                className="h-8 text-sm text-right font-mono"
+                min="0"
+                step="0.01"
+              />
+              <span className="text-sm text-on-surface/60 font-mono text-right px-2">
+                {item.taxAmount}
+              </span>
+              <span className="text-sm text-on-surface font-mono text-right font-medium px-2">
+                {item.lineTotal}
+              </span>
+              <div className="flex flex-col gap-0.5">
+                <button
+                  type="button"
+                  onClick={() => moveItem(index, index - 1)}
+                  className="text-on-surface/40 hover:text-on-surface text-xs leading-none"
+                  disabled={index === 0}
+                >
+                  <span className="material-symbols-outlined text-[14px]">
+                    arrow_upward
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => removeItem(index)}
+                  className="text-red-400/60 hover:text-red-400 text-xs leading-none"
+                >
+                  <span className="material-symbols-outlined text-[14px]">
+                    close
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => moveItem(index, index + 1)}
+                  className="text-on-surface/40 hover:text-on-surface text-xs leading-none"
+                  disabled={index === items.length - 1}
+                >
+                  <span className="material-symbols-outlined text-[14px]">
+                    arrow_downward
+                  </span>
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {items.length > 0 && (
+        <div className="flex justify-end">
+          <div className="w-64 space-y-1 text-sm">
+            <div className="flex justify-between text-on-surface/60">
+              <span>{t("subtotal")}</span>
+              <span className="font-mono">{subtotal.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-on-surface/60">
+              <span>{t("taxAmount")}</span>
+              <span className="font-mono">{totalTax.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-on-surface font-semibold border-t border-on-surface/10 pt-1">
+              <span>{t("totalAmount")}</span>
+              <span className="font-mono">{total.toFixed(2)}</span>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

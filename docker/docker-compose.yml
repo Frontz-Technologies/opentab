@@ -65,6 +65,12 @@ services:
       timeout: 5s
       retries: 5
 
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    restart: unless-stopped
+    expose:
+      - "3000"
+
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
