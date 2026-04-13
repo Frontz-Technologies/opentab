@@ -1,0 +1,22 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+import { useAiChatStore } from "@/hooks/use-ai-chat-store";
+
+export function AiChatButton() {
+  const t = useTranslations("ai");
+  const open = useAiChatStore((state) => state.open);
+
+  return (
+    <button
+      type="button"
+      onClick={open}
+      className="fixed bottom-20 right-4 z-50 flex size-14 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg transition-transform hover:scale-105 md:bottom-6"
+      aria-label={t("open")}
+    >
+      <span className="material-symbols-outlined text-[24px] leading-none">
+        smart_toy
+      </span>
+    </button>
+  );
+}

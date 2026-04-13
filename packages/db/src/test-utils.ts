@@ -475,6 +475,20 @@ async function pushSchema(pglite: PGlite) {
       "created_at" timestamp NOT NULL DEFAULT now(),
       "updated_at" timestamp NOT NULL DEFAULT now()
     )`,
+
+    `CREATE TABLE IF NOT EXISTS "ai_settings" (
+      "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      "org_id" uuid NOT NULL REFERENCES "organisation"("id") ON DELETE CASCADE,
+      "enabled" boolean NOT NULL DEFAULT false,
+      "api_key_encrypted" text,
+      "api_key_iv" varchar(32),
+      "api_key_last4" varchar(4),
+      "model" varchar(100) NOT NULL DEFAULT 'anthropic/claude-sonnet-4',
+      "created_at" timestamp NOT NULL DEFAULT now(),
+      "updated_at" timestamp NOT NULL DEFAULT now()
+    )`,
+
+    `CREATE UNIQUE INDEX "ai_settings_org_id_idx" ON "ai_settings" ("org_id")`,
   ];
 
   for (const sql of statements) {

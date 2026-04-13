@@ -102,3 +102,4 @@ export {
   type MydataTransmission,
   type NewMydataTransmission,
 } from "./mydata";
+export { aiSettings, type AiSettings, type NewAiSettings } from "./ai-settings";
