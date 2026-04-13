@@ -3,10 +3,7 @@
 import type { UIMessage } from "ai";
 import { create } from "zustand";
 import type { ConfirmToolCall } from "@/lib/ai/types";
-import {
-  confirmAiToolCall,
-  submitAiChatMessage,
-} from "@/lib/ai/chat-client";
+import { confirmAiToolCall, submitAiChatMessage } from "@/lib/ai/chat-client";
 
 type AiChatStore = {
   isOpen: boolean;
@@ -51,7 +48,9 @@ export const useAiChatStore = create<AiChatStore>((set) => ({
       set({
         isStreaming: false,
         error:
-          error instanceof Error ? error.message : "Unable to complete request.",
+          error instanceof Error
+            ? error.message
+            : "Unable to complete request.",
       });
       return false;
     }
@@ -74,7 +73,9 @@ export const useAiChatStore = create<AiChatStore>((set) => ({
       set({
         isStreaming: false,
         error:
-          error instanceof Error ? error.message : "Unable to complete request.",
+          error instanceof Error
+            ? error.message
+            : "Unable to complete request.",
       });
       return false;
     }

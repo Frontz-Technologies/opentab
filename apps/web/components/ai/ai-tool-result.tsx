@@ -16,7 +16,10 @@ function formatToolName(toolName: string) {
 }
 
 export function AiToolResult({ toolInvocation }: AiToolResultProps) {
-  if ("result" in toolInvocation && isPendingConfirmation(toolInvocation.result)) {
+  if (
+    "result" in toolInvocation &&
+    isPendingConfirmation(toolInvocation.result)
+  ) {
     return <AiConfirmation confirmation={toolInvocation.result} />;
   }
 

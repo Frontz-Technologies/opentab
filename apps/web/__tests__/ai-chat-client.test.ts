@@ -1,9 +1,6 @@
 import { formatDataStreamPart, type UIMessage } from "ai";
 import { describe, expect, it, vi } from "vitest";
-import {
-  confirmAiToolCall,
-  submitAiChatMessage,
-} from "../lib/ai/chat-client";
+import { confirmAiToolCall, submitAiChatMessage } from "../lib/ai/chat-client";
 
 function createStream(parts: string[]): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder();
@@ -20,19 +17,21 @@ function createStream(parts: string[]): ReadableStream<Uint8Array> {
 
 describe("submitAiChatMessage", () => {
   it("posts the new user message and appends the streamed assistant text", async () => {
-    const fetchMock = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
-      return new Response(
-        createStream([
-          formatDataStreamPart("start_step", { messageId: "assistant-1" }),
-          formatDataStreamPart("text", "Revenue is "),
-          formatDataStreamPart("text", "up 12%."),
-          formatDataStreamPart("finish_message", {
-            finishReason: "stop",
-            usage: { promptTokens: 10, completionTokens: 6 },
-          }),
-        ]),
-      );
-    });
+    const fetchMock = vi.fn(
+      async (_input: RequestInfo | URL, init?: RequestInit) => {
+        return new Response(
+          createStream([
+            formatDataStreamPart("start_step", { messageId: "assistant-1" }),
+            formatDataStreamPart("text", "Revenue is "),
+            formatDataStreamPart("text", "up 12%."),
+            formatDataStreamPart("finish_message", {
+              finishReason: "stop",
+              usage: { promptTokens: 10, completionTokens: 6 },
+            }),
+          ]),
+        );
+      },
+    );
 
     const result = await submitAiChatMessage({
       input: "How is revenue doing?",

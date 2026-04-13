@@ -95,7 +95,8 @@ export function createCreateDraftInvoiceTool(
   confirmToolCall?: ConfirmToolCall,
 ) {
   return tool({
-    description: "Create a draft invoice after the user explicitly approves it.",
+    description:
+      "Create a draft invoice after the user explicitly approves it.",
     parameters: zodSchema(createDraftInvoiceParameters),
     execute: async (rawArgs) => {
       const args = createDraftInvoiceParameters.parse(rawArgs);

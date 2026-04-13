@@ -69,7 +69,12 @@ describe("POST /api/ai/chat", () => {
 
   it("returns 400 when AI is not configured", async () => {
     getSessionMock.mockResolvedValue({
-      user: { id: "user-1", name: "Alex", email: "alex@example.com", locale: "en" },
+      user: {
+        id: "user-1",
+        name: "Alex",
+        email: "alex@example.com",
+        locale: "en",
+      },
       org: {
         id: "org-1",
         name: "OpenTab",
@@ -104,7 +109,12 @@ describe("POST /api/ai/chat", () => {
 
   it("returns 429 when the org exceeds the AI rate limit", async () => {
     getSessionMock.mockResolvedValue({
-      user: { id: "user-1", name: "Alex", email: "alex@example.com", locale: "en" },
+      user: {
+        id: "user-1",
+        name: "Alex",
+        email: "alex@example.com",
+        locale: "en",
+      },
       org: {
         id: "org-1",
         name: "OpenTab",
@@ -145,7 +155,12 @@ describe("POST /api/ai/chat", () => {
 
   it("creates tools with the current org role", async () => {
     getSessionMock.mockResolvedValue({
-      user: { id: "user-1", name: "Alex", email: "alex@example.com", locale: "en" },
+      user: {
+        id: "user-1",
+        name: "Alex",
+        email: "alex@example.com",
+        locale: "en",
+      },
       org: {
         id: "org-1",
         name: "OpenTab",
@@ -188,7 +203,12 @@ describe("POST /api/ai/chat", () => {
 
   it("converts full UI messages before calling the model", async () => {
     getSessionMock.mockResolvedValue({
-      user: { id: "user-1", name: "Alex", email: "alex@example.com", locale: "en" },
+      user: {
+        id: "user-1",
+        name: "Alex",
+        email: "alex@example.com",
+        locale: "en",
+      },
       org: {
         id: "org-1",
         name: "OpenTab",

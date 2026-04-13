@@ -74,7 +74,9 @@ function buildConfirmation(
       details: [
         `Expense date: ${args.expenseDate}`,
         `Line items: ${args.items.length}`,
-        args.contactId ? `Supplier ID: ${args.contactId}` : "No supplier linked",
+        args.contactId
+          ? `Supplier ID: ${args.contactId}`
+          : "No supplier linked",
       ],
     },
   };
@@ -93,7 +95,8 @@ export function createCreateDraftExpenseTool(
   confirmToolCall?: ConfirmToolCall,
 ) {
   return tool({
-    description: "Create a draft expense after the user explicitly approves it.",
+    description:
+      "Create a draft expense after the user explicitly approves it.",
     parameters: zodSchema(createDraftExpenseParameters),
     execute: async (rawArgs) => {
       const args = createDraftExpenseParameters.parse(rawArgs);
