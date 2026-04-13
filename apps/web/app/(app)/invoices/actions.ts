@@ -18,6 +18,7 @@ import {
   calculateLineTotal,
   calculateInvoiceTotals,
 } from "@/lib/invoicing/calculations";
+import { createDraftInvoice } from "@/lib/invoicing/draft-invoices";
 
 const lineItemSchema = z.object({
   productId: z.string().uuid().optional().or(z.literal("")),
@@ -141,67 +142,7 @@ export async function createInvoice(formData: FormData) {
     return { success: false, error: parsed.error.flatten().fieldErrors };
   }
 
-  const data = parsed.data;
-  const usesInclusiveTax = data.usesInclusiveTax;
-
-  const totals = calculateInvoiceTotals(
-    data.items.map((i) => ({
-      quantity: i.quantity,
-      unitPrice: i.unitPrice,
-      taxRate: i.taxRate,
-    })),
-    usesInclusiveTax,
-  );
-
-  const invoiceNumber = await generateNextNumber(session.org.id, "invoice");
-
-  const [invoice] = await db
-    .insert(invoices)
-    .values({
-      orgId: session.org.id,
-      contactId: data.contactId,
-      invoiceNumber,
-      issueDate: data.issueDate,
-      dueDate: data.dueDate || null,
-      currencyCode: data.currencyCode,
-      usesInclusiveTax,
-      subtotal: totals.subtotal,
-      taxAmount: totals.taxAmount,
-      total: totals.total,
-      balance: totals.total,
-      contactName: data.contactName,
-      contactEmail: data.contactEmail || null,
-      contactVatNumber: data.contactVatNumber || null,
-      contactAddress: data.contactAddress || null,
-      notes: data.notes || null,
-      terms: data.terms || null,
-      internalNotes: data.internalNotes || null,
-    })
-    .returning();
-
-  for (const item of data.items) {
-    const lineTotals = calculateLineTotal({
-      quantity: item.quantity,
-      unitPrice: item.unitPrice,
-      taxRate: item.taxRate,
-      usesInclusiveTax,
-    });
-
-    await db.insert(invoiceItems).values({
-      invoiceId: invoice.id,
-      productId: item.productId || null,
-      sortOrder: item.sortOrder,
-      name: item.name,
-      description: item.description || null,
-      quantity: item.quantity,
-      unitPrice: item.unitPrice,
-      unit: item.unit || null,
-      taxCategory: item.taxCategory,
-      taxRate: item.taxRate,
-      taxAmount: lineTotals.taxAmount,
-      lineTotal: lineTotals.lineTotal,
-    });
-  }
+  const { invoice } = await createDraftInvoice(session.org.id, parsed.data);
 
   revalidatePath("/invoices");
   return { success: true, invoice };

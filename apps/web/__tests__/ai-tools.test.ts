@@ -7,6 +7,8 @@ const getExpensesByCategoryMock = vi.fn();
 const getOutputVatMock = vi.fn();
 const getInputVatMock = vi.fn();
 const getOutstandingMock = vi.fn();
+const createDraftInvoiceMock = vi.fn();
+const createDraftExpenseMock = vi.fn();
 
 vi.mock("@/lib/reports/queries", () => ({
   getRevenue: getRevenueMock,
@@ -16,6 +18,14 @@ vi.mock("@/lib/reports/queries", () => ({
   getOutputVat: getOutputVatMock,
   getInputVat: getInputVatMock,
   getOutstanding: getOutstandingMock,
+}));
+
+vi.mock("@/lib/invoicing/draft-invoices", () => ({
+  createDraftInvoice: createDraftInvoiceMock,
+}));
+
+vi.mock("@/lib/expenses/draft-expenses", () => ({
+  createDraftExpense: createDraftExpenseMock,
 }));
 
 describe("AI tools", () => {
@@ -48,7 +58,7 @@ describe("AI tools", () => {
     });
 
     const { createTools } = await import("@/lib/ai/tools");
-    const tools = createTools("org-1");
+    const tools = createTools("org-1", { role: "owner" });
 
     expect(tools).toHaveProperty("getRevenueSummary");
     expect(tools).toHaveProperty("getExpenseSummary");
@@ -111,6 +121,120 @@ describe("AI tools", () => {
       totalOutstanding: 3000,
       count: 4,
       overdueCount: 2,
+    });
+  });
+
+  it("exposes write tools only for non-accountant roles", async () => {
+    const { createTools } = await import("@/lib/ai/tools");
+
+    const ownerTools = createTools("org-1", { role: "owner" });
+    const accountantTools = createTools("org-1", { role: "accountant" });
+
+    expect(ownerTools).toHaveProperty("createDraftInvoice");
+    expect(ownerTools).toHaveProperty("createDraftExpense");
+    expect(accountantTools).not.toHaveProperty("createDraftInvoice");
+    expect(accountantTools).not.toHaveProperty("createDraftExpense");
+  });
+
+  it("returns a confirmation payload before executing a write tool", async () => {
+    const { createTools } = await import("@/lib/ai/tools");
+    const tools = createTools("org-1", { role: "owner" });
+
+    const result = await (tools as any).createDraftInvoice.execute(
+      {
+        contactId: "11111111-1111-4111-8111-111111111111",
+        issueDate: "2026-04-13",
+        items: [
+          {
+            name: "Development",
+            quantity: 1,
+            unitPrice: 100,
+            taxRate: 24,
+          },
+        ],
+      },
+      { toolCallId: "tool-1", messages: [] },
+    );
+
+    expect(result).toMatchObject({
+      confirmation: true,
+      toolName: "createDraftInvoice",
+    });
+    expect(createDraftInvoiceMock).not.toHaveBeenCalled();
+  });
+
+  it("executes the confirmed write tool when approval matches", async () => {
+    createDraftInvoiceMock.mockResolvedValue({
+      invoice: {
+        id: "invoice-1",
+        invoiceNumber: "INV-0001",
+        total: "124.00",
+      },
+    });
+
+    const { createTools } = await import("@/lib/ai/tools");
+    const tools = createTools("org-1", {
+      role: "owner",
+      confirmToolCall: {
+        approved: true,
+        toolName: "createDraftInvoice",
+        args: {
+          contactId: "11111111-1111-4111-8111-111111111111",
+          issueDate: "2026-04-13",
+          items: [
+            {
+              name: "Development",
+              quantity: 1,
+              unitPrice: 100,
+              taxRate: 24,
+            },
+          ],
+        },
+      },
+    });
+
+    const result = await (tools as any).createDraftInvoice.execute(
+      {
+        contactId: "11111111-1111-4111-8111-111111111111",
+        issueDate: "2026-04-13",
+        items: [
+          {
+            name: "Development",
+            quantity: 1,
+            unitPrice: 100,
+            taxRate: 24,
+          },
+        ],
+      },
+      { toolCallId: "tool-2", messages: [] },
+    );
+
+    expect(createDraftInvoiceMock).toHaveBeenCalledWith("org-1", {
+      contactId: "11111111-1111-4111-8111-111111111111",
+      issueDate: "2026-04-13",
+      dueDate: "",
+      currencyCode: "EUR",
+      usesInclusiveTax: false,
+      notes: "",
+      terms: "",
+      internalNotes: "",
+      items: [
+        {
+          sortOrder: 0,
+          name: "Development",
+          description: "",
+          quantity: "1",
+          unitPrice: "100",
+          unit: "",
+          taxCategory: "standard",
+          taxRate: "24",
+        },
+      ],
+    });
+    expect(result).toMatchObject({
+      created: true,
+      invoiceId: "invoice-1",
+      invoiceNumber: "INV-0001",
     });
   });
 });

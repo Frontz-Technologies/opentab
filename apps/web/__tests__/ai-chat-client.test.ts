@@ -1,6 +1,9 @@
 import { formatDataStreamPart, type UIMessage } from "ai";
 import { describe, expect, it, vi } from "vitest";
-import { submitAiChatMessage } from "../lib/ai/chat-client";
+import {
+  confirmAiToolCall,
+  submitAiChatMessage,
+} from "../lib/ai/chat-client";
 
 function createStream(parts: string[]): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder();
@@ -38,13 +41,20 @@ describe("submitAiChatMessage", () => {
     });
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(fetchMock.mock.calls[0]?.[0]).toBe("/api/ai/chat");
-    expect(fetchMock.mock.calls[0]?.[1]?.method).toBe("POST");
-    expect(fetchMock.mock.calls[0]?.[1]?.body).toBe(
-      JSON.stringify({
-        messages: [{ role: "user", content: "How is revenue doing?" }],
-      }),
-    );
+    expect((fetchMock as any).mock.calls[0]?.[0]).toBe("/api/ai/chat");
+    expect((fetchMock as any).mock.calls[0]?.[1]?.method).toBe("POST");
+    const requestInit = (fetchMock as any).mock.calls[0]?.[1] as
+      | RequestInit
+      | undefined;
+    const body = JSON.parse(String(requestInit?.body)) as {
+      messages: UIMessage[];
+    };
+    expect(body.messages).toHaveLength(1);
+    expect(body.messages[0]).toMatchObject({
+      role: "user",
+      content: "How is revenue doing?",
+      parts: [{ type: "text", text: "How is revenue doing?" }],
+    });
 
     expect(result[0]).toEqual<UIMessage>({
       id: expect.any(String),
@@ -119,6 +129,66 @@ describe("submitAiChatMessage", () => {
           },
         },
       ],
+    });
+  });
+
+  it("sends a confirmation payload when approving a pending tool action", async () => {
+    const fetchMock = vi.fn(async () => {
+      return new Response(
+        createStream([
+          formatDataStreamPart("start_step", { messageId: "assistant-3" }),
+          formatDataStreamPart("text", "Draft invoice created."),
+          formatDataStreamPart("finish_message", {
+            finishReason: "stop",
+            usage: { promptTokens: 9, completionTokens: 4 },
+          }),
+        ]),
+      );
+    });
+
+    await confirmAiToolCall({
+      messages: [
+        {
+          id: "assistant-2",
+          role: "assistant",
+          content: "",
+          parts: [],
+        },
+      ],
+      confirmToolCall: {
+        approved: true,
+        toolName: "createDraftInvoice",
+        args: {
+          contactId: "contact-1",
+          items: [{ name: "Development", quantity: 1, unitPrice: 100 }],
+        },
+      },
+      fetch: fetchMock,
+    });
+
+    const requestInit = (fetchMock as any).mock.calls[0]?.[1] as
+      | RequestInit
+      | undefined;
+    const body = JSON.parse(String(requestInit?.body)) as {
+      messages: UIMessage[];
+      confirmToolCall: {
+        approved: boolean;
+        toolName: string;
+        args: unknown;
+      };
+    };
+
+    expect(body.confirmToolCall).toEqual({
+      approved: true,
+      toolName: "createDraftInvoice",
+      args: {
+        contactId: "contact-1",
+        items: [{ name: "Development", quantity: 1, unitPrice: 100 }],
+      },
+    });
+    expect(body.messages.at(-1)).toMatchObject({
+      role: "user",
+      content: "Approved. Continue.",
     });
   });
 });

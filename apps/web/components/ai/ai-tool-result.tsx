@@ -1,6 +1,8 @@
 "use client";
 
 import type { ToolInvocation } from "ai";
+import { AiConfirmation } from "@/components/ai/ai-confirmation";
+import { isPendingConfirmation } from "@/lib/ai/types";
 
 type AiToolResultProps = {
   toolInvocation: ToolInvocation;
@@ -14,6 +16,10 @@ function formatToolName(toolName: string) {
 }
 
 export function AiToolResult({ toolInvocation }: AiToolResultProps) {
+  if ("result" in toolInvocation && isPendingConfirmation(toolInvocation.result)) {
+    return <AiConfirmation confirmation={toolInvocation.result} />;
+  }
+
   return (
     <div className="rounded-2xl border border-on-surface/10 bg-surface-container-high px-4 py-3">
       <div className="flex items-center justify-between gap-3">

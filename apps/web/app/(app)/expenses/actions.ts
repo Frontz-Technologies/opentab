@@ -20,6 +20,7 @@ import { formatInvoiceNumber } from "@/lib/invoicing/numbering";
 import { computeFileHash } from "@/lib/expenses/duplicate-detection";
 import { matchSupplier } from "@/lib/expenses/supplier-matching";
 import { ensureCategoriesSeeded } from "@/lib/expenses/category-seed";
+import { createDraftExpense } from "@/lib/expenses/draft-expenses";
 
 const lineItemSchema = z.object({
   sortOrder: z.coerce.number().int().min(0),
@@ -137,62 +138,7 @@ export async function createExpense(formData: FormData) {
     return { success: false, error: parsed.error.flatten().fieldErrors };
   }
 
-  const data = parsed.data;
-  const usesInclusiveTax = data.usesInclusiveTax;
-
-  const totals = calculateInvoiceTotals(
-    data.items.map((i) => ({
-      quantity: i.quantity,
-      unitPrice: i.unitPrice,
-      taxRate: i.taxRate,
-    })),
-    usesInclusiveTax,
-  );
-
-  const expenseNumber = await generateExpenseNumber(session.org.id);
-
-  const [expense] = await db
-    .insert(expenses)
-    .values({
-      orgId: session.org.id,
-      contactId: data.contactId || null,
-      categoryId: data.categoryId || null,
-      expenseNumber,
-      expenseDate: data.expenseDate,
-      paymentDate: data.paymentDate || null,
-      currencyCode: data.currencyCode,
-      usesInclusiveTax,
-      subtotal: totals.subtotal,
-      taxAmount: totals.taxAmount,
-      total: totals.total,
-      supplierInvoiceNumber: data.supplierInvoiceNumber || null,
-      contactName: data.contactName || null,
-      contactVatNumber: data.contactVatNumber || null,
-      description: data.description || null,
-      notes: data.notes || null,
-    })
-    .returning();
-
-  for (const item of data.items) {
-    const lineTotals = calculateLineTotal({
-      quantity: item.quantity,
-      unitPrice: item.unitPrice,
-      taxRate: item.taxRate,
-      usesInclusiveTax,
-    });
-
-    await db.insert(expenseItems).values({
-      expenseId: expense.id,
-      sortOrder: item.sortOrder,
-      name: item.name,
-      description: item.description || null,
-      quantity: item.quantity,
-      unitPrice: item.unitPrice,
-      taxRate: item.taxRate,
-      taxAmount: lineTotals.taxAmount,
-      lineTotal: lineTotals.lineTotal,
-    });
-  }
+  const { expense } = await createDraftExpense(session.org.id, parsed.data);
 
   revalidatePath("/expenses");
   return { success: true, expense };

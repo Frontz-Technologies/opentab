@@ -18,6 +18,30 @@ export type AiStreamState =
   | { type: "done" };
 
 export type ConfirmToolCall = {
-  toolCallId: string;
   approved: boolean;
+  toolName: string;
+  args: unknown;
 };
+
+export type PendingConfirmation = {
+  confirmation: true;
+  toolName: string;
+  args: unknown;
+  summary: {
+    title: string;
+    details: string[];
+  };
+};
+
+export function isPendingConfirmation(
+  value: unknown,
+): value is PendingConfirmation {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "confirmation" in value &&
+    (value as { confirmation?: unknown }).confirmation === true &&
+    "toolName" in value &&
+    typeof (value as { toolName?: unknown }).toolName === "string"
+  );
+}

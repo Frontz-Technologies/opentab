@@ -1,4 +1,4 @@
-import { streamText } from "ai";
+import { convertToCoreMessages, streamText, type UIMessage } from "ai";
 import { getAiSettingsSecret } from "@/lib/actions/ai-settings";
 import { createAiProvider } from "@/lib/ai/provider";
 import { aiRateLimiter } from "@/lib/ai/rate-limiter";
@@ -8,7 +8,7 @@ import type { ConfirmToolCall } from "@/lib/ai/types";
 import { getSession } from "@/lib/session";
 
 type ChatRequestBody = {
-  messages?: Array<{ role: "user" | "assistant"; content: string }>;
+  messages?: UIMessage[];
   confirmToolCall?: ConfirmToolCall;
 };
 
@@ -29,7 +29,7 @@ export async function POST(req: Request): Promise<Response> {
   }
 
   const body = (await req.json()) as ChatRequestBody;
-  const messages = body.messages ?? [];
+  const messages = convertToCoreMessages(body.messages ?? []);
   const model = createAiProvider(settings.apiKey, settings.model);
   const tools = createTools(session.org.id, {
     role: session.role,

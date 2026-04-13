@@ -1,9 +1,13 @@
 import { processDataStream, type ToolInvocation, type UIMessage } from "ai";
+import type { ConfirmToolCall } from "@/lib/ai/types";
+
+type FetchImplementation = typeof globalThis.fetch;
 
 type SubmitAiChatMessageOptions = {
-  input: string;
   messages: UIMessage[];
-  fetch?: typeof fetch;
+  input?: string;
+  confirmToolCall?: ConfirmToolCall;
+  fetch?: FetchImplementation;
 };
 
 function createUserMessage(content: string): UIMessage {
@@ -45,23 +49,26 @@ function upsertToolInvocation(
 export async function submitAiChatMessage({
   input,
   messages,
+  confirmToolCall,
   fetch: fetchImplementation = fetch,
 }: SubmitAiChatMessageOptions): Promise<UIMessage[]> {
-  const trimmedInput = input.trim();
+  const trimmedInput = input?.trim() ?? "";
   if (!trimmedInput) {
-    return messages;
+    if (!confirmToolCall) {
+      return messages;
+    }
   }
 
-  const nextMessages = [...messages, createUserMessage(trimmedInput)];
+  const nextMessages = trimmedInput
+    ? [...messages, createUserMessage(trimmedInput)]
+    : [...messages];
 
   const response = await fetchImplementation("/api/ai/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      messages: nextMessages.map((message) => ({
-        role: message.role,
-        content: message.content,
-      })),
+      messages: nextMessages,
+      confirmToolCall,
     }),
   });
 
@@ -163,4 +170,21 @@ export async function submitAiChatMessage({
   });
 
   return nextMessages;
+}
+
+export async function confirmAiToolCall({
+  messages,
+  confirmToolCall,
+  fetch,
+}: {
+  messages: UIMessage[];
+  confirmToolCall: ConfirmToolCall;
+  fetch?: FetchImplementation;
+}) {
+  return submitAiChatMessage({
+    messages,
+    input: "Approved. Continue.",
+    confirmToolCall,
+    fetch,
+  });
 }

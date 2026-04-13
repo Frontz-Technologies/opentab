@@ -4,6 +4,7 @@ const getSessionMock = vi.fn();
 const getAiSettingsSecretMock = vi.fn();
 const createAiProviderMock = vi.fn();
 const createToolsMock = vi.fn();
+const convertToCoreMessagesMock = vi.fn();
 const getSystemPromptMock = vi.fn();
 const streamTextMock = vi.fn();
 const aiRateLimiterCheckMock = vi.fn();
@@ -35,6 +36,7 @@ vi.mock("@/lib/ai/rate-limiter", () => ({
 }));
 
 vi.mock("ai", () => ({
+  convertToCoreMessages: convertToCoreMessagesMock,
   streamText: streamTextMock,
 }));
 
@@ -44,6 +46,7 @@ describe("POST /api/ai/chat", () => {
     aiRateLimiterCheckMock.mockReturnValue({ allowed: true, remaining: 19 });
     createAiProviderMock.mockReturnValue({ provider: "mock" });
     createToolsMock.mockReturnValue({});
+    convertToCoreMessagesMock.mockImplementation((messages) => messages);
     getSystemPromptMock.mockReturnValue("system prompt");
     streamTextMock.mockReturnValue({
       toDataStreamResponse: () => new Response("ok"),
@@ -181,5 +184,81 @@ describe("POST /api/ai/chat", () => {
       role: "accountant",
       confirmToolCall: undefined,
     });
+  });
+
+  it("converts full UI messages before calling the model", async () => {
+    getSessionMock.mockResolvedValue({
+      user: { id: "user-1", name: "Alex", email: "alex@example.com", locale: "en" },
+      org: {
+        id: "org-1",
+        name: "OpenTab",
+        slug: "opentab",
+        countryCode: "GR",
+        defaultCurrency: "EUR",
+        fiscalYearStart: 1,
+        taxId: null,
+        taxAuthority: null,
+        addressLine1: null,
+        addressLine2: null,
+        city: null,
+        postalCode: null,
+        region: null,
+        phone: null,
+        setupCompletedSteps: [],
+      },
+      role: "owner",
+    });
+    getAiSettingsSecretMock.mockResolvedValue({
+      enabled: true,
+      apiKey: "sk-test",
+      model: "openai/gpt-4.1-mini",
+    });
+    convertToCoreMessagesMock.mockReturnValue([
+      { role: "user", content: "Preserved core message" },
+    ]);
+
+    const uiMessages = [
+      {
+        id: "assistant-1",
+        role: "assistant",
+        content: "",
+        parts: [
+          {
+            type: "tool-invocation",
+            toolInvocation: {
+              toolCallId: "tool-1",
+              toolName: "createDraftInvoice",
+              args: { contactId: "contact-1" },
+              result: { confirmation: true },
+              state: "result",
+            },
+          },
+        ],
+        toolInvocations: [
+          {
+            toolCallId: "tool-1",
+            toolName: "createDraftInvoice",
+            args: { contactId: "contact-1" },
+            result: { confirmation: true },
+            state: "result",
+          },
+        ],
+      },
+    ];
+
+    const { POST } = await import("@/app/api/ai/chat/route");
+    await POST(
+      new Request("http://localhost/api/ai/chat", {
+        method: "POST",
+        body: JSON.stringify({ messages: uiMessages }),
+      }),
+    );
+
+    expect(convertToCoreMessagesMock).toHaveBeenCalledWith(uiMessages);
+    expect(streamTextMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        messages: [{ role: "user", content: "Preserved core message" }],
+      }),
+    );
   });
 });
