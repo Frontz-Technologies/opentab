@@ -7,7 +7,7 @@ export const TEST_USER = {
 };
 
 export async function registerTestUser(page: Page): Promise<void> {
-  const response = await page.request.post("/api/auth/sign-up/email", {
+  await page.request.post("/api/auth/sign-up/email", {
     data: {
       name: TEST_USER.name,
       email: TEST_USER.email,
@@ -15,12 +15,8 @@ export async function registerTestUser(page: Page): Promise<void> {
     },
   });
 
-  // 200 = created, ignore if already exists
-  if (!response.ok()) {
-    // Try login instead — user might already exist
-    await loginTestUser(page);
-    return;
-  }
+  // Always login via UI regardless of registration result
+  await loginTestUser(page);
 }
 
 export async function loginTestUser(page: Page): Promise<void> {
