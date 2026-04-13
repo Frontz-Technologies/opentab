@@ -5,14 +5,23 @@
 #   cp .env.sample .env    # edit with your values
 #   docker compose up -d
 #
+# Or from project root:
+#   make prod
+#
 # Caddy provides automatic HTTPS. Set DOMAIN in .env to your domain.
+
+name: opentab
 
 services:
   app:
+    container_name: opentab-app
     build:
       context: ..
       dockerfile: docker/Dockerfile
     restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:size=64M
     expose:
       - "3000"
     depends_on:
@@ -38,10 +47,15 @@ services:
           memory: 128M
     security_opt:
       - no-new-privileges:true
+    networks:
+      - opentab-network
 
   postgres:
+    container_name: opentab-postgres
     image: postgres:16-alpine
     restart: unless-stopped
+    expose:
+      - "5432"
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-opentab}
       POSTGRES_USER: ${POSTGRES_USER:-opentab}
@@ -53,10 +67,15 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - opentab-network
 
   redis:
+    container_name: opentab-redis
     image: redis:7-alpine
     restart: unless-stopped
+    expose:
+      - "6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -64,14 +83,20 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - opentab-network
 
   gotenberg:
+    container_name: opentab-gotenberg
     image: gotenberg/gotenberg:8
     restart: unless-stopped
     expose:
       - "3000"
+    networks:
+      - opentab-network
 
   caddy:
+    container_name: opentab-caddy
     image: caddy:2-alpine
     restart: unless-stopped
     ports:
@@ -85,9 +110,15 @@ services:
       - app
     environment:
       DOMAIN: ${DOMAIN:-localhost}
+    networks:
+      - opentab-network
 
 volumes:
   postgres_data:
   redis_data:
   caddy_data:
   caddy_config:
+
+networks:
+  opentab-network:
+    driver: bridge

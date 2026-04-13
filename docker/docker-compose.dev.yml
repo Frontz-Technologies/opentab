@@ -1,5 +1,17 @@
+# OpenTab — Development Docker Compose
+#
+# Usage:
+#   cd docker
+#   docker compose -f docker-compose.dev.yml up --build
+#
+# Or from project root:
+#   make dev
+
+name: opentab-dev
+
 services:
   app:
+    container_name: opentab-dev-app
     build:
       context: ..
       dockerfile: docker/Dockerfile.dev
@@ -26,8 +38,11 @@ services:
       - /app/apps/web/node_modules
       - /app/packages/db/node_modules
       - /app/apps/web/.next
+    networks:
+      - opentab-dev-network
 
   postgres:
+    container_name: opentab-dev-postgres
     image: postgres:16-alpine
     restart: unless-stopped
     ports:
@@ -43,8 +58,11 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - opentab-dev-network
 
   redis:
+    container_name: opentab-dev-redis
     image: redis:7-alpine
     restart: unless-stopped
     ports:
@@ -56,13 +74,22 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - opentab-dev-network
 
   gotenberg:
+    container_name: opentab-dev-gotenberg
     image: gotenberg/gotenberg:8
     restart: unless-stopped
     ports:
       - "3100:3000"
+    networks:
+      - opentab-dev-network
 
 volumes:
   postgres_data_dev:
   redis_data_dev:
+
+networks:
+  opentab-dev-network:
+    driver: bridge
