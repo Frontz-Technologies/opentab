@@ -109,7 +109,12 @@ export async function createQuote(formData: FormData) {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
 
-  const rawItems = JSON.parse(formData.get("items") as string);
+  let rawItems: unknown;
+  try {
+    rawItems = JSON.parse((formData.get("items") as string) ?? "[]");
+  } catch {
+    return { success: false, error: { items: ["Invalid line items data"] } };
+  }
   const parsed = quoteSchema.safeParse({
     contactId: formData.get("contactId"),
     issueDate: formData.get("issueDate"),
@@ -207,7 +212,12 @@ export async function updateQuote(id: string, formData: FormData) {
     };
   }
 
-  const rawItems = JSON.parse(formData.get("items") as string);
+  let rawItems: unknown;
+  try {
+    rawItems = JSON.parse((formData.get("items") as string) ?? "[]");
+  } catch {
+    return { success: false, error: { items: ["Invalid line items data"] } };
+  }
   const parsed = quoteSchema.safeParse({
     contactId: formData.get("contactId"),
     issueDate: formData.get("issueDate"),
