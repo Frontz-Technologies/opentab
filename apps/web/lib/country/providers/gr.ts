@@ -1,4 +1,8 @@
-import type { CountryProvider, TaxOffice } from "../types";
+import type {
+  CountryProvider,
+  TaxOffice,
+  ExpenseClassification,
+} from "../types";
 import { resolveDocumentType } from "@/lib/mydata/document-types";
 import { resolveClassification } from "@/lib/mydata/classification-codes";
 
@@ -108,6 +112,81 @@ export const GREEK_EFKA_2026 = {
   },
 };
 
+const greekExpenseClassifications: ExpenseClassification[] = [
+  {
+    code: "E3_585_001",
+    label: "Domestic purchases of goods",
+    labelEl: "Αγορές εμπορευμάτων εσωτερικού",
+    categoryCode: "operating.office_supplies",
+  },
+  {
+    code: "E3_585_002",
+    label: "Domestic purchases of raw materials",
+    labelEl: "Αγορές πρώτων υλών εσωτερικού",
+    categoryCode: "operating",
+  },
+  {
+    code: "E3_585_003",
+    label: "Rent expenses",
+    labelEl: "Ενοίκια",
+    categoryCode: "operating.rent",
+  },
+  {
+    code: "E3_585_004",
+    label: "Accounting & legal fees",
+    labelEl: "Αμοιβές λογιστών & δικηγόρων",
+    categoryCode: "professional.accounting",
+  },
+  {
+    code: "E3_585_005",
+    label: "Insurance premiums",
+    labelEl: "Ασφάλιστρα",
+    categoryCode: "operating.insurance",
+  },
+  {
+    code: "E3_585_006",
+    label: "Repairs & maintenance",
+    labelEl: "Επισκευές & συντηρήσεις",
+    categoryCode: "operating",
+  },
+  {
+    code: "E3_585_007",
+    label: "Utilities (electricity, water, telecom)",
+    labelEl: "Ηλεκτρισμός, ύδρευση, τηλεπικοινωνίες",
+    categoryCode: "operating.utilities",
+  },
+  {
+    code: "E3_585_008",
+    label: "Transportation expenses",
+    labelEl: "Μεταφορικά",
+    categoryCode: "travel.transport",
+  },
+  {
+    code: "E3_585_009",
+    label: "Travel expenses",
+    labelEl: "Ταξιδιωτικά",
+    categoryCode: "travel",
+  },
+  {
+    code: "E3_585_010",
+    label: "Advertising & marketing",
+    labelEl: "Διαφήμιση & marketing",
+    categoryCode: "operating.marketing",
+  },
+  {
+    code: "E3_585_011",
+    label: "Bank fees & commissions",
+    labelEl: "Τραπεζικά έξοδα & προμήθειες",
+    categoryCode: "financial.bank_fees",
+  },
+  {
+    code: "E3_585_016",
+    label: "Other expenses",
+    labelEl: "Λοιπά έξοδα",
+    categoryCode: "other",
+  },
+];
+
 export const greeceProvider: CountryProvider = {
   code: "GR",
   name: "Greece",
@@ -141,6 +220,17 @@ export const greeceProvider: CountryProvider = {
 
   resolveDocumentType,
   resolveClassification,
+
+  expenseClassifications: greekExpenseClassifications,
+
+  mapCategoryToClassification(categoryCode: string): string | null {
+    const match = greekExpenseClassifications.find(
+      (c) =>
+        c.categoryCode === categoryCode ||
+        categoryCode.startsWith(c.categoryCode + "."),
+    );
+    return match?.code ?? null;
+  },
 
   incomeTaxBrackets: GREEK_INCOME_TAX_BRACKETS_2026,
   corporateTax: GREEK_CORPORATE_TAX,

@@ -58,6 +58,13 @@ export interface DocumentTypeParams {
   relatedInvoiceId: string | null;
 }
 
+export interface ExpenseClassification {
+  code: string;
+  label: string;
+  labelEl: string;
+  categoryCode: string;
+}
+
 export interface CountryProvider {
   code: string;
   name: string;
@@ -85,6 +92,10 @@ export interface CountryProvider {
     documentType: string,
     isService: boolean,
   ): { category: string; type: string };
+
+  // Expense classification (Phase 5)
+  expenseClassifications?: ExpenseClassification[];
+  mapCategoryToClassification?(categoryCode: string): string | null;
 
   // Tax data (Phase 4 defines, Phase 6 uses)
   incomeTaxBrackets?: TaxBracket[];
