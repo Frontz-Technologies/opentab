@@ -233,3 +233,70 @@ Freelancers and small startups are the primary users. They don't switch between 
 
 **Why Tailwind CSS v4?**
 v4's CSS-native approach (no `tailwind.config.js` for theming, CSS variables as the primary token system) aligns with the design system's need for dynamic surface tokens. The `@theme` directive replaces the old JS config for most token definitions.
+
+---
+
+## Country Provider
+
+`apps/web/lib/country/` implements a capability-based country abstraction. Each country (Greece, Germany, international) registers a provider that declares its capabilities (VAT lookup, myDATA, category seeds, etc.).
+
+### Two-Layer Expense Category System
+
+Expense categories use a universal-then-local architecture:
+
+1. **Expense groups** (`expense_groups` table) — 16 universal groups with string PKs (e.g. `office_supplies`, `travel`, `professional_services`). These are seeded once and shared across all organisations.
+2. **Expense categories** (`expense_categories` table) — per-organisation categories linked to a group. Country-specific seed data creates localised category names and descriptions.
+
+Each country provider implements `mapGroupToTaxCode(groupId)` to map universal groups to country-specific tax deduction codes (e.g. Greek E3 codes). This allows the reporting and myDATA layers to derive tax treatment from the category without country-specific branching.
+
+---
+
+## Reports & Data Aggregation
+
+`apps/web/lib/reports/` contains the query and aggregation layer for financial reports.
+
+### Query Layer
+
+- `queries.ts` — core aggregation queries (revenue, expenses, net income, outstanding) scoped by org and date range
+- `periods.ts` — period utilities (month/quarter/year boundaries, comparison periods)
+- `types.ts` — shared TypeScript types for report data
+- `tax/` — Greek tax bracket calculations and projection logic
+- `insights/` — AI-powered financial insight generation via OpenRouter
+- `export/` — report export utilities
+- `cache.ts` — optional Redis cache layer for expensive aggregations
+
+### Cache Strategy
+
+Report queries can be expensive for organisations with large transaction volumes. An optional Redis cache (`lib/reports/cache.ts`) stores aggregated results keyed by `org:period:report-type`. Cache is invalidated when invoices or expenses are created/updated. When Redis is not configured, queries run directly against PostgreSQL.
+
+### UI Components
+
+`apps/web/components/reports/` contains the presentation layer:
+
+- `kpi-card.tsx` — reusable KPI display card
+- `insight-cards-row.tsx` — AI insight summary cards
+- `period-selector.tsx` — month/quarter/year period picker
+- `charts/` — Recharts-based chart components (revenue trend, expense breakdown, income comparison)
+- `tax-bracket-table.tsx` — Greek tax bracket visualisation
+- `tax-projection-slider.tsx` — interactive income slider for tax projection
+
+### Report Pages
+
+- `/reports` — overview with KPIs and charts
+- `/reports/pnl` — Profit & Loss statement
+- `/reports/vat` — VAT input/output report
+- `/reports/tax-projection` — Greek tax projection with bracket breakdown
+
+---
+
+## AI Integration
+
+> Placeholder — Phase 7 is in progress.
+
+The AI layer uses OpenRouter (model-agnostic) for:
+
+- **Email generation** (`lib/invoicing/`) — invoice/quote email drafts
+- **Receipt extraction** (`lib/expenses/ai-extraction.ts`) — OCR and structured data extraction from uploaded receipts
+- **Financial insights** (`lib/reports/insights/`) — AI-generated summaries of financial trends
+
+Phase 7 will add a conversational AI assistant with function calling for financial Q&A. Architecture details will be documented when the implementation stabilises.

@@ -29,6 +29,7 @@ test.describe("Navigation", () => {
     await expect(sidebar.getByRole("link", { name: /Expenses/ })).toBeVisible();
     await expect(sidebar.getByRole("link", { name: /Contacts/ })).toBeVisible();
     await expect(sidebar.getByRole("link", { name: /Products/ })).toBeVisible();
+    await expect(sidebar.getByRole("link", { name: /Reports/ })).toBeVisible();
     await expect(page.getByRole("link", { name: /Settings/ })).toBeVisible();
   });
 
@@ -44,6 +45,10 @@ test.describe("Navigation", () => {
     await expect(
       page.getByRole("heading", { name: "Products & Services" }),
     ).toBeVisible();
+
+    await sidebar.getByRole("link", { name: /Reports/ }).click();
+    await page.waitForURL("**/reports");
+    await expect(page.getByRole("heading", { name: "Reports" })).toBeVisible();
 
     await sidebar.getByRole("link", { name: /Dashboard/ }).click();
     await page.waitForURL("**/dashboard");
