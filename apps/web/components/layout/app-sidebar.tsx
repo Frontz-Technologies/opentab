@@ -107,6 +107,15 @@ export function AppSidebar({ orgName }: AppSidebarProps) {
           </span>
           <span className="font-label text-sm">myDATA</span>
         </Link>
+        <Link
+          href="/settings/ai"
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface/60 hover:text-on-surface hover:bg-surface-container-low transition-colors"
+        >
+          <span className="material-symbols-outlined text-[20px] leading-none">
+            smart_toy
+          </span>
+          <span className="font-label text-sm">{t("ai")}</span>
+        </Link>
       </SidebarFooter>
     </Sidebar>
   );

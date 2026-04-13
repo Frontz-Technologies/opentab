@@ -15,8 +15,19 @@
     "products": "Products",
     "reports": "Reports",
     "settings": "Settings",
+    "ai": "AI",
     "support": "Support",
     "createNew": "Create New"
+  },
+  "ai": {
+    "title": "AI Assistant",
+    "subtitle": "Ask about invoices, expenses, and reports",
+    "open": "Open AI assistant",
+    "send": "Send message",
+    "streaming": "Working through your request...",
+    "emptyTitle": "Ask a financial question",
+    "emptyDescription": "Try revenue, VAT, expenses, overdue invoices, or client summaries.",
+    "inputPlaceholder": "Ask about revenue, VAT, or overdue invoices..."
   },
   "auth": {
     "login": "Sign in",
@@ -86,6 +97,25 @@
     "greekAfmDetected": "Greek business detected — Greek features will be available in future updates",
     "euVatDetected": "EU VAT number detected",
     "saved": "Changes saved successfully"
+  },
+  "settingsAi": {
+    "settings": "Settings",
+    "title": "AI Settings",
+    "description": "Configure the OpenRouter model and credentials used by the AI assistant.",
+    "enabled": "Enable AI assistant",
+    "enabledHelp": "Allow this organisation to use the AI assistant",
+    "model": "OpenRouter model",
+    "apiKey": "OpenRouter API key",
+    "apiKeyPlaceholder": "sk-or-...",
+    "apiKeyStored": "Stored key ending in {last4}",
+    "save": "Save AI settings",
+    "saved": "Settings saved.",
+    "saveFailed": "Failed to save AI settings.",
+    "test": "Test connection",
+    "testSuccess": "Connection successful.",
+    "testFailed": "Connection failed.",
+    "delete": "Delete API key",
+    "deleted": "Stored API key removed."
   },
   "contacts": {
     "title": "Contacts",

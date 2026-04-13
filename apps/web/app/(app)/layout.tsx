@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
+import { AiChatButton } from "@/components/ai/ai-chat-button";
+import { AiChatPanel } from "@/components/ai/ai-chat-panel";
 import { getSession } from "@/lib/session";
 
 export default async function AppLayout({
@@ -20,6 +22,8 @@ export default async function AppLayout({
       <SidebarInset className="min-h-screen pb-24 md:pb-0">
         {children}
       </SidebarInset>
+      <AiChatButton />
+      <AiChatPanel />
       <MobileNav />
     </SidebarProvider>
   );
