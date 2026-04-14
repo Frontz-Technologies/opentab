@@ -11,6 +11,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 
 interface AppSidebarProps {
@@ -30,25 +31,29 @@ const navItems = [
 export function AppSidebar({ orgName }: AppSidebarProps) {
   const pathname = usePathname();
   const t = useTranslations("nav");
+  const { state } = useSidebar();
+  const isCollapsed = state === "collapsed";
 
   return (
     <Sidebar
+      collapsible="icon"
       className="bg-surface-dim/70 glass-effect border-r border-on-surface/10"
-      style={{ "--sidebar-width": "240px" } as React.CSSProperties}
     >
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-3">
           <div className="size-8 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center flex-shrink-0">
             <span className="text-white font-bold text-sm">O</span>
           </div>
-          <div className="flex flex-col min-w-0">
-            <span className="font-headline font-semibold text-on-surface text-sm leading-tight">
-              OpenTab
-            </span>
-            <span className="text-on-surface/50 text-xs truncate leading-tight">
-              {orgName}
-            </span>
-          </div>
+          {!isCollapsed && (
+            <div className="flex flex-col min-w-0">
+              <span className="font-headline font-semibold text-on-surface text-sm leading-tight">
+                OpenTab
+              </span>
+              <span className="text-on-surface/50 text-xs truncate leading-tight">
+                {orgName}
+              </span>
+            </div>
+          )}
         </div>
       </SidebarHeader>
 
@@ -62,6 +67,7 @@ export function AppSidebar({ orgName }: AppSidebarProps) {
               <SidebarMenuItem key={item.href}>
                 <SidebarMenuButton
                   isActive={isActive}
+                  tooltip={isCollapsed ? t(item.labelKey) : undefined}
                   render={<Link href={item.href} />}
                   className={
                     isActive
@@ -72,7 +78,9 @@ export function AppSidebar({ orgName }: AppSidebarProps) {
                   <span className="material-symbols-outlined text-[20px] leading-none">
                     {item.icon}
                   </span>
-                  <span className="font-label text-sm">{t(item.labelKey)}</span>
+                  <span className="font-label text-sm">
+                    {t(item.labelKey)}
+                  </span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             );
@@ -88,7 +96,7 @@ export function AppSidebar({ orgName }: AppSidebarProps) {
           <span className="material-symbols-outlined text-[18px] leading-none">
             add
           </span>
-          {t("createNew")}
+          {!isCollapsed && t("createNew")}
         </Link>
       </SidebarFooter>
     </Sidebar>

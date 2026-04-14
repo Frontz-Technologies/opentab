@@ -16,7 +16,13 @@ export default async function AppLayout({
 
   return (
     <SidebarProvider
-      style={{ "--sidebar-width": "240px" } as React.CSSProperties}
+      defaultOpen={false}
+      style={
+        {
+          "--sidebar-width": "240px",
+          "--sidebar-width-icon": "64px",
+        } as React.CSSProperties
+      }
     >
       <AppSidebar orgName={session.org.name} />
       <SidebarInset className="min-h-screen pb-24 md:pb-0">
