@@ -17,8 +17,7 @@ export function MobileMoreSheet() {
   const [open, setOpen] = useState(false);
 
   const isActive = moreItems.some(
-    (item) =>
-      pathname === item.href || pathname.startsWith(item.href + "/"),
+    (item) => pathname === item.href || pathname.startsWith(item.href + "/"),
   );
 
   return (
@@ -49,8 +48,7 @@ export function MobileMoreSheet() {
         <div className="flex flex-col gap-1">
           {moreItems.map((item) => {
             const active =
-              pathname === item.href ||
-              pathname.startsWith(item.href + "/");
+              pathname === item.href || pathname.startsWith(item.href + "/");
             return (
               <Link
                 key={item.href}
@@ -65,9 +63,7 @@ export function MobileMoreSheet() {
                 <span className="material-symbols-outlined text-[22px] leading-none">
                   {item.icon}
                 </span>
-                <span className="font-label text-sm">
-                  {t(item.labelKey)}
-                </span>
+                <span className="font-label text-sm">{t(item.labelKey)}</span>
               </Link>
             );
           })}

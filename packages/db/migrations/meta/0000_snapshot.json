@@ -95,12 +95,8 @@
           "name": "account_user_id_user_id_fk",
           "tableFrom": "account",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -197,12 +193,8 @@
           "name": "ai_settings_org_id_organisation_id_fk",
           "tableFrom": "ai_settings",
           "tableTo": "organisation",
-          "columnsFrom": [
-            "org_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["org_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -440,12 +432,8 @@
           "name": "contact_org_id_organisation_id_fk",
           "tableFrom": "contact",
           "tableTo": "organisation",
-          "columnsFrom": [
-            "org_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["org_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -573,12 +561,8 @@
           "name": "expense_attachment_expense_id_expense_id_fk",
           "tableFrom": "expense_attachment",
           "tableTo": "expense",
-          "columnsFrom": [
-            "expense_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["expense_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -742,12 +726,8 @@
           "name": "expense_category_org_id_organisation_id_fk",
           "tableFrom": "expense_category",
           "tableTo": "organisation",
-          "columnsFrom": [
-            "org_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["org_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -755,12 +735,8 @@
           "name": "expense_category_group_code_expense_group_code_fk",
           "tableFrom": "expense_category",
           "tableTo": "expense_group",
-          "columnsFrom": [
-            "group_code"
-          ],
-          "columnsTo": [
-            "code"
-          ],
+          "columnsFrom": ["group_code"],
+          "columnsTo": ["code"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -948,12 +924,8 @@
           "name": "expense_item_expense_id_expense_id_fk",
           "tableFrom": "expense_item",
           "tableTo": "expense",
-          "columnsFrom": [
-            "expense_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["expense_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1272,12 +1244,8 @@
           "name": "expense_org_id_organisation_id_fk",
           "tableFrom": "expense",
           "tableTo": "organisation",
-          "columnsFrom": [
-            "org_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["org_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1285,12 +1253,8 @@
           "name": "expense_contact_id_contact_id_fk",
           "tableFrom": "expense",
           "tableTo": "contact",
-          "columnsFrom": [
-            "contact_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["contact_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1298,12 +1262,8 @@
           "name": "expense_category_id_expense_category_id_fk",
           "tableFrom": "expense",
           "tableTo": "expense_category",
-          "columnsFrom": [
-            "category_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["category_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1434,12 +1394,8 @@
           "name": "invoice_item_invoice_id_invoice_id_fk",
           "tableFrom": "invoice_item",
           "tableTo": "invoice",
-          "columnsFrom": [
-            "invoice_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["invoice_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1537,12 +1493,8 @@
           "name": "invoice_number_sequence_org_id_organisation_id_fk",
           "tableFrom": "invoice_number_sequence",
           "tableTo": "organisation",
-          "columnsFrom": [
-            "org_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["org_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1847,12 +1799,8 @@
           "name": "invoice_org_id_organisation_id_fk",
           "tableFrom": "invoice",
           "tableTo": "organisation",
-          "columnsFrom": [
-            "org_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["org_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1860,12 +1808,8 @@
           "name": "invoice_contact_id_contact_id_fk",
           "tableFrom": "invoice",
           "tableTo": "contact",
-          "columnsFrom": [
-            "contact_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["contact_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1962,12 +1906,8 @@
           "name": "mydata_credentials_org_id_organisation_id_fk",
           "tableFrom": "mydata_credentials",
           "tableTo": "organisation",
-          "columnsFrom": [
-            "org_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["org_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2193,12 +2133,8 @@
           "name": "mydata_transmission_org_id_organisation_id_fk",
           "tableFrom": "mydata_transmission",
           "tableTo": "organisation",
-          "columnsFrom": [
-            "org_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["org_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2206,12 +2142,8 @@
           "name": "mydata_transmission_invoice_id_invoice_id_fk",
           "tableFrom": "mydata_transmission",
           "tableTo": "invoice",
-          "columnsFrom": [
-            "invoice_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["invoice_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2272,12 +2204,8 @@
           "name": "org_membership_user_id_user_id_fk",
           "tableFrom": "org_membership",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2285,12 +2213,8 @@
           "name": "org_membership_org_id_organisation_id_fk",
           "tableFrom": "org_membership",
           "tableTo": "organisation",
-          "columnsFrom": [
-            "org_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["org_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2300,9 +2224,7 @@
         "org_membership_user_id_unique": {
           "name": "org_membership_user_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id"
-          ]
+          "columns": ["user_id"]
         }
       },
       "policies": {},
@@ -2441,9 +2363,7 @@
         "organisation_slug_unique": {
           "name": "organisation_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -2572,12 +2492,8 @@
           "name": "product_org_id_organisation_id_fk",
           "tableFrom": "product",
           "tableTo": "organisation",
-          "columnsFrom": [
-            "org_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["org_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2708,12 +2624,8 @@
           "name": "quote_item_quote_id_quote_id_fk",
           "tableFrom": "quote_item",
           "tableTo": "quote",
-          "columnsFrom": [
-            "quote_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["quote_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2935,12 +2847,8 @@
           "name": "quote_org_id_organisation_id_fk",
           "tableFrom": "quote",
           "tableTo": "organisation",
-          "columnsFrom": [
-            "org_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["org_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2948,12 +2856,8 @@
           "name": "quote_contact_id_contact_id_fk",
           "tableFrom": "quote",
           "tableTo": "contact",
-          "columnsFrom": [
-            "contact_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["contact_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -3065,12 +2969,8 @@
           "name": "recurring_expense_item_recurring_expense_id_recurring_expense_id_fk",
           "tableFrom": "recurring_expense_item",
           "tableTo": "recurring_expense",
-          "columnsFrom": [
-            "recurring_expense_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["recurring_expense_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3260,12 +3160,8 @@
           "name": "recurring_expense_org_id_organisation_id_fk",
           "tableFrom": "recurring_expense",
           "tableTo": "organisation",
-          "columnsFrom": [
-            "org_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["org_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -3273,12 +3169,8 @@
           "name": "recurring_expense_contact_id_contact_id_fk",
           "tableFrom": "recurring_expense",
           "tableTo": "contact",
-          "columnsFrom": [
-            "contact_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["contact_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -3286,12 +3178,8 @@
           "name": "recurring_expense_category_id_expense_category_id_fk",
           "tableFrom": "recurring_expense",
           "tableTo": "expense_category",
-          "columnsFrom": [
-            "category_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["category_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -3422,12 +3310,8 @@
           "name": "recurring_invoice_item_recurring_invoice_id_recurring_invoice_id_fk",
           "tableFrom": "recurring_invoice_item",
           "tableTo": "recurring_invoice",
-          "columnsFrom": [
-            "recurring_invoice_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["recurring_invoice_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3611,12 +3495,8 @@
           "name": "recurring_invoice_org_id_organisation_id_fk",
           "tableFrom": "recurring_invoice",
           "tableTo": "organisation",
-          "columnsFrom": [
-            "org_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["org_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -3624,12 +3504,8 @@
           "name": "recurring_invoice_contact_id_contact_id_fk",
           "tableFrom": "recurring_invoice",
           "tableTo": "contact",
-          "columnsFrom": [
-            "contact_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["contact_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -3701,12 +3577,8 @@
           "name": "session_user_id_user_id_fk",
           "tableFrom": "session",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3716,9 +3588,7 @@
         "session_token_unique": {
           "name": "session_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token"
-          ]
+          "columns": ["token"]
         }
       },
       "policies": {},
@@ -3803,9 +3673,7 @@
         "user_email_unique": {
           "name": "user_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -3915,12 +3783,8 @@
           "name": "user_preferences_user_id_user_id_fk",
           "tableFrom": "user_preferences",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3987,30 +3851,17 @@
     "public.contact_classification": {
       "name": "contact_classification",
       "schema": "public",
-      "values": [
-        "individual",
-        "business",
-        "government"
-      ]
+      "values": ["individual", "business", "government"]
     },
     "public.contact_type": {
       "name": "contact_type",
       "schema": "public",
-      "values": [
-        "client",
-        "supplier",
-        "both"
-      ]
+      "values": ["client", "supplier", "both"]
     },
     "public.org_role": {
       "name": "org_role",
       "schema": "public",
-      "values": [
-        "owner",
-        "admin",
-        "member",
-        "accountant"
-      ]
+      "values": ["owner", "admin", "member", "accountant"]
     },
     "public.tax_category": {
       "name": "tax_category",

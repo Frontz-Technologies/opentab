@@ -12,8 +12,7 @@ export default async function IntegrationsPage() {
 
   const t = await getTranslations("settingsIntegrations");
   const isGreek = session.org.countryCode === "GR";
-  const isOwnerOrAdmin =
-    session.role === "owner" || session.role === "admin";
+  const isOwnerOrAdmin = session.role === "owner" || session.role === "admin";
 
   const [mydataCredentials, aiSettings] = await Promise.all([
     isGreek ? getMyDataCredentialsStatus() : null,
@@ -57,9 +56,7 @@ export default async function IntegrationsPage() {
               name={t("aiName")}
               description={t("aiDescription")}
               href="/settings/integrations/ai"
-              status={
-                aiSettings?.enabled ? "connected" : "not_configured"
-              }
+              status={aiSettings?.enabled ? "connected" : "not_configured"}
               statusLabels={statusLabels}
             />
           )}
