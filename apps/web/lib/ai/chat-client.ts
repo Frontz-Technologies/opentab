@@ -70,7 +70,10 @@ export async function submitAiChatMessage({
     stream: response.body,
     schema: uiMessageChunkSchema,
   }).pipeThrough(
-    new TransformStream<{ success: boolean; value?: UIMessageChunk; error?: unknown }, UIMessageChunk>({
+    new TransformStream<
+      { success: boolean; value?: UIMessageChunk; error?: unknown },
+      UIMessageChunk
+    >({
       transform(parsed, controller) {
         if (!parsed.success) throw parsed.error;
         controller.enqueue(parsed.value!);

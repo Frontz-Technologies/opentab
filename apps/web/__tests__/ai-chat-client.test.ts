@@ -93,9 +93,7 @@ describe("submitAiChatMessage", () => {
 
     const assistant = result[1];
     expect(assistant).toMatchObject({ role: "assistant" });
-    const toolParts = assistant?.parts.filter(
-      (p) => p.type === "dynamic-tool",
-    );
+    const toolParts = assistant?.parts.filter((p) => p.type === "dynamic-tool");
     expect(toolParts).toHaveLength(1);
     expect(toolParts?.[0]).toMatchObject({
       type: "dynamic-tool",
