@@ -31,6 +31,8 @@ services:
       - /app/apps/web/node_modules
       - /app/packages/db/node_modules
       - /app/apps/web/.next
+      - /app/apps/web/.env
+      - /app/apps/web/.env.local
     networks:
       - opentab-dev-network
 
