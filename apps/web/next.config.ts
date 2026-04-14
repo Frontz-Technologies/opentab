@@ -9,6 +9,25 @@ const devOrigins = appUrl ? [new URL(appUrl).hostname] : [];
 const nextConfig: NextConfig = {
   allowedDevOrigins: devOrigins,
   transpilePackages: ["@opentab/db"],
+  async redirects() {
+    return [
+      {
+        source: "/settings/company",
+        destination: "/settings/organisation",
+        permanent: true,
+      },
+      {
+        source: "/settings/mydata",
+        destination: "/settings/integrations/mydata",
+        permanent: true,
+      },
+      {
+        source: "/settings/ai",
+        destination: "/settings/integrations/ai",
+        permanent: true,
+      },
+    ];
+  },
   webpack: (config) => {
     config.resolve.extensionAlias = {
       ".js": [".ts", ".js"],

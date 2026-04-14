@@ -24,6 +24,7 @@ const navItems = [
   { icon: "contacts", labelKey: "contacts", href: "/contacts" },
   { icon: "inventory_2", labelKey: "products", href: "/products" },
   { icon: "bar_chart", labelKey: "reports", href: "/reports" },
+  { icon: "settings", labelKey: "settings", href: "/settings" },
 ] as const;
 
 export function AppSidebar({ orgName }: AppSidebarProps) {
@@ -79,7 +80,7 @@ export function AppSidebar({ orgName }: AppSidebarProps) {
         </SidebarMenu>
       </SidebarContent>
 
-      <SidebarFooter className="p-3 flex flex-col gap-2">
+      <SidebarFooter className="p-3">
         <Link
           href="/invoices/new"
           className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-label font-semibold text-sm hover:from-emerald-400 hover:to-emerald-500 transition-all"
@@ -88,33 +89,6 @@ export function AppSidebar({ orgName }: AppSidebarProps) {
             add
           </span>
           {t("createNew")}
-        </Link>
-        <Link
-          href="/settings/company"
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface/60 hover:text-on-surface hover:bg-surface-container-low transition-colors"
-        >
-          <span className="material-symbols-outlined text-[20px] leading-none">
-            settings
-          </span>
-          <span className="font-label text-sm">{t("settings")}</span>
-        </Link>
-        <Link
-          href="/settings/mydata"
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface/60 hover:text-on-surface hover:bg-surface-container-low transition-colors"
-        >
-          <span className="material-symbols-outlined text-[20px] leading-none">
-            cloud_sync
-          </span>
-          <span className="font-label text-sm">myDATA</span>
-        </Link>
-        <Link
-          href="/settings/ai"
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface/60 hover:text-on-surface hover:bg-surface-container-low transition-colors"
-        >
-          <span className="material-symbols-outlined text-[20px] leading-none">
-            smart_toy
-          </span>
-          <span className="font-label text-sm">{t("ai")}</span>
         </Link>
       </SidebarFooter>
     </Sidebar>

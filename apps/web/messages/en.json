@@ -17,7 +17,9 @@
     "settings": "Settings",
     "ai": "AI",
     "support": "Support",
-    "createNew": "Create New"
+    "createNew": "Create New",
+    "more": "More",
+    "organisation": "Organisation"
   },
   "ai": {
     "title": "AI Assistant",
@@ -116,6 +118,78 @@
     "testFailed": "Connection failed.",
     "delete": "Delete API key",
     "deleted": "Stored API key removed."
+  },
+  "settingsNav": {
+    "organisation": "Organisation",
+    "general": "General",
+    "account": "Account",
+    "appearance": "Appearance",
+    "integrations": "Integrations",
+    "sectionOrganisation": "Organisation",
+    "sectionUser": "User",
+    "sectionIntegrations": "Integrations"
+  },
+  "settingsGeneral": {
+    "title": "General",
+    "description": "Language, date formatting, and notification preferences.",
+    "language": "Language",
+    "languageEn": "English",
+    "languageEl": "Greek",
+    "dateFormat": "Date format",
+    "numberFormat": "Number format",
+    "numberFormatEu": "1.234,56 (European)",
+    "numberFormatUs": "1,234.56 (US)",
+    "notifications": "Notifications",
+    "notifyInvoicePaid": "Email when an invoice is paid",
+    "notifyExpenseApproved": "Email when an expense is approved",
+    "saved": "Preferences saved"
+  },
+  "settingsAccount": {
+    "title": "Account",
+    "description": "Your profile and security settings.",
+    "profile": "Profile",
+    "name": "Full name",
+    "email": "Email address",
+    "emailHint": "Changing your email requires verification",
+    "avatar": "Avatar",
+    "avatarPlaceholder": "Avatar upload coming soon",
+    "security": "Security",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm new password",
+    "changePassword": "Change password",
+    "passwordChanged": "Password changed successfully",
+    "passwordMismatch": "Passwords do not match",
+    "wrongPassword": "Current password is incorrect",
+    "profileSaved": "Profile updated"
+  },
+  "settingsAppearance": {
+    "title": "Appearance",
+    "description": "Customise how OpenTab looks.",
+    "theme": "Theme",
+    "themeDark": "Dark",
+    "themeLight": "Light",
+    "themeSystem": "System",
+    "density": "Display Density",
+    "densityComfortable": "Comfortable",
+    "densityComfortableDesc": "Default spacing with generous padding",
+    "densityCompact": "Compact",
+    "densityCompactDesc": "Tighter spacing for more content on screen",
+    "saved": "Appearance saved"
+  },
+  "settingsIntegrations": {
+    "title": "Integrations",
+    "description": "Connect external services to your organisation.",
+    "backToIntegrations": "Integrations",
+    "mydataName": "myDATA (AADE)",
+    "mydataDescription": "Greek e-invoicing — transmit invoices to AADE automatically",
+    "aiName": "AI Assistant",
+    "aiDescription": "AI-powered financial insights and chat assistant",
+    "connected": "Connected",
+    "notConfigured": "Not configured"
+  },
+  "mobileNav": {
+    "more": "More"
   },
   "contacts": {
     "title": "Contacts",

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { MobileMoreSheet } from "./mobile-more-sheet";
 
 const navItems = [
   { icon: "dashboard", label: "Dashboard", href: "/dashboard" },
@@ -9,7 +10,6 @@ const navItems = [
   { icon: "account_balance_wallet", label: "Expenses", href: "/expenses" },
   { icon: "contacts", label: "Contacts", href: "/contacts" },
   { icon: "inventory_2", label: "Products", href: "/products" },
-  { icon: "bar_chart", label: "Reports", href: "/reports" },
 ] as const;
 
 export function MobileNav() {
@@ -45,6 +45,7 @@ export function MobileNav() {
             </Link>
           );
         })}
+        <MobileMoreSheet />
       </div>
     </nav>
   );

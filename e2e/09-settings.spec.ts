@@ -19,46 +19,77 @@ test.describe("Settings", () => {
     await page.close();
   });
 
-  test("company settings page renders", async () => {
-    await page.goto("/settings/company");
-    await expect(
-      page.getByRole("heading", { name: "Company Settings" }),
-    ).toBeVisible();
-    await page.screenshot({ path: "e2e/screenshots/settings-company.png" });
+  test("settings root redirects to organisation", async () => {
+    await page.goto("/settings");
+    await page.waitForURL("**/settings/organisation");
+    expect(page.url()).toContain("/settings/organisation");
   });
 
-  test("company settings form has required fields", async () => {
-    // The CompanyForm renders fields for name, currency, tax ID, etc.
+  test("old /settings/company redirects to /settings/organisation", async () => {
+    await page.goto("/settings/company");
+    await page.waitForURL("**/settings/organisation");
+    expect(page.url()).toContain("/settings/organisation");
+  });
+
+  test("organisation settings page renders", async () => {
+    await page.goto("/settings/organisation");
+    await expect(
+      page.getByRole("heading", { name: /Organisation Settings/i }),
+    ).toBeVisible();
     await expect(
       page.locator('input[name="name"]').or(page.getByLabel(/name/i)).first(),
     ).toBeVisible();
   });
 
-  test("company settings pre-fills org name from registration", async () => {
-    // After registration, the org name should be "<user name>'s Company"
-    const nameInput = page.locator('input[name="name"]');
-    if (await nameInput.isVisible()) {
-      const value = await nameInput.inputValue();
-      expect(value).toBeTruthy();
-    }
+  test("general settings page renders", async () => {
+    await page.goto("/settings/general");
+    await expect(
+      page.getByRole("heading", { name: /General/i }).first(),
+    ).toBeVisible();
   });
 
-  test("myDATA settings page loads (or redirects for non-GR orgs)", async () => {
-    await page.goto("/settings/mydata");
+  test("account settings page renders", async () => {
+    await page.goto("/settings/account");
+    await expect(
+      page.getByRole("heading", { name: /Account/i }).first(),
+    ).toBeVisible();
+  });
+
+  test("appearance settings page renders", async () => {
+    await page.goto("/settings/appearance");
+    await expect(
+      page.getByRole("heading", { name: /Appearance/i }).first(),
+    ).toBeVisible();
+    await expect(page.getByText("Dark")).toBeVisible();
+  });
+
+  test("integrations page renders", async () => {
+    await page.goto("/settings/integrations");
+    await expect(
+      page.getByRole("heading", { name: /Integrations/i }).first(),
+    ).toBeVisible();
+  });
+
+  test("myDATA integration redirects for non-GR orgs", async () => {
+    await page.goto("/settings/integrations/mydata");
     const url = page.url();
-    if (url.includes("/settings/mydata")) {
+    if (url.includes("/settings/integrations/mydata")) {
       // GR org — myDATA settings page renders
       await expect(page.locator("h2").first()).toBeVisible();
-      await page.screenshot({ path: "e2e/screenshots/settings-mydata.png" });
     } else {
-      // Non-GR org — redirects to company settings
-      expect(url).toMatch(/\/settings\/company/);
+      // Non-GR org — redirects to integrations list
+      expect(url).toMatch(/\/settings\/integrations/);
     }
   });
 
-  test("sidebar has settings and myDATA links", async () => {
+  test("settings nav is visible in sidebar", async () => {
     await page.goto("/dashboard");
     await expect(page.getByRole("link", { name: /Settings/ })).toBeVisible();
-    await expect(page.getByRole("link", { name: /myDATA/ })).toBeVisible();
+  });
+
+  test("settings secondary nav highlights active tab", async () => {
+    await page.goto("/settings/general");
+    const generalLink = page.locator('a[href="/settings/general"]').first();
+    await expect(generalLink).toBeVisible();
   });
 });

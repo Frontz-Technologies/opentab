@@ -489,6 +489,22 @@ async function pushSchema(pglite: PGlite) {
     )`,
 
     `CREATE UNIQUE INDEX "ai_settings_org_id_idx" ON "ai_settings" ("org_id")`,
+
+    `CREATE TABLE IF NOT EXISTS "user_preferences" (
+      "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      "user_id" text NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
+      "locale" varchar(5) NOT NULL DEFAULT 'en',
+      "date_format" varchar(20) NOT NULL DEFAULT 'DD/MM/YYYY',
+      "number_format" varchar(10) NOT NULL DEFAULT 'eu',
+      "notify_invoice_paid" boolean NOT NULL DEFAULT true,
+      "notify_expense_approved" boolean NOT NULL DEFAULT true,
+      "theme" varchar(20) NOT NULL DEFAULT 'dark',
+      "density" varchar(20) NOT NULL DEFAULT 'comfortable',
+      "created_at" timestamp NOT NULL DEFAULT now(),
+      "updated_at" timestamp NOT NULL DEFAULT now()
+    )`,
+
+    `CREATE UNIQUE INDEX "user_preferences_user_id_idx" ON "user_preferences" ("user_id")`,
   ];
 
   for (const sql of statements) {
