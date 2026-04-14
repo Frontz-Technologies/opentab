@@ -125,11 +125,13 @@ Avoid pure `#FFFFFF` (dark mode) and pure `#000000` (light mode). Both text colo
 **Floating elements** (modals, dropdowns, sidebars, tooltips) use glassmorphism:
 
 **Dark mode:**
+
 - Background opacity: 70% of the underlying surface token
 - Backdrop blur: `blur(24px)` (`backdrop-filter: blur(24px)`)
 - Combined with a ghost border at `outline-variant` 15% opacity to define the edge
 
 **Light mode:**
+
 - Background opacity: 85% of the underlying surface token (higher than dark — light backgrounds make blur artifacts more visible)
 - Backdrop blur: `blur(16px)` (reduced to avoid the "frosted shower door" effect)
 - Combined with a ghost border at `outline-variant` 10% opacity
@@ -255,21 +257,21 @@ border-radius: 9999px; /* pill */
 
 Common variants (both themes use the same token references — the values resolve per theme):
 
-| Status | Background | Text |
-|---|---|---|
-| Paid / Active | `primary-container/20` | `primary` |
-| Overdue | `tertiary-container/20` | `tertiary` |
-| Draft | `surface-container-highest` | `on-surface-variant` |
-| Pending / Sent | `secondary-container` | `secondary` |
+| Status         | Background                  | Text                 |
+| -------------- | --------------------------- | -------------------- |
+| Paid / Active  | `primary-container/20`      | `primary`            |
+| Overdue        | `tertiary-container/20`     | `tertiary`           |
+| Draft          | `surface-container-highest` | `on-surface-variant` |
+| Pending / Sent | `secondary-container`       | `secondary`          |
 
 **Light mode resolved examples:**
 
-| Status | Background | Text |
-|---|---|---|
-| Paid / Active | `#D1FAE5` | `#0A8F6C` |
-| Overdue | `#F9DEDC` | `#B3261E` |
-| Draft | `#DDDDD7` | `#5C6B60` |
-| Pending / Sent | `#C8EDD8` | `#3D7A5C` |
+| Status         | Background | Text      |
+| -------------- | ---------- | --------- |
+| Paid / Active  | `#D1FAE5`  | `#0A8F6C` |
+| Overdue        | `#F9DEDC`  | `#B3261E` |
+| Draft          | `#DDDDD7`  | `#5C6B60` |
+| Pending / Sent | `#C8EDD8`  | `#3D7A5C` |
 
 Never introduce blue (`#0070F3`, etc.) for status badges — keep all status colours within the emerald/red/neutral family.
 
