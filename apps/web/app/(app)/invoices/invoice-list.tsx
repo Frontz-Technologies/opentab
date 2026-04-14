@@ -17,6 +17,7 @@ interface InvoiceListProps {
 const statusColors: Record<number, string> = {
   [INVOICE_STATUS.DRAFT]:
     "bg-surface-container-highest text-on-surface-variant",
+  [INVOICE_STATUS.PUBLISHED]: "bg-blue-500/20 text-blue-400",
   [INVOICE_STATUS.SENT]: "bg-secondary-container text-secondary",
   [INVOICE_STATUS.PARTIAL]: "bg-amber-500/20 text-amber-400",
   [INVOICE_STATUS.PAID]: "bg-primary-container/20 text-primary",
@@ -36,6 +37,7 @@ function getStatusLabel(
   if (isOverdue(invoice)) return t("statusOverdue");
   const labels: Record<number, string> = {
     [INVOICE_STATUS.DRAFT]: t("statusDraft"),
+    [INVOICE_STATUS.PUBLISHED]: t("statusPublished"),
     [INVOICE_STATUS.SENT]: t("statusSent"),
     [INVOICE_STATUS.PARTIAL]: t("statusPartial"),
     [INVOICE_STATUS.PAID]: t("statusPaid"),

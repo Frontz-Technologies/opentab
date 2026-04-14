@@ -44,13 +44,13 @@ export function InvoiceForm({
 
   const selectedContact = contacts.find((c) => c.id === contactId);
 
-  function handleSubmit() {
+  function handleSubmit(publish = false) {
     if (!contactId) {
       setError(t("selectClient"));
       return;
     }
     if (items.length === 0) {
-      setError("At least one line item is required");
+      setError(t("itemRequired"));
       return;
     }
 
@@ -78,6 +78,7 @@ export function InvoiceForm({
     formData.set("terms", terms);
     formData.set("internalNotes", internalNotes);
     formData.set("items", JSON.stringify(items));
+    if (publish) formData.set("publish", "true");
 
     startTransition(async () => {
       const result = await createInvoice(formData);
@@ -223,9 +224,16 @@ export function InvoiceForm({
         </div>
       </div>
 
-      <div className="flex justify-end">
-        <Button onClick={handleSubmit} disabled={isPending}>
+      <div className="flex justify-end gap-2">
+        <Button
+          variant="outline"
+          onClick={() => handleSubmit(false)}
+          disabled={isPending}
+        >
           {isPending ? "Saving..." : t("saveAsDraft")}
+        </Button>
+        <Button onClick={() => handleSubmit(true)} disabled={isPending}>
+          {isPending ? "Saving..." : t("saveAndPublish")}
         </Button>
       </div>
     </div>
