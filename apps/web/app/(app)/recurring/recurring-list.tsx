@@ -6,8 +6,8 @@ import { useTranslations } from "next-intl";
 import type { RecurringInvoice } from "@opentab/db/schema";
 import { RECURRING_STATUS, FREQUENCY } from "@opentab/db/schema";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AnimatedFilterBar } from "@/components/ui/animated-filter-bar";
 
 interface RecurringListProps {
   items: RecurringInvoice[];
@@ -69,18 +69,11 @@ export function RecurringList({ items }: RecurringListProps) {
           onChange={(e) => setSearch(e.target.value)}
           className="max-w-sm"
         />
-        <div className="flex gap-1">
-          {filters.map((f) => (
-            <Button
-              key={f.key}
-              variant={statusFilter === f.key ? "default" : "outline"}
-              size="sm"
-              onClick={() => setStatusFilter(f.key)}
-            >
-              {f.label}
-            </Button>
-          ))}
-        </div>
+        <AnimatedFilterBar
+          items={filters.map((f) => ({ value: f.key, label: f.label }))}
+          value={statusFilter}
+          onValueChange={setStatusFilter}
+        />
       </div>
 
       {filtered.length === 0 ? (
