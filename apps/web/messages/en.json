@@ -121,10 +121,15 @@
   },
   "settingsNav": {
     "organisation": "Organisation",
+    "organisationSubtitle": "Company info, tax, and address",
     "general": "General",
+    "generalSubtitle": "Language, date format, and notifications",
     "account": "Account",
+    "accountSubtitle": "Profile and security settings",
     "appearance": "Appearance",
+    "appearanceSubtitle": "Theme and display density",
     "integrations": "Integrations",
+    "integrationsSubtitle": "External service connections",
     "sectionOrganisation": "Organisation",
     "sectionUser": "User",
     "sectionIntegrations": "Integrations"
