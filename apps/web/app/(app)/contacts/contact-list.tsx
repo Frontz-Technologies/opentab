@@ -64,63 +64,89 @@ export function ContactList({ contacts }: ContactListProps) {
           <p className="text-sm mt-1">{t("noContactsDescription")}</p>
         </div>
       ) : (
-        <div className="bg-surface-container rounded-xl overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-on-surface/10">
-                <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
-                  {t("company")} / Name
-                </th>
-                <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
-                  {t("type")}
-                </th>
-                <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
-                  {t("email")}
-                </th>
-                <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
-                  {t("phone")}
-                </th>
-                <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
-                  {t("vatNumber")}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((contact) => (
-                <tr
-                  key={contact.id}
-                  className="border-b border-on-surface/5 hover:bg-surface-container-low transition-colors"
-                >
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/contacts/${contact.id}`}
-                      className="text-on-surface hover:text-primary transition-colors font-medium"
-                    >
-                      {contact.displayName}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3">
-                    <Badge
-                      className={typeColors[contact.type] || ""}
-                      variant="outline"
-                    >
-                      {contact.type}
-                    </Badge>
-                  </td>
-                  <td className="px-4 py-3 text-on-surface/60 text-sm">
-                    {contact.email || "\u2014"}
-                  </td>
-                  <td className="px-4 py-3 text-on-surface/60 text-sm">
-                    {contact.phone || "\u2014"}
-                  </td>
-                  <td className="px-4 py-3 text-on-surface/60 text-sm font-mono">
-                    {contact.vatNumber || "\u2014"}
-                  </td>
+        <>
+        <div className="hidden md:block">
+          <div className="bg-surface-container rounded-xl overflow-hidden">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-on-surface/10">
+                  <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
+                    {t("company")} / Name
+                  </th>
+                  <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
+                    {t("type")}
+                  </th>
+                  <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
+                    {t("email")}
+                  </th>
+                  <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
+                    {t("phone")}
+                  </th>
+                  <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
+                    {t("vatNumber")}
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filtered.map((contact) => (
+                  <tr
+                    key={contact.id}
+                    className="border-b border-on-surface/5 hover:bg-surface-container-low transition-colors"
+                  >
+                    <td className="px-4 py-3">
+                      <Link
+                        href={`/contacts/${contact.id}`}
+                        className="text-on-surface hover:text-primary transition-colors font-medium"
+                      >
+                        {contact.displayName}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge
+                        className={typeColors[contact.type] || ""}
+                        variant="outline"
+                      >
+                        {contact.type}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3 text-on-surface/60 text-sm">
+                      {contact.email || "\u2014"}
+                    </td>
+                    <td className="px-4 py-3 text-on-surface/60 text-sm">
+                      {contact.phone || "\u2014"}
+                    </td>
+                    <td className="px-4 py-3 text-on-surface/60 text-sm font-mono">
+                      {contact.vatNumber || "\u2014"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
+
+        <div className="block md:hidden space-y-3">
+          {filtered.map((contact) => (
+            <Link
+              key={contact.id}
+              href={`/contacts/${contact.id}`}
+              className="block bg-surface-container rounded-xl p-4 hover:bg-surface-container-high transition-colors"
+            >
+              <div className="flex items-start justify-between mb-1">
+                <span className="font-label text-lg font-bold text-on-surface">{contact.displayName}</span>
+                <Badge
+                  className={typeColors[contact.type] || ""}
+                  variant="outline"
+                >
+                  {contact.type}
+                </Badge>
+              </div>
+              <p className="text-sm text-on-surface-variant mb-1">{contact.email || "\u2014"}</p>
+              <p className="text-xs text-on-surface-variant">{contact.phone || "\u2014"}</p>
+            </Link>
+          ))}
+        </div>
+        </>
       )}
     </div>
   );

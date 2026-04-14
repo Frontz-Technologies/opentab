@@ -85,69 +85,93 @@ export function QuoteList({ quotes }: QuoteListProps) {
           <p className="text-sm mt-1">{t("noQuotesDescription")}</p>
         </div>
       ) : (
-        <div className="bg-surface-container rounded-xl overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-on-surface/10">
-                <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
-                  {t("number")}
-                </th>
-                <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
-                  {t("client")}
-                </th>
-                <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
-                  {t("issueDate")}
-                </th>
-                <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
-                  {t("validUntil")}
-                </th>
-                <th className="text-right px-4 py-3 font-label text-sm text-on-surface/60">
-                  {t("total")}
-                </th>
-                <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
-                  {t("status")}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((quote) => (
-                <tr
-                  key={quote.id}
-                  className="border-b border-on-surface/5 hover:bg-surface-container-low transition-colors"
-                >
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/quotes/${quote.id}`}
-                      className="text-on-surface hover:text-primary transition-colors font-medium font-mono text-sm"
-                    >
-                      {quote.quoteNumber}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-on-surface text-sm">
-                    {quote.contactName}
-                  </td>
-                  <td className="px-4 py-3 text-on-surface/60 text-sm">
-                    {quote.issueDate}
-                  </td>
-                  <td className="px-4 py-3 text-on-surface/60 text-sm">
-                    {quote.validUntil || "\u2014"}
-                  </td>
-                  <td className="px-4 py-3 text-on-surface text-sm text-right font-mono">
-                    {quote.currencyCode} {quote.total}
-                  </td>
-                  <td className="px-4 py-3">
-                    <Badge
-                      className={statusColors[quote.status] ?? ""}
-                      variant="outline"
-                    >
-                      {statusLabels[quote.status]}
-                    </Badge>
-                  </td>
+        <>
+        <div className="hidden md:block">
+          <div className="bg-surface-container rounded-xl overflow-hidden">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-on-surface/10">
+                  <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
+                    {t("number")}
+                  </th>
+                  <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
+                    {t("client")}
+                  </th>
+                  <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
+                    {t("issueDate")}
+                  </th>
+                  <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
+                    {t("validUntil")}
+                  </th>
+                  <th className="text-right px-4 py-3 font-label text-sm text-on-surface/60">
+                    {t("total")}
+                  </th>
+                  <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
+                    {t("status")}
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filtered.map((quote) => (
+                  <tr
+                    key={quote.id}
+                    className="border-b border-on-surface/5 hover:bg-surface-container-low transition-colors"
+                  >
+                    <td className="px-4 py-3">
+                      <Link
+                        href={`/quotes/${quote.id}`}
+                        className="text-on-surface hover:text-primary transition-colors font-medium font-mono text-sm"
+                      >
+                        {quote.quoteNumber}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3 text-on-surface text-sm">
+                      {quote.contactName}
+                    </td>
+                    <td className="px-4 py-3 text-on-surface/60 text-sm">
+                      {quote.issueDate}
+                    </td>
+                    <td className="px-4 py-3 text-on-surface/60 text-sm">
+                      {quote.validUntil || "\u2014"}
+                    </td>
+                    <td className="px-4 py-3 text-on-surface text-sm text-right font-mono">
+                      {quote.currencyCode} {quote.total}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge
+                        className={statusColors[quote.status] ?? ""}
+                        variant="outline"
+                      >
+                        {statusLabels[quote.status]}
+                      </Badge>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
+
+        <div className="block md:hidden space-y-3">
+          {filtered.map((quote) => (
+            <Link
+              key={quote.id}
+              href={`/quotes/${quote.id}`}
+              className="block bg-surface-container rounded-xl p-4 hover:bg-surface-container-high transition-colors"
+            >
+              <div className="flex items-start justify-between mb-1">
+                <span className="font-mono text-sm text-on-surface">{quote.quoteNumber}</span>
+                <span className="font-label text-lg font-bold text-on-surface">{quote.currencyCode} {quote.total}</span>
+              </div>
+              <p className="text-sm text-on-surface mb-2">{quote.contactName}</p>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-on-surface-variant">{quote.issueDate}</span>
+                <Badge className={statusColors[quote.status] ?? ""} variant="outline">{statusLabels[quote.status]}</Badge>
+              </div>
+            </Link>
+          ))}
+        </div>
+        </>
       )}
     </div>
   );
