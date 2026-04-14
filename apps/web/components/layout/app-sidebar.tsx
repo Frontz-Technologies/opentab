@@ -86,10 +86,12 @@ export function AppSidebar({ orgName }: AppSidebarProps) {
         </SidebarMenu>
       </SidebarContent>
 
-      <SidebarFooter className="p-3">
+      <SidebarFooter className="p-2">
         <Link
           href="/invoices/new"
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-label font-semibold text-sm hover:from-emerald-400 hover:to-emerald-500 transition-all"
+          className={`flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-label font-semibold text-sm hover:from-emerald-400 hover:to-emerald-500 transition-all ${
+            isCollapsed ? "size-9 mx-auto" : "w-full px-4 py-2"
+          }`}
         >
           <span className="material-symbols-outlined text-[18px] leading-none">
             add
