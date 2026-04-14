@@ -1,4 +1,4 @@
-import { convertToModelMessages, streamText, type UIMessage } from "ai";
+import { convertToCoreMessages, streamText, type UIMessage } from "ai";
 import { getAiSettingsSecret } from "@/lib/actions/ai-settings";
 import { createAiProvider } from "@/lib/ai/provider";
 import { aiRateLimiter } from "@/lib/ai/rate-limiter";
@@ -29,7 +29,7 @@ export async function POST(req: Request): Promise<Response> {
   }
 
   const body = (await req.json()) as ChatRequestBody;
-  const messages = await convertToModelMessages(body.messages ?? []);
+  const messages = convertToCoreMessages(body.messages ?? []);
   const model = createAiProvider(settings.apiKey, settings.model);
   const tools = createTools(session.org.id, {
     role: session.role,
@@ -42,7 +42,8 @@ export async function POST(req: Request): Promise<Response> {
     system,
     messages,
     tools,
+    maxSteps: 5,
   });
 
-  return result.toUIMessageStreamResponse();
+  return result.toDataStreamResponse();
 }

@@ -1,11 +1,11 @@
 "use client";
 
-import type { DynamicToolUIPart } from "ai";
+import type { ToolInvocation } from "ai";
 import { AiConfirmation } from "@/components/ai/ai-confirmation";
 import { isPendingConfirmation } from "@/lib/ai/types";
 
 type AiToolResultProps = {
-  toolPart: DynamicToolUIPart;
+  toolInvocation: ToolInvocation;
 };
 
 function formatToolName(toolName: string) {
@@ -15,9 +15,12 @@ function formatToolName(toolName: string) {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-export function AiToolResult({ toolPart }: AiToolResultProps) {
-  if ("output" in toolPart && isPendingConfirmation(toolPart.output)) {
-    return <AiConfirmation confirmation={toolPart.output} />;
+export function AiToolResult({ toolInvocation }: AiToolResultProps) {
+  if (
+    "result" in toolInvocation &&
+    isPendingConfirmation(toolInvocation.result)
+  ) {
+    return <AiConfirmation confirmation={toolInvocation.result} />;
   }
 
   return (
@@ -26,18 +29,18 @@ export function AiToolResult({ toolPart }: AiToolResultProps) {
         <p className="text-xs font-medium uppercase tracking-[0.18em] text-on-surface/50">
           Tool
         </p>
-        <p className="text-xs text-on-surface/50">{toolPart.state}</p>
+        <p className="text-xs text-on-surface/50">{toolInvocation.state}</p>
       </div>
       <p className="mt-1 text-sm font-medium text-on-surface">
-        {formatToolName(toolPart.toolName)}
+        {formatToolName(toolInvocation.toolName)}
       </p>
-      {"output" in toolPart && toolPart.output !== undefined ? (
+      {"result" in toolInvocation ? (
         <pre className="mt-3 overflow-x-auto rounded-xl bg-background/40 p-3 text-xs text-on-surface/80">
-          {JSON.stringify(toolPart.output, null, 2)}
+          {JSON.stringify(toolInvocation.result, null, 2)}
         </pre>
       ) : (
         <pre className="mt-3 overflow-x-auto rounded-xl bg-background/40 p-3 text-xs text-on-surface/80">
-          {JSON.stringify(toolPart.input, null, 2)}
+          {JSON.stringify(toolInvocation.args, null, 2)}
         </pre>
       )}
     </div>

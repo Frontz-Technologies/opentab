@@ -1,14 +1,15 @@
-import type { UIMessage } from "ai";
+import { formatDataStreamPart, type UIMessage } from "ai";
 import { describe, expect, it, vi } from "vitest";
 import { confirmAiToolCall, submitAiChatMessage } from "../lib/ai/chat-client";
 
-function createSSEStream(events: object[]): ReadableStream<Uint8Array> {
+function createStream(parts: string[]): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder();
-  const lines = events.map((e) => `data: ${JSON.stringify(e)}\n\n`).join("");
 
   return new ReadableStream<Uint8Array>({
     start(controller) {
-      controller.enqueue(encoder.encode(lines + "data: [DONE]\n\n"));
+      for (const part of parts) {
+        controller.enqueue(encoder.encode(part));
+      }
       controller.close();
     },
   });
@@ -16,19 +17,21 @@ function createSSEStream(events: object[]): ReadableStream<Uint8Array> {
 
 describe("submitAiChatMessage", () => {
   it("posts the new user message and appends the streamed assistant text", async () => {
-    const fetchMock = vi.fn(async () => {
-      return new Response(
-        createSSEStream([
-          { type: "start-step" },
-          { type: "text-start", id: "text-1" },
-          { type: "text-delta", id: "text-1", delta: "Revenue is " },
-          { type: "text-delta", id: "text-1", delta: "up 12%." },
-          { type: "text-end", id: "text-1" },
-          { type: "finish-step" },
-          { type: "finish" },
-        ]),
-      );
-    });
+    const fetchMock = vi.fn(
+      async (_input: RequestInfo | URL, init?: RequestInit) => {
+        return new Response(
+          createStream([
+            formatDataStreamPart("start_step", { messageId: "assistant-1" }),
+            formatDataStreamPart("text", "Revenue is "),
+            formatDataStreamPart("text", "up 12%."),
+            formatDataStreamPart("finish_message", {
+              finishReason: "stop",
+              usage: { promptTokens: 10, completionTokens: 6 },
+            }),
+          ]),
+        );
+      },
+    );
 
     const result = await submitAiChatMessage({
       input: "How is revenue doing?",
@@ -48,39 +51,46 @@ describe("submitAiChatMessage", () => {
     expect(body.messages).toHaveLength(1);
     expect(body.messages[0]).toMatchObject({
       role: "user",
+      content: "How is revenue doing?",
       parts: [{ type: "text", text: "How is revenue doing?" }],
     });
 
-    expect(result[0]).toMatchObject({
+    expect(result[0]).toEqual<UIMessage>({
+      id: expect.any(String),
       role: "user",
+      content: "How is revenue doing?",
       parts: [{ type: "text", text: "How is revenue doing?" }],
     });
-    expect(result[1]).toMatchObject({ role: "assistant" });
-    const textParts = result[1]?.parts.filter((p) => p.type === "text");
-    expect(textParts).toHaveLength(1);
-    expect((textParts?.[0] as any).text).toBe("Revenue is up 12%.");
+    expect(result[1]).toMatchObject({
+      id: "assistant-1",
+      role: "assistant",
+      content: "Revenue is up 12%.",
+      toolInvocations: [],
+    });
+    expect(result[1]?.parts).toEqual([
+      { type: "step-start" },
+      { type: "text", text: "Revenue is up 12%." },
+    ]);
   });
 
   it("captures streamed tool calls and results on the assistant message", async () => {
     const fetchMock = vi.fn(async () => {
       return new Response(
-        createSSEStream([
-          { type: "start-step" },
-          {
-            type: "tool-input-available",
+        createStream([
+          formatDataStreamPart("start_step", { messageId: "assistant-2" }),
+          formatDataStreamPart("tool_call", {
             toolCallId: "tool-1",
             toolName: "getRevenueSummary",
-            input: { range: "this-month" },
-            dynamic: true,
-          },
-          {
-            type: "tool-output-available",
+            args: { range: "this-month" },
+          }),
+          formatDataStreamPart("tool_result", {
             toolCallId: "tool-1",
-            output: { total: 4200 },
-            dynamic: true,
-          },
-          { type: "finish-step" },
-          { type: "finish" },
+            result: { total: 4200 },
+          }),
+          formatDataStreamPart("finish_message", {
+            finishReason: "tool-calls",
+            usage: { promptTokens: 8, completionTokens: 4 },
+          }),
         ]),
       );
     });
@@ -91,30 +101,46 @@ describe("submitAiChatMessage", () => {
       fetch: fetchMock,
     });
 
-    const assistant = result[1];
-    expect(assistant).toMatchObject({ role: "assistant" });
-    const toolParts = assistant?.parts.filter((p) => p.type === "dynamic-tool");
-    expect(toolParts).toHaveLength(1);
-    expect(toolParts?.[0]).toMatchObject({
-      type: "dynamic-tool",
-      toolName: "getRevenueSummary",
-      toolCallId: "tool-1",
-      state: "output-available",
-      input: { range: "this-month" },
-      output: { total: 4200 },
+    expect(result[1]).toMatchObject({
+      id: "assistant-2",
+      role: "assistant",
+      toolInvocations: [
+        {
+          toolCallId: "tool-1",
+          toolName: "getRevenueSummary",
+          state: "result",
+          args: { range: "this-month" },
+          result: { total: 4200 },
+        },
+      ],
+      parts: [
+        {
+          type: "step-start",
+        },
+        {
+          type: "tool-invocation",
+          toolInvocation: {
+            toolCallId: "tool-1",
+            toolName: "getRevenueSummary",
+            state: "result",
+            args: { range: "this-month" },
+            result: { total: 4200 },
+          },
+        },
+      ],
     });
   });
 
   it("sends a confirmation payload when approving a pending tool action", async () => {
     const fetchMock = vi.fn(async () => {
       return new Response(
-        createSSEStream([
-          { type: "start-step" },
-          { type: "text-start", id: "text-1" },
-          { type: "text-delta", id: "text-1", delta: "Draft invoice created." },
-          { type: "text-end", id: "text-1" },
-          { type: "finish-step" },
-          { type: "finish" },
+        createStream([
+          formatDataStreamPart("start_step", { messageId: "assistant-3" }),
+          formatDataStreamPart("text", "Draft invoice created."),
+          formatDataStreamPart("finish_message", {
+            finishReason: "stop",
+            usage: { promptTokens: 9, completionTokens: 4 },
+          }),
         ]),
       );
     });
@@ -124,6 +150,7 @@ describe("submitAiChatMessage", () => {
         {
           id: "assistant-2",
           role: "assistant",
+          content: "",
           parts: [],
         },
       ],
@@ -157,6 +184,10 @@ describe("submitAiChatMessage", () => {
         contactId: "contact-1",
         items: [{ name: "Development", quantity: 1, unitPrice: 100 }],
       },
+    });
+    expect(body.messages.at(-1)).toMatchObject({
+      role: "user",
+      content: "Approved. Continue.",
     });
   });
 });

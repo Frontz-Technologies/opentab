@@ -4,7 +4,7 @@ const getSessionMock = vi.fn();
 const getAiSettingsSecretMock = vi.fn();
 const createAiProviderMock = vi.fn();
 const createToolsMock = vi.fn();
-const convertToModelMessagesMock = vi.fn();
+const convertToCoreMessagesMock = vi.fn();
 const getSystemPromptMock = vi.fn();
 const streamTextMock = vi.fn();
 const aiRateLimiterCheckMock = vi.fn();
@@ -36,7 +36,7 @@ vi.mock("@/lib/ai/rate-limiter", () => ({
 }));
 
 vi.mock("ai", () => ({
-  convertToModelMessages: convertToModelMessagesMock,
+  convertToCoreMessages: convertToCoreMessagesMock,
   streamText: streamTextMock,
 }));
 
@@ -46,12 +46,10 @@ describe("POST /api/ai/chat", () => {
     aiRateLimiterCheckMock.mockReturnValue({ allowed: true, remaining: 19 });
     createAiProviderMock.mockReturnValue({ provider: "mock" });
     createToolsMock.mockReturnValue({});
-    convertToModelMessagesMock.mockImplementation((messages) =>
-      Promise.resolve(messages),
-    );
+    convertToCoreMessagesMock.mockImplementation((messages) => messages);
     getSystemPromptMock.mockReturnValue("system prompt");
     streamTextMock.mockReturnValue({
-      toUIMessageStreamResponse: () => new Response("ok"),
+      toDataStreamResponse: () => new Response("ok"),
     });
   });
 
@@ -235,7 +233,7 @@ describe("POST /api/ai/chat", () => {
       apiKey: "sk-test",
       model: "openai/gpt-4.1-mini",
     });
-    convertToModelMessagesMock.mockResolvedValue([
+    convertToCoreMessagesMock.mockReturnValue([
       { role: "user", content: "Preserved core message" },
     ]);
 
@@ -276,7 +274,7 @@ describe("POST /api/ai/chat", () => {
       }),
     );
 
-    expect(convertToModelMessagesMock).toHaveBeenCalledWith(uiMessages);
+    expect(convertToCoreMessagesMock).toHaveBeenCalledWith(uiMessages);
     expect(streamTextMock).toHaveBeenCalledWith(
       expect.objectContaining({
         messages: [{ role: "user", content: "Preserved core message" }],
