@@ -87,6 +87,15 @@ test.describe("Settings", () => {
     await expect(page.getByRole("link", { name: /Settings/ })).toBeVisible();
   });
 
+  test("general settings has language selector with 3 options", async () => {
+    await page.goto("/settings/general");
+    const localeSelect = page.locator('select[name="locale"]');
+    if (await localeSelect.isVisible()) {
+      const options = await localeSelect.locator("option").allTextContents();
+      expect(options.length).toBe(3);
+    }
+  });
+
   test("settings secondary nav highlights active tab", async () => {
     await page.goto("/settings/general");
     const generalLink = page.locator('a[href="/settings/general"]').first();

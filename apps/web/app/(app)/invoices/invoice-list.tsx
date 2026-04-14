@@ -154,79 +154,113 @@ export function InvoiceList({ invoices, showMyData }: InvoiceListProps) {
           <p className="text-sm mt-1">{t("noInvoicesDescription")}</p>
         </div>
       ) : (
-        <div className="bg-surface-container rounded-xl overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-on-surface/10">
-                <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
-                  {t("number")}
-                </th>
-                <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
-                  {t("client")}
-                </th>
-                <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
-                  {t("issueDate")}
-                </th>
-                <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
-                  {t("dueDate")}
-                </th>
-                <th className="text-right px-4 py-3 font-label text-sm text-on-surface/60">
-                  {t("total")}
-                </th>
-                <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
-                  {t("status")}
-                </th>
-                {showMyData && (
-                  <th className="text-center px-4 py-3 font-label text-sm text-on-surface/60">
-                    myDATA
-                  </th>
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((invoice) => (
-                <tr
-                  key={invoice.id}
-                  className="border-b border-on-surface/5 hover:bg-surface-container-low transition-colors"
-                >
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/invoices/${invoice.id}`}
-                      className="text-on-surface hover:text-primary transition-colors font-medium font-mono text-sm"
+        <>
+          <div className="hidden md:block">
+            <div className="bg-surface-container rounded-xl overflow-hidden">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-on-surface/10">
+                    <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
+                      {t("number")}
+                    </th>
+                    <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
+                      {t("client")}
+                    </th>
+                    <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
+                      {t("issueDate")}
+                    </th>
+                    <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
+                      {t("dueDate")}
+                    </th>
+                    <th className="text-right px-4 py-3 font-label text-sm text-on-surface/60">
+                      {t("total")}
+                    </th>
+                    <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
+                      {t("status")}
+                    </th>
+                    {showMyData && (
+                      <th className="text-center px-4 py-3 font-label text-sm text-on-surface/60">
+                        myDATA
+                      </th>
+                    )}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((invoice) => (
+                    <tr
+                      key={invoice.id}
+                      className="border-b border-on-surface/5 hover:bg-surface-container-low transition-colors"
                     >
-                      {invoice.invoiceNumber}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-on-surface text-sm">
-                    {invoice.contactName}
-                  </td>
-                  <td className="px-4 py-3 text-on-surface/60 text-sm">
-                    {invoice.issueDate}
-                  </td>
-                  <td className="px-4 py-3 text-on-surface/60 text-sm">
-                    {invoice.dueDate || "\u2014"}
-                  </td>
-                  <td className="px-4 py-3 text-on-surface text-sm text-right font-mono">
+                      <td className="px-4 py-3">
+                        <Link
+                          href={`/invoices/${invoice.id}`}
+                          className="text-on-surface hover:text-primary transition-colors font-medium font-mono text-sm"
+                        >
+                          {invoice.invoiceNumber}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-3 text-on-surface text-sm">
+                        {invoice.contactName}
+                      </td>
+                      <td className="px-4 py-3 text-on-surface/60 text-sm">
+                        {invoice.issueDate}
+                      </td>
+                      <td className="px-4 py-3 text-on-surface/60 text-sm">
+                        {invoice.dueDate || "\u2014"}
+                      </td>
+                      <td className="px-4 py-3 text-on-surface text-sm text-right font-mono">
+                        {invoice.currencyCode} {invoice.total}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge
+                          className={getStatusColor(invoice)}
+                          variant="outline"
+                        >
+                          {getStatusLabel(invoice, t)}
+                        </Badge>
+                      </td>
+                      {showMyData && (
+                        <td className="px-4 py-3 text-center">
+                          <MyDataStatusIcon status={invoice.mydataStatus} />
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="block md:hidden space-y-3">
+            {filtered.map((invoice) => (
+              <Link
+                key={invoice.id}
+                href={`/invoices/${invoice.id}`}
+                className="block bg-surface-container rounded-xl p-4 hover:bg-surface-container-high transition-colors"
+              >
+                <div className="flex items-start justify-between mb-1">
+                  <span className="font-mono text-sm text-on-surface">
+                    {invoice.invoiceNumber}
+                  </span>
+                  <span className="font-label text-lg font-bold text-on-surface">
                     {invoice.currencyCode} {invoice.total}
-                  </td>
-                  <td className="px-4 py-3">
-                    <Badge
-                      className={getStatusColor(invoice)}
-                      variant="outline"
-                    >
-                      {getStatusLabel(invoice, t)}
-                    </Badge>
-                  </td>
-                  {showMyData && (
-                    <td className="px-4 py-3 text-center">
-                      <MyDataStatusIcon status={invoice.mydataStatus} />
-                    </td>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  </span>
+                </div>
+                <p className="text-sm text-on-surface mb-2">
+                  {invoice.contactName}
+                </p>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-on-surface-variant">
+                    {invoice.issueDate}
+                  </span>
+                  <Badge className={getStatusColor(invoice)} variant="outline">
+                    {getStatusLabel(invoice, t)}
+                  </Badge>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
