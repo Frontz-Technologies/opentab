@@ -448,6 +448,9 @@
   "expenses": {
     "title": "Expenses",
     "addExpense": "New Expense",
+    "uploadReceipt": "Upload Receipt",
+    "uploading": "Uploading...",
+    "uploadReceiptHint": "Upload a PDF or image to auto-fill expense details",
     "editExpense": "Edit Expense",
     "noExpenses": "No expenses yet",
     "noExpensesDescription": "Record your first expense to start tracking costs.",

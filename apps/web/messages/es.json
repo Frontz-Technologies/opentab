@@ -448,6 +448,9 @@
   "expenses": {
     "title": "Gastos",
     "addExpense": "Nuevo gasto",
+    "uploadReceipt": "Subir recibo",
+    "uploading": "Subiendo...",
+    "uploadReceiptHint": "Suba un PDF o imagen para completar automáticamente",
     "editExpense": "Editar gasto",
     "noExpenses": "A\u00fan no hay gastos",
     "noExpensesDescription": "Registre su primer gasto para comenzar a controlar costos.",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import type {
@@ -14,7 +14,7 @@ import {
   LineItemsBuilder,
   type LineItem,
 } from "@/components/invoicing/line-items-builder";
-import { createExpense } from "../actions";
+import { createExpense, uploadReceipt } from "../actions";
 
 interface ExpenseFormProps {
   contacts: Contact[];
@@ -48,8 +48,28 @@ export function ExpenseForm({
   const [notes, setNotes] = useState("");
   const [items, setItems] = useState<LineItem[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const selectedContact = contacts.find((c) => c.id === contactId);
+
+  async function handleReceiptUpload(file: File) {
+    setIsUploading(true);
+    setError(null);
+    const formData = new FormData();
+    formData.set("file", file);
+    try {
+      const result = await uploadReceipt(formData);
+      if (result.success && result.expense) {
+        router.push(`/expenses/${result.expense.id}`);
+      } else {
+        setError(result.error ?? "Upload failed");
+      }
+    } catch {
+      setError("Failed to upload receipt");
+    }
+    setIsUploading(false);
+  }
 
   // Group categories by expense group for optgroup display
   const groupedCategories = groups.map((group) => ({
@@ -89,6 +109,35 @@ export function ExpenseForm({
 
   return (
     <div className="space-y-6 max-w-4xl">
+      <div className="bg-surface-container rounded-xl p-6">
+        <div className="flex items-center gap-4">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*,application/pdf"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleReceiptUpload(file);
+            }}
+          />
+          <Button
+            variant="outline"
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+          >
+            <span className="material-symbols-outlined text-[18px] mr-1">
+              upload_file
+            </span>
+            {isUploading ? t("uploading") : t("uploadReceipt")}
+          </Button>
+          <span className="text-sm text-on-surface/50">
+            {t("uploadReceiptHint")}
+          </span>
+        </div>
+      </div>
+
       {error && (
         <div className="bg-red-500/10 text-red-400 rounded-lg p-3 text-sm">
           {error}
