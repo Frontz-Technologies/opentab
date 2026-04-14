@@ -15,11 +15,11 @@ interface InvoiceListProps {
 }
 
 const statusColors: Record<number, string> = {
-  [INVOICE_STATUS.DRAFT]: "bg-zinc-500/20 text-zinc-400",
-  [INVOICE_STATUS.SENT]: "bg-blue-500/20 text-blue-400",
+  [INVOICE_STATUS.DRAFT]: "bg-surface-container-highest text-on-surface-variant",
+  [INVOICE_STATUS.SENT]: "bg-secondary-container text-secondary",
   [INVOICE_STATUS.PARTIAL]: "bg-amber-500/20 text-amber-400",
-  [INVOICE_STATUS.PAID]: "bg-emerald-500/20 text-emerald-400",
-  [INVOICE_STATUS.CANCELLED]: "bg-red-500/20 text-red-400",
+  [INVOICE_STATUS.PAID]: "bg-primary-container/20 text-primary",
+  [INVOICE_STATUS.CANCELLED]: "bg-tertiary-container/20 text-tertiary",
 };
 
 function isOverdue(invoice: Invoice): boolean {
@@ -44,7 +44,7 @@ function getStatusLabel(
 }
 
 function getStatusColor(invoice: Invoice): string {
-  if (isOverdue(invoice)) return "bg-red-500/20 text-red-400";
+  if (isOverdue(invoice)) return "bg-tertiary-container/20 text-tertiary-container";
   return statusColors[invoice.status] ?? "";
 }
 

@@ -14,11 +14,11 @@ interface QuoteListProps {
 }
 
 const statusColors: Record<number, string> = {
-  [QUOTE_STATUS.DRAFT]: "bg-zinc-500/20 text-zinc-400",
-  [QUOTE_STATUS.SENT]: "bg-blue-500/20 text-blue-400",
-  [QUOTE_STATUS.ACCEPTED]: "bg-emerald-500/20 text-emerald-400",
-  [QUOTE_STATUS.REJECTED]: "bg-red-500/20 text-red-400",
-  [QUOTE_STATUS.CONVERTED]: "bg-purple-500/20 text-purple-400",
+  [QUOTE_STATUS.DRAFT]: "bg-surface-container-highest text-on-surface-variant",
+  [QUOTE_STATUS.SENT]: "bg-secondary-container text-secondary",
+  [QUOTE_STATUS.ACCEPTED]: "bg-primary-container/20 text-primary",
+  [QUOTE_STATUS.REJECTED]: "bg-tertiary-container/20 text-tertiary",
+  [QUOTE_STATUS.CONVERTED]: "bg-primary-container/20 text-primary",
 };
 
 type StatusFilter = "all" | "draft" | "sent" | "accepted";

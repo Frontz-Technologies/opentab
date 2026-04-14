@@ -14,9 +14,9 @@ interface ExpenseListProps {
 }
 
 const statusColors: Record<number, string> = {
-  [EXPENSE_STATUS.DRAFT]: "bg-zinc-500/20 text-zinc-400",
-  [EXPENSE_STATUS.CONFIRMED]: "bg-emerald-500/20 text-emerald-400",
-  [EXPENSE_STATUS.CANCELLED]: "bg-red-500/20 text-red-400",
+  [EXPENSE_STATUS.DRAFT]: "bg-surface-container-highest text-on-surface-variant",
+  [EXPENSE_STATUS.CONFIRMED]: "bg-primary-container/20 text-primary",
+  [EXPENSE_STATUS.CANCELLED]: "bg-tertiary-container/20 text-tertiary",
 };
 
 type StatusFilter = "all" | "draft" | "confirmed" | "cancelled";
