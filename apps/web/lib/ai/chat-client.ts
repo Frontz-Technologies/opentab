@@ -1,4 +1,11 @@
-import { consumeStream, readUIMessageStream, type UIMessage } from "ai";
+import {
+  consumeStream,
+  parseJsonEventStream,
+  readUIMessageStream,
+  uiMessageChunkSchema,
+  type UIMessage,
+  type UIMessageChunk,
+} from "ai";
 import type { ConfirmToolCall } from "@/lib/ai/types";
 
 type FetchImplementation = typeof globalThis.fetch;
@@ -59,15 +66,27 @@ export async function submitAiChatMessage({
   };
   nextMessages.push(assistantMessage);
 
-  await consumeStream(
-    readUIMessageStream({
-      message: assistantMessage,
-      stream: response.body,
-      onError(error) {
-        throw new Error(typeof error === "string" ? error : error.message);
+  const chunkStream = parseJsonEventStream({
+    stream: response.body,
+    schema: uiMessageChunkSchema,
+  }).pipeThrough(
+    new TransformStream<{ success: boolean; value?: UIMessageChunk; error?: unknown }, UIMessageChunk>({
+      transform(parsed, controller) {
+        if (!parsed.success) throw parsed.error;
+        controller.enqueue(parsed.value!);
       },
     }),
   );
+
+  await consumeStream({
+    stream: readUIMessageStream({
+      message: assistantMessage,
+      stream: chunkStream,
+      onError(error) {
+        throw new Error(typeof error === "string" ? error : String(error));
+      },
+    }),
+  });
 
   return nextMessages;
 }
