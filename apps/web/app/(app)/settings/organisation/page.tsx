@@ -1,5 +1,5 @@
 import { getSession } from "@/lib/session";
-import { TopBar } from "@/components/layout/top-bar";
+import { PageHeader } from "@/components/layout/page-header";
 import { CompanyForm } from "./company-form";
 
 export default async function OrganisationSettingsPage() {
@@ -7,18 +7,13 @@ export default async function OrganisationSettingsPage() {
 
   return (
     <>
-      <TopBar
-        breadcrumbs={[
-          { label: "Settings", href: "/settings" },
-          { label: "Organisation" },
-        ]}
+      <PageHeader
+        headingPrefix="Settings"
+        heading="Organisation Settings"
         userName={session.user.name}
         userEmail={session.user.email}
       />
       <main>
-        <h2 className="font-headline text-3xl font-extrabold tracking-tight text-on-surface mb-8">
-          Organisation Settings
-        </h2>
         <CompanyForm
           initialData={{
             name: session.org.name,

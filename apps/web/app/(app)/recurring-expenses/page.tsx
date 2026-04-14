@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getSession } from "@/lib/session";
+import { PageHeader } from "@/components/layout/page-header";
 import { db } from "@/lib/db";
 import { recurringExpenses } from "@opentab/db/schema";
 import { eq, desc } from "drizzle-orm";
@@ -20,22 +21,26 @@ export default async function RecurringExpensesPage() {
     .orderBy(desc(recurringExpenses.createdAt));
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="font-headline text-2xl font-bold text-on-surface">
-          {t("title")}
-        </h1>
-        <Link
-          href="/recurring-expenses/new"
-          className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/80 transition-colors"
-        >
-          <span className="material-symbols-outlined text-[18px] leading-none">
-            add
-          </span>
-          {t("addRecurring")}
-        </Link>
+    <>
+      <PageHeader
+        heading={t("title")}
+        userName={session.user.name}
+        userEmail={session.user.email}
+        actions={
+          <Link
+            href="/recurring-expenses/new"
+            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-primary text-on-primary font-medium text-sm hover:bg-primary/80 transition-colors"
+          >
+            <span className="material-symbols-outlined text-[18px] leading-none">
+              add
+            </span>
+            {t("addRecurring")}
+          </Link>
+        }
+      />
+      <div className="px-6 py-6">
+        <RecurringExpenseList items={allRecurring} />
       </div>
-      <RecurringExpenseList items={allRecurring} />
-    </div>
+    </>
   );
 }

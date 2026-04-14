@@ -1,6 +1,6 @@
 import { getSession } from "@/lib/session";
 import { getTranslations } from "next-intl/server";
-import { TopBar } from "@/components/layout/top-bar";
+import { PageHeader } from "@/components/layout/page-header";
 import { PnlClient } from "./pnl-client";
 
 export default async function PnlPage() {
@@ -19,11 +19,9 @@ export default async function PnlPage() {
 
   return (
     <>
-      <TopBar
-        breadcrumbs={[
-          { label: tNav("reports"), href: "/reports" },
-          { label: t("pnl") },
-        ]}
+      <PageHeader
+        headingPrefix={tNav("reports")}
+        heading={t("pnl")}
         userName={session.user.name}
         userEmail={session.user.email}
       />
