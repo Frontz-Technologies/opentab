@@ -86,78 +86,92 @@ export function RecurringList({ items }: RecurringListProps) {
         </div>
       ) : (
         <>
-        <div className="hidden md:block">
-          <div className="bg-surface-container rounded-xl overflow-hidden">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-on-surface/10">
-                  <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
-                    {t("client")}
-                  </th>
-                  <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
-                    {t("frequency")}
-                  </th>
-                  <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
-                    {t("nextSendDate")}
-                  </th>
-                  <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
-                    {t("status")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((r) => (
-                  <tr
-                    key={r.id}
-                    className="border-b border-on-surface/5 hover:bg-surface-container-low transition-colors"
-                  >
-                    <td className="px-4 py-3">
-                      <Link
-                        href={`/recurring/${r.id}`}
-                        className="text-on-surface hover:text-primary transition-colors font-medium text-sm"
-                      >
-                        {r.contactId}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3 text-on-surface text-sm">
-                      {frequencyLabels[r.frequency]}
-                    </td>
-                    <td className="px-4 py-3 text-on-surface/60 text-sm">
-                      {r.nextSendDate}
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge
-                        className={statusColors[r.status] ?? ""}
-                        variant="outline"
-                      >
-                        {statusLabels[r.status]}
-                      </Badge>
-                    </td>
+          <div className="hidden md:block">
+            <div className="bg-surface-container rounded-xl overflow-hidden">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-on-surface/10">
+                    <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
+                      {t("client")}
+                    </th>
+                    <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
+                      {t("frequency")}
+                    </th>
+                    <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
+                      {t("nextSendDate")}
+                    </th>
+                    <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
+                      {t("status")}
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {filtered.map((r) => (
+                    <tr
+                      key={r.id}
+                      className="border-b border-on-surface/5 hover:bg-surface-container-low transition-colors"
+                    >
+                      <td className="px-4 py-3">
+                        <Link
+                          href={`/recurring/${r.id}`}
+                          className="text-on-surface hover:text-primary transition-colors font-medium text-sm"
+                        >
+                          {r.contactId}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-3 text-on-surface text-sm">
+                        {frequencyLabels[r.frequency]}
+                      </td>
+                      <td className="px-4 py-3 text-on-surface/60 text-sm">
+                        {r.nextSendDate}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge
+                          className={statusColors[r.status] ?? ""}
+                          variant="outline"
+                        >
+                          {statusLabels[r.status]}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
 
-        <div className="block md:hidden space-y-3">
-          {filtered.map((r) => (
-            <Link
-              key={r.id}
-              href={`/recurring/${r.id}`}
-              className="block bg-surface-container rounded-xl p-4 hover:bg-surface-container-high transition-colors"
-            >
-              <div className="flex items-start justify-between mb-1">
-                <span className="font-label text-lg font-bold text-on-surface">{r.contactId}</span>
-                <Badge className={statusColors[r.status] ?? ""} variant="outline">{statusLabels[r.status]}</Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <Badge className="bg-secondary-container text-secondary" variant="outline">{frequencyLabels[r.frequency]}</Badge>
-                <span className="text-xs text-on-surface-variant">{r.nextSendDate}</span>
-              </div>
-            </Link>
-          ))}
-        </div>
+          <div className="block md:hidden space-y-3">
+            {filtered.map((r) => (
+              <Link
+                key={r.id}
+                href={`/recurring/${r.id}`}
+                className="block bg-surface-container rounded-xl p-4 hover:bg-surface-container-high transition-colors"
+              >
+                <div className="flex items-start justify-between mb-1">
+                  <span className="font-label text-lg font-bold text-on-surface">
+                    {r.contactId}
+                  </span>
+                  <Badge
+                    className={statusColors[r.status] ?? ""}
+                    variant="outline"
+                  >
+                    {statusLabels[r.status]}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <Badge
+                    className="bg-secondary-container text-secondary"
+                    variant="outline"
+                  >
+                    {frequencyLabels[r.frequency]}
+                  </Badge>
+                  <span className="text-xs text-on-surface-variant">
+                    {r.nextSendDate}
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
         </>
       )}
     </div>

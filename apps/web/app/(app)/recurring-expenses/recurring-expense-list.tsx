@@ -85,91 +85,100 @@ export function RecurringExpenseList({ items }: RecurringExpenseListProps) {
         </div>
       ) : (
         <>
-        <div className="hidden md:block">
-          <div className="bg-surface-container rounded-xl overflow-hidden">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-on-surface/10">
-                  <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
-                    {t("description")}
-                  </th>
-                  <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
-                    {t("frequency")}
-                  </th>
-                  <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
-                    {t("nextRunDate")}
-                  </th>
-                  <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
-                    {t("status")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="border-b border-on-surface/5 hover:bg-surface-container-low transition-colors"
-                  >
-                    <td className="px-4 py-3">
-                      <Link
-                        href={`/recurring-expenses/${item.id}`}
-                        className="text-on-surface hover:text-primary transition-colors font-medium text-sm"
-                      >
-                        {item.description || "\u2014"}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3 text-on-surface/60 text-sm">
-                      {frequencyLabels[item.frequency] ?? ""}
-                    </td>
-                    <td className="px-4 py-3 text-on-surface/60 text-sm">
-                      {item.nextRunDate}
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge
-                        className={statusColors[item.status] ?? ""}
-                        variant="outline"
-                      >
-                        {item.status === RECURRING_EXPENSE_STATUS.ACTIVE
-                          ? t("statusActive")
-                          : item.status === RECURRING_EXPENSE_STATUS.PAUSED
-                            ? t("statusPaused")
-                            : t("statusCompleted")}
-                      </Badge>
-                    </td>
+          <div className="hidden md:block">
+            <div className="bg-surface-container rounded-xl overflow-hidden">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-on-surface/10">
+                    <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
+                      {t("description")}
+                    </th>
+                    <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
+                      {t("frequency")}
+                    </th>
+                    <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
+                      {t("nextRunDate")}
+                    </th>
+                    <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
+                      {t("status")}
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {filtered.map((item) => (
+                    <tr
+                      key={item.id}
+                      className="border-b border-on-surface/5 hover:bg-surface-container-low transition-colors"
+                    >
+                      <td className="px-4 py-3">
+                        <Link
+                          href={`/recurring-expenses/${item.id}`}
+                          className="text-on-surface hover:text-primary transition-colors font-medium text-sm"
+                        >
+                          {item.description || "\u2014"}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-3 text-on-surface/60 text-sm">
+                        {frequencyLabels[item.frequency] ?? ""}
+                      </td>
+                      <td className="px-4 py-3 text-on-surface/60 text-sm">
+                        {item.nextRunDate}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge
+                          className={statusColors[item.status] ?? ""}
+                          variant="outline"
+                        >
+                          {item.status === RECURRING_EXPENSE_STATUS.ACTIVE
+                            ? t("statusActive")
+                            : item.status === RECURRING_EXPENSE_STATUS.PAUSED
+                              ? t("statusPaused")
+                              : t("statusCompleted")}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
 
-        <div className="block md:hidden space-y-3">
-          {filtered.map((item) => (
-            <Link
-              key={item.id}
-              href={`/recurring-expenses/${item.id}`}
-              className="block bg-surface-container rounded-xl p-4 hover:bg-surface-container-high transition-colors"
-            >
-              <div className="flex items-start justify-between mb-1">
-                <span className="font-label text-lg font-bold text-on-surface">{item.description || "\u2014"}</span>
-                <Badge
-                  className={statusColors[item.status] ?? ""}
-                  variant="outline"
-                >
-                  {item.status === RECURRING_EXPENSE_STATUS.ACTIVE
-                    ? t("statusActive")
-                    : item.status === RECURRING_EXPENSE_STATUS.PAUSED
-                      ? t("statusPaused")
-                      : t("statusCompleted")}
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <Badge className="bg-secondary-container text-secondary" variant="outline">{frequencyLabels[item.frequency] ?? ""}</Badge>
-                <span className="text-xs text-on-surface-variant">{item.nextRunDate}</span>
-              </div>
-            </Link>
-          ))}
-        </div>
+          <div className="block md:hidden space-y-3">
+            {filtered.map((item) => (
+              <Link
+                key={item.id}
+                href={`/recurring-expenses/${item.id}`}
+                className="block bg-surface-container rounded-xl p-4 hover:bg-surface-container-high transition-colors"
+              >
+                <div className="flex items-start justify-between mb-1">
+                  <span className="font-label text-lg font-bold text-on-surface">
+                    {item.description || "\u2014"}
+                  </span>
+                  <Badge
+                    className={statusColors[item.status] ?? ""}
+                    variant="outline"
+                  >
+                    {item.status === RECURRING_EXPENSE_STATUS.ACTIVE
+                      ? t("statusActive")
+                      : item.status === RECURRING_EXPENSE_STATUS.PAUSED
+                        ? t("statusPaused")
+                        : t("statusCompleted")}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <Badge
+                    className="bg-secondary-container text-secondary"
+                    variant="outline"
+                  >
+                    {frequencyLabels[item.frequency] ?? ""}
+                  </Badge>
+                  <span className="text-xs text-on-surface-variant">
+                    {item.nextRunDate}
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
         </>
       )}
     </div>
