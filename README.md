@@ -1,67 +1,44 @@
 # OpenTab
 
-**AI-native financial platform for freelancers & startups.**
+**The open-source financial platform for freelancers and startups.**
 
-Invoice clients, track expenses, and understand your finances — without calling your accountant for every question.
+Invoice clients, track expenses, file taxes, and understand your finances — without calling your accountant for every question.
 
-## Features
+Self-hosted, privacy-first, and built for the EU.
+
+## Key Features
+
+### Invoicing & Quotes
+
+Create professional invoices in seconds. Convert quotes to invoices with one click, set up recurring billing for retainer clients, and let AI draft the email for you. Auto-numbering, PDF generation, and full status tracking from draft to paid.
+
+### Smart Expense Tracking
+
+Snap a photo of a receipt and AI extracts the supplier, amounts, and tax details automatically. Expenses are matched to suppliers via VAT number, duplicates are caught by file hash, and recurring costs are tracked on autopilot. Forward receipts by email and they appear in your dashboard.
+
+### Financial Reports & Insights
+
+See how your business is doing at a glance — revenue trends, expense breakdowns, profit & loss, and VAT summaries. A Greek tax projection tool shows exactly what you'll owe with an interactive bracket slider. AI-generated insights surface trends you might miss.
+
+### Greek E-Invoicing (myDATA)
+
+Submit invoices directly to ΑΑΔΕ with automatic document type resolution, retry logic, and MARK number tracking. QR codes are embedded in your PDFs. Credentials are encrypted with AES-256-GCM.
+
+### AI Assistant (In Progress)
+
+Ask questions about your finances in plain language. The chat panel uses function calling to query your real data — revenue summaries, outstanding invoices, expense breakdowns — and responds with accurate, contextual answers.
 
 ### Contacts & Products
 
-- Contact management (clients/suppliers) with VAT lookup (Greek ΑΑΔΕ + EU VIES)
-- Product/service catalogue with tax categories
-- Country provider architecture — capability-based feature gating (Greece first)
+Manage your clients and suppliers with automatic VAT validation (Greek ΑΑΔΕ + EU VIES). Maintain a product catalogue with tax categories, default prices, and units. Country-aware features activate based on your tax ID.
 
-### Invoicing
+### Built for You
 
-- Invoice CRUD with line items and status flow (Draft → Sent → Paid → Cancelled)
-- Quotes/estimates with one-click conversion to invoices
-- Recurring invoices with configurable frequency
-- Auto-numbering with configurable prefix, digits, and year
-- PDF generation via Gotenberg
-- AI-generated email content via OpenRouter
-
-### Expenses
-
-- Expense CRUD with line items and status flow (Draft → Confirmed → Cancelled)
-- Two-layer category system: 16 universal expense groups → per-org categories with country-specific tax code mapping (`mapGroupToTaxCode`)
-- Country-aware category seeding (Greece, Germany, international)
-- AI receipt extraction with PDF-to-image conversion
-- Supplier auto-matching from extracted VAT numbers
-- Duplicate detection via SHA-256 file hash
-- Recurring expenses with configurable frequency
-- Email inbox webhook endpoint for receipt forwarding
-- Authenticated file serving API route
-
-### Reports & Dashboard
-
-- KPI cards: revenue, expenses, net income, outstanding invoices
-- Recharts-powered charts: revenue trend, expense breakdown, income vs expenses
-- Profit & Loss statement with date-range filtering
-- VAT report with input/output breakdown
-- Greek tax projection with bracket visualisation and slider
-- AI-powered financial insights (OpenRouter)
-- Period selector with month/quarter/year presets
-- Optional Redis cache layer for aggregated queries
-
-### myDATA (Greek E-Invoicing)
-
-- ΑΑΔΕ SendInvoices / CancelInvoice API client
-- Transmission queue with retry logic and exponential backoff
-- ΜΑΡΚ number storage and QR code generation
-- Encrypted credentials management (AES-256-GCM)
-- 15 document types with auto-resolution logic
-
-### Foundation
-
-- Email/password authentication with auto-organisation creation
-- Dashboard with Quick Setup onboarding widget
-- Company settings with VAT/tax ID country detection
-- Design system: "The Digital Ledger" — dark theme, glassmorphism, emerald accents
-- Responsive layout: sidebar (desktop) + bottom nav (mobile)
-- i18n infrastructure (English, ready for Spanish & Greek)
-- CI/CD with GitHub Actions (format, lint, test, build)
-- E2E test suite with Playwright
+- Dark-only design system with glassmorphism and emerald accents
+- Multi-language ready (English first, Greek and Spanish next)
+- Responsive layout — sidebar on desktop, bottom nav on mobile
+- One-command Docker setup for self-hosting
+- CI/CD pipeline with automated formatting, linting, testing, and builds
 
 ## Tech Stack
 
@@ -96,15 +73,13 @@ opentab/
 
 ## Getting Started
 
-### Building from Source
-
-#### Prerequisites
+### Prerequisites
 
 - [Node.js](https://nodejs.org/) 22+
 - [pnpm](https://pnpm.io/) 10+
 - [PostgreSQL](https://www.postgresql.org/) 16+
 
-#### Setup
+### Building from Source
 
 1. **Clone the repository**:
 
@@ -164,29 +139,7 @@ opentab/
 
 ### Docker
 
-You can either pull a pre-built Docker image or build it yourself locally.
-
-<!-- TODO: Publish Docker image to a container registry (e.g. Docker Hub or GHCR) -->
-
-#### Using a Pre-built Image
-
-> **Note:** A pre-built image is not yet available. For now, build from source or use the Docker Compose setup below.
-
-#### Building the Image
-
-Build the Docker image directly from source:
-
-```bash
-docker build -t opentab -f docker/Dockerfile .
-```
-
-The build process:
-
-1. Installs dependencies (`pnpm install --frozen-lockfile`)
-2. Builds the Next.js application (`pnpm build`)
-3. Creates a minimal Alpine-based image with only the runtime artifacts
-
-#### Running with Docker Compose (Development)
+#### Development
 
 One command to start everything — PostgreSQL, Redis, schema migration, and the dev server:
 
@@ -194,17 +147,9 @@ One command to start everything — PostgreSQL, Redis, schema migration, and the
 docker compose -f docker/docker-compose.dev.yml up
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to see the app.
+Source code is mounted as a volume so changes are reflected immediately. Open [http://localhost:3000](http://localhost:3000).
 
-The app container automatically waits for PostgreSQL, pushes the database schema, and starts the Next.js dev server. Source code is mounted as a volume so changes are reflected immediately.
-
-To stop everything:
-
-```bash
-docker compose -f docker/docker-compose.dev.yml down
-```
-
-#### Running with Docker Compose (Production)
+#### Production
 
 A production compose file is included with Caddy for automatic HTTPS:
 
@@ -238,22 +183,22 @@ pnpm e2e
 
 ## Roadmap
 
-| Phase | Description                                                       | Status      |
-| ----- | ----------------------------------------------------------------- | ----------- |
-| 1     | Foundation — Auth, dashboard, company settings, design system     | Done        |
-| 2     | Contacts + Products — CRUD, VAT lookup, country abstraction       | Done        |
-| 3     | Invoicing — Creation, PDF, AI emails, estimates, recurring        | Done        |
-| 4     | myDATA — API client, transmission, ΜΑΡΚ/QR on PDFs                | Done        |
-| 5     | Expenses — AI extraction, categories, recurring, email inbox      | Done        |
-| 6     | Reports & Dashboard — KPIs, charts, P&L, VAT, tax projection      | Done        |
-| 7     | AI Assistant — Chat panel, function calling, financial Q&A        | In progress |
-| 8     | Polish — Multi-user/roles, API docs, MCP server, i18n, responsive | Specced     |
+| Phase | Description                                                | Status      |
+| ----- | ---------------------------------------------------------- | ----------- |
+| 1     | Foundation — Auth, dashboard, settings, design system      | Done        |
+| 2     | Contacts & Products — CRUD, VAT lookup, country support    | Done        |
+| 3     | Invoicing — Creation, PDF, AI emails, quotes, recurring    | Done        |
+| 4     | myDATA — Greek e-invoicing, transmission, MARK/QR          | Done        |
+| 5     | Expenses — AI extraction, categories, recurring, email     | Done        |
+| 6     | Reports — KPIs, charts, P&L, VAT, tax projection           | Done        |
+| 7     | AI Assistant — Chat panel, function calling, financial Q&A | In progress |
+| 8     | Polish — Multi-user, API docs, MCP server, i18n            | Specced     |
 
 ## Documentation
 
 - [Design System](docs/DESIGN.md) — colours, typography, components
-- [Architecture](docs/ARCHITECTURE.md) — system design, data flow
-- [Conventions](docs/CONVENTIONS.md) — code style, patterns
+- [Architecture](docs/ARCHITECTURE.md) — system design, data flow, key decisions
+- [Conventions](docs/CONVENTIONS.md) — code style, testing, git workflow
 
 ## License
 
