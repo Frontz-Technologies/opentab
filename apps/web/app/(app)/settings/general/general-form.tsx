@@ -53,6 +53,7 @@ export function GeneralForm({ initialData }: GeneralFormProps) {
           >
             <option value="en">{t("languageEn")}</option>
             <option value="el">{t("languageEl")}</option>
+            <option value="es">{t("languageEs")}</option>
           </select>
           <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-base text-on-surface-variant">
             expand_more
