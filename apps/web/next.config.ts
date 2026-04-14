@@ -3,7 +3,11 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
+const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+const devOrigins = appUrl ? [new URL(appUrl).hostname] : [];
+
 const nextConfig: NextConfig = {
+  allowedDevOrigins: devOrigins,
   transpilePackages: ["@opentab/db"],
   webpack: (config) => {
     config.resolve.extensionAlias = {
