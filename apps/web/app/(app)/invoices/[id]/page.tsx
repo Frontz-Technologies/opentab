@@ -17,7 +17,8 @@ import { InvoiceActions } from "./invoice-actions";
 import { MYDATA_DOCUMENT_TYPES } from "@/lib/mydata/document-types";
 
 const statusColors: Record<number, string> = {
-  [INVOICE_STATUS.DRAFT]: "bg-surface-container-highest text-on-surface-variant",
+  [INVOICE_STATUS.DRAFT]:
+    "bg-surface-container-highest text-on-surface-variant",
   [INVOICE_STATUS.SENT]: "bg-secondary-container text-secondary",
   [INVOICE_STATUS.PARTIAL]: "bg-amber-500/20 text-amber-400",
   [INVOICE_STATUS.PAID]: "bg-primary-container/20 text-primary",

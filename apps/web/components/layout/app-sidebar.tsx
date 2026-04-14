@@ -78,9 +78,7 @@ export function AppSidebar({ orgName }: AppSidebarProps) {
                   <span className="material-symbols-outlined text-[20px] leading-none">
                     {item.icon}
                   </span>
-                  <span className="font-label text-sm">
-                    {t(item.labelKey)}
-                  </span>
+                  <span className="font-label text-sm">{t(item.labelKey)}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             );

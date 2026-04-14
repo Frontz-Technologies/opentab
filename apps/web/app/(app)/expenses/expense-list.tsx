@@ -14,7 +14,8 @@ interface ExpenseListProps {
 }
 
 const statusColors: Record<number, string> = {
-  [EXPENSE_STATUS.DRAFT]: "bg-surface-container-highest text-on-surface-variant",
+  [EXPENSE_STATUS.DRAFT]:
+    "bg-surface-container-highest text-on-surface-variant",
   [EXPENSE_STATUS.CONFIRMED]: "bg-primary-container/20 text-primary",
   [EXPENSE_STATUS.CANCELLED]: "bg-tertiary-container/20 text-tertiary",
 };
