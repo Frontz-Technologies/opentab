@@ -486,7 +486,7 @@
     "taxRate": "IVA %",
     "lineTotal": "Total",
     "attachments": "Adjuntos",
-    "saveAsDraft": "Guardar como borrador",
+    "saveAsDraft": "Guardar",
     "saving": "Guardando...",
     "confirm": "Confirmar",
     "cancelExpense": "Cancelar gasto",

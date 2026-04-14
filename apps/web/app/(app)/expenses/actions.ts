@@ -154,10 +154,10 @@ export async function updateExpense(id: string, formData: FormData) {
     .where(and(eq(expenses.id, id), eq(expenses.orgId, session.org.id)));
 
   if (!existing) return { success: false, error: { _: ["Expense not found"] } };
-  if (existing.status !== EXPENSE_STATUS.DRAFT) {
+  if (existing.status === EXPENSE_STATUS.CANCELLED) {
     return {
       success: false,
-      error: { _: ["Only draft expenses can be edited"] },
+      error: { _: ["Cancelled expenses cannot be edited"] },
     };
   }
 
@@ -303,8 +303,8 @@ export async function deleteExpense(id: string) {
     .where(and(eq(expenses.id, id), eq(expenses.orgId, session.org.id)));
 
   if (!expense) return { success: false, error: "Expense not found" };
-  if (expense.status !== EXPENSE_STATUS.DRAFT) {
-    return { success: false, error: "Only draft expenses can be deleted" };
+  if (expense.status === EXPENSE_STATUS.CANCELLED) {
+    return { success: false, error: "Cancelled expenses cannot be deleted" };
   }
 
   await db

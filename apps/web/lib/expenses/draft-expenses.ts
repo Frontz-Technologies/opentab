@@ -131,6 +131,7 @@ export async function createDraftExpense(
       orgId,
       contactId: contact?.id || null,
       categoryId: data.categoryId || null,
+      status: 2, // CONFIRMED — expenses skip draft state
       expenseNumber,
       expenseDate: data.expenseDate,
       paymentDate: data.paymentDate || null,
