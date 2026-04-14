@@ -19,7 +19,14 @@
 
 Current mobile bottom bar has 6 items and no access to Settings. With Settings as item 7, the bar is too crowded.
 
-**Solution:** Replace the last slot (Reports) with a "More" menu that contains both Reports and Settings. The "More" menu opens an overlay/bottom sheet with the remaining nav items.
+**Solution:** Replace the last slot (Reports) with a "More" menu that contains both Reports and Settings. The "More" menu opens a glassmorphic bottom sheet overlay with the remaining nav items.
+
+**"More" bottom sheet visual treatment:**
+- Background: `bg-surface-container/70 backdrop-blur-[24px]` (matching main sidebar glass effect)
+- Ghost border: `border-t border-outline-variant/15`
+- Entrance animation: slide-up with `transition-transform duration-300 ease-out`
+- Backdrop: semi-transparent overlay `bg-black/40` that dismisses on tap
+- Items inside use the same icon + label styling as the bottom bar items
 
 Mobile nav items become:
 1. Dashboard
@@ -58,11 +65,11 @@ app/(app)/settings/
 ### Settings Layout Component (`settings/layout.tsx`)
 
 **Desktop (md+):** Two-column layout
-- Left: 220px secondary nav panel on `surface-container-low` background
+- Left: 220px secondary nav panel on `surface-container` background — one step above the page floor (`surface-dim`), visually distinct from the main glassmorphic sidebar without needing a border
 - Right: Scrollable content area
 - The secondary nav is NOT the main app sidebar — it's an inner nav within the settings content area
 
-**Mobile (<md):** Secondary nav collapses to a horizontal scrollable tab bar pinned to the top of the settings content area. Each tab is a pill-shaped link.
+**Mobile (<md):** Secondary nav collapses to a horizontal scrollable tab bar pinned to the top of the settings content area. Each tab is a pill-shaped link. A subtle gradient fade on the right edge (from `surface-dim` to transparent, ~32px wide) serves as a scroll affordance to signal more tabs off-screen.
 
 ### Secondary Nav Items
 
@@ -79,7 +86,7 @@ Grouped visually with small uppercase section headers (`font-label text-xs upper
 **Integrations**
 - Integrations (icon: `extension`)
 
-Active state: `bg-surface-container-high text-primary` with a 2px left border in `primary` (matching the main sidebar convention from DESIGN.md).
+Active state: `bg-surface-container-high text-primary` with a 2px left border in `primary` (matching the main sidebar convention from DESIGN.md). Hover state: `bg-surface-container-high/50 text-on-surface` — one-step tonal lift with smooth `transition-colors duration-200`.
 
 ---
 
@@ -165,11 +172,13 @@ Visual preferences for the user.
 
 **Theme**
 - Three-option selector (card-style, not a dropdown): Dark, Light, System
-- **Dark** is the only enabled option. Light and System cards are visually present but disabled with a "Coming soon" badge
-- Dark card shows a checkmark and `primary` accent ring
+- **Dark** is the only enabled option. Light and System cards are visually present but disabled with `opacity-60` and `cursor-not-allowed`
+- Disabled cards show a "Coming soon" badge using the pending badge palette: `secondary-container` background with `secondary` text (not error styling — this reads as "planned, not broken")
+- Dark card shows a checkmark icon and `primary` accent ring (`ring-2 ring-primary`)
 
 **Display Density**
 - Two-option selector: Comfortable (default), Compact
+- Each option card contains a **mini schematic preview** — 3 small rectangles stacked vertically with the actual spacing values applied (wider gaps for Comfortable, tighter for Compact). This makes the choice self-explanatory without needing to try both.
 - Comfortable: standard padding (`p-6` cards, `space-y-6` gaps)
 - Compact: tighter padding (`p-4` cards, `space-y-4` gaps)
 - Stored in `user_preferences` table (add `density` column: `text("density").notNull().default("comfortable")`)
@@ -198,6 +207,8 @@ Each integration renders as a card on `surface-container` with:
 - Name + one-line description (center)
 - Status badge (right): "Connected" (green) or "Not configured" (muted)
 - Chevron icon indicating it's clickable
+
+**Hover interaction:** Card background lifts to `surface-container-high` with `transition-colors duration-200`. The chevron icon shifts right by 2px on hover (`translate-x-0.5 transition-transform`) for a subtle directional cue.
 
 Cards are `Link` components to `/settings/integrations/[slug]`.
 
@@ -279,11 +290,12 @@ Renders: `surface-container-low` background, `rounded-2xl`, `p-6`, section headi
 All new UI follows DESIGN.md rules:
 
 - No opaque borders — tonal surface shifts for separation
-- Secondary nav uses `surface-container-low` with `surface-container-high` for active/hover
-- Cards use `surface-container` with `rounded-xl` and `p-6`
+- Secondary nav uses `surface-container` with `surface-container-high` for active/hover — distinct from both the glassmorphic main sidebar and the page floor
+- Cards use `surface-container` with `rounded-xl` and `p-6`, hover lifts to `surface-container-high`
 - Active nav indicator: 2px left border in `primary`
-- Theme selector cards: disabled cards use `opacity-40` + `cursor-not-allowed` + "Coming soon" badge in `surface-container-highest`/`on-surface-variant`
+- Theme selector cards: disabled cards use `opacity-60` + `cursor-not-allowed` + "Coming soon" badge in `secondary-container`/`secondary` (pending palette)
 - Status badges follow the `.status-badge` pattern from DESIGN.md
+- Mobile "More" bottom sheet uses glassmorphic treatment matching the main sidebar
 - Typography: headings in `font-headline`, labels in `font-label`, body in `font-body`
 - Gradient CTA reserved for the main sidebar "New Invoice" button — settings uses standard primary buttons
 
