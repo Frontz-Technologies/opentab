@@ -13,6 +13,7 @@ import {
 import { eq, and, asc } from "drizzle-orm";
 import { Badge } from "@/components/ui/badge";
 import { ExpenseActions } from "./expense-actions";
+import { SaveSupplierBanner } from "./save-supplier-banner";
 
 const statusColors: Record<number, string> = {
   [EXPENSE_STATUS.DRAFT]: "bg-zinc-500/20 text-zinc-400",
@@ -86,6 +87,16 @@ export default async function ExpenseDetailPage({
         </div>
         <ExpenseActions expense={expense} />
       </div>
+
+      {expense.source === "ai_extract" &&
+        !expense.contactId &&
+        expense.contactName && (
+          <SaveSupplierBanner
+            expenseId={expense.id}
+            supplierName={expense.contactName}
+            supplierVat={expense.contactVatNumber}
+          />
+        )}
 
       <div className="bg-surface-container rounded-xl p-6 space-y-4">
         <div className="grid grid-cols-2 gap-6">
