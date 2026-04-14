@@ -2,8 +2,7 @@ import { getSession } from "@/lib/session";
 import { TopBar } from "@/components/layout/top-bar";
 import { CompanyForm } from "./company-form";
 
-export default async function CompanySettingsPage() {
-  // Layout already guards auth — session is guaranteed non-null
+export default async function OrganisationSettingsPage() {
   const session = (await getSession())!;
 
   return (
@@ -11,14 +10,14 @@ export default async function CompanySettingsPage() {
       <TopBar
         breadcrumbs={[
           { label: "Settings", href: "/settings" },
-          { label: "Company" },
+          { label: "Organisation" },
         ]}
         userName={session.user.name}
         userEmail={session.user.email}
       />
-      <main className="px-8 py-8 max-w-3xl mx-auto">
+      <main>
         <h2 className="font-headline text-3xl font-extrabold tracking-tight text-on-surface mb-8">
-          Company Settings
+          Organisation Settings
         </h2>
         <CompanyForm
           initialData={{
