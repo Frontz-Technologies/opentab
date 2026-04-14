@@ -136,6 +136,7 @@ const { user, session: sessionData } = session;
 | `recurring_expense_items`  | Line items per recurring expense template                |
 | `mydata_credentials`       | Encrypted ΑΑΔΕ API credentials per org                   |
 | `mydata_transmissions`     | myDATA submission queue with retry tracking              |
+| `ai_settings`              | Encrypted AI API keys and model preferences per org      |
 
 Better Auth manages its own session/account/verification tables alongside these. Drizzle schema types are exported and used throughout `apps/web` for type-safe queries.
 
@@ -211,12 +212,19 @@ No feature flags, no separate branches. The same `apps/web` build runs both vari
 
 `docker/` contains the Docker Compose configuration. This is the **source of truth for production and self-hosting** topology:
 
-- PostgreSQL 16 service
-- Next.js app service (built from the monorepo)
-- (Future) MinIO for file storage
-- (Future) Redis for job queues
+- **PostgreSQL 16** — primary database with persistent volume
+- **Redis 7** — optional cache layer for report aggregations
+- **Caddy** — reverse proxy with automatic HTTPS (production only)
+- **Next.js app** — built from the monorepo, auto-migrates DB on start
 
-Local development uses `pnpm dev` directly against a local or Docker PostgreSQL instance. Docker Compose is not required for development.
+Two compose files are provided:
+
+- `docker-compose.dev.yml` — development mode with source mounting and hot reload
+- `docker-compose.yml` — production mode with Caddy, built image, and persistent volumes
+
+Environment variables are passed through Turbo to the Next.js dev process. Server-side variables (e.g. `DATABASE_URL`, `BETTER_AUTH_SECRET`) are configured in `turbo.json`'s `globalPassThroughEnv` to ensure they reach the app at runtime.
+
+Local development can also use `pnpm dev` directly against a local PostgreSQL instance without Docker.
 
 ---
 
@@ -291,12 +299,32 @@ Report queries can be expensive for organisations with large transaction volumes
 
 ## AI Integration
 
-> Placeholder — Phase 7 is in progress.
+The AI layer uses OpenRouter (model-agnostic) via the Vercel AI SDK. Each organisation configures their own API key and preferred model through encrypted settings (AES-256-GCM).
 
-The AI layer uses OpenRouter (model-agnostic) for:
+### Capabilities
 
-- **Email generation** (`lib/invoicing/`) — invoice/quote email drafts
-- **Receipt extraction** (`lib/expenses/ai-extraction.ts`) — OCR and structured data extraction from uploaded receipts
-- **Financial insights** (`lib/reports/insights/`) — AI-generated summaries of financial trends
+| Feature            | Location                        | Description                                                      |
+| ------------------ | ------------------------------- | ---------------------------------------------------------------- |
+| Email generation   | `lib/invoicing/`                | AI-drafted invoice and quote emails                              |
+| Receipt extraction | `lib/expenses/ai-extraction.ts` | OCR and structured data extraction from uploaded receipts        |
+| Financial insights | `lib/reports/insights/`         | AI-generated summaries of financial trends                       |
+| Chat assistant     | `lib/ai/`, `components/ai/`     | Conversational interface with function calling for financial Q&A |
 
-Phase 7 will add a conversational AI assistant with function calling for financial Q&A. Architecture details will be documented when the implementation stabilises.
+### Chat Assistant Architecture
+
+The AI assistant (`app/api/ai/chat/route.ts`) uses the Vercel AI SDK's `streamText` with function calling:
+
+- **System prompt** (`lib/ai/system-prompt.ts`) — provides org context, user role, and available capabilities
+- **Tools** (`lib/ai/tools.ts`) — read-only functions that query real financial data (revenue, expenses, invoices, contacts)
+- **Rate limiting** (`lib/ai/rate-limiter.ts`) — per-org rate limits to control API usage
+- **Confirmation flow** (`lib/ai/types.ts`) — write operations require explicit user approval before execution
+- **Custom client** (`lib/ai/chat-client.ts`) — vanilla stream consumer (no `useChat` hook) for full control over message rendering
+
+Tools are role-scoped: accountants see different capabilities than owners. All tool results render inline with the conversation via `DynamicToolUIPart` components.
+
+### Security
+
+- API keys are encrypted at rest (AES-256-GCM) and never exposed to the client
+- The chat route validates the session and org membership before every request
+- Tools are read-only by default; write operations go through a confirmation step
+- Rate limiting prevents runaway API costs
