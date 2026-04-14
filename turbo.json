@@ -1,5 +1,14 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalPassThroughEnv": [
+    "DATABASE_URL",
+    "BETTER_AUTH_SECRET",
+    "REDIS_URL",
+    "GOTENBERG_URL",
+    "OPENROUTER_API_KEY",
+    "OPENROUTER_MODEL",
+    "AI_ENCRYPTION_KEY"
+  ],
   "tasks": {
     "dev": {
       "cache": false,
