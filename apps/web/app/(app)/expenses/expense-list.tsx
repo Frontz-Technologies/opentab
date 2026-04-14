@@ -6,17 +6,18 @@ import { useTranslations } from "next-intl";
 import type { Expense } from "@opentab/db/schema";
 import { EXPENSE_STATUS } from "@opentab/db/schema";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AnimatedFilterBar } from "@/components/ui/animated-filter-bar";
 
 interface ExpenseListProps {
   expenses: Expense[];
 }
 
 const statusColors: Record<number, string> = {
-  [EXPENSE_STATUS.DRAFT]: "bg-zinc-500/20 text-zinc-400",
-  [EXPENSE_STATUS.CONFIRMED]: "bg-emerald-500/20 text-emerald-400",
-  [EXPENSE_STATUS.CANCELLED]: "bg-red-500/20 text-red-400",
+  [EXPENSE_STATUS.DRAFT]:
+    "bg-surface-container-highest text-on-surface-variant",
+  [EXPENSE_STATUS.CONFIRMED]: "bg-primary-container/20 text-primary",
+  [EXPENSE_STATUS.CANCELLED]: "bg-tertiary-container/20 text-tertiary",
 };
 
 type StatusFilter = "all" | "draft" | "confirmed" | "cancelled";
@@ -60,18 +61,11 @@ export function ExpenseList({ expenses }: ExpenseListProps) {
           onChange={(e) => setSearch(e.target.value)}
           className="max-w-sm"
         />
-        <div className="flex gap-1">
-          {filters.map((f) => (
-            <Button
-              key={f.key}
-              variant={statusFilter === f.key ? "default" : "outline"}
-              size="sm"
-              onClick={() => setStatusFilter(f.key)}
-            >
-              {f.label}
-            </Button>
-          ))}
-        </div>
+        <AnimatedFilterBar
+          items={filters.map((f) => ({ value: f.key, label: f.label }))}
+          value={statusFilter}
+          onValueChange={setStatusFilter}
+        />
       </div>
 
       {filtered.length === 0 ? (

@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getSession } from "@/lib/session";
+import { PageHeader } from "@/components/layout/page-header";
 import { db } from "@/lib/db";
 import { expenses } from "@opentab/db/schema";
 import { eq, desc } from "drizzle-orm";
@@ -20,33 +21,37 @@ export default async function ExpensesPage() {
     .orderBy(desc(expenses.createdAt));
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="font-headline text-2xl font-bold text-on-surface">
-          {t("title")}
-        </h1>
-        <div className="flex gap-2">
-          <Link
-            href="/expenses/categories"
-            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-on-surface/10 text-on-surface/60 font-medium text-sm hover:bg-surface-container-low transition-colors"
-          >
-            <span className="material-symbols-outlined text-[18px] leading-none">
-              category
-            </span>
-            {t("categories")}
-          </Link>
-          <Link
-            href="/expenses/new"
-            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/80 transition-colors"
-          >
-            <span className="material-symbols-outlined text-[18px] leading-none">
-              add
-            </span>
-            {t("addExpense")}
-          </Link>
-        </div>
+    <>
+      <PageHeader
+        heading={t("title")}
+        userName={session.user.name}
+        userEmail={session.user.email}
+        actions={
+          <div className="flex gap-2">
+            <Link
+              href="/expenses/categories"
+              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-on-surface/10 text-on-surface/60 font-medium text-sm hover:bg-surface-container-low transition-colors"
+            >
+              <span className="material-symbols-outlined text-[18px] leading-none">
+                category
+              </span>
+              {t("categories")}
+            </Link>
+            <Link
+              href="/expenses/new"
+              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-primary text-on-primary font-medium text-sm hover:bg-primary/80 transition-colors"
+            >
+              <span className="material-symbols-outlined text-[18px] leading-none">
+                add
+              </span>
+              {t("addExpense")}
+            </Link>
+          </div>
+        }
+      />
+      <div className="px-6 py-6">
+        <ExpenseList expenses={allExpenses} />
       </div>
-      <ExpenseList expenses={allExpenses} />
-    </div>
+    </>
   );
 }

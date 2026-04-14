@@ -1,6 +1,6 @@
 import { getSession } from "@/lib/session";
 import { getTranslations } from "next-intl/server";
-import { TopBar } from "@/components/layout/top-bar";
+import { PageHeader } from "@/components/layout/page-header";
 import { getCountryProvider } from "@/lib/country";
 import Link from "next/link";
 
@@ -34,15 +34,12 @@ export default async function ReportsPage() {
 
   return (
     <>
-      <TopBar
-        breadcrumbs={[{ label: tNav("reports") }]}
+      <PageHeader
+        heading={t("title")}
         userName={session.user.name}
         userEmail={session.user.email}
       />
       <main className="px-8 py-8 max-w-7xl mx-auto">
-        <h2 className="font-headline text-4xl font-extrabold text-on-surface tracking-tight mb-8">
-          {t("title")}
-        </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {reportCards
             .filter(

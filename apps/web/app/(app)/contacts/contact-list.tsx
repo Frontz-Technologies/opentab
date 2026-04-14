@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import type { Contact } from "@opentab/db/schema";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AnimatedFilterBar } from "@/components/ui/animated-filter-bar";
 
 interface ContactListProps {
   contacts: Contact[];
@@ -44,22 +44,15 @@ export function ContactList({ contacts }: ContactListProps) {
           onChange={(e) => setSearch(e.target.value)}
           className="max-w-sm"
         />
-        <div className="flex gap-1">
-          {["all", "client", "supplier"].map((type) => (
-            <Button
-              key={type}
-              variant={typeFilter === type ? "default" : "outline"}
-              size="sm"
-              onClick={() => setTypeFilter(type)}
-            >
-              {type === "all"
-                ? t("filterAll")
-                : type === "client"
-                  ? t("filterClients")
-                  : t("filterSuppliers")}
-            </Button>
-          ))}
-        </div>
+        <AnimatedFilterBar
+          items={[
+            { value: "all", label: t("filterAll") },
+            { value: "client", label: t("filterClients") },
+            { value: "supplier", label: t("filterSuppliers") },
+          ]}
+          value={typeFilter}
+          onValueChange={setTypeFilter}
+        />
       </div>
 
       {filtered.length === 0 ? (

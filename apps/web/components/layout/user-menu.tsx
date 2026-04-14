@@ -60,7 +60,7 @@ export function UserMenu({ name, email }: UserMenuProps) {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          render={<Link href="/settings/company" />}
+          render={<Link href="/settings/organisation" />}
           className="flex items-center gap-2 cursor-pointer"
         >
           <span className="material-symbols-outlined text-[16px] leading-none">

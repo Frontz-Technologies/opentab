@@ -1,7 +1,7 @@
 import { getSession } from "@/lib/session";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
-import { TopBar } from "@/components/layout/top-bar";
+import { PageHeader } from "@/components/layout/page-header";
 import { getCountryProvider } from "@/lib/country";
 import { VatClient } from "./vat-client";
 
@@ -27,11 +27,9 @@ export default async function VatReportPage() {
 
   return (
     <>
-      <TopBar
-        breadcrumbs={[
-          { label: tNav("reports"), href: "/reports" },
-          { label: t("vat") },
-        ]}
+      <PageHeader
+        headingPrefix={tNav("reports")}
+        heading={t("vat")}
         userName={session.user.name}
         userEmail={session.user.email}
       />

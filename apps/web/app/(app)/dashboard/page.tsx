@@ -1,6 +1,6 @@
 import { getSession } from "@/lib/session";
 import { getTranslations } from "next-intl/server";
-import { TopBar } from "@/components/layout/top-bar";
+import { PageHeader } from "@/components/layout/page-header";
 import { QuickSetup } from "@/components/onboarding/quick-setup";
 import { DashboardClient } from "./dashboard-client";
 import { getDashboardData, hasAnyData } from "./actions";
@@ -21,20 +21,12 @@ export default async function DashboardPage({
 
   return (
     <>
-      <TopBar
-        breadcrumbs={[{ label: tNav("dashboard") }]}
+      <PageHeader
+        heading={t("title")}
         userName={session.user.name}
         userEmail={session.user.email}
       />
-      <main className="px-8 py-8 max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h2 className="font-headline text-4xl font-extrabold text-on-surface tracking-tight mb-2">
-            {t("title")}
-          </h2>
-          <p className="text-on-surface-variant">
-            {t("welcome")}, {session.user.name.split(" ")[0]}
-          </p>
-        </div>
+      <main className="px-6 py-6 max-w-7xl mx-auto">
         {dataExists ? (
           <DashboardWithData period={period} session={session} />
         ) : (

@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { cn } from "@/lib/utils";
 
 interface NavItem {
   icon: string;
   labelKey: string;
+  subtitleKey: string;
   href: string;
 }
 
@@ -22,6 +24,7 @@ const sections: NavSection[] = [
       {
         icon: "business",
         labelKey: "organisation",
+        subtitleKey: "organisationSubtitle",
         href: "/settings/organisation",
       },
     ],
@@ -29,11 +32,22 @@ const sections: NavSection[] = [
   {
     titleKey: "sectionUser",
     items: [
-      { icon: "tune", labelKey: "general", href: "/settings/general" },
-      { icon: "person", labelKey: "account", href: "/settings/account" },
+      {
+        icon: "tune",
+        labelKey: "general",
+        subtitleKey: "generalSubtitle",
+        href: "/settings/general",
+      },
+      {
+        icon: "person",
+        labelKey: "account",
+        subtitleKey: "accountSubtitle",
+        href: "/settings/account",
+      },
       {
         icon: "palette",
         labelKey: "appearance",
+        subtitleKey: "appearanceSubtitle",
         href: "/settings/appearance",
       },
     ],
@@ -44,6 +58,7 @@ const sections: NavSection[] = [
       {
         icon: "extension",
         labelKey: "integrations",
+        subtitleKey: "integrationsSubtitle",
         href: "/settings/integrations",
       },
     ],
@@ -79,11 +94,12 @@ export function SettingsNav() {
                   <li key={item.href}>
                     <Link
                       href={item.href}
-                      className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors duration-200 ${
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors duration-200",
                         active
                           ? "bg-surface-container-high text-primary font-semibold border-l-2 border-primary"
-                          : "text-on-surface/60 hover:text-on-surface hover:bg-surface-container-high/50"
-                      }`}
+                          : "text-on-surface/60 hover:text-on-surface hover:bg-surface-container-high/50",
+                      )}
                     >
                       <span className="material-symbols-outlined text-[20px] leading-none">
                         {item.icon}
@@ -98,31 +114,47 @@ export function SettingsNav() {
         ))}
       </nav>
 
-      {/* Mobile: horizontal scrollable pills */}
-      <nav className="md:hidden relative">
-        <div className="flex gap-2 overflow-x-auto pb-4 px-4 scrollbar-hide">
-          {allItems.map((item) => {
-            const active = isActive(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors duration-200 ${
-                  active
-                    ? "bg-surface-container-high text-primary font-semibold"
-                    : "bg-surface-container text-on-surface/60 hover:text-on-surface"
-                }`}
-              >
-                <span className="material-symbols-outlined text-[16px] leading-none">
-                  {item.icon}
-                </span>
-                <span className="font-label">{t(item.labelKey)}</span>
-              </Link>
-            );
-          })}
-        </div>
-        {/* Right-edge gradient fade scroll affordance */}
-        <div className="absolute right-0 top-0 bottom-4 w-8 bg-gradient-to-l from-surface-dim to-transparent pointer-events-none" />
+      {/* Mobile: iOS-style grouped card list */}
+      <nav className="md:hidden space-y-6 px-1">
+        {sections.map((section) => (
+          <div key={section.titleKey}>
+            <p className="font-label text-xs uppercase tracking-widest text-on-surface-variant px-2 mb-2">
+              {t(section.titleKey)}
+            </p>
+            <div className="bg-surface-container rounded-2xl overflow-hidden divide-y divide-outline-variant/10">
+              {section.items.map((item) => {
+                const active = isActive(item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      "flex items-center gap-3 px-4 py-4 transition-colors",
+                      active
+                        ? "bg-surface-container-high"
+                        : "hover:bg-surface-container-high/50",
+                    )}
+                  >
+                    <span className="material-symbols-outlined text-[20px] text-on-surface-variant leading-none">
+                      {item.icon}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-on-surface">
+                        {t(item.labelKey)}
+                      </p>
+                      <p className="text-xs text-on-surface-variant truncate">
+                        {t(item.subtitleKey)}
+                      </p>
+                    </div>
+                    <span className="material-symbols-outlined text-[18px] text-on-surface-variant leading-none">
+                      chevron_right
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
     </>
   );
