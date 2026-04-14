@@ -6,9 +6,11 @@
 
 ## Creative North Star: "The Digital Ledger"
 
-OpenTab occupies a precise aesthetic intersection: the editorial rigour of a well-typeset financial publication, the density-tolerance of a developer tool, and the tactile warmth of high-end stationery. Think a Moleskine ledger rendered in dark glass — structured, premium, purposeful.
+OpenTab occupies a precise aesthetic intersection: the editorial rigour of a well-typeset financial publication, the density-tolerance of a developer tool, and the tactile warmth of high-end stationery. In dark mode, think a Moleskine ledger rendered in dark glass. In light mode, think premium parchment stationery — structured, warm, purposeful.
 
 Every visual decision should answer: _does this feel like a tool a serious freelancer trusts with their money?_
+
+Both themes share the same emerald accent, typography, layout rules, and tonal separation philosophy. The warm undertone is the constant — dark mode uses warm charcoals, light mode uses warm parchments. Neither feels "cold" or "clinical."
 
 ---
 
@@ -22,7 +24,11 @@ Never use a 1px border to separate sections or define layout regions. Separation
 
 ### Surface Hierarchy
 
-Surfaces stack from darkest (base/floor) to lightest (most elevated):
+Surfaces stack tonally to create depth. In dark mode, elevation goes from darkest (floor) to lightest (most elevated). In light mode, the direction reverses — the floor is the lightest, and elevation adds warmth/density downward.
+
+Both palettes use the same warm undertone family. The light palette's olive-parchment tint mirrors the dark palette's warm charcoal.
+
+**Dark mode:**
 
 | Token                       | Hex       | Role                              |
 | --------------------------- | --------- | --------------------------------- |
@@ -34,9 +40,25 @@ Surfaces stack from darkest (base/floor) to lightest (most elevated):
 | `surface-container-highest` | `#353534` | Tooltips, popovers, most elevated |
 | `surface-bright`            | `#3A3939` | Highlighted / selected rows       |
 
-Use one step up the hierarchy to create lift. Never skip two steps — the contrast differential becomes harsh.
+**Light mode:**
+
+| Token                       | Hex       | Role                              |
+| --------------------------- | --------- | --------------------------------- |
+| `surface-dim`               | `#FAFAF9` | Page background — warm parchment  |
+| `surface-container-lowest`  | `#FFFFFF` | Recessed wells, input fills       |
+| `surface-container-low`     | `#F5F5F0` | Subtle inset sections             |
+| `surface-container`         | `#EEEEE8` | Default card surface              |
+| `surface-container-high`    | `#E5E5DF` | Raised cards, hover states        |
+| `surface-container-highest` | `#DDDDD7` | Tooltips, popovers, most elevated |
+| `surface-bright`            | `#D5D5CF` | Highlighted / selected rows       |
+
+Use one step up the hierarchy to create lift. Never skip two steps — the contrast differential becomes harsh. This rule applies identically in both themes.
 
 ### Primary & Accent
+
+The emerald primary is the brand anchor across both themes. In light mode, the primary shifts deeper to maintain contrast and readability against pale backgrounds.
+
+**Dark mode:**
 
 | Token                 | Hex       | Usage                                       |
 | --------------------- | --------- | ------------------------------------------- |
@@ -46,7 +68,21 @@ Use one step up the hierarchy to create lift. Never skip two steps — the contr
 | `secondary`           | `#9ED2B5` | Secondary interactive elements              |
 | `secondary-container` | `#21523C` | Secondary chip/badge backgrounds            |
 
+**Light mode:**
+
+| Token                 | Hex       | Usage                                       |
+| --------------------- | --------- | ------------------------------------------- |
+| `primary`             | `#0A8F6C` | Active states, links, focus rings, key data |
+| `primary-container`   | `#10B981` | Gradient endpoint, filled chip backgrounds  |
+| `on-primary`          | `#FFFFFF` | Text on primary-coloured surfaces           |
+| `secondary`           | `#3D7A5C` | Secondary interactive elements              |
+| `secondary-container` | `#C8EDD8` | Secondary chip/badge backgrounds            |
+
+The CTA gradient in light mode becomes `linear-gradient(135deg, #10B981, #0A8F6C)` — reversed to keep the brighter shade as the start point.
+
 ### Tertiary / Danger
+
+**Dark mode:**
 
 | Token                   | Hex       | Usage                                  |
 | ----------------------- | --------- | -------------------------------------- |
@@ -54,7 +90,17 @@ Use one step up the hierarchy to create lift. Never skip two steps — the contr
 | `tertiary-container`    | `#FC7C78` | Error fills, destructive action states |
 | `on-tertiary-container` | `#711419` | Text on error fills                    |
 
+**Light mode:**
+
+| Token                   | Hex       | Usage                                  |
+| ----------------------- | --------- | -------------------------------------- |
+| `tertiary`              | `#B3261E` | Soft warnings, overdue indicators      |
+| `tertiary-container`    | `#F9DEDC` | Error fills, destructive action states |
+| `on-tertiary-container` | `#8C1D18` | Text on error fills                    |
+
 ### Text
+
+**Dark mode:**
 
 | Token                | Hex       | Usage                                                  |
 | -------------------- | --------- | ------------------------------------------------------ |
@@ -63,20 +109,39 @@ Use one step up the hierarchy to create lift. Never skip two steps — the contr
 | `outline`            | `#86948A` | Disabled states, decorative separators (use sparingly) |
 | `outline-variant`    | `#3C4A42` | Ghost border fallback                                  |
 
-Avoid pure `#FFFFFF`. `on-surface` (#E5E2E1) has a warm tint that reads more natural against the dark palette.
+**Light mode:**
+
+| Token                | Hex       | Usage                                                  |
+| -------------------- | --------- | ------------------------------------------------------ |
+| `on-surface`         | `#1A1A1A` | Primary body text — deep charcoal, not pure black      |
+| `on-surface-variant` | `#5C6B60` | Secondary text — green-tinted for brand cohesion       |
+| `outline`            | `#8A9A8E` | Disabled states, decorative separators (use sparingly) |
+| `outline-variant`    | `#C2CFC6` | Ghost border fallback                                  |
+
+Avoid pure `#FFFFFF` (dark mode) and pure `#000000` (light mode). Both text colours carry a warm tint that reads more natural against their respective palettes.
 
 ### Glass & Gradient Rule
 
 **Floating elements** (modals, dropdowns, sidebars, tooltips) use glassmorphism:
 
+**Dark mode:**
 - Background opacity: 70% of the underlying surface token
 - Backdrop blur: `blur(24px)` (`backdrop-filter: blur(24px)`)
 - Combined with a ghost border at `outline-variant` 15% opacity to define the edge
 
+**Light mode:**
+- Background opacity: 85% of the underlying surface token (higher than dark — light backgrounds make blur artifacts more visible)
+- Backdrop blur: `blur(16px)` (reduced to avoid the "frosted shower door" effect)
+- Combined with a ghost border at `outline-variant` 10% opacity
+
 **Call-to-action buttons** use the gradient:
 
 ```css
+/* Dark mode */
 background: linear-gradient(135deg, #4edea3, #10b981);
+
+/* Light mode */
+background: linear-gradient(135deg, #10b981, #0a8f6c);
 ```
 
 This gradient is reserved for the single primary action per screen. Don't apply it to secondary or tertiary buttons.
@@ -188,13 +253,25 @@ padding: 0.25rem 0.75rem;
 border-radius: 9999px; /* pill */
 ```
 
-Common variants:
+Common variants (both themes use the same token references — the values resolve per theme):
+
 | Status | Background | Text |
 |---|---|---|
 | Paid / Active | `primary-container/20` | `primary` |
-| Overdue | `tertiary-container/20` | `tertiary-container` |
+| Overdue | `tertiary-container/20` | `tertiary` |
 | Draft | `surface-container-highest` | `on-surface-variant` |
-| Pending | `secondary-container` | `secondary` |
+| Pending / Sent | `secondary-container` | `secondary` |
+
+**Light mode resolved examples:**
+
+| Status | Background | Text |
+|---|---|---|
+| Paid / Active | `#D1FAE5` | `#0A8F6C` |
+| Overdue | `#F9DEDC` | `#B3261E` |
+| Draft | `#DDDDD7` | `#5C6B60` |
+| Pending / Sent | `#C8EDD8` | `#3D7A5C` |
+
+Never introduce blue (`#0070F3`, etc.) for status badges — keep all status colours within the emerald/red/neutral family.
 
 ---
 
@@ -223,21 +300,51 @@ Never mix the two systems within a single UI region. Navigation uses Material; i
 - Use **extreme typographic scale** — large display figures feel premium
 - Layer surfaces tonally — depth without shadows
 - Apply **asymmetric padding** in layouts: wider gutters on the right, compressed on the left creates editorial tension
-- Keep the emerald primary as the _only_ saturated colour anchor on a dark screen
+- Keep the emerald primary as the _only_ saturated colour anchor in both themes
 - Reserve the gradient CTA for the single most important action
+- Use **token references** (not hex values) so both themes resolve automatically
 
 ### Don't
 
-- Use **opaque borders** for layout separation — tonal shifts only
+- Use **opaque borders** for layout separation — tonal shifts only (both themes)
 - Use **standard blue** (`#0070F3`, etc.) for any interactive element — the emerald primary owns that role
-- Add a **light mode** — the warm dark palette is the brand, not a preference
+- Use pure `#FFFFFF` text (dark) or pure `#000000` text (light) — both carry warm tints
 - **Crowd the sidebar** — empty space in navigation communicates calm confidence
-- Use `#FFFFFF` text — always use `on-surface` (`#E5E2E1`) for warmth
+- Hard-code hex colours in components — always use semantic tokens so theme switching works
 
 ---
 
-## Dark-Only
+## Dual Theme Architecture
 
-There is no light mode. The warm dark palette is not a theme toggle — it is the brand identity. Do not add light mode variables, do not configure `darkMode: "class"` to toggle, do not add a theme switcher component.
+OpenTab supports two themes: **Dark** (default) and **Light**. Dark is the primary brand expression. Light is the companion — it must feel like the same product, not a desatured afterthought.
 
-The `darkMode: "class"` in `tailwind.config.ts` is present for shadcn compatibility only. The `dark` class is permanently applied to `<html>`.
+### Implementation
+
+- `darkMode: "class"` in `tailwind.config.ts` toggles between themes
+- The `dark` class on `<html>` activates dark mode (default)
+- Removing the `dark` class activates light mode
+- User preference is stored in the `user_preferences.theme` column and applied server-side
+- All colour tokens are defined as CSS custom properties with both dark and light values
+- Components must use semantic tokens (e.g., `bg-surface-container`) — never raw hex values
+
+### Design Parity Checklist
+
+When building or modifying any component, verify it works in both themes:
+
+1. Surface hierarchy uses token references, not hex
+2. Primary colour contrast is sufficient (dark: `#4EDEA3`, light: `#0A8F6C`)
+3. Glass effects use the correct opacity/blur per theme
+4. Status badges resolve correctly
+5. The No-Line Rule applies in both themes — no opaque borders
+
+### Light Mode — Quick Reference
+
+```
+Surfaces:        #FAFAF9 → #FFFFFF → #F5F5F0 → #EEEEE8 → #E5E5DF → #DDDDD7 → #D5D5CF
+Primary:         #0A8F6C (deeper emerald for light bg contrast)
+Primary CTA:     linear-gradient(135deg, #10B981, #0A8F6C)
+Text:            #1A1A1A (primary) / #5C6B60 (secondary, green-tinted)
+Danger:          #B3261E (text) / #F9DEDC (container)
+Ghost border:    rgba(194, 207, 198, 0.10)
+Glass:           85% opacity, blur(16px)
+```
