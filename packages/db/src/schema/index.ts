@@ -103,3 +103,8 @@ export {
   type NewMydataTransmission,
 } from "./mydata";
 export { aiSettings, type AiSettings, type NewAiSettings } from "./ai-settings";
+export {
+  userPreferences,
+  type UserPreferences,
+  type NewUserPreferences,
+} from "./user-preferences";
