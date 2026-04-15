@@ -83,7 +83,6 @@ export async function getExpenseTotal(
     SELECT COALESCE(SUM(total::numeric), 0) AS total, COUNT(*)::int AS count
     FROM expense
     WHERE org_id = ${orgId}
-      AND status = 2
       AND expense_date BETWEEN ${start.toISOString().slice(0, 10)} AND ${end.toISOString().slice(0, 10)}
   `);
   const row = (result as unknown as Record<string, unknown>[])[0];
@@ -103,7 +102,6 @@ export async function getExpensesByCategory(
     FROM expense e
     LEFT JOIN expense_category ec ON ec.id = e.category_id
     WHERE e.org_id = ${orgId}
-      AND e.status = 2
       AND e.expense_date BETWEEN ${startDate} AND ${endDate}
     GROUP BY e.category_id, ec.name
     ORDER BY SUM(e.total::numeric) DESC
@@ -188,7 +186,6 @@ export async function getInputVat(
     FROM expense_item ei
     JOIN expense e ON e.id = ei.expense_id
     WHERE e.org_id = ${orgId}
-      AND e.status = 2
       AND e.expense_date BETWEEN ${start.toISOString().slice(0, 10)} AND ${end.toISOString().slice(0, 10)}
     GROUP BY ei.tax_rate
     ORDER BY ei.tax_rate DESC
@@ -213,7 +210,6 @@ export async function getExpensesByPeriod(
       COALESCE(SUM(total::numeric), 0) AS total
     FROM expense
     WHERE org_id = ${orgId}
-      AND status = 2
       AND expense_date BETWEEN ${start.toISOString().slice(0, 10)} AND ${end.toISOString().slice(0, 10)}
     GROUP BY bucket
     ORDER BY bucket

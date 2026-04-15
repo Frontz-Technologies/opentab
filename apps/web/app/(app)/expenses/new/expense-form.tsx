@@ -482,7 +482,7 @@ export function ExpenseForm({
 
       <div className="flex justify-end">
         <Button onClick={handleSubmit} disabled={isPending}>
-          {isPending ? t("saving") : t("saveAsDraft")}
+          {isPending ? t("saving") : t("save")}
         </Button>
       </div>
     </div>

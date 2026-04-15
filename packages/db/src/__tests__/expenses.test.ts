@@ -10,7 +10,6 @@ import {
   contacts,
   organisations,
   users,
-  EXPENSE_STATUS,
   RECURRING_EXPENSE_STATUS,
 } from "../schema/index";
 import { eq } from "drizzle-orm";
@@ -81,7 +80,6 @@ describe("expenses schema", () => {
       })
       .returning();
 
-    expect(expense.status).toBe(EXPENSE_STATUS.DRAFT);
     expect(expense.expenseNumber).toBe("EXP-0001");
     expect(expense.subtotal).toBe("0.00");
     expect(expense.source).toBe("manual");
@@ -205,35 +203,6 @@ describe("expenses schema", () => {
       .where(eq(expenseAttachments.expenseId, expense.id));
 
     expect(remaining.length).toBe(0);
-  });
-
-  it("tracks status transitions", async () => {
-    const [expense] = await db
-      .insert(expenses)
-      .values({
-        orgId,
-        expenseNumber: "EXP-0006",
-        expenseDate: "2026-04-13",
-      })
-      .returning();
-
-    expect(expense.status).toBe(EXPENSE_STATUS.DRAFT);
-
-    const [confirmed] = await db
-      .update(expenses)
-      .set({ status: EXPENSE_STATUS.CONFIRMED })
-      .where(eq(expenses.id, expense.id))
-      .returning();
-
-    expect(confirmed.status).toBe(EXPENSE_STATUS.CONFIRMED);
-
-    const [cancelled] = await db
-      .update(expenses)
-      .set({ status: EXPENSE_STATUS.CANCELLED })
-      .where(eq(expenses.id, expense.id))
-      .returning();
-
-    expect(cancelled.status).toBe(EXPENSE_STATUS.CANCELLED);
   });
 
   it("cascades delete when org is deleted", async () => {
