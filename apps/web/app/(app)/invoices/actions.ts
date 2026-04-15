@@ -144,6 +144,14 @@ export async function createInvoice(formData: FormData) {
 
   const { invoice } = await createDraftInvoice(session.org.id, parsed.data);
 
+  // If publish flag is set, immediately transition to PUBLISHED
+  if (formData.get("publish") === "true") {
+    await db
+      .update(invoices)
+      .set({ status: INVOICE_STATUS.PUBLISHED, updatedAt: new Date() })
+      .where(eq(invoices.id, invoice.id));
+  }
+
   revalidatePath("/invoices");
   return { success: true, invoice };
 }
@@ -269,8 +277,14 @@ export async function sendInvoice(id: string) {
     .where(and(eq(invoices.id, id), eq(invoices.orgId, session.org.id)));
 
   if (!invoice) return { success: false, error: "Invoice not found" };
-  if (invoice.status !== INVOICE_STATUS.DRAFT) {
-    return { success: false, error: "Only draft invoices can be sent" };
+  if (
+    invoice.status !== INVOICE_STATUS.DRAFT &&
+    invoice.status !== INVOICE_STATUS.PUBLISHED
+  ) {
+    return {
+      success: false,
+      error: "Only draft or published invoices can be sent",
+    };
   }
 
   await db
@@ -305,6 +319,33 @@ export async function sendInvoice(id: string) {
       }
     }
   }
+
+  revalidatePath("/invoices");
+  revalidatePath(`/invoices/${id}`);
+  return { success: true };
+}
+
+export async function publishInvoice(id: string) {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+
+  const [invoice] = await db
+    .select()
+    .from(invoices)
+    .where(and(eq(invoices.id, id), eq(invoices.orgId, session.org.id)));
+
+  if (!invoice) return { success: false, error: "Invoice not found" };
+  if (invoice.status !== INVOICE_STATUS.DRAFT) {
+    return { success: false, error: "Only draft invoices can be published" };
+  }
+
+  await db
+    .update(invoices)
+    .set({
+      status: INVOICE_STATUS.PUBLISHED,
+      updatedAt: new Date(),
+    })
+    .where(eq(invoices.id, id));
 
   revalidatePath("/invoices");
   revalidatePath(`/invoices/${id}`);
