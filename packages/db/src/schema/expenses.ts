@@ -15,12 +15,6 @@ import { organisations } from "./organisations";
 import { contacts } from "./contacts";
 import { expenseCategories } from "./expense-categories";
 
-export const EXPENSE_STATUS = {
-  DRAFT: 1,
-  CONFIRMED: 2,
-  CANCELLED: 3,
-} as const;
-
 export const EXPENSE_SOURCE = {
   MANUAL: "manual",
   EMAIL: "email",
@@ -37,7 +31,6 @@ export const expenses = pgTable(
       .references(() => organisations.id, { onDelete: "cascade" }),
     contactId: uuid("contact_id").references(() => contacts.id),
     categoryId: uuid("category_id").references(() => expenseCategories.id),
-    status: integer("status").notNull().default(EXPENSE_STATUS.DRAFT),
     expenseNumber: varchar("expense_number", { length: 50 }).notNull(),
     supplierInvoiceNumber: varchar("supplier_invoice_number", { length: 100 }),
     expenseDate: date("expense_date").notNull(),
@@ -70,7 +63,6 @@ export const expenses = pgTable(
   },
   (table) => [
     index("expense_org_id_idx").on(table.orgId),
-    index("expense_org_status_idx").on(table.orgId, table.status),
     index("expense_org_contact_idx").on(table.orgId, table.contactId),
     index("expense_org_category_idx").on(table.orgId, table.categoryId),
     index("expense_org_date_idx").on(table.orgId, table.expenseDate),
