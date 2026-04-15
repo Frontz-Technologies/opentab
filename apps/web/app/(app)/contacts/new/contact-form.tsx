@@ -17,13 +17,15 @@ interface FieldProps {
   label: string;
   children: React.ReactNode;
   hint?: string;
+  required?: boolean;
 }
 
-function Field({ label, children, hint }: FieldProps) {
+function Field({ label, children, hint, required }: FieldProps) {
   return (
     <div className="space-y-1.5">
       <label className="block font-medium text-sm text-on-surface">
         {label}
+        {required && <span className="text-tertiary ml-0.5">*</span>}
       </label>
       {children}
       {hint && <p className="text-xs text-on-surface-variant/70">{hint}</p>}
@@ -145,7 +147,7 @@ export function ContactForm({
         <section className="bg-surface-container-low rounded-2xl p-6 border border-outline-variant/10 space-y-5">
           <SectionHeading>{t("type")}</SectionHeading>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <Field label={t("type")}>
+            <Field label={t("type")} required>
               <div className="relative">
                 <select
                   name="type"
@@ -190,7 +192,7 @@ export function ContactForm({
         <section className="bg-surface-container-low rounded-2xl p-6 border border-outline-variant/10 space-y-5">
           <SectionHeading>{t("company")}</SectionHeading>
           <div className="grid grid-cols-1 gap-5">
-            <Field label={t("company")}>
+            <Field label={t("company")} required>
               <input
                 type="text"
                 name="company"
