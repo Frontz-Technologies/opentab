@@ -7,6 +7,7 @@ import type { Invoice } from "@opentab/db/schema";
 import { INVOICE_STATUS, MYDATA_TRANSMISSION_STATUS } from "@opentab/db/schema";
 import { Button } from "@/components/ui/button";
 import {
+  publishInvoice,
   sendInvoice,
   markAsPaid,
   cancelInvoice,
@@ -42,15 +43,14 @@ export function InvoiceActions({ invoice }: InvoiceActionsProps) {
       {invoice.status === INVOICE_STATUS.DRAFT && (
         <>
           <Button
-            variant="outline"
             size="sm"
-            onClick={() => handleAction(sendInvoice, t("sendConfirm"))}
+            onClick={() => handleAction(publishInvoice, t("publishConfirm"))}
             disabled={isPending}
           >
             <span className="material-symbols-outlined text-[16px] mr-1">
-              send
+              publish
             </span>
-            {t("send")}
+            {t("publish")}
           </Button>
           <Button
             variant="outline"
@@ -64,6 +64,28 @@ export function InvoiceActions({ invoice }: InvoiceActionsProps) {
               delete
             </span>
             {t("delete")}
+          </Button>
+        </>
+      )}
+      {invoice.status === INVOICE_STATUS.PUBLISHED && (
+        <>
+          <Button
+            size="sm"
+            onClick={() => handleAction(sendInvoice, t("sendConfirm"))}
+            disabled={isPending}
+          >
+            <span className="material-symbols-outlined text-[16px] mr-1">
+              send
+            </span>
+            {t("send")}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleAction(cancelInvoice, t("cancelConfirm"))}
+            disabled={isPending}
+          >
+            {t("cancel")}
           </Button>
         </>
       )}
