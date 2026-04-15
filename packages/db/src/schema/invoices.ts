@@ -20,6 +20,7 @@ export const INVOICE_STATUS = {
   PARTIAL: 3,
   PAID: 4,
   CANCELLED: 5,
+  PUBLISHED: 6,
 } as const;
 
 export const invoices = pgTable(
