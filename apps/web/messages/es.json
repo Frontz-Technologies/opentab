@@ -119,7 +119,9 @@
     "delete": "Eliminar clave API",
     "deleted": "Clave API almacenada eliminada.",
     "receiptExtraction": "Extracción de datos de recibos",
-    "receiptExtractionHelp": "Extraer automáticamente datos de recibos subidos usando IA"
+    "receiptExtractionHelp": "Extraer automáticamente datos de recibos subidos usando IA",
+    "configuredFromEnv": "IA configurada desde variables de entorno",
+    "configuredFromEnvHelp": "OPENROUTER_API_KEY y OPENROUTER_MODEL están configuradas en su entorno."
   },
   "settingsNav": {
     "organisation": "Organizaci\u00f3n",

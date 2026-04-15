@@ -17,6 +17,10 @@ export default async function AiIntegrationPage() {
   const tInt = await getTranslations("settingsIntegrations");
   const settings = await getAiSettings(session.org.id);
 
+  const envApiKey = process.env.OPENROUTER_API_KEY;
+  const envModel = process.env.OPENROUTER_MODEL;
+  const configuredFromEnv = Boolean(envApiKey);
+
   return (
     <>
       <PageHeader
@@ -27,18 +31,52 @@ export default async function AiIntegrationPage() {
       />
       <main>
         <p className="mb-8 text-sm text-on-surface/60">{t("description")}</p>
-        <AiSettingsForm
-          orgId={session.org.id}
-          initialData={
-            settings ?? {
-              enabled: false,
-              model: "anthropic/claude-sonnet-4-5",
-              apiKeyLast4: null,
-              hasApiKey: false,
-              receiptExtractionEnabled: true,
+        {configuredFromEnv ? (
+          <div className="space-y-4 rounded-2xl border border-on-surface/10 bg-surface-container-low p-6">
+            <div className="flex items-center gap-3 rounded-xl bg-primary/10 px-4 py-3">
+              <span className="material-symbols-outlined text-primary text-[20px]">
+                check_circle
+              </span>
+              <p className="text-sm text-primary font-medium">
+                {t("configuredFromEnv")}
+              </p>
+            </div>
+            <div className="space-y-3 text-sm text-on-surface/70">
+              <div className="flex gap-2">
+                <span className="font-medium text-on-surface min-w-[120px]">
+                  {t("model")}:
+                </span>
+                <span className="font-mono">
+                  {envModel ?? "anthropic/claude-sonnet-4-5"}
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <span className="font-medium text-on-surface min-w-[120px]">
+                  {t("apiKey")}:
+                </span>
+                <span className="font-mono">
+                  sk-or-...{envApiKey!.slice(-4)}
+                </span>
+              </div>
+            </div>
+            <p className="text-xs text-on-surface/50">
+              {t("configuredFromEnvHelp")}
+            </p>
+          </div>
+        ) : (
+          <AiSettingsForm
+            orgId={session.org.id}
+            initialData={
+              settings ?? {
+                enabled: false,
+                model: "anthropic/claude-sonnet-4-5",
+                apiKeyLast4: null,
+                hasApiKey: false,
+                receiptExtractionEnabled: true,
+              }
             }
-          }
-        />
+          />
+        )}
       </main>
     </>
   );

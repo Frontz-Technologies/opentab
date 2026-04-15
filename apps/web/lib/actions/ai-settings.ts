@@ -57,6 +57,14 @@ export async function getAiSettings(
 }
 
 export async function getAiSettingsSecret(orgId: string) {
+  // Env vars take priority over DB settings
+  const envApiKey = process.env.OPENROUTER_API_KEY;
+  const envModel =
+    process.env.OPENROUTER_MODEL ?? "anthropic/claude-sonnet-4-5";
+  if (envApiKey) {
+    return { enabled: true, model: envModel, apiKey: envApiKey };
+  }
+
   const settings = await getAiSettingsRow(orgId);
   if (!settings || !settings.apiKeyEncrypted || !settings.apiKeyIv) {
     return null;
@@ -179,6 +187,9 @@ export async function testAiConnection(orgId: string) {
 export async function isReceiptExtractionEnabled(
   orgId: string,
 ): Promise<boolean> {
+  // Env var config enables extraction automatically
+  if (process.env.OPENROUTER_API_KEY) return true;
+
   const settings = await getAiSettingsRow(orgId);
   if (!settings) return false;
   return (
