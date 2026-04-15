@@ -71,7 +71,6 @@ export {
 export {
   expenses,
   expenseItems,
-  EXPENSE_STATUS,
   EXPENSE_SOURCE,
   type Expense,
   type NewExpense,

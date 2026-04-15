@@ -7,7 +7,6 @@ import {
   expenseItems,
   expenseAttachments,
   invoiceSequences,
-  EXPENSE_STATUS,
 } from "@opentab/db/schema";
 import { eq, and } from "drizzle-orm";
 import { db } from "@/lib/db";
@@ -154,12 +153,6 @@ export async function updateExpense(id: string, formData: FormData) {
     .where(and(eq(expenses.id, id), eq(expenses.orgId, session.org.id)));
 
   if (!existing) return { success: false, error: { _: ["Expense not found"] } };
-  if (existing.status !== EXPENSE_STATUS.DRAFT) {
-    return {
-      success: false,
-      error: { _: ["Only draft expenses can be edited"] },
-    };
-  }
 
   let rawItems: unknown;
   try {
@@ -248,51 +241,6 @@ export async function updateExpense(id: string, formData: FormData) {
   return { success: true };
 }
 
-export async function confirmExpense(id: string) {
-  const session = await getSession();
-  if (!session) throw new Error("Unauthorized");
-
-  const [expense] = await db
-    .select()
-    .from(expenses)
-    .where(and(eq(expenses.id, id), eq(expenses.orgId, session.org.id)));
-
-  if (!expense) return { success: false, error: "Expense not found" };
-  if (expense.status !== EXPENSE_STATUS.DRAFT) {
-    return { success: false, error: "Only draft expenses can be confirmed" };
-  }
-
-  await db
-    .update(expenses)
-    .set({ status: EXPENSE_STATUS.CONFIRMED, updatedAt: new Date() })
-    .where(eq(expenses.id, id));
-
-  revalidatePath("/expenses");
-  revalidatePath(`/expenses/${id}`);
-  return { success: true };
-}
-
-export async function cancelExpense(id: string) {
-  const session = await getSession();
-  if (!session) throw new Error("Unauthorized");
-
-  const [expense] = await db
-    .select()
-    .from(expenses)
-    .where(and(eq(expenses.id, id), eq(expenses.orgId, session.org.id)));
-
-  if (!expense) return { success: false, error: "Expense not found" };
-
-  await db
-    .update(expenses)
-    .set({ status: EXPENSE_STATUS.CANCELLED, updatedAt: new Date() })
-    .where(eq(expenses.id, id));
-
-  revalidatePath("/expenses");
-  revalidatePath(`/expenses/${id}`);
-  return { success: true };
-}
-
 export async function deleteExpense(id: string) {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
@@ -303,9 +251,6 @@ export async function deleteExpense(id: string) {
     .where(and(eq(expenses.id, id), eq(expenses.orgId, session.org.id)));
 
   if (!expense) return { success: false, error: "Expense not found" };
-  if (expense.status !== EXPENSE_STATUS.DRAFT) {
-    return { success: false, error: "Only draft expenses can be deleted" };
-  }
 
   await db
     .delete(expenses)

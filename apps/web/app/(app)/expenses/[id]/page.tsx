@@ -8,17 +8,10 @@ import {
   expenseItems,
   expenseAttachments,
   expenseCategories,
-  EXPENSE_STATUS,
 } from "@opentab/db/schema";
 import { eq, and, asc } from "drizzle-orm";
 import { Badge } from "@/components/ui/badge";
 import { ExpenseActions } from "./expense-actions";
-
-const statusColors: Record<number, string> = {
-  [EXPENSE_STATUS.DRAFT]: "bg-zinc-500/20 text-zinc-400",
-  [EXPENSE_STATUS.CONFIRMED]: "bg-emerald-500/20 text-emerald-400",
-  [EXPENSE_STATUS.CANCELLED]: "bg-red-500/20 text-red-400",
-};
 
 export default async function ExpenseDetailPage({
   params,
@@ -58,12 +51,6 @@ export default async function ExpenseDetailPage({
     categoryName = cat?.name ?? null;
   }
 
-  const statusLabels: Record<number, string> = {
-    [EXPENSE_STATUS.DRAFT]: t("statusDraft"),
-    [EXPENSE_STATUS.CONFIRMED]: t("statusConfirmed"),
-    [EXPENSE_STATUS.CANCELLED]: t("statusCancelled"),
-  };
-
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -77,12 +64,6 @@ export default async function ExpenseDetailPage({
           <h1 className="font-headline text-2xl font-bold text-on-surface">
             {expense.expenseNumber}
           </h1>
-          <Badge
-            className={statusColors[expense.status] ?? ""}
-            variant="outline"
-          >
-            {statusLabels[expense.status]}
-          </Badge>
         </div>
         <ExpenseActions expense={expense} />
       </div>
