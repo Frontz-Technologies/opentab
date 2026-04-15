@@ -13,8 +13,6 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
-
 interface AppSidebarProps {
   orgName: string;
 }
@@ -87,19 +85,21 @@ export function AppSidebar({ orgName }: AppSidebarProps) {
         </SidebarMenu>
       </SidebarContent>
 
-      <SidebarFooter className="p-2">
-        <Button
-          variant="ghost"
-          onClick={toggleSidebar}
-          className={`flex items-center justify-center text-on-surface/50 hover:text-on-surface hover:bg-surface-container-low ${
-            isCollapsed ? "size-8 p-0" : "w-full py-2 gap-2"
-          }`}
-        >
-          <span className="material-symbols-outlined text-[20px] leading-none">
-            {isCollapsed ? "chevron_right" : "chevron_left"}
-          </span>
-          {!isCollapsed && <span className="font-label text-sm">Collapse</span>}
-        </Button>
+      <SidebarFooter className="px-2 pb-2">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip={isCollapsed ? "Expand" : undefined}
+              onClick={toggleSidebar}
+              className="text-on-surface/60 hover:text-on-surface hover:bg-surface-container-low"
+            >
+              <span className="material-symbols-outlined text-[20px] leading-none">
+                {isCollapsed ? "chevron_right" : "chevron_left"}
+              </span>
+              <span className="font-label text-sm">Collapse</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
   );
