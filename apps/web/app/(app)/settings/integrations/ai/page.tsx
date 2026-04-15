@@ -32,7 +32,7 @@ export default async function AiIntegrationPage() {
           initialData={
             settings ?? {
               enabled: false,
-              model: "anthropic/claude-sonnet-4",
+              model: "claude-sonnet-4-5",
               apiKeyLast4: null,
               hasApiKey: false,
               receiptExtractionEnabled: true,
