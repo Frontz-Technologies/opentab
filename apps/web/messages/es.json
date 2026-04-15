@@ -461,6 +461,8 @@
     "number": "N\u00famero",
     "supplier": "Proveedor",
     "selectSupplier": "Seleccionar un proveedor",
+    "supplierNameFreeText": "O ingrese nombre del proveedor",
+    "supplierNamePlaceholder": "ej. Cafetería, Estacionamiento, Suministros",
     "category": "Categor\u00eda",
     "selectCategory": "Seleccionar una categor\u00eda",
     "categories": "Categor\u00edas",
