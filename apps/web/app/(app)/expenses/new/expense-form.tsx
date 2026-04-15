@@ -44,6 +44,7 @@ export function ExpenseForm({
   const [isPending, startTransition] = useTransition();
 
   const [contactId, setContactId] = useState("");
+  const [supplierName, setSupplierName] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [expenseDate, setExpenseDate] = useState(
     new Date().toISOString().split("T")[0],
@@ -197,7 +198,10 @@ export function ExpenseForm({
     formData.set("currencyCode", currencyCode);
     formData.set("usesInclusiveTax", String(usesInclusiveTax));
     formData.set("supplierInvoiceNumber", supplierInvoiceNumber);
-    formData.set("contactName", selectedContact?.displayName ?? "");
+    formData.set(
+      "contactName",
+      selectedContact?.displayName ?? supplierName ?? "",
+    );
     formData.set("contactVatNumber", selectedContact?.vatNumber ?? "");
     formData.set("description", description);
     formData.set("notes", notes);
@@ -338,6 +342,7 @@ export function ExpenseForm({
           value={contactId}
           onChange={(e) => {
             setContactId(e.target.value);
+            if (e.target.value) setSupplierName("");
             const contact = contacts.find((c) => c.id === e.target.value);
             if (contact?.defaultCurrency)
               setCurrencyCode(contact.defaultCurrency);
@@ -353,6 +358,18 @@ export function ExpenseForm({
               </option>
             ))}
         </select>
+        {!contactId && (
+          <div>
+            <label className="block text-sm font-label text-on-surface/60 mb-1">
+              {t("supplierNameFreeText")}
+            </label>
+            <Input
+              value={supplierName}
+              onChange={(e) => setSupplierName(e.target.value)}
+              placeholder={t("supplierNamePlaceholder")}
+            />
+          </div>
+        )}
       </div>
 
       <div className="bg-surface-container rounded-xl p-6 space-y-4">

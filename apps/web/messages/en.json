@@ -474,6 +474,8 @@
     "number": "Number",
     "supplier": "Supplier",
     "selectSupplier": "Select a supplier",
+    "supplierNameFreeText": "Or enter supplier name",
+    "supplierNamePlaceholder": "e.g. Coffee shop, Parking, Office supplies",
     "category": "Category",
     "selectCategory": "Select a category",
     "categories": "Categories",

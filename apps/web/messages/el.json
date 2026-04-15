@@ -474,6 +474,8 @@
     "number": "Αριθμός",
     "supplier": "Προμηθευτής",
     "selectSupplier": "Επιλέξτε προμηθευτή",
+    "supplierNameFreeText": "Ή εισάγετε όνομα προμηθευτή",
+    "supplierNamePlaceholder": "π.χ. Καφετέρια, Πάρκινγκ, Γραφική ύλη",
     "category": "Κατηγορία",
     "selectCategory": "Επιλέξτε κατηγορία",
     "categories": "Κατηγορίες",
