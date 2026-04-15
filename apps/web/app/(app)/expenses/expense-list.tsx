@@ -17,10 +17,9 @@ const statusColors: Record<number, string> = {
   [EXPENSE_STATUS.DRAFT]:
     "bg-surface-container-highest text-on-surface-variant",
   [EXPENSE_STATUS.CONFIRMED]: "bg-primary-container/20 text-primary",
-  [EXPENSE_STATUS.CANCELLED]: "bg-tertiary-container/20 text-tertiary",
 };
 
-type StatusFilter = "all" | "draft" | "confirmed" | "cancelled";
+type StatusFilter = "all" | "draft" | "confirmed";
 
 export function ExpenseList({ expenses }: ExpenseListProps) {
   const t = useTranslations("expenses");
@@ -39,8 +38,6 @@ export function ExpenseList({ expenses }: ExpenseListProps) {
       matchesStatus = exp.status === EXPENSE_STATUS.DRAFT;
     else if (statusFilter === "confirmed")
       matchesStatus = exp.status === EXPENSE_STATUS.CONFIRMED;
-    else if (statusFilter === "cancelled")
-      matchesStatus = exp.status === EXPENSE_STATUS.CANCELLED;
 
     return matchesSearch && matchesStatus;
   });
@@ -49,7 +46,6 @@ export function ExpenseList({ expenses }: ExpenseListProps) {
     { key: "all", label: t("filterAll") },
     { key: "draft", label: t("filterDraft") },
     { key: "confirmed", label: t("filterConfirmed") },
-    { key: "cancelled", label: t("filterCancelled") },
   ];
 
   return (
@@ -136,9 +132,7 @@ export function ExpenseList({ expenses }: ExpenseListProps) {
                         >
                           {expense.status === EXPENSE_STATUS.DRAFT
                             ? t("statusDraft")
-                            : expense.status === EXPENSE_STATUS.CONFIRMED
-                              ? t("statusConfirmed")
-                              : t("statusCancelled")}
+                            : t("statusConfirmed")}
                         </Badge>
                       </td>
                     </tr>

@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import type { Expense } from "@opentab/db/schema";
 import { EXPENSE_STATUS } from "@opentab/db/schema";
 import { Button } from "@/components/ui/button";
-import { cancelExpense, deleteExpense } from "../actions";
+import { deleteExpense } from "../actions";
 
 interface ExpenseActionsProps {
   expense: Expense;
@@ -36,29 +36,19 @@ export function ExpenseActions({ expense }: ExpenseActionsProps) {
   return (
     <div className="flex gap-2">
       {expense.status === EXPENSE_STATUS.CONFIRMED && (
-        <>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleAction(cancelExpense, t("cancelConfirm"))}
-            disabled={isPending}
-          >
-            {t("cancelExpense")}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              handleAction(deleteExpense, t("deleteConfirm"), "/expenses")
-            }
-            disabled={isPending}
-          >
-            <span className="material-symbols-outlined text-[16px] mr-1">
-              delete
-            </span>
-            {t("delete")}
-          </Button>
-        </>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() =>
+            handleAction(deleteExpense, t("deleteConfirm"), "/expenses")
+          }
+          disabled={isPending}
+        >
+          <span className="material-symbols-outlined text-[16px] mr-1">
+            delete
+          </span>
+          {t("delete")}
+        </Button>
       )}
     </div>
   );

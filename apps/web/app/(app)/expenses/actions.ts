@@ -154,12 +154,6 @@ export async function updateExpense(id: string, formData: FormData) {
     .where(and(eq(expenses.id, id), eq(expenses.orgId, session.org.id)));
 
   if (!existing) return { success: false, error: { _: ["Expense not found"] } };
-  if (existing.status === EXPENSE_STATUS.CANCELLED) {
-    return {
-      success: false,
-      error: { _: ["Cancelled expenses cannot be edited"] },
-    };
-  }
 
   let rawItems: unknown;
   try {
@@ -272,27 +266,6 @@ export async function confirmExpense(id: string) {
   return { success: true };
 }
 
-export async function cancelExpense(id: string) {
-  const session = await getSession();
-  if (!session) throw new Error("Unauthorized");
-
-  const [expense] = await db
-    .select()
-    .from(expenses)
-    .where(and(eq(expenses.id, id), eq(expenses.orgId, session.org.id)));
-
-  if (!expense) return { success: false, error: "Expense not found" };
-
-  await db
-    .update(expenses)
-    .set({ status: EXPENSE_STATUS.CANCELLED, updatedAt: new Date() })
-    .where(eq(expenses.id, id));
-
-  revalidatePath("/expenses");
-  revalidatePath(`/expenses/${id}`);
-  return { success: true };
-}
-
 export async function deleteExpense(id: string) {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
@@ -303,9 +276,6 @@ export async function deleteExpense(id: string) {
     .where(and(eq(expenses.id, id), eq(expenses.orgId, session.org.id)));
 
   if (!expense) return { success: false, error: "Expense not found" };
-  if (expense.status === EXPENSE_STATUS.CANCELLED) {
-    return { success: false, error: "Cancelled expenses cannot be deleted" };
-  }
 
   await db
     .delete(expenses)

@@ -17,7 +17,6 @@ import { ExpenseActions } from "./expense-actions";
 const statusColors: Record<number, string> = {
   [EXPENSE_STATUS.DRAFT]: "bg-zinc-500/20 text-zinc-400",
   [EXPENSE_STATUS.CONFIRMED]: "bg-emerald-500/20 text-emerald-400",
-  [EXPENSE_STATUS.CANCELLED]: "bg-red-500/20 text-red-400",
 };
 
 export default async function ExpenseDetailPage({
@@ -61,7 +60,6 @@ export default async function ExpenseDetailPage({
   const statusLabels: Record<number, string> = {
     [EXPENSE_STATUS.DRAFT]: t("statusDraft"),
     [EXPENSE_STATUS.CONFIRMED]: t("statusConfirmed"),
-    [EXPENSE_STATUS.CANCELLED]: t("statusCancelled"),
   };
 
   return (
