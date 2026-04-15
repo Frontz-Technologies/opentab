@@ -45,16 +45,8 @@ export async function getDashboardData(
       const prevRange = previousPeriodRange(period);
       const bucket = timeBucket(period);
 
-      const [
-        rev,
-        exp,
-        outstanding,
-        prevRev,
-        prevExp,
-        cashFlow,
-        revenueByClient,
-        expensesByCategory,
-      ] = await Promise.all([
+      // Use Promise.allSettled to prevent one failed query from crashing the dashboard
+      const results = await Promise.allSettled([
         getRevenue(orgId, start, end),
         getExpenseTotal(orgId, start, end),
         getOutstanding(orgId),
@@ -68,6 +60,23 @@ export async function getDashboardData(
         getRevenueByClient(orgId, start, end),
         getExpensesByCategory(orgId, start, end),
       ]);
+
+      const settled = <T>(r: PromiseSettledResult<T>, fallback: T): T =>
+        r.status === "fulfilled" ? r.value : fallback;
+
+      const rev = settled(results[0], { total: 0, count: 0 });
+      const exp = settled(results[1], { total: 0, count: 0 });
+      const outstanding = settled(results[2], {
+        total: 0,
+        count: 0,
+        overdueTotal: 0,
+        overdueCount: 0,
+      });
+      const prevRev = settled(results[3], null);
+      const prevExp = settled(results[4], null);
+      const cashFlow = settled(results[5], { revenue: [], expenses: [] });
+      const revenueByClient = settled(results[6], []);
+      const expensesByCategory = settled(results[7], []);
 
       const netProfit = rev.total - exp.total;
       const prevNetProfit =

@@ -344,7 +344,8 @@
     "mydataDocumentType": "Τύπος παραστατικού",
     "mydataRetry": "Επανάληψη myDATA",
     "mydataCancel": "Ακύρωση στο myDATA",
-    "mydataCancelConfirm": "Ακύρωση αυτού του τιμολογίου στο myDATA; Θα σταλεί ακύρωση στην AADE."
+    "mydataCancelConfirm": "Ακύρωση αυτού του τιμολογίου στο myDATA; Θα σταλεί ακύρωση στην AADE.",
+    "itemRequired": "Απαιτείται τουλάχιστον ένα είδος"
   },
   "quotes": {
     "title": "Προσφορές",
@@ -382,7 +383,9 @@
     "rejected": "Η προσφορά απορρίφθηκε",
     "converted": "Η προσφορά μετατράπηκε σε τιμολόγιο",
     "deleted": "Η προσφορά διαγράφηκε",
-    "selectClient": "Επιλέξτε πελάτη"
+    "selectClient": "Επιλέξτε πελάτη",
+    "lineItems": "Γραμμές Ειδών",
+    "itemRequired": "Απαιτείται τουλάχιστον ένα είδος"
   },
   "recurring": {
     "title": "Επαναλαμβανόμενα Τιμολόγια",
