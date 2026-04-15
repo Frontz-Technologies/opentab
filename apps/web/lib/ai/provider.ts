@@ -1,6 +1,12 @@
-import { createAnthropic } from "@ai-sdk/anthropic";
+import { createOpenAI } from "@ai-sdk/openai";
+
+const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
 
 export function createAiProvider(apiKey: string, model: string) {
-  const anthropic = createAnthropic({ apiKey });
-  return anthropic(model);
+  const openrouter = createOpenAI({
+    apiKey,
+    baseURL: OPENROUTER_BASE_URL,
+  });
+
+  return openrouter(model);
 }

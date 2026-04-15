@@ -82,7 +82,21 @@ export async function updateAiSettings(input: unknown) {
   const existing = await getAiSettingsRow(session.org.id);
   const next = parsed.data;
 
-  const encryptedKey = next.apiKey ? encryptApiKey(next.apiKey) : null;
+  let encryptedKey: ReturnType<typeof encryptApiKey> | null = null;
+  if (next.apiKey) {
+    try {
+      encryptedKey = encryptApiKey(next.apiKey);
+    } catch {
+      return {
+        success: false,
+        error: {
+          _: [
+            "AI_ENCRYPTION_KEY is not configured. Add it to your docker/.env file: AI_ENCRYPTION_KEY=$(openssl rand -hex 32)",
+          ],
+        },
+      };
+    }
+  }
 
   if (existing) {
     await db

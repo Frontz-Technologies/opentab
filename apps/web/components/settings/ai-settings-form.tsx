@@ -37,7 +37,13 @@ export function AiSettingsForm({ orgId, initialData }: AiSettingsFormProps) {
           formData.get("receiptExtractionEnabled") === "on",
       });
 
-      setStatus(result.success ? t("saved") : t("saveFailed"));
+      if (result.success) {
+        setStatus(t("saved"));
+      } else {
+        const errObj = result.error as Record<string, string[]> | undefined;
+        const msg = errObj?._ ? errObj._[0] : t("saveFailed");
+        setStatus(msg);
+      }
     });
   }
 
