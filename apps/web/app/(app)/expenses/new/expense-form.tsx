@@ -160,7 +160,7 @@ export function ExpenseForm({
           </div>
           <div>
             <label className="block text-sm font-label text-on-surface/60 mb-1">
-              {t("expenseDate")}
+              {t("expenseDate")} <span className="text-tertiary">*</span>
             </label>
             <Input
               type="date"
@@ -203,6 +203,14 @@ export function ExpenseForm({
       </div>
 
       <div className="bg-surface-container rounded-xl p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <h2 className="font-headline text-lg font-semibold text-on-surface">
+            {t("lineItems")} <span className="text-tertiary">*</span>
+          </h2>
+          {items.length === 0 && (
+            <p className="text-sm text-on-surface/50">— {t("itemRequired")}</p>
+          )}
+        </div>
         <LineItemsBuilder
           items={items}
           onChange={setItems}

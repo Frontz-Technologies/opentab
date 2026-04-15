@@ -348,7 +348,8 @@
     "mydataDocumentType": "Document type",
     "mydataRetry": "Retry myDATA",
     "mydataCancel": "Cancel on myDATA",
-    "mydataCancelConfirm": "Cancel this invoice on myDATA? This will send a cancellation to AADE."
+    "mydataCancelConfirm": "Cancel this invoice on myDATA? This will send a cancellation to AADE.",
+    "itemRequired": "At least one item is required"
   },
   "quotes": {
     "title": "Quotes",
@@ -386,7 +387,9 @@
     "rejected": "Quote rejected",
     "converted": "Quote converted to invoice",
     "deleted": "Quote deleted",
-    "selectClient": "Select a client"
+    "selectClient": "Select a client",
+    "lineItems": "Line Items",
+    "itemRequired": "At least one item is required"
   },
   "recurring": {
     "title": "Recurring Invoices",
