@@ -34,7 +34,7 @@ export function SettingsMobileLayout({
       pathname.startsWith(path),
     )?.[1] ?? t("organisation");
 
-  // On sub-pages, show back button + content
+  // On sub-pages, show back button + content (hide the page's own PageHeader)
   return (
     <div>
       <div className="flex items-center gap-3 mb-6">
@@ -50,7 +50,7 @@ export function SettingsMobileLayout({
           {label}
         </h2>
       </div>
-      {children}
+      <div className="[&>header]:hidden">{children}</div>
     </div>
   );
 }

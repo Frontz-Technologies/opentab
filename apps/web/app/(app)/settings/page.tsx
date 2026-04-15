@@ -1,21 +1,7 @@
-import { redirect } from "next/navigation";
-import { headers } from "next/headers";
+import { SettingsDesktopRedirect } from "@/components/settings/settings-desktop-redirect";
 
-function isMobileUA(userAgent: string | null): boolean {
-  if (!userAgent) return false;
-  return /mobile|android|iphone|ipad/i.test(userAgent);
-}
-
-export default async function SettingsPage() {
-  const headersList = await headers();
-  const ua = headersList.get("user-agent");
-
-  // On desktop, redirect to organisation settings (first item)
-  // On mobile, the layout will show just the nav list
-  if (!isMobileUA(ua)) {
-    redirect("/settings/organisation");
-  }
-
-  // Mobile: render nothing — the layout shows the nav
-  return null;
+export default function SettingsPage() {
+  // On desktop, redirect to /settings/organisation
+  // On mobile, the layout renders the nav list (children is null here)
+  return <SettingsDesktopRedirect />;
 }
