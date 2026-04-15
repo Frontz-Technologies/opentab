@@ -53,7 +53,11 @@ export default async function IntegrationsPage() {
               name={t("aiName")}
               description={t("aiDescription")}
               href="/settings/integrations/ai"
-              status={aiConfiguredFromEnv || aiSettings?.enabled ? "connected" : "not_configured"}
+              status={
+                aiConfiguredFromEnv || aiSettings?.enabled
+                  ? "connected"
+                  : "not_configured"
+              }
               statusLabels={statusLabels}
             />
           )}
