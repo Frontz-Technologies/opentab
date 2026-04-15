@@ -126,7 +126,7 @@ export function AccountForm({ initialData }: AccountFormProps) {
 
       <form onSubmit={handlePasswordSubmit} className="space-y-8">
         <SettingsSection title={t("security")}>
-          <div className="space-y-4 max-w-md">
+          <div className="space-y-4">
             <div className="space-y-1.5">
               <label className="block font-medium text-sm text-on-surface">
                 {t("currentPassword")}
