@@ -21,6 +21,20 @@ import { computeFileHash } from "@/lib/expenses/duplicate-detection";
 import { matchSupplier } from "@/lib/expenses/supplier-matching";
 import { ensureCategoriesSeeded } from "@/lib/expenses/category-seed";
 import { createDraftExpense } from "@/lib/expenses/draft-expenses";
+import {
+  generateTempId,
+  storeTempFile,
+  deleteTempFile,
+  moveTempToExpense,
+} from "@/lib/expenses/file-storage";
+import {
+  prepareImageForExtraction,
+  extractReceiptData,
+} from "@/lib/expenses/ai-extraction";
+import {
+  isReceiptExtractionEnabled,
+  getAiSettingsSecret,
+} from "@/lib/actions/ai-settings";
 
 const lineItemSchema = z.object({
   sortOrder: z.coerce.number().int().min(0),
@@ -140,8 +154,151 @@ export async function createExpense(formData: FormData) {
 
   const { expense } = await createDraftExpense(session.org.id, parsed.data);
 
+  // Handle attachment if provided
+  const attachmentJson = formData.get("attachment") as string | null;
+  if (attachmentJson) {
+    const attachment = JSON.parse(attachmentJson) as UploadedFileInfo;
+    const finalPath = await moveTempToExpense(
+      attachment.filePath,
+      session.org.id,
+      expense.id,
+    );
+
+    await db.insert(expenseAttachments).values({
+      expenseId: expense.id,
+      filePath: finalPath,
+      fileName: attachment.fileName,
+      mimeType: attachment.mimeType,
+      fileSize: attachment.fileSize,
+      fileHash: attachment.fileHash,
+      aiStatus: "completed",
+    });
+  }
+
   revalidatePath("/expenses");
   return { success: true, expense };
+}
+
+export interface UploadedFileInfo {
+  tempId: string;
+  filePath: string;
+  fileName: string;
+  mimeType: string;
+  fileSize: number;
+  fileHash: string;
+}
+
+export interface UploadReceiptResult {
+  success: boolean;
+  error?: string;
+  fileInfo?: UploadedFileInfo;
+  extractedData?: {
+    vendorName: string | null;
+    vendorVat: string | null;
+    date: string | null;
+    totalAmount: string | null;
+    currency: string | null;
+    description: string | null;
+    category: string | null;
+    lineItems: {
+      name: string;
+      quantity: string;
+      unitPrice: string;
+      taxRate: string;
+    }[];
+    confidence: Record<string, number>;
+  } | null;
+  supplierMatch?: { contactId: string; displayName: string } | null;
+}
+
+export async function uploadAndExtractReceipt(
+  formData: FormData,
+): Promise<UploadReceiptResult> {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+
+  const file = formData.get("file") as File | null;
+  if (!file) return { success: false, error: "No file provided" };
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const hash = computeFileHash(buffer);
+
+  // Check for duplicates
+  const [duplicate] = await db
+    .select()
+    .from(expenseAttachments)
+    .where(eq(expenseAttachments.fileHash, hash))
+    .limit(1);
+
+  if (duplicate) {
+    return { success: false, error: "This file has already been uploaded" };
+  }
+
+  // Store file immediately
+  const tempId = generateTempId();
+  const filePath = await storeTempFile(
+    session.org.id,
+    tempId,
+    buffer,
+    file.name,
+  );
+
+  const fileInfo: UploadedFileInfo = {
+    tempId,
+    filePath,
+    fileName: file.name,
+    mimeType: file.type || "application/octet-stream",
+    fileSize: buffer.length,
+    fileHash: hash,
+  };
+
+  // Try AI extraction if enabled
+  let extractedData = null;
+  let supplierMatch = null;
+
+  const extractionEnabled = await isReceiptExtractionEnabled(session.org.id);
+  if (extractionEnabled) {
+    const aiSecrets = await getAiSettingsSecret(session.org.id);
+    if (aiSecrets?.apiKey) {
+      const { dataUrl } = await prepareImageForExtraction(
+        buffer,
+        file.type || "application/octet-stream",
+      );
+      extractedData = await extractReceiptData(
+        dataUrl,
+        aiSecrets.apiKey,
+        aiSecrets.model,
+      );
+
+      // Try supplier matching if we got a VAT number or name
+      if (extractedData?.vendorVat) {
+        supplierMatch = await matchSupplier(
+          session.org.id,
+          extractedData.vendorVat,
+          extractedData.vendorName,
+        );
+      } else if (extractedData?.vendorName) {
+        supplierMatch = await matchSupplier(
+          session.org.id,
+          null,
+          extractedData.vendorName,
+        );
+      }
+    }
+  }
+
+  return { success: true, fileInfo, extractedData, supplierMatch };
+}
+
+export async function cleanupTempAttachment(filePath: string) {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+
+  // Only allow deleting temp files (safety check)
+  if (!filePath.includes("/tmp/")) return { success: false };
+
+  await deleteTempFile(filePath);
+  return { success: true };
 }
 
 export async function updateExpense(id: string, formData: FormData) {
@@ -313,70 +470,4 @@ export async function deleteExpense(id: string) {
 
   revalidatePath("/expenses");
   return { success: true };
-}
-
-export async function uploadReceipt(formData: FormData) {
-  const session = await getSession();
-  if (!session) throw new Error("Unauthorized");
-
-  const file = formData.get("file") as File | null;
-  if (!file) return { success: false, error: "No file provided" };
-
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const hash = computeFileHash(buffer);
-
-  // Check for duplicates
-  const [duplicate] = await db
-    .select()
-    .from(expenseAttachments)
-    .where(eq(expenseAttachments.fileHash, hash))
-    .limit(1);
-
-  if (duplicate) {
-    return {
-      success: false,
-      error: "This file has already been uploaded",
-    };
-  }
-
-  await ensureCategoriesSeeded(session.org.id, session.org.countryCode);
-
-  const expenseNumber = await generateExpenseNumber(session.org.id);
-
-  // Try to match supplier from VAT
-  const supplierMatch = await matchSupplier(session.org.id, null, null);
-
-  const [expense] = await db
-    .insert(expenses)
-    .values({
-      orgId: session.org.id,
-      contactId: supplierMatch?.contactId ?? null,
-      expenseNumber,
-      expenseDate: new Date().toISOString().split("T")[0],
-      source: "ai_extract",
-      fileHash: hash,
-      contactName: supplierMatch?.displayName ?? null,
-    })
-    .returning();
-
-  const { storeFile } = await import("@/lib/expenses/file-storage");
-  const filePath = await storeFile(
-    session.org.id,
-    expense.id,
-    buffer,
-    file.name,
-  );
-
-  await db.insert(expenseAttachments).values({
-    expenseId: expense.id,
-    filePath,
-    fileName: file.name,
-    mimeType: file.type || "application/octet-stream",
-    fileSize: buffer.length,
-    fileHash: hash,
-    aiStatus: "pending",
-  });
-
-  revalidatePath("/expenses");
-  return { success: true, expense };
 }
