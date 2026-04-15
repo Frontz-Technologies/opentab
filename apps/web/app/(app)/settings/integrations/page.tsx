@@ -19,6 +19,8 @@ export default async function IntegrationsPage() {
     isOwnerOrAdmin ? getAiSettings(session.org.id) : null,
   ]);
 
+  const aiConfiguredFromEnv = Boolean(process.env.OPENROUTER_API_KEY);
+
   const statusLabels = {
     connected: t("connected"),
     notConfigured: t("notConfigured"),
@@ -51,7 +53,7 @@ export default async function IntegrationsPage() {
               name={t("aiName")}
               description={t("aiDescription")}
               href="/settings/integrations/ai"
-              status={aiSettings?.enabled ? "connected" : "not_configured"}
+              status={aiConfiguredFromEnv || aiSettings?.enabled ? "connected" : "not_configured"}
               statusLabels={statusLabels}
             />
           )}
