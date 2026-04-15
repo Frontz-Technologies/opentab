@@ -56,6 +56,18 @@ export async function getAiSettings(
   };
 }
 
+export async function getAiEnvConfig(): Promise<{
+  model: string;
+  apiKeyLast4: string;
+} | null> {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) return null;
+  return {
+    model: process.env.OPENROUTER_MODEL ?? "anthropic/claude-sonnet-4-5",
+    apiKeyLast4: apiKey.slice(-4),
+  };
+}
+
 export async function getAiSettingsSecret(orgId: string) {
   // Env vars take priority over DB settings
   const envApiKey = process.env.OPENROUTER_API_KEY;

@@ -4,7 +4,7 @@ import { getSession } from "@/lib/session";
 import { PageHeader } from "@/components/layout/page-header";
 import { IntegrationCard } from "@/components/settings/integration-card";
 import { getMyDataCredentialsStatus } from "./mydata/actions";
-import { getAiSettings } from "@/lib/actions/ai-settings";
+import { getAiSettings, getAiEnvConfig } from "@/lib/actions/ai-settings";
 
 export default async function IntegrationsPage() {
   const session = await getSession();
@@ -14,12 +14,11 @@ export default async function IntegrationsPage() {
   const isGreek = session.org.countryCode === "GR";
   const isOwnerOrAdmin = session.role === "owner" || session.role === "admin";
 
-  const [mydataCredentials, aiSettings] = await Promise.all([
+  const [mydataCredentials, aiSettings, aiEnvConfig] = await Promise.all([
     isGreek ? getMyDataCredentialsStatus() : null,
     isOwnerOrAdmin ? getAiSettings(session.org.id) : null,
+    isOwnerOrAdmin ? getAiEnvConfig() : null,
   ]);
-
-  const aiConfiguredFromEnv = Boolean(process.env.OPENROUTER_API_KEY);
 
   const statusLabels = {
     connected: t("connected"),
@@ -54,7 +53,7 @@ export default async function IntegrationsPage() {
               description={t("aiDescription")}
               href="/settings/integrations/ai"
               status={
-                aiConfiguredFromEnv || aiSettings?.enabled
+                aiEnvConfig || aiSettings?.enabled
                   ? "connected"
                   : "not_configured"
               }

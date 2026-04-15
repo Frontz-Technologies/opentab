@@ -3,7 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/layout/page-header";
 import { AiSettingsForm } from "@/components/settings/ai-settings-form";
 import { getSession } from "@/lib/session";
-import { getAiSettings } from "@/lib/actions/ai-settings";
+import { getAiSettings, getAiEnvConfig } from "@/lib/actions/ai-settings";
 
 export default async function AiIntegrationPage() {
   const session = await getSession();
@@ -15,11 +15,10 @@ export default async function AiIntegrationPage() {
 
   const t = await getTranslations("settingsAi");
   const tInt = await getTranslations("settingsIntegrations");
-  const settings = await getAiSettings(session.org.id);
-
-  const envApiKey = process.env.OPENROUTER_API_KEY;
-  const envModel = process.env.OPENROUTER_MODEL;
-  const configuredFromEnv = Boolean(envApiKey);
+  const [settings, envConfig] = await Promise.all([
+    getAiSettings(session.org.id),
+    getAiEnvConfig(),
+  ]);
 
   return (
     <>
@@ -31,7 +30,7 @@ export default async function AiIntegrationPage() {
       />
       <main>
         <p className="mb-8 text-sm text-on-surface/60">{t("description")}</p>
-        {configuredFromEnv ? (
+        {envConfig ? (
           <div className="space-y-4 rounded-2xl border border-on-surface/10 bg-surface-container-low p-6">
             <div className="flex items-center gap-3 rounded-xl bg-primary/10 px-4 py-3">
               <span className="material-symbols-outlined text-primary text-[20px]">
@@ -46,16 +45,14 @@ export default async function AiIntegrationPage() {
                 <span className="font-medium text-on-surface min-w-[120px]">
                   {t("model")}:
                 </span>
-                <span className="font-mono">
-                  {envModel ?? "anthropic/claude-sonnet-4-5"}
-                </span>
+                <span className="font-mono">{envConfig.model}</span>
               </div>
               <div className="flex gap-2">
                 <span className="font-medium text-on-surface min-w-[120px]">
                   {t("apiKey")}:
                 </span>
                 <span className="font-mono">
-                  sk-or-...{envApiKey!.slice(-4)}
+                  sk-or-...{envConfig.apiKeyLast4}
                 </span>
               </div>
             </div>
