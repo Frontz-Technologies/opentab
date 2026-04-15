@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { db } from "@/lib/db";
 import { contacts, products } from "@opentab/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, inArray } from "drizzle-orm";
 import { getCountryProvider } from "@/lib/country";
 import { InvoiceForm } from "./invoice-form";
 
@@ -16,7 +16,12 @@ export default async function NewInvoicePage() {
   const clientContacts = await db
     .select()
     .from(contacts)
-    .where(and(eq(contacts.orgId, session.org.id)))
+    .where(
+      and(
+        eq(contacts.orgId, session.org.id),
+        inArray(contacts.type, ["client", "both"]),
+      ),
+    )
     .orderBy(desc(contacts.createdAt));
 
   const activeProducts = await db
