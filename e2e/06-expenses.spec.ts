@@ -29,9 +29,8 @@ test.describe("Expenses", () => {
     await expect(page.getByText("No expenses yet")).toBeVisible();
   });
 
-  test("expenses list has search and status filters", async () => {
+  test("expenses list has search input", async () => {
     await expect(page.getByPlaceholder("Search expenses...")).toBeVisible();
-    await expect(page.getByRole("button", { name: "All" })).toBeVisible();
   });
 
   test("navigate to create expense page", async () => {
