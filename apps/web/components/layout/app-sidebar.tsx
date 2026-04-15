@@ -13,6 +13,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
 
 interface AppSidebarProps {
   orgName: string;
@@ -31,7 +32,7 @@ const navItems = [
 export function AppSidebar({ orgName }: AppSidebarProps) {
   const pathname = usePathname();
   const t = useTranslations("nav");
-  const { state } = useSidebar();
+  const { state, toggleSidebar } = useSidebar();
   const isCollapsed = state === "collapsed";
 
   return (
@@ -86,16 +87,19 @@ export function AppSidebar({ orgName }: AppSidebarProps) {
         </SidebarMenu>
       </SidebarContent>
 
-      <SidebarFooter className="p-3">
-        <Link
-          href="/invoices/new"
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-label font-semibold text-sm hover:from-emerald-400 hover:to-emerald-500 transition-all"
+      <SidebarFooter className="p-2">
+        <Button
+          variant="ghost"
+          onClick={toggleSidebar}
+          className={`flex items-center justify-center text-on-surface/50 hover:text-on-surface hover:bg-surface-container-low ${
+            isCollapsed ? "size-8 p-0" : "w-full py-2 gap-2"
+          }`}
         >
-          <span className="material-symbols-outlined text-[18px] leading-none">
-            add
+          <span className="material-symbols-outlined text-[20px] leading-none">
+            {isCollapsed ? "chevron_right" : "chevron_left"}
           </span>
-          {!isCollapsed && t("createNew")}
-        </Link>
+          {!isCollapsed && <span className="font-label text-sm">Collapse</span>}
+        </Button>
       </SidebarFooter>
     </Sidebar>
   );
