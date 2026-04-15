@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import type { Quote } from "@opentab/db/schema";
 import { QUOTE_STATUS } from "@opentab/db/schema";
@@ -25,6 +26,7 @@ type StatusFilter = "all" | "draft" | "sent" | "accepted";
 
 export function QuoteList({ quotes }: QuoteListProps) {
   const t = useTranslations("quotes");
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
@@ -115,7 +117,8 @@ export function QuoteList({ quotes }: QuoteListProps) {
                   {filtered.map((quote) => (
                     <tr
                       key={quote.id}
-                      className="border-b border-on-surface/5 hover:bg-surface-container-low transition-colors"
+                      className="border-b border-on-surface/5 hover:bg-surface-container-low transition-colors cursor-pointer"
+                      onClick={() => router.push(`/quotes/${quote.id}`)}
                     >
                       <td className="px-4 py-3">
                         <Link

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import type { Invoice } from "@opentab/db/schema";
 import { INVOICE_STATUS, MYDATA_TRANSMISSION_STATUS } from "@opentab/db/schema";
@@ -102,6 +103,7 @@ function MyDataStatusIcon({ status }: { status: number | null }) {
 
 export function InvoiceList({ invoices, showMyData }: InvoiceListProps) {
   const t = useTranslations("invoices");
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
@@ -191,7 +193,8 @@ export function InvoiceList({ invoices, showMyData }: InvoiceListProps) {
                   {filtered.map((invoice) => (
                     <tr
                       key={invoice.id}
-                      className="border-b border-on-surface/5 hover:bg-surface-container-low transition-colors"
+                      className="border-b border-on-surface/5 hover:bg-surface-container-low transition-colors cursor-pointer"
+                      onClick={() => router.push(`/invoices/${invoice.id}`)}
                     >
                       <td className="px-4 py-3">
                         <Link
