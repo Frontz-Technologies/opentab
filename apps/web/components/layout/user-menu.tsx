@@ -51,7 +51,9 @@ export function UserMenu({ name, email }: UserMenuProps) {
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuGroup>
           <DropdownMenuLabel className="flex flex-col gap-0.5">
-            <span className="font-semibold text-on-surface text-sm">{name}</span>
+            <span className="font-semibold text-on-surface text-sm">
+              {name}
+            </span>
             <span className="text-on-surface/50 text-xs font-normal">
               {email}
             </span>
