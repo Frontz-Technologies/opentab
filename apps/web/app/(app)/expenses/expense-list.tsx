@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import type { Expense } from "@opentab/db/schema";
 import { EXPENSE_STATUS } from "@opentab/db/schema";
@@ -24,6 +25,7 @@ type StatusFilter = "all" | "draft" | "confirmed" | "cancelled";
 
 export function ExpenseList({ expenses }: ExpenseListProps) {
   const t = useTranslations("expenses");
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
@@ -107,7 +109,8 @@ export function ExpenseList({ expenses }: ExpenseListProps) {
                   {filtered.map((expense) => (
                     <tr
                       key={expense.id}
-                      className="border-b border-on-surface/5 hover:bg-surface-container-low transition-colors"
+                      className="border-b border-on-surface/5 hover:bg-surface-container-low transition-colors cursor-pointer"
+                      onClick={() => router.push(`/expenses/${expense.id}`)}
                     >
                       <td className="px-4 py-3">
                         <Link

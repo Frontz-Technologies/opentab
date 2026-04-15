@@ -344,7 +344,8 @@
     "mydataDocumentType": "Tipo de documento",
     "mydataRetry": "Reintentar myDATA",
     "mydataCancel": "Cancelar en myDATA",
-    "mydataCancelConfirm": "\u00bfCancelar esta factura en myDATA? Esto enviar\u00e1 una cancelaci\u00f3n a AADE."
+    "mydataCancelConfirm": "\u00bfCancelar esta factura en myDATA? Esto enviar\u00e1 una cancelaci\u00f3n a AADE.",
+    "itemRequired": "Se requiere al menos un artículo"
   },
   "quotes": {
     "title": "Cotizaciones",
@@ -382,7 +383,9 @@
     "rejected": "Cotizaci\u00f3n rechazada",
     "converted": "Cotizaci\u00f3n convertida a factura",
     "deleted": "Cotizaci\u00f3n eliminada",
-    "selectClient": "Seleccionar un cliente"
+    "selectClient": "Seleccionar un cliente",
+    "lineItems": "Partidas",
+    "itemRequired": "Se requiere al menos un artículo"
   },
   "recurring": {
     "title": "Facturas recurrentes",
