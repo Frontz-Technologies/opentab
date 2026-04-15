@@ -18,6 +18,7 @@ interface AiSettingsFormProps {
     model: string;
     apiKeyLast4: string | null;
     hasApiKey: boolean;
+    receiptExtractionEnabled: boolean;
   };
 }
 
@@ -32,6 +33,8 @@ export function AiSettingsForm({ orgId, initialData }: AiSettingsFormProps) {
         enabled: formData.get("enabled") === "on",
         model: formData.get("model"),
         apiKey: formData.get("apiKey"),
+        receiptExtractionEnabled:
+          formData.get("receiptExtractionEnabled") === "on",
       });
 
       setStatus(result.success ? t("saved") : t("saveFailed"));
@@ -98,6 +101,24 @@ export function AiSettingsForm({ orgId, initialData }: AiSettingsFormProps) {
               : t("apiKeyPlaceholder")
           }
         />
+      </div>
+
+      <div className="space-y-2">
+        <Label
+          htmlFor="receiptExtractionEnabled"
+          className="text-sm font-medium text-on-surface"
+        >
+          {t("receiptExtraction")}
+        </Label>
+        <label className="flex items-center gap-3 rounded-xl bg-surface-container-high px-4 py-3 text-sm text-on-surface">
+          <input
+            id="receiptExtractionEnabled"
+            name="receiptExtractionEnabled"
+            type="checkbox"
+            defaultChecked={initialData.receiptExtractionEnabled}
+          />
+          {t("receiptExtractionHelp")}
+        </label>
       </div>
 
       {status && (

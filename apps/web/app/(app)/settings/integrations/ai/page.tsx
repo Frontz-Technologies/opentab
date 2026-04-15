@@ -35,6 +35,7 @@ export default async function AiIntegrationPage() {
               model: "anthropic/claude-sonnet-4",
               apiKeyLast4: null,
               hasApiKey: false,
+              receiptExtractionEnabled: true,
             }
           }
         />

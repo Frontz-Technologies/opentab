@@ -14,6 +14,7 @@ const updateAiSettingsSchema = z.object({
   enabled: z.boolean(),
   model: z.string().min(1).max(100),
   apiKey: z.string().trim().optional().default(""),
+  receiptExtractionEnabled: z.boolean().default(true),
 });
 
 export type AiSettingsPublic = {
@@ -21,6 +22,7 @@ export type AiSettingsPublic = {
   model: string;
   apiKeyLast4: string | null;
   hasApiKey: boolean;
+  receiptExtractionEnabled: boolean;
 };
 
 function assertSettingsAdmin(role: string) {
@@ -50,6 +52,7 @@ export async function getAiSettings(
     model: settings.model,
     apiKeyLast4: settings.apiKeyLast4 ?? null,
     hasApiKey: Boolean(settings.apiKeyEncrypted),
+    receiptExtractionEnabled: settings.receiptExtractionEnabled,
   };
 }
 
@@ -87,6 +90,7 @@ export async function updateAiSettings(input: unknown) {
       .set({
         enabled: next.enabled,
         model: next.model,
+        receiptExtractionEnabled: next.receiptExtractionEnabled,
         apiKeyEncrypted: encryptedKey?.encrypted ?? existing.apiKeyEncrypted,
         apiKeyIv: encryptedKey?.iv ?? existing.apiKeyIv,
         apiKeyLast4: encryptedKey?.last4 ?? existing.apiKeyLast4,
@@ -98,6 +102,7 @@ export async function updateAiSettings(input: unknown) {
       orgId: session.org.id,
       enabled: next.enabled,
       model: next.model,
+      receiptExtractionEnabled: next.receiptExtractionEnabled,
       apiKeyEncrypted: encryptedKey?.encrypted ?? null,
       apiKeyIv: encryptedKey?.iv ?? null,
       apiKeyLast4: encryptedKey?.last4 ?? null,
@@ -155,4 +160,16 @@ export async function testAiConnection(orgId: string) {
       error: error instanceof Error ? error.message : "Connection test failed",
     };
   }
+}
+
+export async function isReceiptExtractionEnabled(
+  orgId: string,
+): Promise<boolean> {
+  const settings = await getAiSettingsRow(orgId);
+  if (!settings) return false;
+  return (
+    settings.enabled &&
+    Boolean(settings.apiKeyEncrypted) &&
+    settings.receiptExtractionEnabled
+  );
 }

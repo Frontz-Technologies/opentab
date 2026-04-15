@@ -117,7 +117,9 @@
     "testSuccess": "Conexi\u00f3n exitosa.",
     "testFailed": "Error en la conexi\u00f3n.",
     "delete": "Eliminar clave API",
-    "deleted": "Clave API almacenada eliminada."
+    "deleted": "Clave API almacenada eliminada.",
+    "receiptExtraction": "Extracción de datos de recibos",
+    "receiptExtractionHelp": "Extraer automáticamente datos de recibos subidos usando IA"
   },
   "settingsNav": {
     "organisation": "Organizaci\u00f3n",

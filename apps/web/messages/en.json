@@ -117,7 +117,9 @@
     "testSuccess": "Connection successful.",
     "testFailed": "Connection failed.",
     "delete": "Delete API key",
-    "deleted": "Stored API key removed."
+    "deleted": "Stored API key removed.",
+    "receiptExtraction": "Receipt data extraction",
+    "receiptExtractionHelp": "Automatically extract data from uploaded receipts using AI"
   },
   "settingsNav": {
     "organisation": "Organisation",
