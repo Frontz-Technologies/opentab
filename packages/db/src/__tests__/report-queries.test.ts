@@ -11,7 +11,6 @@ import {
   expenseCategories,
   expenseGroups,
   INVOICE_STATUS,
-  EXPENSE_STATUS,
 } from "../schema/index";
 import { sql } from "drizzle-orm";
 
@@ -102,7 +101,6 @@ describe("report aggregation queries", () => {
 
   async function createExpense(
     overrides: {
-      status?: number;
       expenseDate?: string;
       total?: string;
     } = {},
@@ -114,7 +112,6 @@ describe("report aggregation queries", () => {
         orgId,
         expenseNumber: num,
         expenseDate: overrides.expenseDate ?? "2026-04-01",
-        status: overrides.status ?? EXPENSE_STATUS.CONFIRMED,
         total: overrides.total ?? "500.00",
         categoryId,
       })
@@ -241,28 +238,25 @@ describe("report aggregation queries", () => {
   });
 
   describe("expense queries", () => {
-    it("sums only CONFIRMED expenses within date range", async () => {
+    it("sums expenses within date range", async () => {
       await createExpense({
-        status: EXPENSE_STATUS.CONFIRMED,
         total: "200.00",
         expenseDate: "2026-08-10",
       });
       await createExpense({
-        status: EXPENSE_STATUS.DRAFT,
-        total: "9999.00",
-        expenseDate: "2026-08-10",
+        total: "300.00",
+        expenseDate: "2026-08-15",
       });
 
       const result = await db.execute(sql`
         SELECT COALESCE(SUM(total::numeric), 0) AS total, COUNT(*)::int AS count
         FROM expense
         WHERE org_id = ${orgId}
-          AND status = 2
           AND expense_date BETWEEN '2026-08-01' AND '2026-08-31'
       `);
       const rows = (result as any).rows as Record<string, unknown>[];
-      expect(Number(rows[0].total)).toBe(200);
-      expect(Number(rows[0].count)).toBe(1);
+      expect(Number(rows[0].total)).toBe(500);
+      expect(Number(rows[0].count)).toBe(2);
     });
 
     it("groups expenses by category with correct totals", async () => {
@@ -281,7 +275,6 @@ describe("report aggregation queries", () => {
         FROM expense e
         LEFT JOIN expense_category ec ON ec.id = e.category_id
         WHERE e.org_id = ${orgId}
-          AND e.status = 2
           AND e.expense_date BETWEEN '2026-09-01' AND '2026-09-30'
         GROUP BY e.category_id, ec.name
         ORDER BY SUM(e.total::numeric) DESC
