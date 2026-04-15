@@ -95,6 +95,8 @@ export async function getExpensesByCategory(
   start: Date,
   end: Date,
 ): Promise<ExpenseByCategoryRow[]> {
+  const startDate = start.toISOString().slice(0, 10);
+  const endDate = end.toISOString().slice(0, 10);
   const result = await db.execute(sql`
     SELECT e.category_id, COALESCE(ec.name, 'Uncategorized') AS category,
       COALESCE(SUM(e.total::numeric), 0) AS total
@@ -102,7 +104,7 @@ export async function getExpensesByCategory(
     LEFT JOIN expense_category ec ON ec.id = e.category_id
     WHERE e.org_id = ${orgId}
       AND e.status = 2
-      AND e.expense_date BETWEEN ${start.toISOString().slice(0, 10)} AND ${end.toISOString().slice(0, 10)}
+      AND e.expense_date BETWEEN ${startDate} AND ${endDate}
     GROUP BY e.category_id, ec.name
     ORDER BY SUM(e.total::numeric) DESC
   `);
