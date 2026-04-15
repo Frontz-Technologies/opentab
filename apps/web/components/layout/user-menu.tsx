@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -40,11 +41,7 @@ export function UserMenu({ name, email }: UserMenuProps) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <button className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary" />
-        }
-      >
+      <DropdownMenuTrigger className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer">
         <Avatar>
           <AvatarFallback className="bg-emerald-500/20 text-emerald-400 font-semibold text-xs">
             {getInitials(name)}
@@ -52,15 +49,19 @@ export function UserMenu({ name, email }: UserMenuProps) {
         </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel className="flex flex-col gap-0.5">
-          <span className="font-semibold text-on-surface text-sm">{name}</span>
-          <span className="text-on-surface/50 text-xs font-normal">
-            {email}
-          </span>
-        </DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="flex flex-col gap-0.5">
+            <span className="font-semibold text-on-surface text-sm">
+              {name}
+            </span>
+            <span className="text-on-surface/50 text-xs font-normal">
+              {email}
+            </span>
+          </DropdownMenuLabel>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          render={<Link href="/settings/organisation" />}
+          render={<Link href="/settings/account" />}
           className="flex items-center gap-2 cursor-pointer"
         >
           <span className="material-symbols-outlined text-[16px] leading-none">
