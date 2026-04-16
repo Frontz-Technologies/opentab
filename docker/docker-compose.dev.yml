@@ -7,6 +7,10 @@
 #
 # Or from project root:
 #   make dev
+#
+# Optional: Enable S3 storage with MinIO (for testing S3 before prod):
+#   docker compose -f docker-compose.dev.yml --profile s3 up --build
+#   (also set S3_* env vars in .env — see .env.dev.sample)
 
 name: opentab-dev
 
@@ -22,8 +26,6 @@ services:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_healthy
-      minio:
         condition: service_healthy
     env_file: .env
     volumes:
@@ -77,6 +79,7 @@ services:
 
   minio:
     container_name: opentab-dev-minio
+    profiles: ["s3"]
     image: minio/minio:latest
     command: server /data --console-address ":9001"
     ports:
@@ -97,6 +100,7 @@ services:
 
   createbuckets:
     container_name: opentab-dev-createbuckets
+    profiles: ["s3"]
     image: minio/mc:latest
     depends_on:
       minio:
