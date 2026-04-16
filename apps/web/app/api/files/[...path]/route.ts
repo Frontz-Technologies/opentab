@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
-import { getPresignedUrl } from "@/lib/expenses/file-storage";
+import { getFile, getPresignedUrl } from "@/lib/expenses/file-storage";
 
 export async function GET(
   request: NextRequest,
@@ -20,8 +20,29 @@ export async function GET(
   }
 
   try {
-    const url = await getPresignedUrl(relativePath, 3600);
-    return NextResponse.redirect(url);
+    // S3 mode: redirect to presigned URL
+    const presignedUrl = await getPresignedUrl(relativePath, 3600);
+    if (presignedUrl) {
+      return NextResponse.redirect(presignedUrl);
+    }
+
+    // Local mode: serve file bytes directly
+    const buffer = await getFile(relativePath);
+    const ext = relativePath.split(".").pop()?.toLowerCase();
+    const mimeTypes: Record<string, string> = {
+      pdf: "application/pdf",
+      png: "image/png",
+      jpg: "image/jpeg",
+      jpeg: "image/jpeg",
+      webp: "image/webp",
+    };
+
+    return new NextResponse(new Uint8Array(buffer), {
+      headers: {
+        "Content-Type": mimeTypes[ext ?? ""] || "application/octet-stream",
+        "Cache-Control": "private, max-age=3600",
+      },
+    });
   } catch {
     return NextResponse.json({ error: "File not found" }, { status: 404 });
   }
