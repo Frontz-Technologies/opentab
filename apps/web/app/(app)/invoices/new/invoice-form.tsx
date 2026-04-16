@@ -7,10 +7,17 @@ import type { Contact, Product } from "@opentab/db/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   LineItemsBuilder,
   type LineItem,
 } from "@/components/invoicing/line-items-builder";
 import { createInvoice } from "../actions";
+import { createContact } from "../../contacts/actions";
 
 interface InvoiceFormProps {
   contacts: Contact[];
@@ -29,7 +36,16 @@ export function InvoiceForm({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
+  const [allContacts, setAllContacts] = useState(contacts);
   const [contactId, setContactId] = useState("");
+  const [showCreateContact, setShowCreateContact] = useState(false);
+  const [newContactClassification, setNewContactClassification] =
+    useState<string>("business");
+  const [newContactName, setNewContactName] = useState("");
+  const [newContactEmail, setNewContactEmail] = useState("");
+  const [newContactVat, setNewContactVat] = useState("");
+  const [newContactAddress, setNewContactAddress] = useState("");
+  const [isCreatingContact, setIsCreatingContact] = useState(false);
   const [issueDate, setIssueDate] = useState(
     new Date().toISOString().split("T")[0],
   );
@@ -42,7 +58,37 @@ export function InvoiceForm({
   const [items, setItems] = useState<LineItem[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const selectedContact = contacts.find((c) => c.id === contactId);
+  const selectedContact = allContacts.find((c) => c.id === contactId);
+
+  function resetCreateContactForm() {
+    setNewContactClassification("business");
+    setNewContactName("");
+    setNewContactEmail("");
+    setNewContactVat("");
+    setNewContactAddress("");
+  }
+
+  async function handleCreateContact() {
+    if (!newContactName.trim()) return;
+    setIsCreatingContact(true);
+    const formData = new FormData();
+    formData.set("type", "client");
+    formData.set("classification", newContactClassification);
+    formData.set("company", newContactName);
+    formData.set("email", newContactEmail);
+    if (newContactClassification === "business") {
+      formData.set("vatNumber", newContactVat);
+      formData.set("addressLine1", newContactAddress);
+    }
+    const result = await createContact(formData);
+    if (result.success && result.contact) {
+      setAllContacts((prev) => [result.contact!, ...prev]);
+      setContactId(result.contact.id);
+      setShowCreateContact(false);
+      resetCreateContactForm();
+    }
+    setIsCreatingContact(false);
+  }
 
   function handleSubmit(publish = false) {
     if (!contactId) {
@@ -106,7 +152,7 @@ export function InvoiceForm({
           value={contactId}
           onChange={(e) => {
             setContactId(e.target.value);
-            const contact = contacts.find((c) => c.id === e.target.value);
+            const contact = allContacts.find((c) => c.id === e.target.value);
             if (contact?.defaultCurrency)
               setCurrencyCode(contact.defaultCurrency);
             if (contact?.defaultPaymentTerms) {
@@ -118,12 +164,116 @@ export function InvoiceForm({
           className="w-full rounded-lg bg-surface-container-low border border-on-surface/10 px-3 py-2 text-sm text-on-surface"
         >
           <option value="">{t("selectClient")}</option>
-          {contacts.map((c) => (
+          {allContacts.map((c) => (
             <option key={c.id} value={c.id}>
               {c.displayName}
             </option>
           ))}
         </select>
+        <button
+          type="button"
+          onClick={() => setShowCreateContact(true)}
+          className="text-sm text-primary hover:text-primary/80 font-medium flex items-center gap-1"
+        >
+          <span className="material-symbols-outlined text-[16px]">add</span>
+          {t("createContact")}
+        </button>
+
+        <Dialog
+          open={showCreateContact}
+          onOpenChange={(open) => {
+            setShowCreateContact(open);
+            if (!open) resetCreateContactForm();
+          }}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{t("createContact")}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 pt-2">
+              <div>
+                <label className="block text-sm font-label text-on-surface/60 mb-1">
+                  {t("contactClassification")}{" "}
+                  <span className="text-tertiary">*</span>
+                </label>
+                <select
+                  value={newContactClassification}
+                  onChange={(e) => setNewContactClassification(e.target.value)}
+                  className="w-full rounded-lg bg-surface-container-low border border-on-surface/10 px-3 py-2 text-sm text-on-surface"
+                >
+                  <option value="business">
+                    {t("classificationBusiness")}
+                  </option>
+                  <option value="government">
+                    {t("classificationGovernment")}
+                  </option>
+                  <option value="individual">
+                    {t("classificationIndividual")}
+                  </option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-label text-on-surface/60 mb-1">
+                  {t("companyName")} <span className="text-tertiary">*</span>
+                </label>
+                <Input
+                  value={newContactName}
+                  onChange={(e) => setNewContactName(e.target.value)}
+                  placeholder="Acme Corp"
+                />
+              </div>
+              {newContactClassification === "business" && (
+                <>
+                  <div>
+                    <label className="block text-sm font-label text-on-surface/60 mb-1">
+                      {t("contactVat")}
+                    </label>
+                    <Input
+                      value={newContactVat}
+                      onChange={(e) => setNewContactVat(e.target.value)}
+                      placeholder="EL123456789"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-label text-on-surface/60 mb-1">
+                      {t("contactAddress")}
+                    </label>
+                    <Input
+                      value={newContactAddress}
+                      onChange={(e) => setNewContactAddress(e.target.value)}
+                      placeholder="123 Main St, Athens"
+                    />
+                  </div>
+                </>
+              )}
+              <div>
+                <label className="block text-sm font-label text-on-surface/60 mb-1">
+                  {t("contactEmail")}
+                </label>
+                <Input
+                  type="email"
+                  value={newContactEmail}
+                  onChange={(e) => setNewContactEmail(e.target.value)}
+                  placeholder="contact@example.com"
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowCreateContact(false)}
+                >
+                  {t("cancelAction")}
+                </Button>
+                <Button
+                  onClick={handleCreateContact}
+                  disabled={isCreatingContact || !newContactName.trim()}
+                >
+                  {isCreatingContact ? "Creating..." : t("saveAction")}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="bg-surface-container rounded-xl p-6 space-y-4">
