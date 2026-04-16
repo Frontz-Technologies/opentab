@@ -166,7 +166,7 @@ export async function extractReceiptData(
         mode: "json",
         schema: extractionSchema,
         messages: [{ role: "user", content }],
-        maxTokens: 2000,
+        maxOutputTokens: 2000,
       });
       const data = result.object as z.infer<typeof extractionSchema>;
       aiTimer("structured extraction succeeded", {
@@ -194,7 +194,7 @@ export async function extractReceiptData(
     const { text } = await generateText({
       model: provider,
       messages: [{ role: "user", content }],
-      maxTokens: 2000,
+      maxOutputTokens: 2000,
     });
     aiTimer("text fallback extraction", { model, responseLength: text.length });
 

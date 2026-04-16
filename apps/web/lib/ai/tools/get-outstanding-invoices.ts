@@ -1,4 +1,4 @@
-import { tool, zodSchema } from "ai";
+import { defineTool } from "./define-tool";
 import { z } from "zod";
 import { getOutstanding } from "@/lib/reports/queries";
 
@@ -7,9 +7,9 @@ export function createGetOutstandingInvoicesTool(orgId: string) {
     daysOverdue: z.number().int().min(0).optional(),
   });
 
-  return tool({
+  return defineTool({
     description: "Get outstanding invoice totals and overdue counts.",
-    parameters: zodSchema(parameters),
+    parameters: parameters,
     execute: async (args) => {
       parameters.parse(args);
       const outstanding = await getOutstanding(orgId);
