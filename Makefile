@@ -1,7 +1,8 @@
 # OpenTab — Docker convenience commands
 
-DEV_COMPOSE  = docker compose -f docker/docker-compose.dev.yml
-PROD_COMPOSE = docker compose -f docker/docker-compose.yml
+DEV_COMPOSE     = docker compose -f docker/docker-compose.dev.yml
+PROD_COMPOSE    = docker compose -f docker/docker-compose.yml
+COOLIFY_COMPOSE = docker compose -f docker/docker-compose.coolify.yml
 
 # ── Development ──────────────────────────────────────────────────────────────
 
@@ -41,6 +42,25 @@ prod-logs:
 prod-ps:
 	$(PROD_COMPOSE) --env-file docker/.env ps
 
+# ── Coolify / PaaS ──────────────────────────────────────────────────────────
+
+.PHONY: coolify coolify-down coolify-build coolify-logs coolify-ps
+
+coolify:
+	$(COOLIFY_COMPOSE) --env-file docker/.env up --build -d
+
+coolify-down:
+	$(COOLIFY_COMPOSE) --env-file docker/.env down
+
+coolify-build:
+	$(COOLIFY_COMPOSE) --env-file docker/.env build
+
+coolify-logs:
+	$(COOLIFY_COMPOSE) --env-file docker/.env logs -f app
+
+coolify-ps:
+	$(COOLIFY_COMPOSE) --env-file docker/.env ps
+
 # ── Database ─────────────────────────────────────────────────────────────────
 
 .PHONY: db-push db-shell
@@ -58,3 +78,4 @@ db-shell:
 clean:
 	$(DEV_COMPOSE) down -v
 	$(PROD_COMPOSE) down -v
+	$(COOLIFY_COMPOSE) down -v
