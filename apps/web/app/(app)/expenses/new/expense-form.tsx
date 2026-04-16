@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState, useTransition, useEffect } from "react";
+import { useRef, useState, useTransition } from "react";
+import { useUnsavedChangesWarning } from "@/hooks/use-unsaved-changes-warning";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import type {
@@ -79,15 +80,7 @@ export function ExpenseForm({
     !!supplierInvoiceNumber ||
     items.length > 0;
 
-  // Warn on browser close/refresh with unsaved data
-  useEffect(() => {
-    if (!isDirty) return;
-    const handler = (e: BeforeUnloadEvent) => {
-      e.preventDefault();
-    };
-    window.addEventListener("beforeunload", handler);
-    return () => window.removeEventListener("beforeunload", handler);
-  }, [isDirty]);
+  useUnsavedChangesWarning(isDirty, t("discardConfirm"));
 
   const submittedRef = useRef(false);
 
