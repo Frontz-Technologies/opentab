@@ -205,7 +205,6 @@ export interface UploadReceiptResult {
       unitPrice: string;
       taxRate: string;
     }[];
-    confidence: Record<string, number>;
   } | null;
   supplierMatch?: { contactId: string; displayName: string } | null;
 }

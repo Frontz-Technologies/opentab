@@ -1,4 +1,5 @@
-import { generateText } from "ai";
+import { generateObject } from "ai";
+import { z } from "zod";
 import { createAiProvider } from "@/lib/ai/provider";
 import {
   getModelCapabilities,
@@ -24,73 +25,49 @@ export interface ExtractedExpenseData {
   description: string | null;
   category: string | null;
   lineItems: ExtractedLineItem[];
-  confidence: Record<string, number>;
 }
 
-/**
- * Normalize AI response into a consistent structure.
- * Handles two formats:
- *   Format A (nested): { vendorName: { value: "...", confidence: 0.9 } }
- *   Format B (flat):   { vendorName: "...", vendorName_confidence: 0.9 }
- */
-export function parseExtractionResponse(
-  raw: Record<string, unknown>,
-): ExtractedExpenseData {
-  const fields = [
-    "vendorName",
-    "vendorVat",
-    "date",
-    "totalAmount",
-    "currency",
-    "description",
-    "category",
-  ];
-  const result: Record<string, string | null> = {};
-  const confidence: Record<string, number> = {};
-
-  for (const field of fields) {
-    const val = raw[field];
-    if (val && typeof val === "object" && "value" in val) {
-      // Format A: nested { value, confidence }
-      result[field] = String((val as { value: unknown }).value ?? "") || null;
-      confidence[field] = Number(
-        (val as { confidence?: unknown }).confidence ?? 0,
-      );
-    } else {
-      // Format B: flat value + separate confidence key
-      result[field] = val != null ? String(val) : null;
-      confidence[field] = Number(raw[`${field}_confidence`] ?? 0);
-    }
-  }
-
-  const rawLineItems = raw.lineItems;
-  const lineItems: ExtractedLineItem[] = [];
-  if (Array.isArray(rawLineItems)) {
-    for (const item of rawLineItems) {
-      if (item && typeof item === "object") {
-        const li = item as Record<string, unknown>;
-        lineItems.push({
-          name: String(li.name ?? ""),
-          quantity: String(li.quantity ?? "1"),
-          unitPrice: String(li.unitPrice ?? "0"),
-          taxRate: String(li.taxRate ?? "0"),
-        });
-      }
-    }
-  }
-
-  return {
-    vendorName: result.vendorName ?? null,
-    vendorVat: result.vendorVat ?? null,
-    date: result.date ?? null,
-    totalAmount: result.totalAmount ?? null,
-    currency: result.currency ?? null,
-    description: result.description ?? null,
-    category: result.category ?? null,
-    lineItems,
-    confidence,
-  };
-}
+const extractionSchema = z.object({
+  vendorName: z
+    .string()
+    .nullable()
+    .describe("The supplier/vendor name from the receipt"),
+  vendorVat: z
+    .string()
+    .nullable()
+    .describe("The VAT/tax ID number of the vendor"),
+  date: z
+    .string()
+    .nullable()
+    .describe("The receipt/invoice date in YYYY-MM-DD format"),
+  totalAmount: z
+    .string()
+    .nullable()
+    .describe("The total amount as a decimal string (e.g. '123.45')"),
+  currency: z
+    .string()
+    .nullable()
+    .describe("3-letter ISO currency code (e.g. 'EUR', 'USD')"),
+  description: z
+    .string()
+    .nullable()
+    .describe("Brief description of what was purchased"),
+  category: z.string().nullable().describe("Expense category"),
+  lineItems: z
+    .array(
+      z.object({
+        name: z.string().describe("Item description"),
+        quantity: z.string().describe("Quantity as decimal string (e.g. '1')"),
+        unitPrice: z
+          .string()
+          .describe("Unit price as decimal string (e.g. '10.00')"),
+        taxRate: z
+          .string()
+          .describe("Tax rate as percentage string (e.g. '24')"),
+      }),
+    )
+    .describe("Individual line items from the receipt"),
+});
 
 /**
  * Check if the model can process the given file type.
@@ -104,7 +81,6 @@ export function getExtractionStrategy(
   const isImage = mimeType.startsWith("image/");
 
   if (isPdf) {
-    // PDF: prefer native file support, fall back to image if model supports it
     if (capabilities.file) return "file";
     if (capabilities.image) return "image";
     return null;
@@ -139,8 +115,6 @@ function buildContentBlocks(
     ];
   }
 
-  // image strategy — for images, send directly; for PDFs this path shouldn't
-  // be reached without prior conversion, but we handle it gracefully
   const dataUrl = `data:${mimeType};base64,${base64}`;
   return [
     { type: "text", text: EXTRACTION_PROMPT },
@@ -148,38 +122,8 @@ function buildContentBlocks(
   ];
 }
 
-const EXTRACTION_PROMPT = `You are a receipt/invoice data extractor. Analyze the provided document and extract structured data.
-
-Return a JSON object with these fields. Use null for any field you cannot confidently read:
-
-{
-  "vendorName": "string or null - the supplier/vendor name",
-  "vendorVat": "string or null - the VAT/tax ID number of the vendor",
-  "date": "YYYY-MM-DD or null - the receipt/invoice date",
-  "totalAmount": "string decimal or null - the total amount (e.g. '123.45')",
-  "currency": "string 3-letter ISO code or null (e.g. 'EUR', 'USD')",
-  "description": "string or null - brief description of what was purchased",
-  "category": "string or null - expense category",
-  "lineItems": [
-    {
-      "name": "item description",
-      "quantity": "decimal string (e.g. '1')",
-      "unitPrice": "decimal string (e.g. '10.00')",
-      "taxRate": "decimal percentage string (e.g. '24')"
-    }
-  ],
-  "confidence": {
-    "vendorName": 0.0,
-    "vendorVat": 0.0,
-    "date": 0.0,
-    "totalAmount": 0.0,
-    "currency": 0.0,
-    "description": 0.0,
-    "category": 0.0
-  }
-}
-
-Return ONLY valid JSON. No markdown, no explanation.`;
+const EXTRACTION_PROMPT =
+  "Extract structured data from this receipt/invoice. Use null for any field you cannot confidently read.";
 
 export async function extractReceiptData(
   buffer: Buffer,
@@ -213,19 +157,21 @@ export async function extractReceiptData(
     const provider = createAiProvider(apiKey, model);
 
     const aiTimer = log.time("ai-api-call");
-    const { text } = await generateText({
+    const result = await generateObject({
       model: provider,
+      schema: extractionSchema,
       messages: [{ role: "user", content }],
       maxTokens: 2000,
     });
-    aiTimer("ai response received", { model, responseLength: text.length });
+    const data = result.object as z.infer<typeof extractionSchema>;
+    aiTimer("ai response received", {
+      model,
+      hasVendor: !!data.vendorName,
+      hasTotal: !!data.totalAmount,
+      lineItemCount: data.lineItems.length,
+    });
 
-    const cleaned = text
-      .replace(/```json\n?/g, "")
-      .replace(/```\n?/g, "")
-      .trim();
-    const parsed = JSON.parse(cleaned) as Record<string, unknown>;
-    return parseExtractionResponse(parsed);
+    return data;
   } catch (err) {
     log.error("extraction failed", {
       model,
