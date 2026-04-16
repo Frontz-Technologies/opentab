@@ -38,6 +38,7 @@ vi.mock("@/lib/ai/rate-limiter", () => ({
 vi.mock("ai", () => ({
   convertToModelMessages: convertToModelMessagesMock,
   streamText: streamTextMock,
+  stepCountIs: (n: number) => ({ type: "stepCount", count: n }),
 }));
 
 describe("POST /api/ai/chat", () => {
