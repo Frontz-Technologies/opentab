@@ -39,8 +39,12 @@ export function InvoiceForm({
   const [allContacts, setAllContacts] = useState(contacts);
   const [contactId, setContactId] = useState("");
   const [showCreateContact, setShowCreateContact] = useState(false);
+  const [newContactClassification, setNewContactClassification] =
+    useState<string>("business");
   const [newContactName, setNewContactName] = useState("");
   const [newContactEmail, setNewContactEmail] = useState("");
+  const [newContactVat, setNewContactVat] = useState("");
+  const [newContactAddress, setNewContactAddress] = useState("");
   const [isCreatingContact, setIsCreatingContact] = useState(false);
   const [issueDate, setIssueDate] = useState(
     new Date().toISOString().split("T")[0],
@@ -56,21 +60,32 @@ export function InvoiceForm({
 
   const selectedContact = allContacts.find((c) => c.id === contactId);
 
+  function resetCreateContactForm() {
+    setNewContactClassification("business");
+    setNewContactName("");
+    setNewContactEmail("");
+    setNewContactVat("");
+    setNewContactAddress("");
+  }
+
   async function handleCreateContact() {
     if (!newContactName.trim()) return;
     setIsCreatingContact(true);
     const formData = new FormData();
     formData.set("type", "client");
-    formData.set("classification", "business");
+    formData.set("classification", newContactClassification);
     formData.set("company", newContactName);
     formData.set("email", newContactEmail);
+    if (newContactClassification === "business") {
+      formData.set("vatNumber", newContactVat);
+      formData.set("addressLine1", newContactAddress);
+    }
     const result = await createContact(formData);
     if (result.success && result.contact) {
       setAllContacts((prev) => [result.contact!, ...prev]);
       setContactId(result.contact.id);
       setShowCreateContact(false);
-      setNewContactName("");
-      setNewContactEmail("");
+      resetCreateContactForm();
     }
     setIsCreatingContact(false);
   }
@@ -164,12 +179,37 @@ export function InvoiceForm({
           {t("createContact")}
         </button>
 
-        <Dialog open={showCreateContact} onOpenChange={setShowCreateContact}>
+        <Dialog
+          open={showCreateContact}
+          onOpenChange={(open) => {
+            setShowCreateContact(open);
+            if (!open) resetCreateContactForm();
+          }}
+        >
           <DialogContent>
             <DialogHeader>
               <DialogTitle>{t("createContact")}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 pt-2">
+              <div>
+                <label className="block text-sm font-label text-on-surface/60 mb-1">
+                  {t("contactClassification")}{" "}
+                  <span className="text-tertiary">*</span>
+                </label>
+                <select
+                  value={newContactClassification}
+                  onChange={(e) => setNewContactClassification(e.target.value)}
+                  className="w-full rounded-lg bg-surface-container-low border border-on-surface/10 px-3 py-2 text-sm text-on-surface"
+                >
+                  <option value="business">{t("classificationBusiness")}</option>
+                  <option value="government">
+                    {t("classificationGovernment")}
+                  </option>
+                  <option value="individual">
+                    {t("classificationIndividual")}
+                  </option>
+                </select>
+              </div>
               <div>
                 <label className="block text-sm font-label text-on-surface/60 mb-1">
                   {t("companyName")} <span className="text-tertiary">*</span>
@@ -180,6 +220,30 @@ export function InvoiceForm({
                   placeholder="Acme Corp"
                 />
               </div>
+              {newContactClassification === "business" && (
+                <>
+                  <div>
+                    <label className="block text-sm font-label text-on-surface/60 mb-1">
+                      {t("contactVat")}
+                    </label>
+                    <Input
+                      value={newContactVat}
+                      onChange={(e) => setNewContactVat(e.target.value)}
+                      placeholder="EL123456789"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-label text-on-surface/60 mb-1">
+                      {t("contactAddress")}
+                    </label>
+                    <Input
+                      value={newContactAddress}
+                      onChange={(e) => setNewContactAddress(e.target.value)}
+                      placeholder="123 Main St, Athens"
+                    />
+                  </div>
+                </>
+              )}
               <div>
                 <label className="block text-sm font-label text-on-surface/60 mb-1">
                   {t("contactEmail")}
@@ -202,7 +266,7 @@ export function InvoiceForm({
                   onClick={handleCreateContact}
                   disabled={isCreatingContact || !newContactName.trim()}
                 >
-                  {isCreatingContact ? "Creating..." : t("createContact")}
+                  {isCreatingContact ? "Creating..." : t("saveAction")}
                 </Button>
               </div>
             </div>
