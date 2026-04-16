@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition, useEffect, useCallback } from "react";
+import { useRef, useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import type {
@@ -90,15 +90,6 @@ export function ExpenseForm({
   }, [isDirty]);
 
   const submittedRef = useRef(false);
-
-  const handleDiscard = useCallback(async () => {
-    if (!isDirty || confirm(t("discardConfirm"))) {
-      if (uploadedFile) {
-        await cleanupTempAttachment(uploadedFile.filePath);
-      }
-      router.push("/expenses");
-    }
-  }, [isDirty, uploadedFile, router, t]);
 
   function applyAutofill(result: UploadReceiptResult) {
     const data = result.extractedData;
@@ -530,10 +521,7 @@ export function ExpenseForm({
         </div>
       </div>
 
-      <div className="flex justify-end gap-2">
-        <Button variant="outline" onClick={handleDiscard} disabled={isPending}>
-          {t("cancelAction")}
-        </Button>
+      <div className="flex justify-end">
         <Button onClick={handleSubmit} disabled={isPending}>
           {isPending ? t("saving") : t("save")}
         </Button>
