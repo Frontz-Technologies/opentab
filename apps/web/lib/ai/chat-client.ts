@@ -10,12 +10,11 @@ type SubmitAiChatMessageOptions = {
   fetch?: FetchImplementation;
 };
 
-function createUserMessage(content: string): UIMessage {
+function createUserMessage(text: string): UIMessage {
   return {
     id: crypto.randomUUID(),
     role: "user",
-    content,
-    parts: [{ type: "text", text: content }],
+    parts: [{ type: "text", text }],
   };
 }
 
