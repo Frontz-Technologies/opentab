@@ -155,7 +155,7 @@ export async function extractReceiptData(
       return null;
     }
 
-    const content = buildContentBlocks(buffer, mimeType, strategy) as any;
+    const content = buildContentBlocks(buffer, mimeType, strategy);
     const provider = createAiProvider(apiKey, model);
 
     // Try structured output first (mode: json injects schema into prompt)
