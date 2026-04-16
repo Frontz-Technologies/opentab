@@ -26,6 +26,15 @@ services:
       minio:
         condition: service_healthy
     env_file: .env
+    environment:
+      S3_ENDPOINT: http://minio:9000
+      S3_PUBLIC_ENDPOINT: http://localhost:9000
+      S3_ACCESS_KEY_ID: minioadmin
+      S3_SECRET_ACCESS_KEY: minioadmin
+      S3_BUCKET: opentab-uploads
+      S3_REGION: eu-west-1
+      S3_FORCE_PATH_STYLE: "true"
+      GOTENBERG_URL: http://gotenberg:3000
     volumes:
       - ../apps:/app/apps
       - ../packages:/app/packages
@@ -83,8 +92,8 @@ services:
       - "9000:9000"
       - "9001:9001"
     environment:
-      MINIO_ROOT_USER: ${S3_ACCESS_KEY_ID:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${S3_SECRET_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
     volumes:
       - minio_data_dev:/data
     healthcheck:
@@ -103,14 +112,10 @@ services:
         condition: service_healthy
     entrypoint: >
       /bin/sh -c "
-      mc alias set local http://minio:9000 $${MINIO_ROOT_USER:-minioadmin} $${MINIO_ROOT_PASSWORD:-minioadmin};
-      mc mb --ignore-existing local/$${S3_BUCKET:-opentab-uploads};
+      mc alias set local http://minio:9000 minioadmin minioadmin;
+      mc mb --ignore-existing local/opentab-uploads;
       exit 0;
       "
-    environment:
-      MINIO_ROOT_USER: ${S3_ACCESS_KEY_ID:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${S3_SECRET_ACCESS_KEY:-minioadmin}
-      S3_BUCKET: ${S3_BUCKET:-opentab-uploads}
     networks:
       - opentab-dev-network
 
