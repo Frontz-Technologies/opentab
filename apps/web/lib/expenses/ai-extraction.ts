@@ -4,6 +4,9 @@ import {
   getModelCapabilities,
   type ModelCapabilities,
 } from "@/lib/actions/ai-settings";
+import { createLogger } from "@/lib/logging/logger";
+
+const log = createLogger("ai-extraction");
 
 export interface ExtractedLineItem {
   name: string;
@@ -185,19 +188,37 @@ export async function extractReceiptData(
   model: string,
 ): Promise<ExtractedExpenseData | null> {
   try {
+    const capTimer = log.time("capability-check");
     const capabilities = await getModelCapabilities(model);
-    const strategy = getExtractionStrategy(mimeType, capabilities);
+    capTimer("capabilities resolved", {
+      model,
+      text: capabilities.text,
+      image: capabilities.image,
+      file: capabilities.file,
+    });
 
-    if (!strategy) return null;
+    const strategy = getExtractionStrategy(mimeType, capabilities);
+    log.info("extraction strategy selected", { model, mimeType, strategy });
+
+    if (!strategy) {
+      log.warn("model does not support this file type", {
+        model,
+        mimeType,
+        capabilities,
+      });
+      return null;
+    }
 
     const content = buildContentBlocks(buffer, mimeType, strategy);
     const provider = createAiProvider(apiKey, model);
 
+    const aiTimer = log.time("ai-api-call");
     const { text } = await generateText({
       model: provider,
       messages: [{ role: "user", content }],
       maxTokens: 2000,
     });
+    aiTimer("ai response received", { model, responseLength: text.length });
 
     const cleaned = text
       .replace(/```json\n?/g, "")
@@ -205,7 +226,12 @@ export async function extractReceiptData(
       .trim();
     const parsed = JSON.parse(cleaned) as Record<string, unknown>;
     return parseExtractionResponse(parsed);
-  } catch {
+  } catch (err) {
+    log.error("extraction failed", {
+      model,
+      mimeType,
+      error: err instanceof Error ? err.message : String(err),
+    });
     return null;
   }
 }
