@@ -1,4 +1,4 @@
-import { generateText } from "ai";
+import { generateObject, NoObjectGeneratedError, generateText } from "ai";
 import { z } from "zod";
 import { createAiProvider } from "@/lib/ai/provider";
 import {
@@ -158,13 +158,45 @@ export async function extractReceiptData(
     const content = buildContentBlocks(buffer, mimeType, strategy);
     const provider = createAiProvider(apiKey, model);
 
+    // Try structured output first (mode: json injects schema into prompt)
     const aiTimer = log.time("ai-api-call");
+    try {
+      const result = await generateObject({
+        model: provider,
+        mode: "json",
+        schema: extractionSchema,
+        messages: [{ role: "user", content }],
+        maxTokens: 2000,
+      });
+      const data = result.object as z.infer<typeof extractionSchema>;
+      aiTimer("structured extraction succeeded", {
+        model,
+        mode: "generateObject",
+      });
+      log.info("extraction result", {
+        model,
+        hasVendor: !!data.vendorName,
+        hasTotal: !!data.totalAmount,
+        lineItemCount: data.lineItems.length,
+      });
+      return data;
+    } catch (structuredErr) {
+      // Fall back to generateText + manual parse if structured output fails
+      if (!NoObjectGeneratedError.isInstance(structuredErr))
+        throw structuredErr;
+      log.warn("structured output failed, falling back to text parse", {
+        model,
+        error: structuredErr.message,
+      });
+    }
+
+    // Fallback: generateText + manual JSON parse + Zod coercion
     const { text } = await generateText({
       model: provider,
       messages: [{ role: "user", content }],
       maxTokens: 2000,
     });
-    aiTimer("ai response received", { model, responseLength: text.length });
+    aiTimer("text fallback extraction", { model, responseLength: text.length });
 
     const cleaned = text
       .replace(/```json\n?/g, "")
@@ -173,7 +205,7 @@ export async function extractReceiptData(
     const raw = JSON.parse(cleaned);
     const data = extractionSchema.parse(raw);
 
-    log.info("extraction parsed", {
+    log.info("extraction result (fallback)", {
       model,
       hasVendor: !!data.vendorName,
       hasTotal: !!data.totalAmount,
