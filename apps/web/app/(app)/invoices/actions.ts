@@ -19,6 +19,9 @@ import {
   calculateInvoiceTotals,
 } from "@/lib/invoicing/calculations";
 import { createDraftInvoice } from "@/lib/invoicing/draft-invoices";
+import { createLogger } from "@/lib/logging/logger";
+
+const log = createLogger("invoices");
 
 const lineItemSchema = z.object({
   productId: z.string().uuid().optional().or(z.literal("")),
@@ -115,10 +118,14 @@ export async function createInvoice(formData: FormData) {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
 
+  const orgId = session.org.id;
+  log.info("invoice creation started", { orgId });
+
   let rawItems: unknown;
   try {
     rawItems = JSON.parse((formData.get("items") as string) ?? "[]");
   } catch {
+    log.warn("invalid line items JSON", { orgId });
     return { success: false, error: { items: ["Invalid line items data"] } };
   }
 
@@ -139,18 +146,27 @@ export async function createInvoice(formData: FormData) {
   });
 
   if (!parsed.success) {
+    log.warn("invoice validation failed", { orgId });
     return { success: false, error: parsed.error.flatten().fieldErrors };
   }
 
   const { invoice } = await createDraftInvoice(session.org.id, parsed.data);
 
+  const publish = formData.get("publish") === "true";
   // If publish flag is set, immediately transition to PUBLISHED
-  if (formData.get("publish") === "true") {
+  if (publish) {
     await db
       .update(invoices)
       .set({ status: INVOICE_STATUS.PUBLISHED, updatedAt: new Date() })
       .where(eq(invoices.id, invoice.id));
   }
+
+  log.info("invoice created", {
+    orgId,
+    invoiceId: invoice.id,
+    published: publish,
+    itemCount: parsed.data.items.length,
+  });
 
   revalidatePath("/invoices");
   return { success: true, invoice };
@@ -160,13 +176,24 @@ export async function updateInvoice(id: string, formData: FormData) {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
 
+  const orgId = session.org.id;
+  log.info("invoice update started", { orgId, invoiceId: id });
+
   const [existing] = await db
     .select()
     .from(invoices)
     .where(and(eq(invoices.id, id), eq(invoices.orgId, session.org.id)));
 
-  if (!existing) return { success: false, error: { _: ["Invoice not found"] } };
+  if (!existing) {
+    log.warn("invoice not found for update", { orgId, invoiceId: id });
+    return { success: false, error: { _: ["Invoice not found"] } };
+  }
   if (existing.status !== INVOICE_STATUS.DRAFT) {
+    log.warn("attempted update on non-draft invoice", {
+      orgId,
+      invoiceId: id,
+      status: existing.status,
+    });
     return {
       success: false,
       error: { _: ["Only draft invoices can be edited"] },
@@ -177,6 +204,7 @@ export async function updateInvoice(id: string, formData: FormData) {
   try {
     rawItems = JSON.parse((formData.get("items") as string) ?? "[]");
   } catch {
+    log.warn("invalid line items JSON", { orgId, invoiceId: id });
     return { success: false, error: { items: ["Invalid line items data"] } };
   }
 
@@ -262,6 +290,12 @@ export async function updateInvoice(id: string, formData: FormData) {
     });
   }
 
+  log.info("invoice updated", {
+    orgId,
+    invoiceId: id,
+    itemCount: data.items.length,
+  });
+
   revalidatePath("/invoices");
   revalidatePath(`/invoices/${id}`);
   return { success: true };
@@ -271,16 +305,27 @@ export async function sendInvoice(id: string) {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
 
+  const orgId = session.org.id;
+  log.info("invoice send started", { orgId, invoiceId: id });
+
   const [invoice] = await db
     .select()
     .from(invoices)
     .where(and(eq(invoices.id, id), eq(invoices.orgId, session.org.id)));
 
-  if (!invoice) return { success: false, error: "Invoice not found" };
+  if (!invoice) {
+    log.warn("invoice not found for send", { orgId, invoiceId: id });
+    return { success: false, error: "Invoice not found" };
+  }
   if (
     invoice.status !== INVOICE_STATUS.DRAFT &&
     invoice.status !== INVOICE_STATUS.PUBLISHED
   ) {
+    log.warn("attempted send on invalid status", {
+      orgId,
+      invoiceId: id,
+      status: invoice.status,
+    });
     return {
       success: false,
       error: "Only draft or published invoices can be sent",
@@ -309,16 +354,20 @@ export async function sendInvoice(id: string) {
         ),
       );
     if (creds) {
+      log.info("submitting to myDATA", { orgId, invoiceId: id });
       const { submitToMyData } = await import("./mydata-actions");
       const result = await submitToMyData(id);
       if (!result.success) {
-        console.error(
-          "myDATA submission failed, queued for retry:",
-          result.error,
-        );
+        log.error("myDATA submission failed", {
+          orgId,
+          invoiceId: id,
+          error: typeof result.error === "string" ? result.error : "unknown",
+        });
       }
     }
   }
+
+  log.info("invoice sent", { orgId, invoiceId: id });
 
   revalidatePath("/invoices");
   revalidatePath(`/invoices/${id}`);
@@ -329,13 +378,23 @@ export async function publishInvoice(id: string) {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
 
+  const orgId = session.org.id;
+
   const [invoice] = await db
     .select()
     .from(invoices)
     .where(and(eq(invoices.id, id), eq(invoices.orgId, session.org.id)));
 
-  if (!invoice) return { success: false, error: "Invoice not found" };
+  if (!invoice) {
+    log.warn("invoice not found for publish", { orgId, invoiceId: id });
+    return { success: false, error: "Invoice not found" };
+  }
   if (invoice.status !== INVOICE_STATUS.DRAFT) {
+    log.warn("attempted publish on non-draft invoice", {
+      orgId,
+      invoiceId: id,
+      status: invoice.status,
+    });
     return { success: false, error: "Only draft invoices can be published" };
   }
 
@@ -347,6 +406,8 @@ export async function publishInvoice(id: string) {
     })
     .where(eq(invoices.id, id));
 
+  log.info("invoice published", { orgId, invoiceId: id });
+
   revalidatePath("/invoices");
   revalidatePath(`/invoices/${id}`);
   return { success: true };
@@ -356,16 +417,26 @@ export async function markAsPaid(id: string) {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
 
+  const orgId = session.org.id;
+
   const [invoice] = await db
     .select()
     .from(invoices)
     .where(and(eq(invoices.id, id), eq(invoices.orgId, session.org.id)));
 
-  if (!invoice) return { success: false, error: "Invoice not found" };
+  if (!invoice) {
+    log.warn("invoice not found for mark-as-paid", { orgId, invoiceId: id });
+    return { success: false, error: "Invoice not found" };
+  }
   if (
     invoice.status !== INVOICE_STATUS.SENT &&
     invoice.status !== INVOICE_STATUS.PARTIAL
   ) {
+    log.warn("attempted mark-as-paid on invalid status", {
+      orgId,
+      invoiceId: id,
+      status: invoice.status,
+    });
     return {
       success: false,
       error: "Only sent or partial invoices can be marked as paid",
@@ -383,6 +454,8 @@ export async function markAsPaid(id: string) {
     })
     .where(eq(invoices.id, id));
 
+  log.info("invoice marked as paid", { orgId, invoiceId: id });
+
   revalidatePath("/invoices");
   revalidatePath(`/invoices/${id}`);
   return { success: true };
@@ -392,13 +465,19 @@ export async function cancelInvoice(id: string) {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
 
+  const orgId = session.org.id;
+
   const [invoice] = await db
     .select()
     .from(invoices)
     .where(and(eq(invoices.id, id), eq(invoices.orgId, session.org.id)));
 
-  if (!invoice) return { success: false, error: "Invoice not found" };
+  if (!invoice) {
+    log.warn("invoice not found for cancel", { orgId, invoiceId: id });
+    return { success: false, error: "Invoice not found" };
+  }
   if (invoice.status === INVOICE_STATUS.PAID) {
+    log.warn("attempted cancel on paid invoice", { orgId, invoiceId: id });
     return { success: false, error: "Paid invoices cannot be cancelled" };
   }
 
@@ -412,12 +491,19 @@ export async function cancelInvoice(id: string) {
 
   // Cancel on myDATA if submitted
   if (invoice.mydataMark) {
+    log.info("cancelling on myDATA", { orgId, invoiceId: id });
     const { cancelOnMyData } = await import("./mydata-actions");
     const result = await cancelOnMyData(id);
     if (!result.success) {
-      console.error("myDATA cancellation failed:", result.error);
+      log.error("myDATA cancellation failed", {
+        orgId,
+        invoiceId: id,
+        error: typeof result.error === "string" ? result.error : "unknown",
+      });
     }
   }
+
+  log.info("invoice cancelled", { orgId, invoiceId: id });
 
   revalidatePath("/invoices");
   revalidatePath(`/invoices/${id}`);
@@ -428,19 +514,31 @@ export async function deleteInvoice(id: string) {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
 
+  const orgId = session.org.id;
+
   const [invoice] = await db
     .select()
     .from(invoices)
     .where(and(eq(invoices.id, id), eq(invoices.orgId, session.org.id)));
 
-  if (!invoice) return { success: false, error: "Invoice not found" };
+  if (!invoice) {
+    log.warn("invoice not found for delete", { orgId, invoiceId: id });
+    return { success: false, error: "Invoice not found" };
+  }
   if (invoice.status !== INVOICE_STATUS.DRAFT) {
+    log.warn("attempted delete on non-draft invoice", {
+      orgId,
+      invoiceId: id,
+      status: invoice.status,
+    });
     return { success: false, error: "Only draft invoices can be deleted" };
   }
 
   await db
     .delete(invoices)
     .where(and(eq(invoices.id, id), eq(invoices.orgId, session.org.id)));
+
+  log.info("invoice deleted", { orgId, invoiceId: id });
 
   revalidatePath("/invoices");
   return { success: true };

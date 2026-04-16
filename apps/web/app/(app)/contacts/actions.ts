@@ -11,6 +11,9 @@ import { getCountryProvider } from "@/lib/country";
 import { lookupGreekAfm } from "@/lib/country/services/aade";
 import { validateViesVat } from "@/lib/country/services/vies";
 import type { CompanyLookupResult } from "@/lib/country";
+import { createLogger } from "@/lib/logging/logger";
+
+const log = createLogger("contacts");
 
 const contactSchema = z.object({
   type: z.enum(["client", "supplier", "both"]),
@@ -47,6 +50,9 @@ export async function createContact(formData: FormData) {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
 
+  const orgId = session.org.id;
+  log.info("contact creation started", { orgId });
+
   const parsed = contactSchema.safeParse({
     type: formData.get("type"),
     classification: formData.get("classification"),
@@ -70,6 +76,7 @@ export async function createContact(formData: FormData) {
   });
 
   if (!parsed.success) {
+    log.warn("contact validation failed", { orgId });
     return { success: false, error: parsed.error.flatten().fieldErrors };
   }
 
@@ -123,6 +130,13 @@ export async function createContact(formData: FormData) {
     })
     .returning();
 
+  log.info("contact created", {
+    orgId,
+    contactId: contact.id,
+    type: data.type,
+    classification: data.classification,
+  });
+
   revalidatePath("/contacts");
   return { success: true, contact };
 }
@@ -130,6 +144,9 @@ export async function createContact(formData: FormData) {
 export async function updateContact(id: string, formData: FormData) {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
+
+  const orgId = session.org.id;
+  log.info("contact update started", { orgId, contactId: id });
 
   const parsed = contactSchema.safeParse({
     type: formData.get("type"),
@@ -154,6 +171,7 @@ export async function updateContact(id: string, formData: FormData) {
   });
 
   if (!parsed.success) {
+    log.warn("contact update validation failed", { orgId, contactId: id });
     return { success: false, error: parsed.error.flatten().fieldErrors };
   }
 
@@ -195,6 +213,8 @@ export async function updateContact(id: string, formData: FormData) {
     })
     .where(and(eq(contacts.id, id), eq(contacts.orgId, session.org.id)));
 
+  log.info("contact updated", { orgId, contactId: id });
+
   revalidatePath("/contacts");
   revalidatePath(`/contacts/${id}`);
   return { success: true };
@@ -204,9 +224,13 @@ export async function deleteContact(id: string) {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
 
+  const orgId = session.org.id;
+
   await db
     .delete(contacts)
     .where(and(eq(contacts.id, id), eq(contacts.orgId, session.org.id)));
+
+  log.info("contact deleted", { orgId, contactId: id });
 
   revalidatePath("/contacts");
   return { success: true };
@@ -225,20 +249,30 @@ export async function lookupVat(vatNumber: string): Promise<{
   if (!cleaned) return { success: false, error: "VAT number is required" };
 
   const detectedCountry = detectCountryFromTaxId(cleaned);
+  log.info("VAT lookup started", {
+    orgId: session.org.id,
+    detectedCountry: detectedCountry ?? "unknown",
+  });
 
   if (detectedCountry === "GR") {
+    const done = log.time("vat-lookup-gr");
     const result = await lookupGreekAfm(cleaned);
     if (result) {
+      done("Greek AFM lookup succeeded");
       return { success: true, data: result, validated: true };
     }
+    done("Greek AFM lookup failed");
     return { success: false, error: "Could not find company with this ΑΦΜ" };
   }
 
   if (detectedCountry && /^[A-Z]{2}/.test(cleaned)) {
+    const done = log.time("vat-lookup-vies");
     const result = await validateViesVat(cleaned);
     if (result.valid && result.company) {
+      done("VIES lookup succeeded", { country: detectedCountry });
       return { success: true, data: result.company, validated: true };
     }
+    done("VIES lookup failed", { country: detectedCountry });
     return {
       success: false,
       error: result.valid
@@ -247,5 +281,6 @@ export async function lookupVat(vatNumber: string): Promise<{
     };
   }
 
+  log.warn("unsupported VAT format", { orgId: session.org.id });
   return { success: false, error: "Unsupported VAT number format" };
 }

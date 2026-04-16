@@ -9,6 +9,9 @@ import { db } from "@/lib/db";
 import { getSession } from "@/lib/session";
 import { encryptApiKey, decryptApiKey } from "@/lib/ai/encryption";
 import { createAiProvider } from "@/lib/ai/provider";
+import { createLogger } from "@/lib/logging/logger";
+
+const log = createLogger("ai-settings");
 
 const updateAiSettingsSchema = z.object({
   enabled: z.boolean(),
@@ -94,12 +97,16 @@ export async function updateAiSettings(input: unknown) {
   if (!session) throw new Error("Unauthorized");
   assertSettingsAdmin(session.role);
 
+  const orgId = session.org.id;
+  log.info("AI settings update started", { orgId });
+
   const parsed = updateAiSettingsSchema.safeParse(input);
   if (!parsed.success) {
+    log.warn("AI settings validation failed", { orgId });
     return { success: false, error: parsed.error.flatten().fieldErrors };
   }
 
-  const existing = await getAiSettingsRow(session.org.id);
+  const existing = await getAiSettingsRow(orgId);
   const next = parsed.data;
 
   let encryptedKey: ReturnType<typeof encryptApiKey> | null = null;
@@ -107,6 +114,7 @@ export async function updateAiSettings(input: unknown) {
     try {
       encryptedKey = encryptApiKey(next.apiKey);
     } catch {
+      log.error("encryption key not configured", { orgId });
       return {
         success: false,
         error: {
@@ -133,7 +141,7 @@ export async function updateAiSettings(input: unknown) {
       .where(eq(aiSettings.id, existing.id));
   } else {
     await db.insert(aiSettings).values({
-      orgId: session.org.id,
+      orgId,
       enabled: next.enabled,
       model: next.model,
       receiptExtractionEnabled: next.receiptExtractionEnabled,
@@ -142,6 +150,14 @@ export async function updateAiSettings(input: unknown) {
       apiKeyLast4: encryptedKey?.last4 ?? null,
     });
   }
+
+  log.info("AI settings updated", {
+    orgId,
+    enabled: next.enabled,
+    model: next.model,
+    receiptExtractionEnabled: next.receiptExtractionEnabled,
+    apiKeyChanged: !!encryptedKey,
+  });
 
   revalidatePath("/settings/ai");
   return { success: true };
@@ -164,6 +180,8 @@ export async function deleteApiKey(orgId: string) {
       and(eq(aiSettings.orgId, orgId), eq(aiSettings.orgId, session.org.id)),
     );
 
+  log.info("API key deleted", { orgId: session.org.id });
+
   revalidatePath("/settings/ai");
   return { success: true };
 }
@@ -179,6 +197,7 @@ export async function testAiConnection(orgId: string) {
     return { success: false, error: "No API key configured" };
   }
 
+  const done = log.time("ai-connection-test");
   try {
     const model = createAiProvider(settings.apiKey, settings.model);
     await generateText({
@@ -187,8 +206,14 @@ export async function testAiConnection(orgId: string) {
       maxOutputTokens: 5,
     });
 
+    done("AI connection test succeeded", { orgId });
     return { success: true };
   } catch (error) {
+    done("AI connection test failed", { orgId });
+    log.error("AI connection test error", {
+      orgId,
+      error: error instanceof Error ? error.message : "unknown",
+    });
     return {
       success: false,
       error: error instanceof Error ? error.message : "Connection test failed",
