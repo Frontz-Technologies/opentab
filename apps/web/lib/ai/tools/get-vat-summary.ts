@@ -1,4 +1,4 @@
-import { tool, zodSchema } from "ai";
+import { defineTool } from "./define-tool";
 import { z } from "zod";
 import { getInputVat, getOutputVat } from "@/lib/reports/queries";
 import { resolvePeriodRange } from "./shared";
@@ -11,10 +11,10 @@ export function createGetVatSummaryTool(orgId: string) {
     month: z.number().int().min(1).max(12).optional(),
   });
 
-  return tool({
+  return defineTool({
     description:
       "Get output VAT, input VAT, and net VAT payable for a time period.",
-    parameters: zodSchema(parameters),
+    parameters: parameters,
     execute: async (args) => {
       const { period, year, quarter, month } = parameters.parse(args);
       const { start, end } = resolvePeriodRange({

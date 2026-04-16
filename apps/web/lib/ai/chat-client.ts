@@ -1,4 +1,4 @@
-import { processDataStream, type ToolInvocation, type UIMessage } from "ai";
+import { readUIMessageStream, type UIMessage } from "ai";
 import type { ConfirmToolCall } from "@/lib/ai/types";
 
 type FetchImplementation = typeof globalThis.fetch;
@@ -10,40 +10,12 @@ type SubmitAiChatMessageOptions = {
   fetch?: FetchImplementation;
 };
 
-function createUserMessage(content: string): UIMessage {
+function createUserMessage(text: string): UIMessage {
   return {
     id: crypto.randomUUID(),
     role: "user",
-    content,
-    parts: [{ type: "text", text: content }],
+    parts: [{ type: "text", text }],
   };
-}
-
-function appendAssistantText(message: UIMessage, text: string) {
-  const lastPart = message.parts.at(-1);
-  if (lastPart?.type === "text") {
-    lastPart.text += text;
-  } else {
-    message.parts.push({ type: "text", text });
-  }
-
-  message.content += text;
-}
-
-function upsertToolInvocation(
-  toolInvocations: ToolInvocation[],
-  toolInvocation: ToolInvocation,
-) {
-  const index = toolInvocations.findIndex(
-    (entry) => entry.toolCallId === toolInvocation.toolCallId,
-  );
-
-  if (index >= 0) {
-    toolInvocations[index] = toolInvocation;
-    return;
-  }
-
-  toolInvocations.push(toolInvocation);
 }
 
 export async function submitAiChatMessage({
@@ -80,94 +52,19 @@ export async function submitAiChatMessage({
     throw new Error("AI response did not include a stream");
   }
 
-  let assistantMessage: UIMessage | null = null;
-  const toolCalls = new Map<string, { toolName: string; args: unknown }>();
+  // Read the UI message stream — the async iterable yields updated messages
+  const messageStream = readUIMessageStream({
+    stream: response.body as ReadableStream,
+  });
 
-  function ensureAssistantMessage(messageId?: string) {
-    if (assistantMessage) {
-      if (messageId && assistantMessage.id !== messageId) {
-        assistantMessage.id = messageId;
-      }
-      return assistantMessage;
-    }
-
-    assistantMessage = {
-      id: messageId ?? crypto.randomUUID(),
-      role: "assistant",
-      content: "",
-      parts: [],
-      toolInvocations: [],
-    };
-    nextMessages.push(assistantMessage);
-    return assistantMessage;
+  let lastMessage: UIMessage | null = null;
+  for await (const message of messageStream) {
+    lastMessage = message;
   }
 
-  await processDataStream({
-    stream: response.body,
-    onStartStepPart(part) {
-      const message = ensureAssistantMessage(part.messageId);
-      message.parts.push({ type: "step-start" });
-    },
-    onTextPart(text) {
-      const message = ensureAssistantMessage();
-      appendAssistantText(message, text);
-    },
-    onToolCallPart(toolCall) {
-      const message = ensureAssistantMessage();
-      const toolInvocation: ToolInvocation = {
-        ...toolCall,
-        state: "call",
-      };
-
-      toolCalls.set(toolCall.toolCallId, {
-        toolName: toolCall.toolName,
-        args: toolCall.args,
-      });
-      upsertToolInvocation(message.toolInvocations ?? [], toolInvocation);
-      message.parts.push({
-        type: "tool-invocation",
-        toolInvocation,
-      });
-    },
-    onToolResultPart(toolResult) {
-      const message = ensureAssistantMessage();
-      const toolCall = toolCalls.get(toolResult.toolCallId);
-      if (!toolCall) {
-        return;
-      }
-
-      const toolInvocation: ToolInvocation = {
-        toolCallId: toolResult.toolCallId,
-        toolName: toolCall.toolName,
-        args: toolCall.args,
-        result: toolResult.result,
-        state: "result",
-      };
-
-      upsertToolInvocation(message.toolInvocations ?? [], toolInvocation);
-
-      const existingPartIndex = message.parts.findIndex(
-        (part) =>
-          part.type === "tool-invocation" &&
-          part.toolInvocation.toolCallId === toolResult.toolCallId,
-      );
-
-      if (existingPartIndex >= 0) {
-        message.parts[existingPartIndex] = {
-          type: "tool-invocation",
-          toolInvocation,
-        };
-      } else {
-        message.parts.push({
-          type: "tool-invocation",
-          toolInvocation,
-        });
-      }
-    },
-    onErrorPart(error) {
-      throw new Error(error);
-    },
-  });
+  if (lastMessage) {
+    nextMessages.push(lastMessage);
+  }
 
   return nextMessages;
 }

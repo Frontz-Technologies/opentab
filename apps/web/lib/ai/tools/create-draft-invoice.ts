@@ -1,5 +1,5 @@
 import { revalidatePath } from "next/cache";
-import { tool, zodSchema } from "ai";
+import { defineTool } from "./define-tool";
 import { z } from "zod";
 import { createDraftInvoice } from "@/lib/invoicing/draft-invoices";
 import type { ConfirmToolCall, PendingConfirmation } from "@/lib/ai/types";
@@ -94,10 +94,10 @@ export function createCreateDraftInvoiceTool(
   orgId: string,
   confirmToolCall?: ConfirmToolCall,
 ) {
-  return tool({
+  return defineTool({
     description:
       "Create a draft invoice after the user explicitly approves it.",
-    parameters: zodSchema(createDraftInvoiceParameters),
+    parameters: createDraftInvoiceParameters,
     execute: async (rawArgs) => {
       const args = createDraftInvoiceParameters.parse(rawArgs);
       if (!matchesConfirmation(confirmToolCall, "createDraftInvoice", args)) {

@@ -1,11 +1,18 @@
 "use client";
 
-import type { ToolInvocation } from "ai";
 import { AiConfirmation } from "@/components/ai/ai-confirmation";
 import { isPendingConfirmation } from "@/lib/ai/types";
 
+type ToolInvocationData = {
+  toolCallId: string;
+  toolName: string;
+  args: unknown;
+  state: string;
+  result?: unknown;
+};
+
 type AiToolResultProps = {
-  toolInvocation: ToolInvocation;
+  toolInvocation: ToolInvocationData;
 };
 
 function formatToolName(toolName: string) {
@@ -16,10 +23,7 @@ function formatToolName(toolName: string) {
 }
 
 export function AiToolResult({ toolInvocation }: AiToolResultProps) {
-  if (
-    "result" in toolInvocation &&
-    isPendingConfirmation(toolInvocation.result)
-  ) {
+  if (toolInvocation.result && isPendingConfirmation(toolInvocation.result)) {
     return <AiConfirmation confirmation={toolInvocation.result} />;
   }
 
@@ -34,7 +38,7 @@ export function AiToolResult({ toolInvocation }: AiToolResultProps) {
       <p className="mt-1 text-sm font-medium text-on-surface">
         {formatToolName(toolInvocation.toolName)}
       </p>
-      {"result" in toolInvocation ? (
+      {toolInvocation.result ? (
         <pre className="mt-3 overflow-x-auto rounded-xl bg-background/40 p-3 text-xs text-on-surface/80">
           {JSON.stringify(toolInvocation.result, null, 2)}
         </pre>

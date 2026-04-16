@@ -184,7 +184,7 @@ export async function testAiConnection(orgId: string) {
     await generateText({
       model,
       prompt: "Hi",
-      maxTokens: 5,
+      maxOutputTokens: 5,
     });
 
     return { success: true };
