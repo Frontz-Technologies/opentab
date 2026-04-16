@@ -87,22 +87,20 @@ export function ExpenseForm({
   function applyAutofill(result: UploadReceiptResult) {
     const data = result.extractedData;
     if (!data) return;
-    const conf = data.confidence;
 
     if (result.supplierMatch) {
       setContactId(result.supplierMatch.contactId);
     }
-    if (data.date && (conf.date ?? 0) > 0.5 && !expenseDate) {
+    if (data.vendorName && !contactId) {
+      setSupplierName(data.vendorName);
+    }
+    if (data.date) {
       setExpenseDate(data.date);
     }
-    if (
-      data.currency &&
-      (conf.currency ?? 0) > 0.5 &&
-      currencyCode === defaultCurrency
-    ) {
+    if (data.currency && currencyCode === defaultCurrency) {
       setCurrencyCode(data.currency);
     }
-    if (data.description && (conf.description ?? 0) > 0.5 && !description) {
+    if (data.description && !description) {
       setDescription(data.description);
     }
 
@@ -123,11 +121,7 @@ export function ExpenseForm({
           lineTotal: "0",
         })),
       );
-    } else if (
-      data.totalAmount &&
-      (conf.totalAmount ?? 0) > 0.5 &&
-      items.length === 0
-    ) {
+    } else if (data.totalAmount && items.length === 0) {
       setItems([
         {
           id: crypto.randomUUID(),
@@ -166,9 +160,10 @@ export function ExpenseForm({
 
       const hasData =
         result.extractedData &&
-        Object.entries(result.extractedData.confidence).some(
-          ([, v]) => v > 0.5,
-        );
+        (result.extractedData.vendorName ||
+          result.extractedData.totalAmount ||
+          result.extractedData.date ||
+          result.extractedData.lineItems.length > 0);
 
       if (hasData) {
         const pref = localStorage.getItem("receiptAutofillPreference");
