@@ -1,4 +1,4 @@
-import { generateObject } from "ai";
+import { generateText } from "ai";
 import { z } from "zod";
 import { createAiProvider } from "@/lib/ai/provider";
 import {
@@ -27,46 +27,34 @@ export interface ExtractedExpenseData {
   lineItems: ExtractedLineItem[];
 }
 
+/** Coerce any value to string or null */
+const coerceString = z
+  .union([z.string(), z.number(), z.null(), z.undefined()])
+  .transform((v) => (v != null ? String(v) : null));
+
+const coerceStringRequired = z
+  .union([z.string(), z.number()])
+  .transform((v) => String(v));
+
 const extractionSchema = z.object({
-  vendorName: z
-    .string()
-    .nullable()
-    .describe("The supplier/vendor name from the receipt"),
-  vendorVat: z
-    .string()
-    .nullable()
-    .describe("The VAT/tax ID number of the vendor"),
-  date: z
-    .string()
-    .nullable()
-    .describe("The receipt/invoice date in YYYY-MM-DD format"),
-  totalAmount: z
-    .string()
-    .nullable()
-    .describe("The total amount as a decimal string (e.g. '123.45')"),
-  currency: z
-    .string()
-    .nullable()
-    .describe("3-letter ISO currency code (e.g. 'EUR', 'USD')"),
-  description: z
-    .string()
-    .nullable()
-    .describe("Brief description of what was purchased"),
-  category: z.string().nullable().describe("Expense category"),
+  vendorName: coerceString.optional().default(null),
+  vendorVat: coerceString.optional().default(null),
+  date: coerceString.optional().default(null),
+  totalAmount: coerceString.optional().default(null),
+  currency: coerceString.optional().default(null),
+  description: coerceString.optional().default(null),
+  category: coerceString.optional().default(null),
   lineItems: z
     .array(
       z.object({
-        name: z.string().describe("Item description"),
-        quantity: z.string().describe("Quantity as decimal string (e.g. '1')"),
-        unitPrice: z
-          .string()
-          .describe("Unit price as decimal string (e.g. '10.00')"),
-        taxRate: z
-          .string()
-          .describe("Tax rate as percentage string (e.g. '24')"),
+        name: coerceStringRequired.optional().default(""),
+        quantity: coerceStringRequired.optional().default("1"),
+        unitPrice: coerceStringRequired.optional().default("0"),
+        taxRate: coerceStringRequired.optional().default("0"),
       }),
     )
-    .describe("Individual line items from the receipt"),
+    .optional()
+    .default([]),
 });
 
 /**
@@ -122,8 +110,22 @@ function buildContentBlocks(
   ];
 }
 
-const EXTRACTION_PROMPT =
-  "Extract structured data from this receipt/invoice. Use null for any field you cannot confidently read.";
+const EXTRACTION_PROMPT = `Extract structured data from this receipt/invoice as JSON.
+Use null for any field you cannot confidently read.
+
+Required JSON format:
+{
+  "vendorName": "string or null",
+  "vendorVat": "string or null",
+  "date": "YYYY-MM-DD or null",
+  "totalAmount": "number or string or null",
+  "currency": "3-letter ISO code or null",
+  "description": "string or null",
+  "category": "string or null",
+  "lineItems": [{"name": "string", "quantity": "number", "unitPrice": "number", "taxRate": "number"}]
+}
+
+Return ONLY valid JSON.`;
 
 export async function extractReceiptData(
   buffer: Buffer,
@@ -157,14 +159,21 @@ export async function extractReceiptData(
     const provider = createAiProvider(apiKey, model);
 
     const aiTimer = log.time("ai-api-call");
-    const result = await generateObject({
+    const { text } = await generateText({
       model: provider,
-      schema: extractionSchema,
       messages: [{ role: "user", content }],
       maxTokens: 2000,
     });
-    const data = result.object as z.infer<typeof extractionSchema>;
-    aiTimer("ai response received", {
+    aiTimer("ai response received", { model, responseLength: text.length });
+
+    const cleaned = text
+      .replace(/```json\n?/g, "")
+      .replace(/```\n?/g, "")
+      .trim();
+    const raw = JSON.parse(cleaned);
+    const data = extractionSchema.parse(raw);
+
+    log.info("extraction parsed", {
       model,
       hasVendor: !!data.vendorName,
       hasTotal: !!data.totalAmount,
