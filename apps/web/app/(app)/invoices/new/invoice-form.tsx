@@ -201,7 +201,9 @@ export function InvoiceForm({
                   onChange={(e) => setNewContactClassification(e.target.value)}
                   className="w-full rounded-lg bg-surface-container-low border border-on-surface/10 px-3 py-2 text-sm text-on-surface"
                 >
-                  <option value="business">{t("classificationBusiness")}</option>
+                  <option value="business">
+                    {t("classificationBusiness")}
+                  </option>
                   <option value="government">
                     {t("classificationGovernment")}
                   </option>
