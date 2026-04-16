@@ -117,7 +117,11 @@
     "testSuccess": "Η σύνδεση ήταν επιτυχής.",
     "testFailed": "Η σύνδεση απέτυχε.",
     "delete": "Διαγραφή κλειδιού API",
-    "deleted": "Το αποθηκευμένο κλειδί API αφαιρέθηκε."
+    "deleted": "Το αποθηκευμένο κλειδί API αφαιρέθηκε.",
+    "receiptExtraction": "Εξαγωγή δεδομένων απόδειξης",
+    "receiptExtractionHelp": "Αυτόματη εξαγωγή δεδομένων από μεταφορτωμένες αποδείξεις με AI",
+    "configuredFromEnv": "Το AI έχει ρυθμιστεί από μεταβλητές περιβάλλοντος",
+    "configuredFromEnvHelp": "Οι OPENROUTER_API_KEY και OPENROUTER_MODEL είναι ορισμένες στο περιβάλλον σας."
   },
   "settingsNav": {
     "organisation": "Οργανισμός",
@@ -455,6 +459,17 @@
   "expenses": {
     "title": "Δαπάνες",
     "addExpense": "Νέα Δαπάνη",
+    "uploadReceipt": "Μεταφόρτωση Απόδειξης",
+    "uploading": "Μεταφόρτωση...",
+    "uploadReceiptHint": "Ανεβάστε PDF ή εικόνα για επισύναψη στη δαπάνη",
+    "analyzingReceipt": "Ανάλυση απόδειξης...",
+    "receiptAttached": "Απόδειξη επισυνάφθηκε",
+    "autofillPrompt": "Βρήκαμε δεδομένα στην απόδειξή σας. Αυτόματη συμπλήρωση;",
+    "autofillApply": "Εφαρμογή",
+    "autofillIgnore": "Αγνόηση",
+    "autofillAlways": "Πάντα εφαρμογή",
+    "discardConfirm": "Απόρριψη δαπάνης και συνημμένων;",
+    "removeAttachment": "Αφαίρεση",
     "editExpense": "Επεξεργασία Δαπάνης",
     "noExpenses": "Δεν υπάρχουν δαπάνες",
     "noExpensesDescription": "Καταχωρήστε την πρώτη σας δαπάνη για να ξεκινήσετε την παρακολούθηση εξόδων.",
