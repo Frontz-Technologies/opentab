@@ -82,9 +82,9 @@ describe("getFile", () => {
   it("throws when response body is empty", async () => {
     mockSend.mockResolvedValueOnce({ Body: undefined } as never);
 
-    await expect(
-      getFile(`${TEST_ORG}/expenses/exp-001.pdf`),
-    ).rejects.toThrow("Empty response body");
+    await expect(getFile(`${TEST_ORG}/expenses/exp-001.pdf`)).rejects.toThrow(
+      "Empty response body",
+    );
   });
 });
 
