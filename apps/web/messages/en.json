@@ -117,7 +117,11 @@
     "testSuccess": "Connection successful.",
     "testFailed": "Connection failed.",
     "delete": "Delete API key",
-    "deleted": "Stored API key removed."
+    "deleted": "Stored API key removed.",
+    "receiptExtraction": "Receipt data extraction",
+    "receiptExtractionHelp": "Automatically extract data from uploaded receipts using AI",
+    "configuredFromEnv": "AI configured from environment variables",
+    "configuredFromEnvHelp": "OPENROUTER_API_KEY and OPENROUTER_MODEL are set in your environment. To manage settings here instead, remove those variables."
   },
   "settingsNav": {
     "organisation": "Organisation",
@@ -459,6 +463,17 @@
   "expenses": {
     "title": "Expenses",
     "addExpense": "New Expense",
+    "uploadReceipt": "Upload Receipt",
+    "uploading": "Uploading...",
+    "uploadReceiptHint": "Upload a PDF or image to attach to this expense",
+    "analyzingReceipt": "Analyzing receipt...",
+    "receiptAttached": "Receipt attached",
+    "autofillPrompt": "We found data in your receipt. Autofill fields?",
+    "autofillApply": "Apply",
+    "autofillIgnore": "Ignore",
+    "autofillAlways": "Always apply",
+    "discardConfirm": "Discard expense and uploaded attachments?",
+    "removeAttachment": "Remove",
     "editExpense": "Edit Expense",
     "noExpenses": "No expenses yet",
     "noExpensesDescription": "Record your first expense to start tracking costs.",

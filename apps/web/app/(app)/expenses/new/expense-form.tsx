@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import type {
@@ -14,7 +14,13 @@ import {
   LineItemsBuilder,
   type LineItem,
 } from "@/components/invoicing/line-items-builder";
-import { createExpense } from "../actions";
+import {
+  createExpense,
+  uploadAndExtractReceipt,
+  cleanupTempAttachment,
+  type UploadedFileInfo,
+  type UploadReceiptResult,
+} from "../actions";
 
 interface ExpenseFormProps {
   contacts: Contact[];
@@ -22,6 +28,7 @@ interface ExpenseFormProps {
   categories: ExpenseCategory[];
   defaultCurrency: string;
   defaultTaxRate: string;
+  aiExtractionAvailable?: boolean;
 }
 
 export function ExpenseForm({
@@ -30,6 +37,7 @@ export function ExpenseForm({
   categories,
   defaultCurrency,
   defaultTaxRate,
+  aiExtractionAvailable = false,
 }: ExpenseFormProps) {
   const t = useTranslations("expenses");
   const router = useRouter();
@@ -49,8 +57,126 @@ export function ExpenseForm({
   const [notes, setNotes] = useState("");
   const [items, setItems] = useState<LineItem[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [uploadedFile, setUploadedFile] = useState<UploadedFileInfo | null>(
+    null,
+  );
+  const [extractResult, setExtractResult] =
+    useState<UploadReceiptResult | null>(null);
+  const [showAutofillPrompt, setShowAutofillPrompt] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const selectedContact = contacts.find((c) => c.id === contactId);
+
+  function applyAutofill(result: UploadReceiptResult) {
+    const data = result.extractedData;
+    if (!data) return;
+    const conf = data.confidence;
+
+    if (result.supplierMatch) {
+      setContactId(result.supplierMatch.contactId);
+    }
+    if (data.date && (conf.date ?? 0) > 0.5 && !expenseDate) {
+      setExpenseDate(data.date);
+    }
+    if (
+      data.currency &&
+      (conf.currency ?? 0) > 0.5 &&
+      currencyCode === defaultCurrency
+    ) {
+      setCurrencyCode(data.currency);
+    }
+    if (data.description && (conf.description ?? 0) > 0.5 && !description) {
+      setDescription(data.description);
+    }
+
+    if (data.lineItems.length > 0 && items.length === 0) {
+      setItems(
+        data.lineItems.map((li, i) => ({
+          id: crypto.randomUUID(),
+          productId: "",
+          sortOrder: i,
+          name: li.name,
+          description: "",
+          quantity: li.quantity,
+          unitPrice: li.unitPrice,
+          unit: "",
+          taxCategory: "",
+          taxRate: li.taxRate || defaultTaxRate,
+          taxAmount: "0",
+          lineTotal: "0",
+        })),
+      );
+    } else if (
+      data.totalAmount &&
+      (conf.totalAmount ?? 0) > 0.5 &&
+      items.length === 0
+    ) {
+      setItems([
+        {
+          id: crypto.randomUUID(),
+          productId: "",
+          sortOrder: 0,
+          name: data.description || "Receipt item",
+          description: "",
+          quantity: "1",
+          unitPrice: data.totalAmount,
+          unit: "",
+          taxCategory: "",
+          taxRate: defaultTaxRate,
+          taxAmount: "0",
+          lineTotal: "0",
+        },
+      ]);
+    }
+
+    setShowAutofillPrompt(false);
+  }
+
+  async function handleReceiptUpload(file: File) {
+    setIsUploading(true);
+    setError(null);
+    const formData = new FormData();
+    formData.set("file", file);
+    try {
+      const result = await uploadAndExtractReceipt(formData);
+      if (!result.success) {
+        setError(result.error ?? "Upload failed");
+        setIsUploading(false);
+        return;
+      }
+      setUploadedFile(result.fileInfo ?? null);
+      setExtractResult(result);
+
+      const hasData =
+        result.extractedData &&
+        Object.entries(result.extractedData.confidence).some(
+          ([, v]) => v > 0.5,
+        );
+
+      if (hasData) {
+        const pref = localStorage.getItem("receiptAutofillPreference");
+        if (pref === "always") {
+          applyAutofill(result);
+        } else {
+          setShowAutofillPrompt(true);
+        }
+      }
+    } catch {
+      setError("Failed to upload receipt");
+    }
+    setIsUploading(false);
+  }
+
+  async function handleRemoveAttachment() {
+    if (uploadedFile) {
+      await cleanupTempAttachment(uploadedFile.filePath);
+      setUploadedFile(null);
+      setExtractResult(null);
+      setShowAutofillPrompt(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
 
   // Group categories by expense group for optgroup display
   const groupedCategories = groups.map((group) => ({
@@ -80,6 +206,9 @@ export function ExpenseForm({
     formData.set("description", description);
     formData.set("notes", notes);
     formData.set("items", JSON.stringify(items));
+    if (uploadedFile) {
+      formData.set("attachment", JSON.stringify(uploadedFile));
+    }
 
     startTransition(async () => {
       const result = await createExpense(formData);
@@ -93,6 +222,112 @@ export function ExpenseForm({
 
   return (
     <div className="space-y-6 max-w-4xl">
+      <div className="bg-surface-container rounded-xl p-6">
+        {!uploadedFile ? (
+          <div className="flex items-center gap-4">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*,application/pdf"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleReceiptUpload(file);
+              }}
+            />
+            <Button
+              variant="outline"
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+            >
+              <span className="material-symbols-outlined text-[18px] mr-1">
+                {isUploading ? "hourglass_empty" : "upload_file"}
+              </span>
+              {isUploading
+                ? aiExtractionAvailable
+                  ? t("analyzingReceipt")
+                  : t("uploading")
+                : t("uploadReceipt")}
+            </Button>
+            <span className="text-sm text-on-surface/50">
+              {t("uploadReceiptHint")}
+            </span>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px] text-primary">
+                  attach_file
+                </span>
+                <span className="text-sm text-on-surface font-medium">
+                  {uploadedFile.fileName}
+                </span>
+                <span className="text-xs text-on-surface/50">
+                  ({Math.round(uploadedFile.fileSize / 1024)} KB)
+                </span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                type="button"
+                onClick={handleRemoveAttachment}
+              >
+                <span className="material-symbols-outlined text-[16px]">
+                  close
+                </span>
+                {t("removeAttachment")}
+              </Button>
+            </div>
+
+            {showAutofillPrompt && (
+              <div className="flex items-center gap-3 rounded-lg bg-primary/10 px-4 py-3">
+                <span className="material-symbols-outlined text-primary text-[20px]">
+                  auto_fix_high
+                </span>
+                <span className="text-sm text-on-surface flex-1">
+                  {t("autofillPrompt")}
+                </span>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    type="button"
+                    onClick={() => {
+                      if (extractResult) applyAutofill(extractResult);
+                    }}
+                  >
+                    {t("autofillApply")}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    type="button"
+                    onClick={() => setShowAutofillPrompt(false)}
+                  >
+                    {t("autofillIgnore")}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    type="button"
+                    onClick={() => {
+                      localStorage.setItem(
+                        "receiptAutofillPreference",
+                        "always",
+                      );
+                      if (extractResult) applyAutofill(extractResult);
+                    }}
+                  >
+                    {t("autofillAlways")}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
       {error && (
         <div className="bg-red-500/10 text-red-400 rounded-lg p-3 text-sm">
           {error}
