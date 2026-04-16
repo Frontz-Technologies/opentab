@@ -23,6 +23,9 @@ export const aiSettings = pgTable(
     model: varchar("model", { length: 100 })
       .notNull()
       .default("anthropic/claude-sonnet-4"),
+    receiptExtractionEnabled: boolean("receipt_extraction_enabled")
+      .notNull()
+      .default(true),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },

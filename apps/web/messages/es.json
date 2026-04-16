@@ -117,7 +117,11 @@
     "testSuccess": "Conexi\u00f3n exitosa.",
     "testFailed": "Error en la conexi\u00f3n.",
     "delete": "Eliminar clave API",
-    "deleted": "Clave API almacenada eliminada."
+    "deleted": "Clave API almacenada eliminada.",
+    "receiptExtraction": "Extracción de datos de recibos",
+    "receiptExtractionHelp": "Extraer automáticamente datos de recibos subidos usando IA",
+    "configuredFromEnv": "IA configurada desde variables de entorno",
+    "configuredFromEnvHelp": "OPENROUTER_API_KEY y OPENROUTER_MODEL están configuradas en su entorno."
   },
   "settingsNav": {
     "organisation": "Organizaci\u00f3n",
@@ -455,6 +459,17 @@
   "expenses": {
     "title": "Gastos",
     "addExpense": "Nuevo gasto",
+    "uploadReceipt": "Subir recibo",
+    "uploading": "Subiendo...",
+    "uploadReceiptHint": "Suba un PDF o imagen para adjuntar al gasto",
+    "analyzingReceipt": "Analizando recibo...",
+    "receiptAttached": "Recibo adjunto",
+    "autofillPrompt": "Encontramos datos en su recibo. ¿Autocompletar campos?",
+    "autofillApply": "Aplicar",
+    "autofillIgnore": "Ignorar",
+    "autofillAlways": "Siempre aplicar",
+    "discardConfirm": "¿Descartar gasto y archivos adjuntos?",
+    "removeAttachment": "Eliminar",
     "editExpense": "Editar gasto",
     "noExpenses": "A\u00fan no hay gastos",
     "noExpensesDescription": "Registre su primer gasto para comenzar a controlar costos.",

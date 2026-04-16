@@ -91,4 +91,70 @@ describe("parseExtractionResponse", () => {
     expect(result.totalAmount).toBe("100.00");
     expect(result.confidence.totalAmount).toBe(0);
   });
+
+  it("parses lineItems array", () => {
+    const raw = {
+      vendorName: "Shop",
+      vendorName_confidence: 0.9,
+      lineItems: [
+        { name: "Widget", quantity: "2", unitPrice: "10.00", taxRate: "24" },
+        { name: "Gadget", quantity: "1", unitPrice: "50.00", taxRate: "24" },
+      ],
+    };
+
+    const result = parseExtractionResponse(raw);
+    expect(result.lineItems).toHaveLength(2);
+    expect(result.lineItems[0]).toEqual({
+      name: "Widget",
+      quantity: "2",
+      unitPrice: "10.00",
+      taxRate: "24",
+    });
+    expect(result.lineItems[1]).toEqual({
+      name: "Gadget",
+      quantity: "1",
+      unitPrice: "50.00",
+      taxRate: "24",
+    });
+  });
+
+  it("returns empty lineItems when not provided", () => {
+    const raw = {
+      vendorName: "Shop",
+      vendorName_confidence: 0.9,
+    };
+
+    const result = parseExtractionResponse(raw);
+    expect(result.lineItems).toEqual([]);
+  });
+
+  it("handles lineItems with missing fields using defaults", () => {
+    const raw = {
+      lineItems: [{ name: "Partial item" }, { unitPrice: "5.00" }],
+    };
+
+    const result = parseExtractionResponse(raw);
+    expect(result.lineItems).toHaveLength(2);
+    expect(result.lineItems[0]).toEqual({
+      name: "Partial item",
+      quantity: "1",
+      unitPrice: "0",
+      taxRate: "0",
+    });
+    expect(result.lineItems[1]).toEqual({
+      name: "",
+      quantity: "1",
+      unitPrice: "5.00",
+      taxRate: "0",
+    });
+  });
+
+  it("ignores non-array lineItems", () => {
+    const raw = {
+      lineItems: "not an array",
+    };
+
+    const result = parseExtractionResponse(raw);
+    expect(result.lineItems).toEqual([]);
+  });
 });

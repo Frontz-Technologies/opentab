@@ -7,6 +7,7 @@ import { eq, and, asc } from "drizzle-orm";
 import { getCountryProvider } from "@/lib/country";
 import { ensureCategoriesSeeded } from "@/lib/expenses/category-seed";
 import { ExpenseForm } from "./expense-form";
+import { isReceiptExtractionEnabled } from "@/lib/actions/ai-settings";
 
 export default async function NewExpensePage() {
   const session = await getSession();
@@ -41,6 +42,9 @@ export default async function NewExpensePage() {
 
   const provider = getCountryProvider(session.org.countryCode ?? null);
   const defaultTaxRate = String(provider.getDefaultVatRate());
+  const aiExtractionAvailable = await isReceiptExtractionEnabled(
+    session.org.id,
+  );
 
   return (
     <div className="p-6 space-y-6">
@@ -53,6 +57,7 @@ export default async function NewExpensePage() {
         categories={categories}
         defaultCurrency={session.org.defaultCurrency}
         defaultTaxRate={defaultTaxRate}
+        aiExtractionAvailable={aiExtractionAvailable}
       />
     </div>
   );
