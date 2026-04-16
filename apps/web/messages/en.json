@@ -470,6 +470,7 @@
     "autofillIgnore": "Ignore",
     "autofillAlways": "Always apply",
     "discardConfirm": "Discard expense and uploaded attachments?",
+    "cancelAction": "Cancel",
     "removeAttachment": "Remove",
     "editExpense": "Edit Expense",
     "noExpenses": "No expenses yet",

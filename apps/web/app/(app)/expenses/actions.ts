@@ -459,9 +459,25 @@ export async function deleteExpense(id: string) {
 
   if (!expense) return { success: false, error: "Expense not found" };
 
+  // Delete attached files from storage before removing the DB record
+  const attachments = await db
+    .select({ filePath: expenseAttachments.filePath })
+    .from(expenseAttachments)
+    .where(eq(expenseAttachments.expenseId, id));
+
+  for (const att of attachments) {
+    await deleteTempFile(att.filePath);
+  }
+
   await db
     .delete(expenses)
     .where(and(eq(expenses.id, id), eq(expenses.orgId, session.org.id)));
+
+  log.info("expense deleted", {
+    orgId: session.org.id,
+    expenseId: id,
+    attachmentsDeleted: attachments.length,
+  });
 
   revalidatePath("/expenses");
   return { success: true };

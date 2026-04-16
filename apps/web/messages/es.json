@@ -470,6 +470,7 @@
     "autofillIgnore": "Ignorar",
     "autofillAlways": "Siempre aplicar",
     "discardConfirm": "¿Descartar gasto y archivos adjuntos?",
+    "cancelAction": "Cancelar",
     "removeAttachment": "Eliminar",
     "editExpense": "Editar gasto",
     "noExpenses": "A\u00fan no hay gastos",

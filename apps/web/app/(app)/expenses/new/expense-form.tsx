@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useRef, useState, useTransition, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import type {
@@ -67,6 +67,38 @@ export function ExpenseForm({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const selectedContact = contacts.find((c) => c.id === contactId);
+
+  // Track whether the form has unsaved data
+  const isDirty =
+    !!uploadedFile ||
+    !!contactId ||
+    !!supplierName ||
+    !!categoryId ||
+    !!description ||
+    !!notes ||
+    !!supplierInvoiceNumber ||
+    items.length > 0;
+
+  // Warn on browser close/refresh with unsaved data
+  useEffect(() => {
+    if (!isDirty) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty]);
+
+  const submittedRef = useRef(false);
+
+  const handleDiscard = useCallback(async () => {
+    if (!isDirty || confirm(t("discardConfirm"))) {
+      if (uploadedFile) {
+        await cleanupTempAttachment(uploadedFile.filePath);
+      }
+      router.push("/expenses");
+    }
+  }, [isDirty, uploadedFile, router, t]);
 
   function applyAutofill(result: UploadReceiptResult) {
     const data = result.extractedData;
@@ -213,6 +245,7 @@ export function ExpenseForm({
     startTransition(async () => {
       const result = await createExpense(formData);
       if (result.success) {
+        submittedRef.current = true;
         router.push("/expenses");
       } else {
         setError(JSON.stringify(result.error));
@@ -497,7 +530,10 @@ export function ExpenseForm({
         </div>
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <Button variant="outline" onClick={handleDiscard} disabled={isPending}>
+          {t("cancelAction")}
+        </Button>
         <Button onClick={handleSubmit} disabled={isPending}>
           {isPending ? t("saving") : t("save")}
         </Button>
