@@ -12,7 +12,6 @@ vi.mock("ai", async (importOriginal) => {
         yield {
           id: "assistant-1",
           role: "assistant" as const,
-          content: "Revenue is up 12%.",
           parts: [{ type: "text" as const, text: "Revenue is up 12%." }],
         };
       })(),
@@ -43,23 +42,22 @@ describe("submitAiChatMessage", () => {
     expect(body.messages).toHaveLength(1);
     expect(body.messages[0]).toMatchObject({
       role: "user",
-      content: "How is revenue doing?",
+      parts: [{ type: "text", text: "How is revenue doing?" }],
     });
 
     expect(result[0]).toMatchObject({
       role: "user",
-      content: "How is revenue doing?",
+      parts: [{ type: "text", text: "How is revenue doing?" }],
     });
     expect(result[1]).toMatchObject({
       id: "assistant-1",
       role: "assistant",
-      content: "Revenue is up 12%.",
     });
   });
 
   it("returns messages unchanged when input is empty and no confirmToolCall", async () => {
     const existing: UIMessage[] = [
-      { id: "1", role: "user", content: "hi", parts: [] },
+      { id: "1", role: "user", parts: [{ type: "text", text: "hi" }] },
     ];
     const result = await submitAiChatMessage({
       input: "",
@@ -78,7 +76,6 @@ describe("submitAiChatMessage", () => {
         {
           id: "assistant-2",
           role: "assistant",
-          content: "",
           parts: [],
         },
       ],
@@ -113,7 +110,7 @@ describe("submitAiChatMessage", () => {
     });
     expect(body.messages.at(-1)).toMatchObject({
       role: "user",
-      content: "Approved. Continue.",
+      parts: [{ type: "text", text: "Approved. Continue." }],
     });
   });
 });
