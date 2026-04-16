@@ -159,7 +159,7 @@ export async function extractReceiptData(
           ],
         },
       ],
-      maxTokens: 2000,
+      maxOutputTokens: 2000,
     });
 
     const cleaned = text
