@@ -14,6 +14,7 @@ const updateAiSettingsSchema = z.object({
   enabled: z.boolean(),
   model: z.string().min(1).max(100),
   apiKey: z.string().trim().optional().default(""),
+  receiptExtractionEnabled: z.boolean().default(true),
 });
 
 export type AiSettingsPublic = {
@@ -21,6 +22,7 @@ export type AiSettingsPublic = {
   model: string;
   apiKeyLast4: string | null;
   hasApiKey: boolean;
+  receiptExtractionEnabled: boolean;
 };
 
 function assertSettingsAdmin(role: string) {
@@ -50,10 +52,31 @@ export async function getAiSettings(
     model: settings.model,
     apiKeyLast4: settings.apiKeyLast4 ?? null,
     hasApiKey: Boolean(settings.apiKeyEncrypted),
+    receiptExtractionEnabled: settings.receiptExtractionEnabled,
+  };
+}
+
+export async function getAiEnvConfig(): Promise<{
+  model: string;
+  apiKeyLast4: string;
+} | null> {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) return null;
+  return {
+    model: process.env.OPENROUTER_MODEL ?? "anthropic/claude-sonnet-4-5",
+    apiKeyLast4: apiKey.slice(-4),
   };
 }
 
 export async function getAiSettingsSecret(orgId: string) {
+  // Env vars take priority over DB settings
+  const envApiKey = process.env.OPENROUTER_API_KEY;
+  const envModel =
+    process.env.OPENROUTER_MODEL ?? "anthropic/claude-sonnet-4-5";
+  if (envApiKey) {
+    return { enabled: true, model: envModel, apiKey: envApiKey };
+  }
+
   const settings = await getAiSettingsRow(orgId);
   if (!settings || !settings.apiKeyEncrypted || !settings.apiKeyIv) {
     return null;
@@ -79,7 +102,21 @@ export async function updateAiSettings(input: unknown) {
   const existing = await getAiSettingsRow(session.org.id);
   const next = parsed.data;
 
-  const encryptedKey = next.apiKey ? encryptApiKey(next.apiKey) : null;
+  let encryptedKey: ReturnType<typeof encryptApiKey> | null = null;
+  if (next.apiKey) {
+    try {
+      encryptedKey = encryptApiKey(next.apiKey);
+    } catch {
+      return {
+        success: false,
+        error: {
+          _: [
+            "AI_ENCRYPTION_KEY is not configured. Add it to your docker/.env file: AI_ENCRYPTION_KEY=$(openssl rand -hex 32)",
+          ],
+        },
+      };
+    }
+  }
 
   if (existing) {
     await db
@@ -87,6 +124,7 @@ export async function updateAiSettings(input: unknown) {
       .set({
         enabled: next.enabled,
         model: next.model,
+        receiptExtractionEnabled: next.receiptExtractionEnabled,
         apiKeyEncrypted: encryptedKey?.encrypted ?? existing.apiKeyEncrypted,
         apiKeyIv: encryptedKey?.iv ?? existing.apiKeyIv,
         apiKeyLast4: encryptedKey?.last4 ?? existing.apiKeyLast4,
@@ -98,6 +136,7 @@ export async function updateAiSettings(input: unknown) {
       orgId: session.org.id,
       enabled: next.enabled,
       model: next.model,
+      receiptExtractionEnabled: next.receiptExtractionEnabled,
       apiKeyEncrypted: encryptedKey?.encrypted ?? null,
       apiKeyIv: encryptedKey?.iv ?? null,
       apiKeyLast4: encryptedKey?.last4 ?? null,
@@ -155,4 +194,19 @@ export async function testAiConnection(orgId: string) {
       error: error instanceof Error ? error.message : "Connection test failed",
     };
   }
+}
+
+export async function isReceiptExtractionEnabled(
+  orgId: string,
+): Promise<boolean> {
+  // Env var config enables extraction automatically
+  if (process.env.OPENROUTER_API_KEY) return true;
+
+  const settings = await getAiSettingsRow(orgId);
+  if (!settings) return false;
+  return (
+    settings.enabled &&
+    Boolean(settings.apiKeyEncrypted) &&
+    settings.receiptExtractionEnabled
+  );
 }
