@@ -1,21 +1,35 @@
-import { describe, it, expect, afterEach } from "vitest";
-import { mkdir, readFile, writeFile, rm, access } from "fs/promises";
-import { join } from "path";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   generateTempId,
   storeTempFile,
   moveTempToExpense,
   deleteTempFile,
+  storeFile,
+  getFile,
+  getPresignedUrl,
 } from "../lib/expenses/file-storage";
 
-// The module uses process.cwd()/uploads by default
-const UPLOADS_DIR = join(process.cwd(), "uploads");
-const TEST_ORG = "test-org-fs";
+// Mock the S3 client module
+vi.mock("../lib/storage/s3-client", () => ({
+  s3Client: { send: vi.fn() },
+  BUCKET: "test-bucket",
+}));
 
-afterEach(async () => {
-  // Clean up test org directory only
-  await rm(join(UPLOADS_DIR, TEST_ORG), { recursive: true, force: true });
+// Mock the presigner
+vi.mock("@aws-sdk/s3-request-presigner", () => ({
+  getSignedUrl: vi.fn().mockResolvedValue("https://s3.example.com/signed-url"),
+}));
+
+import { s3Client } from "../lib/storage/s3-client";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+
+const mockSend = vi.mocked(s3Client.send);
+
+beforeEach(() => {
+  vi.clearAllMocks();
 });
+
+const TEST_ORG = "test-org-fs";
 
 describe("generateTempId", () => {
   it("returns a string starting with tmp_", () => {
@@ -29,72 +43,126 @@ describe("generateTempId", () => {
   });
 });
 
+describe("storeFile", () => {
+  it("uploads to S3 with correct key and returns the key", async () => {
+    mockSend.mockResolvedValueOnce({} as never);
+
+    const buffer = Buffer.from("file content");
+    const key = await storeFile(TEST_ORG, "exp-001", buffer, "receipt.pdf");
+
+    expect(key).toBe(`${TEST_ORG}/expenses/exp-001.pdf`);
+    expect(mockSend).toHaveBeenCalledOnce();
+
+    const command = mockSend.mock.calls[0][0];
+    expect(command.constructor.name).toBe("PutObjectCommand");
+    expect(command.input).toEqual({
+      Bucket: "test-bucket",
+      Key: `${TEST_ORG}/expenses/exp-001.pdf`,
+      Body: buffer,
+    });
+  });
+});
+
+describe("getFile", () => {
+  it("downloads from S3 and returns a buffer", async () => {
+    const content = Buffer.from("downloaded content");
+    const mockStream = (async function* () {
+      yield content;
+    })();
+
+    mockSend.mockResolvedValueOnce({ Body: mockStream } as never);
+
+    const result = await getFile(`${TEST_ORG}/expenses/exp-001.pdf`);
+
+    expect(Buffer.isBuffer(result)).toBe(true);
+    expect(result.toString()).toBe("downloaded content");
+    expect(mockSend).toHaveBeenCalledOnce();
+  });
+
+  it("throws when response body is empty", async () => {
+    mockSend.mockResolvedValueOnce({ Body: undefined } as never);
+
+    await expect(getFile(`${TEST_ORG}/expenses/exp-001.pdf`)).rejects.toThrow(
+      "Empty response body",
+    );
+  });
+});
+
+describe("getPresignedUrl", () => {
+  it("returns a presigned URL", async () => {
+    const url = await getPresignedUrl(`${TEST_ORG}/expenses/exp-001.pdf`);
+    expect(url).toBe("https://s3.example.com/signed-url");
+    expect(getSignedUrl).toHaveBeenCalledOnce();
+  });
+});
+
 describe("storeTempFile", () => {
-  it("stores a file and returns the relative path", async () => {
+  it("stores a file with tmp/ prefix and returns the key", async () => {
+    mockSend.mockResolvedValueOnce({} as never);
+
     const buffer = Buffer.from("test content");
     const tempId = generateTempId();
-    const path = await storeTempFile(TEST_ORG, tempId, buffer, "receipt.pdf");
+    const key = await storeTempFile(TEST_ORG, tempId, buffer, "receipt.pdf");
 
-    expect(path).toBe(`${TEST_ORG}/expenses/tmp/${tempId}.pdf`);
+    expect(key).toBe(`${TEST_ORG}/expenses/tmp/${tempId}.pdf`);
+    expect(mockSend).toHaveBeenCalledOnce();
 
-    const stored = await readFile(join(UPLOADS_DIR, path));
-    expect(stored.toString()).toBe("test content");
+    const command = mockSend.mock.calls[0][0];
+    expect(command.constructor.name).toBe("PutObjectCommand");
   });
 
   it("extracts file extension correctly", async () => {
+    mockSend.mockResolvedValueOnce({} as never);
+
     const buffer = Buffer.from("img");
     const tempId = generateTempId();
-    const path = await storeTempFile(TEST_ORG, tempId, buffer, "photo.jpg");
-    expect(path).toContain(".jpg");
+    const key = await storeTempFile(TEST_ORG, tempId, buffer, "photo.jpg");
+    expect(key).toContain(".jpg");
   });
 });
 
 describe("moveTempToExpense", () => {
-  it("moves file from temp to final location", async () => {
-    // Store a temp file first
-    const buffer = Buffer.from("receipt data");
-    const tempId = generateTempId();
-    const tempPath = await storeTempFile(
-      TEST_ORG,
-      tempId,
-      buffer,
-      "receipt.pdf",
-    );
+  it("copies to final key, deletes temp, returns final key", async () => {
+    mockSend.mockResolvedValueOnce({} as never); // CopyObjectCommand
+    mockSend.mockResolvedValueOnce({} as never); // DeleteObjectCommand
 
-    const finalPath = await moveTempToExpense(
-      tempPath,
-      TEST_ORG,
-      "expense-001",
-    );
+    const tempPath = `${TEST_ORG}/expenses/tmp/tmp_abc.pdf`;
+    const finalKey = await moveTempToExpense(tempPath, TEST_ORG, "expense-001");
 
-    expect(finalPath).toBe(`${TEST_ORG}/expenses/expense-001.pdf`);
+    expect(finalKey).toBe(`${TEST_ORG}/expenses/expense-001.pdf`);
+    expect(mockSend).toHaveBeenCalledTimes(2);
 
-    // Final file exists with correct content
-    const content = await readFile(join(UPLOADS_DIR, finalPath));
-    expect(content.toString()).toBe("receipt data");
+    const copyCmd = mockSend.mock.calls[0][0];
+    expect(copyCmd.constructor.name).toBe("CopyObjectCommand");
+    expect(copyCmd.input).toEqual({
+      Bucket: "test-bucket",
+      CopySource: `test-bucket/${tempPath}`,
+      Key: `${TEST_ORG}/expenses/expense-001.pdf`,
+    });
 
-    // Temp file is gone
-    await expect(access(join(UPLOADS_DIR, tempPath))).rejects.toThrow();
+    const deleteCmd = mockSend.mock.calls[1][0];
+    expect(deleteCmd.constructor.name).toBe("DeleteObjectCommand");
+    expect(deleteCmd.input).toEqual({
+      Bucket: "test-bucket",
+      Key: tempPath,
+    });
   });
 });
 
 describe("deleteTempFile", () => {
-  it("deletes the file from disk", async () => {
-    const buffer = Buffer.from("to delete");
-    const tempId = generateTempId();
-    const tempPath = await storeTempFile(
-      TEST_ORG,
-      tempId,
-      buffer,
-      "delete-me.pdf",
-    );
+  it("deletes the object from S3", async () => {
+    mockSend.mockResolvedValueOnce({} as never);
 
-    await deleteTempFile(tempPath);
+    await deleteTempFile(`${TEST_ORG}/expenses/tmp/tmp_abc.pdf`);
 
-    await expect(access(join(UPLOADS_DIR, tempPath))).rejects.toThrow();
+    expect(mockSend).toHaveBeenCalledOnce();
+    const command = mockSend.mock.calls[0][0];
+    expect(command.constructor.name).toBe("DeleteObjectCommand");
   });
 
-  it("does not throw when file does not exist", async () => {
+  it("does not throw when delete fails", async () => {
+    mockSend.mockRejectedValueOnce(new Error("NoSuchKey"));
+
     await expect(
       deleteTempFile(`${TEST_ORG}/expenses/tmp/nonexistent.pdf`),
     ).resolves.not.toThrow();

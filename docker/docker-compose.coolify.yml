@@ -1,14 +1,18 @@
-# OpenTab — Production Docker Compose
+# OpenTab — Coolify / PaaS Docker Compose
 #
-# Usage:
-#   cd docker
-#   cp .env.sample .env    # edit with your values
-#   docker compose up -d
+# Use this compose file when deploying via Coolify, CapRover, or any PaaS
+# that provides its own reverse proxy (Traefik, nginx, etc.) and SSL.
 #
-# Or from project root:
-#   make prod
+# Differences from docker-compose.yml:
+#   - No Caddy (the PaaS handles SSL and routing)
+#   - App exposes port 3000 directly
+#   - No DOMAIN env var needed
 #
-# Caddy provides automatic HTTPS. Set DOMAIN in .env to your domain.
+# In Coolify:
+#   1. Create a new Docker Compose resource
+#   2. Point to this file
+#   3. Set environment variables in Coolify's UI
+#   4. Deploy
 
 name: opentab
 
@@ -22,8 +26,8 @@ services:
     read_only: true
     tmpfs:
       - /tmp:size=64M
-    expose:
-      - "3000"
+    ports:
+      - "3000:3000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -42,7 +46,11 @@ services:
       S3_REGION: ${S3_REGION:-eu-west-1}
       S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-false}
     healthcheck:
-      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://127.0.0.1:3000/ || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "wget --quiet --tries=1 --spider http://127.0.0.1:3000/ || exit 1",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -71,7 +79,11 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-opentab} -d ${POSTGRES_DB:-opentab}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-opentab} -d ${POSTGRES_DB:-opentab}",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -103,29 +115,9 @@ services:
     networks:
       - opentab-network
 
-  caddy:
-    container_name: opentab-caddy
-    image: caddy:2-alpine
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - caddy_data:/data
-      - caddy_config:/config
-    depends_on:
-      - app
-    environment:
-      DOMAIN: ${DOMAIN:-localhost}
-    networks:
-      - opentab-network
-
 volumes:
   postgres_data:
   redis_data:
-  caddy_data:
-  caddy_config:
 
 networks:
   opentab-network:
