@@ -89,11 +89,7 @@ function buildContentBlocks(
   buffer: Buffer,
   mimeType: string,
   strategy: "file" | "image",
-): Array<
-  | { type: "text"; text: string }
-  | { type: "image"; image: string }
-  | { type: "file"; data: string; mimeType: string }
-> {
+) {
   const base64 = buffer.toString("base64");
 
   if (strategy === "file") {
@@ -103,10 +99,9 @@ function buildContentBlocks(
     ];
   }
 
-  const dataUrl = `data:${mimeType};base64,${base64}`;
   return [
     { type: "text", text: EXTRACTION_PROMPT },
-    { type: "image", image: dataUrl },
+    { type: "image", image: `data:${mimeType};base64,${base64}` },
   ];
 }
 
@@ -157,15 +152,15 @@ export async function extractReceiptData(
 
     const content = buildContentBlocks(buffer, mimeType, strategy);
     const provider = createAiProvider(apiKey, model);
+    const messages = [{ role: "user" as const, content: content as any }];
 
     // Try structured output first (mode: json injects schema into prompt)
     const aiTimer = log.time("ai-api-call");
     try {
       const result = await generateObject({
         model: provider,
-        mode: "json",
         schema: extractionSchema,
-        messages: [{ role: "user", content }],
+        messages,
         maxOutputTokens: 2000,
       });
       const data = result.object as z.infer<typeof extractionSchema>;
@@ -193,7 +188,7 @@ export async function extractReceiptData(
     // Fallback: generateText + manual JSON parse + Zod coercion
     const { text } = await generateText({
       model: provider,
-      messages: [{ role: "user", content }],
+      messages,
       maxOutputTokens: 2000,
     });
     aiTimer("text fallback extraction", { model, responseLength: text.length });
