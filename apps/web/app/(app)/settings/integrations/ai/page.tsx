@@ -3,7 +3,11 @@ import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/layout/page-header";
 import { AiSettingsForm } from "@/components/settings/ai-settings-form";
 import { getSession } from "@/lib/session";
-import { getAiSettings, getAiEnvConfig } from "@/lib/actions/ai-settings";
+import {
+  getAiSettings,
+  getAiEnvConfig,
+  getModelCapabilities,
+} from "@/lib/actions/ai-settings";
 
 export default async function AiIntegrationPage() {
   const session = await getSession();
@@ -19,6 +23,10 @@ export default async function AiIntegrationPage() {
     getAiSettings(session.org.id),
     getAiEnvConfig(),
   ]);
+
+  const model =
+    envConfig?.model ?? settings?.model ?? "anthropic/claude-sonnet-4-5";
+  const capabilities = await getModelCapabilities(model);
 
   return (
     <>
@@ -72,6 +80,7 @@ export default async function AiIntegrationPage() {
                 receiptExtractionEnabled: true,
               }
             }
+            initialCapabilities={capabilities}
           />
         )}
       </main>

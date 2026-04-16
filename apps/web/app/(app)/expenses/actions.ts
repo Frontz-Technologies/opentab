@@ -26,14 +26,14 @@ import {
   deleteTempFile,
   moveTempToExpense,
 } from "@/lib/expenses/file-storage";
-import {
-  prepareImageForExtraction,
-  extractReceiptData,
-} from "@/lib/expenses/ai-extraction";
+import { extractReceiptData } from "@/lib/expenses/ai-extraction";
 import {
   isReceiptExtractionEnabled,
   getAiSettingsSecret,
 } from "@/lib/actions/ai-settings";
+import { createLogger } from "@/lib/logging/logger";
+
+const log = createLogger("expenses");
 
 const lineItemSchema = z.object({
   sortOrder: z.coerce.number().int().min(0),
@@ -205,7 +205,6 @@ export interface UploadReceiptResult {
       unitPrice: string;
       taxRate: string;
     }[];
-    confidence: Record<string, number>;
   } | null;
   supplierMatch?: { contactId: string; displayName: string } | null;
 }
@@ -219,6 +218,16 @@ export async function uploadAndExtractReceipt(
   const file = formData.get("file") as File | null;
   if (!file) return { success: false, error: "No file provided" };
 
+  const totalTimer = log.time("upload-and-extract");
+  const mimeType = file.type || "application/octet-stream";
+
+  log.info("receipt upload started", {
+    orgId: session.org.id,
+    fileName: file.name,
+    mimeType,
+    fileSize: file.size,
+  });
+
   const buffer = Buffer.from(await file.arrayBuffer());
   const hash = computeFileHash(buffer);
 
@@ -230,10 +239,15 @@ export async function uploadAndExtractReceipt(
     .limit(1);
 
   if (duplicate) {
+    log.info("duplicate receipt detected", {
+      orgId: session.org.id,
+      fileHash: hash,
+    });
     return { success: false, error: "This file has already been uploaded" };
   }
 
   // Store file immediately
+  const storeTimer = log.time("file-store");
   const tempId = generateTempId();
   const filePath = await storeTempFile(
     session.org.id,
@@ -241,12 +255,13 @@ export async function uploadAndExtractReceipt(
     buffer,
     file.name,
   );
+  storeTimer("file stored", { tempId, filePath });
 
   const fileInfo: UploadedFileInfo = {
     tempId,
     filePath,
     fileName: file.name,
-    mimeType: file.type || "application/octet-stream",
+    mimeType,
     fileSize: buffer.length,
     fileHash: hash,
   };
@@ -259,14 +274,29 @@ export async function uploadAndExtractReceipt(
   if (extractionEnabled) {
     const aiSecrets = await getAiSettingsSecret(session.org.id);
     if (aiSecrets?.apiKey) {
-      const { dataUrl } = await prepareImageForExtraction(
-        buffer,
-        file.type || "application/octet-stream",
-      );
+      log.info("ai extraction starting", {
+        orgId: session.org.id,
+        model: aiSecrets.model,
+        mimeType,
+      });
+
+      const extractTimer = log.time("ai-extraction");
       extractedData = await extractReceiptData(
-        dataUrl,
+        buffer,
+        mimeType,
         aiSecrets.apiKey,
         aiSecrets.model,
+      );
+      extractTimer(
+        extractedData
+          ? "ai extraction succeeded"
+          : "ai extraction returned no data",
+        {
+          model: aiSecrets.model,
+          hasResult: !!extractedData,
+          vendorName: extractedData?.vendorName ?? null,
+          totalAmount: extractedData?.totalAmount ?? null,
+        },
       );
 
       // Try supplier matching if we got a VAT number or name
@@ -283,8 +313,27 @@ export async function uploadAndExtractReceipt(
           extractedData.vendorName,
         );
       }
+
+      if (supplierMatch) {
+        log.info("supplier matched", {
+          orgId: session.org.id,
+          contactId: supplierMatch.contactId,
+          displayName: supplierMatch.displayName,
+        });
+      }
+    } else {
+      log.warn("ai extraction enabled but no API key configured", {
+        orgId: session.org.id,
+      });
     }
+  } else {
+    log.debug("ai extraction disabled", { orgId: session.org.id });
   }
+
+  totalTimer("upload and extract complete", {
+    hasExtraction: !!extractedData,
+    hasSupplierMatch: !!supplierMatch,
+  });
 
   return { success: true, fileInfo, extractedData, supplierMatch };
 }
@@ -409,9 +458,25 @@ export async function deleteExpense(id: string) {
 
   if (!expense) return { success: false, error: "Expense not found" };
 
+  // Delete attached files from storage before removing the DB record
+  const attachments = await db
+    .select({ filePath: expenseAttachments.filePath })
+    .from(expenseAttachments)
+    .where(eq(expenseAttachments.expenseId, id));
+
+  for (const att of attachments) {
+    await deleteTempFile(att.filePath);
+  }
+
   await db
     .delete(expenses)
     .where(and(eq(expenses.id, id), eq(expenses.orgId, session.org.id)));
+
+  log.info("expense deleted", {
+    orgId: session.org.id,
+    expenseId: id,
+    attachmentsDeleted: attachments.length,
+  });
 
   revalidatePath("/expenses");
   return { success: true };
