@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 
 /**
  * Warns the user when they try to leave a page with unsaved changes.
@@ -11,35 +11,31 @@ import { useEffect, useRef } from "react";
  * @param message - Confirmation message shown on client-side navigation
  */
 export function useUnsavedChangesWarning(isDirty: boolean, message: string) {
-  const isDirtyRef = useRef(isDirty);
-  isDirtyRef.current = isDirty;
-
+  // Browser close/refresh
   useEffect(() => {
     if (!isDirty) return;
 
-    // Browser close/refresh
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       e.preventDefault();
     };
 
-    // Back/forward button (popstate)
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty]);
+
+  // Back/forward button (popstate)
+  useEffect(() => {
+    if (!isDirty) return;
+
     const handlePopState = () => {
-      if (isDirtyRef.current && !window.confirm(message)) {
-        // Push the current URL back to cancel the navigation
+      if (!window.confirm(message)) {
         window.history.pushState(null, "", window.location.href);
       }
     };
 
-    // Push a state entry so we can catch the back button
     window.history.pushState(null, "", window.location.href);
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
     window.addEventListener("popstate", handlePopState);
-
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-      window.removeEventListener("popstate", handlePopState);
-    };
+    return () => window.removeEventListener("popstate", handlePopState);
   }, [isDirty, message]);
 
   // Intercept client-side link clicks (Next.js <Link> and sidebar navigation)
@@ -53,8 +49,7 @@ export function useUnsavedChangesWarning(isDirty: boolean, message: string) {
       const href = target.getAttribute("href");
       if (!href || href.startsWith("http") || href.startsWith("#")) return;
 
-      // This is an internal navigation link
-      if (isDirtyRef.current && !window.confirm(message)) {
+      if (!window.confirm(message)) {
         e.preventDefault();
         e.stopPropagation();
       }
