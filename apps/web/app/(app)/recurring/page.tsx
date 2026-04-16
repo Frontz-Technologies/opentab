@@ -5,20 +5,40 @@ import { getSession } from "@/lib/session";
 import { PageHeader } from "@/components/layout/page-header";
 import { db } from "@/lib/db";
 import { recurringInvoices } from "@opentab/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, count } from "drizzle-orm";
 import { RecurringList } from "./recurring-list";
+import { Pagination } from "@/components/ui/pagination";
+import {
+  parsePage,
+  paginationOffset,
+  DEFAULT_PAGE_SIZE,
+} from "@/lib/pagination";
 
-export default async function RecurringPage() {
+export default async function RecurringPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const session = await getSession();
   if (!session) redirect("/login");
 
   const t = await getTranslations("recurring");
+  const params = await searchParams;
+  const page = parsePage(params);
 
-  const allRecurring = await db
-    .select()
-    .from(recurringInvoices)
-    .where(eq(recurringInvoices.orgId, session.org.id))
-    .orderBy(desc(recurringInvoices.createdAt));
+  const [allRecurring, [{ total }]] = await Promise.all([
+    db
+      .select()
+      .from(recurringInvoices)
+      .where(eq(recurringInvoices.orgId, session.org.id))
+      .orderBy(desc(recurringInvoices.createdAt))
+      .limit(DEFAULT_PAGE_SIZE)
+      .offset(paginationOffset(page)),
+    db
+      .select({ total: count() })
+      .from(recurringInvoices)
+      .where(eq(recurringInvoices.orgId, session.org.id)),
+  ]);
 
   return (
     <>
@@ -40,6 +60,12 @@ export default async function RecurringPage() {
       />
       <div className="px-6 py-6">
         <RecurringList items={allRecurring} />
+        <Pagination
+          totalItems={total}
+          pageSize={DEFAULT_PAGE_SIZE}
+          currentPage={page}
+          className="mt-6"
+        />
       </div>
     </>
   );
