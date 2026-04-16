@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
-import { getFile } from "@/lib/expenses/file-storage";
+import { getPresignedUrl } from "@/lib/expenses/file-storage";
 
 export async function GET(
   request: NextRequest,
@@ -20,23 +20,8 @@ export async function GET(
   }
 
   try {
-    const buffer = await getFile(relativePath);
-
-    const ext = relativePath.split(".").pop()?.toLowerCase();
-    const mimeTypes: Record<string, string> = {
-      pdf: "application/pdf",
-      png: "image/png",
-      jpg: "image/jpeg",
-      jpeg: "image/jpeg",
-      webp: "image/webp",
-    };
-
-    return new NextResponse(new Uint8Array(buffer), {
-      headers: {
-        "Content-Type": mimeTypes[ext ?? ""] || "application/octet-stream",
-        "Cache-Control": "private, max-age=3600",
-      },
-    });
+    const url = await getPresignedUrl(relativePath, 3600);
+    return NextResponse.redirect(url);
   } catch {
     return NextResponse.json({ error: "File not found" }, { status: 404 });
   }
