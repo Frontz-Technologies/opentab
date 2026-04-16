@@ -1,6 +1,9 @@
 import { generateText } from "ai";
 import { createAiProvider } from "@/lib/ai/provider";
-import { pdfToImage } from "./pdf-convert";
+import {
+  getModelCapabilities,
+  type ModelCapabilities,
+} from "@/lib/actions/ai-settings";
 
 export interface ExtractedLineItem {
   name: string;
@@ -87,28 +90,62 @@ export function parseExtractionResponse(
 }
 
 /**
- * Prepare a file buffer for vision API submission.
- * If the file is a PDF, converts the first page to PNG.
+ * Check if the model can process the given file type.
+ * Returns the best content strategy or null if unsupported.
  */
-export async function prepareImageForExtraction(
-  originalBuffer: Buffer,
-  originalMimeType: string,
-): Promise<{ buffer: Buffer; mimeType: string; dataUrl: string }> {
-  let imageBuffer = originalBuffer;
-  let mimeType = originalMimeType;
+export function getExtractionStrategy(
+  mimeType: string,
+  capabilities: ModelCapabilities,
+): "file" | "image" | null {
+  const isPdf = mimeType === "application/pdf";
+  const isImage = mimeType.startsWith("image/");
 
-  if (mimeType === "application/pdf") {
-    imageBuffer = await pdfToImage(originalBuffer);
-    mimeType = "image/png";
+  if (isPdf) {
+    // PDF: prefer native file support, fall back to image if model supports it
+    if (capabilities.file) return "file";
+    if (capabilities.image) return "image";
+    return null;
   }
 
-  const base64 = imageBuffer.toString("base64");
-  const dataUrl = `data:${mimeType};base64,${base64}`;
+  if (isImage) {
+    if (capabilities.image) return "image";
+    return null;
+  }
 
-  return { buffer: imageBuffer, mimeType, dataUrl };
+  return null;
 }
 
-const EXTRACTION_PROMPT = `You are a receipt/invoice data extractor. Analyze the provided image and extract structured data.
+/**
+ * Prepare content blocks for the AI message based on the extraction strategy.
+ */
+function buildContentBlocks(
+  buffer: Buffer,
+  mimeType: string,
+  strategy: "file" | "image",
+): Array<
+  | { type: "text"; text: string }
+  | { type: "image"; image: string }
+  | { type: "file"; data: string; mimeType: string }
+> {
+  const base64 = buffer.toString("base64");
+
+  if (strategy === "file") {
+    return [
+      { type: "text", text: EXTRACTION_PROMPT },
+      { type: "file", data: base64, mimeType },
+    ];
+  }
+
+  // image strategy — for images, send directly; for PDFs this path shouldn't
+  // be reached without prior conversion, but we handle it gracefully
+  const dataUrl = `data:${mimeType};base64,${base64}`;
+  return [
+    { type: "text", text: EXTRACTION_PROMPT },
+    { type: "image", image: dataUrl },
+  ];
+}
+
+const EXTRACTION_PROMPT = `You are a receipt/invoice data extractor. Analyze the provided document and extract structured data.
 
 Return a JSON object with these fields. Use null for any field you cannot confidently read:
 
@@ -142,23 +179,23 @@ Return a JSON object with these fields. Use null for any field you cannot confid
 Return ONLY valid JSON. No markdown, no explanation.`;
 
 export async function extractReceiptData(
-  imageDataUrl: string,
+  buffer: Buffer,
+  mimeType: string,
   apiKey: string,
   model: string,
 ): Promise<ExtractedExpenseData | null> {
   try {
+    const capabilities = await getModelCapabilities(model);
+    const strategy = getExtractionStrategy(mimeType, capabilities);
+
+    if (!strategy) return null;
+
+    const content = buildContentBlocks(buffer, mimeType, strategy);
     const provider = createAiProvider(apiKey, model);
+
     const { text } = await generateText({
       model: provider,
-      messages: [
-        {
-          role: "user",
-          content: [
-            { type: "text", text: EXTRACTION_PROMPT },
-            { type: "image", image: imageDataUrl },
-          ],
-        },
-      ],
+      messages: [{ role: "user", content }],
       maxTokens: 2000,
     });
 

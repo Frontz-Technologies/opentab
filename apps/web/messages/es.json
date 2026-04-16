@@ -120,6 +120,7 @@
     "deleted": "Clave API almacenada eliminada.",
     "receiptExtraction": "Extracción de datos de recibos",
     "receiptExtractionHelp": "Extraer automáticamente datos de recibos subidos usando IA",
+    "checkingCapabilities": "Verificando capacidades del modelo...",
     "configuredFromEnv": "IA configurada desde variables de entorno",
     "configuredFromEnvHelp": "OPENROUTER_API_KEY y OPENROUTER_MODEL están configuradas en su entorno."
   },

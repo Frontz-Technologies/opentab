@@ -196,6 +196,40 @@ export async function testAiConnection(orgId: string) {
   }
 }
 
+export type ModelCapabilities = {
+  text: boolean;
+  image: boolean;
+  file: boolean;
+};
+
+export async function getModelCapabilities(
+  model: string,
+): Promise<ModelCapabilities> {
+  const defaults: ModelCapabilities = { text: true, image: false, file: false };
+  try {
+    const res = await fetch("https://openrouter.ai/api/v1/models", {
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return defaults;
+    const data = (await res.json()) as {
+      data: Array<{
+        id: string;
+        architecture?: { input_modalities?: string[] };
+      }>;
+    };
+    const found = data.data.find((m) => m.id === model);
+    if (!found?.architecture?.input_modalities) return defaults;
+    const modalities = found.architecture.input_modalities;
+    return {
+      text: modalities.includes("text"),
+      image: modalities.includes("image"),
+      file: modalities.includes("file"),
+    };
+  } catch {
+    return defaults;
+  }
+}
+
 export async function isReceiptExtractionEnabled(
   orgId: string,
 ): Promise<boolean> {

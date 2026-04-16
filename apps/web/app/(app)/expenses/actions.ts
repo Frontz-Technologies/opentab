@@ -26,10 +26,7 @@ import {
   deleteTempFile,
   moveTempToExpense,
 } from "@/lib/expenses/file-storage";
-import {
-  prepareImageForExtraction,
-  extractReceiptData,
-} from "@/lib/expenses/ai-extraction";
+import { extractReceiptData } from "@/lib/expenses/ai-extraction";
 import {
   isReceiptExtractionEnabled,
   getAiSettingsSecret,
@@ -259,12 +256,9 @@ export async function uploadAndExtractReceipt(
   if (extractionEnabled) {
     const aiSecrets = await getAiSettingsSecret(session.org.id);
     if (aiSecrets?.apiKey) {
-      const { dataUrl } = await prepareImageForExtraction(
+      extractedData = await extractReceiptData(
         buffer,
         file.type || "application/octet-stream",
-      );
-      extractedData = await extractReceiptData(
-        dataUrl,
         aiSecrets.apiKey,
         aiSecrets.model,
       );

@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import {
   updateAiSettings,
   testAiConnection,
   deleteApiKey,
+  getModelCapabilities,
+  type ModelCapabilities,
 } from "@/lib/actions/ai-settings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,12 +22,53 @@ interface AiSettingsFormProps {
     hasApiKey: boolean;
     receiptExtractionEnabled: boolean;
   };
+  initialCapabilities?: ModelCapabilities | null;
 }
 
-export function AiSettingsForm({ orgId, initialData }: AiSettingsFormProps) {
+function CapabilityBadge({
+  label,
+  supported,
+}: {
+  label: string;
+  supported: boolean;
+}) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${
+        supported
+          ? "bg-emerald-500/10 text-emerald-400"
+          : "bg-on-surface/5 text-on-surface/30"
+      }`}
+    >
+      <span className="material-symbols-outlined text-[14px]">
+        {supported ? "check_circle" : "cancel"}
+      </span>
+      {label}
+    </span>
+  );
+}
+
+export function AiSettingsForm({
+  orgId,
+  initialData,
+  initialCapabilities,
+}: AiSettingsFormProps) {
   const t = useTranslations("settingsAi");
   const [isPending, startTransition] = useTransition();
   const [status, setStatus] = useState<string | null>(null);
+  const [capabilities, setCapabilities] = useState<ModelCapabilities | null>(
+    initialCapabilities ?? null,
+  );
+  const [isLoadingCaps, setIsLoadingCaps] = useState(false);
+
+  const fetchCapabilities = useCallback((model: string) => {
+    if (!model.trim()) return;
+    setIsLoadingCaps(true);
+    getModelCapabilities(model.trim()).then((caps) => {
+      setCapabilities(caps);
+      setIsLoadingCaps(false);
+    });
+  }, []);
 
   function handleSubmit(formData: FormData) {
     startTransition(async () => {
@@ -90,7 +133,25 @@ export function AiSettingsForm({ orgId, initialData }: AiSettingsFormProps) {
         <Label htmlFor="model" className="text-sm font-medium text-on-surface">
           {t("model")}
         </Label>
-        <Input id="model" name="model" defaultValue={initialData.model} />
+        <Input
+          id="model"
+          name="model"
+          defaultValue={initialData.model}
+          onBlur={(e) => fetchCapabilities(e.target.value)}
+        />
+        <div className="flex items-center gap-2 min-h-[24px]">
+          {isLoadingCaps ? (
+            <span className="text-xs text-on-surface/40">
+              {t("checkingCapabilities")}
+            </span>
+          ) : capabilities ? (
+            <>
+              <CapabilityBadge label="Text" supported={capabilities.text} />
+              <CapabilityBadge label="Image" supported={capabilities.image} />
+              <CapabilityBadge label="File" supported={capabilities.file} />
+            </>
+          ) : null}
+        </div>
       </div>
 
       <div className="space-y-2">
