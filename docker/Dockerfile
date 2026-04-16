@@ -21,7 +21,7 @@ RUN pnpm build
 
 # Stage 3: Production
 FROM node:22-alpine AS runner
-RUN apk add --no-cache postgresql-client
+RUN apk add --no-cache postgresql-client poppler-utils
 RUN npm install -g pnpm@10
 WORKDIR /app
 
