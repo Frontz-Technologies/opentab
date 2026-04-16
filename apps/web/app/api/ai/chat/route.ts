@@ -1,4 +1,9 @@
-import { convertToModelMessages, streamText, type UIMessage } from "ai";
+import {
+  convertToModelMessages,
+  stepCountIs,
+  streamText,
+  type UIMessage,
+} from "ai";
 import { getAiSettingsSecret } from "@/lib/actions/ai-settings";
 import { createAiProvider } from "@/lib/ai/provider";
 import { aiRateLimiter } from "@/lib/ai/rate-limiter";
@@ -42,7 +47,7 @@ export async function POST(req: Request): Promise<Response> {
     system,
     messages,
     tools,
-    maxSteps: 5,
+    stopWhen: stepCountIs(5),
   });
 
   return result.toUIMessageStreamResponse();
