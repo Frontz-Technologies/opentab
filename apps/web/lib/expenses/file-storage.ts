@@ -1,4 +1,7 @@
 import { randomUUID } from "crypto";
+import { createLogger } from "@/lib/logging/logger";
+
+const log = createLogger("file-storage");
 
 const useS3 = !!process.env.S3_ENDPOINT;
 
@@ -51,6 +54,15 @@ export async function storeFile(
 ): Promise<string> {
   const ext = originalName.split(".").pop() || "bin";
   const key = `${orgId}/expenses/${expenseId}.${ext}`;
+  const backend = useS3 ? "s3" : "local";
+
+  log.info("storing file", {
+    orgId,
+    expenseId,
+    ext,
+    sizeBytes: buffer.length,
+    backend,
+  });
 
   if (useS3) {
     const { s3Client, BUCKET, PutObjectCommand } = await s3();
@@ -64,10 +76,14 @@ export async function storeFile(
     await writeFile(join(dir, `${expenseId}.${ext}`), buffer);
   }
 
+  log.debug("file stored", { orgId, expenseId, key, backend });
   return key;
 }
 
 export async function getFile(relativePath: string): Promise<Buffer> {
+  const backend = useS3 ? "s3" : "local";
+  log.debug("retrieving file", { relativePath, backend });
+
   if (useS3) {
     const { s3Client, BUCKET, GetObjectCommand } = await s3();
     const response = await s3Client.send(
@@ -111,6 +127,15 @@ export async function storeTempFile(
 ): Promise<string> {
   const ext = originalName.split(".").pop() || "bin";
   const key = `${orgId}/expenses/tmp/${tempId}.${ext}`;
+  const backend = useS3 ? "s3" : "local";
+
+  log.info("storing temp file", {
+    orgId,
+    tempId,
+    ext,
+    sizeBytes: buffer.length,
+    backend,
+  });
 
   if (useS3) {
     const { s3Client, BUCKET, PutObjectCommand } = await s3();
@@ -134,6 +159,13 @@ export async function moveTempToExpense(
 ): Promise<string> {
   const ext = tempRelativePath.split(".").pop() || "bin";
   const finalKey = `${orgId}/expenses/${expenseId}.${ext}`;
+  const backend = useS3 ? "s3" : "local";
+
+  log.info("moving temp file to expense", {
+    orgId,
+    expenseId,
+    backend,
+  });
 
   if (useS3) {
     const { s3Client, BUCKET, CopyObjectCommand, DeleteObjectCommand } =
@@ -158,10 +190,14 @@ export async function moveTempToExpense(
     );
   }
 
+  log.debug("temp file moved", { orgId, expenseId, finalKey });
   return finalKey;
 }
 
 export async function deleteTempFile(tempRelativePath: string): Promise<void> {
+  const backend = useS3 ? "s3" : "local";
+  log.debug("deleting temp file", { tempRelativePath, backend });
+
   try {
     if (useS3) {
       const { s3Client, BUCKET, DeleteObjectCommand } = await s3();
@@ -173,6 +209,6 @@ export async function deleteTempFile(tempRelativePath: string): Promise<void> {
       await unlink(join(uploadsDir, tempRelativePath));
     }
   } catch {
-    // File may already be cleaned up
+    log.debug("temp file already cleaned up", { tempRelativePath });
   }
 }

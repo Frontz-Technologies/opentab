@@ -11,6 +11,9 @@ import { getSystemPrompt } from "@/lib/ai/system-prompt";
 import { createTools } from "@/lib/ai/tools";
 import type { ConfirmToolCall } from "@/lib/ai/types";
 import { getSession } from "@/lib/session";
+import { createLogger } from "@/lib/logging/logger";
+
+const log = createLogger("ai-chat");
 
 type ChatRequestBody = {
   messages?: UIMessage[];
@@ -23,20 +26,35 @@ export async function POST(req: Request): Promise<Response> {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const settings = await getAiSettingsSecret(session.org.id);
+  const orgId = session.org.id;
+
+  const settings = await getAiSettingsSecret(orgId);
   if (!settings?.enabled || !settings.apiKey) {
+    log.warn("AI chat request with no config", { orgId });
     return new Response("AI not configured", { status: 400 });
   }
 
-  const rateLimit = aiRateLimiter.check(session.org.id);
+  const rateLimit = aiRateLimiter.check(orgId);
   if (!rateLimit.allowed) {
+    log.warn("AI rate limit exceeded", {
+      orgId,
+      remaining: rateLimit.remaining,
+    });
     return new Response("AI rate limit exceeded", { status: 429 });
   }
+
+  log.info("AI chat request", {
+    orgId,
+    model: settings.model,
+    remaining: rateLimit.remaining,
+  });
+
+  const done = log.time("ai-chat-stream");
 
   const body = (await req.json()) as ChatRequestBody;
   const messages = await convertToModelMessages(body.messages ?? []);
   const model = createAiProvider(settings.apiKey, settings.model);
-  const tools = createTools(session.org.id, {
+  const tools = createTools(orgId, {
     role: session.role,
     confirmToolCall: body.confirmToolCall,
   });
@@ -48,6 +66,11 @@ export async function POST(req: Request): Promise<Response> {
     messages,
     tools,
     stopWhen: stepCountIs(5),
+  });
+
+  done("AI chat stream initiated", {
+    orgId,
+    messageCount: messages.length,
   });
 
   return result.toUIMessageStreamResponse();
