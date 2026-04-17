@@ -1,6 +1,13 @@
-import { generateText } from "ai";
+import { generateObject, NoObjectGeneratedError, generateText } from "ai";
+import { z } from "zod";
 import { createAiProvider } from "@/lib/ai/provider";
-import { pdfToImage } from "./pdf-convert";
+import {
+  getModelCapabilities,
+  type ModelCapabilities,
+} from "@/lib/actions/ai-settings";
+import { createLogger } from "@/lib/logging/logger";
+
+const log = createLogger("ai-extraction");
 
 export interface ExtractedLineItem {
   name: string;
@@ -18,157 +25,195 @@ export interface ExtractedExpenseData {
   description: string | null;
   category: string | null;
   lineItems: ExtractedLineItem[];
-  confidence: Record<string, number>;
+}
+
+/** Coerce any value to string or null */
+const coerceString = z
+  .union([z.string(), z.number(), z.null(), z.undefined()])
+  .transform((v) => (v != null ? String(v) : null));
+
+const coerceStringRequired = z
+  .union([z.string(), z.number()])
+  .transform((v) => String(v));
+
+const extractionSchema = z.object({
+  vendorName: coerceString.optional().default(null),
+  vendorVat: coerceString.optional().default(null),
+  date: coerceString.optional().default(null),
+  totalAmount: coerceString.optional().default(null),
+  currency: coerceString.optional().default(null),
+  description: coerceString.optional().default(null),
+  category: coerceString.optional().default(null),
+  lineItems: z
+    .array(
+      z.object({
+        name: coerceStringRequired.optional().default(""),
+        quantity: coerceStringRequired.optional().default("1"),
+        unitPrice: coerceStringRequired.optional().default("0"),
+        taxRate: coerceStringRequired.optional().default("0"),
+      }),
+    )
+    .optional()
+    .default([]),
+});
+
+/**
+ * Check if the model can process the given file type.
+ * Returns the best content strategy or null if unsupported.
+ */
+export function getExtractionStrategy(
+  mimeType: string,
+  capabilities: ModelCapabilities,
+): "file" | "image" | null {
+  const isPdf = mimeType === "application/pdf";
+  const isImage = mimeType.startsWith("image/");
+
+  if (isPdf) {
+    if (capabilities.file) return "file";
+    if (capabilities.image) return "image";
+    return null;
+  }
+
+  if (isImage) {
+    if (capabilities.image) return "image";
+    return null;
+  }
+
+  return null;
 }
 
 /**
- * Normalize AI response into a consistent structure.
- * Handles two formats:
- *   Format A (nested): { vendorName: { value: "...", confidence: 0.9 } }
- *   Format B (flat):   { vendorName: "...", vendorName_confidence: 0.9 }
+ * Prepare content blocks for the AI message based on the extraction strategy.
  */
-export function parseExtractionResponse(
-  raw: Record<string, unknown>,
-): ExtractedExpenseData {
-  const fields = [
-    "vendorName",
-    "vendorVat",
-    "date",
-    "totalAmount",
-    "currency",
-    "description",
-    "category",
+function buildContentBlocks(
+  buffer: Buffer,
+  mimeType: string,
+  strategy: "file" | "image",
+) {
+  const base64 = buffer.toString("base64");
+
+  if (strategy === "file") {
+    return [
+      { type: "text", text: EXTRACTION_PROMPT },
+      { type: "file", data: base64, mimeType },
+    ];
+  }
+
+  return [
+    { type: "text", text: EXTRACTION_PROMPT },
+    { type: "image", image: `data:${mimeType};base64,${base64}` },
   ];
-  const result: Record<string, string | null> = {};
-  const confidence: Record<string, number> = {};
-
-  for (const field of fields) {
-    const val = raw[field];
-    if (val && typeof val === "object" && "value" in val) {
-      // Format A: nested { value, confidence }
-      result[field] = String((val as { value: unknown }).value ?? "") || null;
-      confidence[field] = Number(
-        (val as { confidence?: unknown }).confidence ?? 0,
-      );
-    } else {
-      // Format B: flat value + separate confidence key
-      result[field] = val != null ? String(val) : null;
-      confidence[field] = Number(raw[`${field}_confidence`] ?? 0);
-    }
-  }
-
-  const rawLineItems = raw.lineItems;
-  const lineItems: ExtractedLineItem[] = [];
-  if (Array.isArray(rawLineItems)) {
-    for (const item of rawLineItems) {
-      if (item && typeof item === "object") {
-        const li = item as Record<string, unknown>;
-        lineItems.push({
-          name: String(li.name ?? ""),
-          quantity: String(li.quantity ?? "1"),
-          unitPrice: String(li.unitPrice ?? "0"),
-          taxRate: String(li.taxRate ?? "0"),
-        });
-      }
-    }
-  }
-
-  return {
-    vendorName: result.vendorName ?? null,
-    vendorVat: result.vendorVat ?? null,
-    date: result.date ?? null,
-    totalAmount: result.totalAmount ?? null,
-    currency: result.currency ?? null,
-    description: result.description ?? null,
-    category: result.category ?? null,
-    lineItems,
-    confidence,
-  };
 }
 
-/**
- * Prepare a file buffer for vision API submission.
- * If the file is a PDF, converts the first page to PNG.
- */
-export async function prepareImageForExtraction(
-  originalBuffer: Buffer,
-  originalMimeType: string,
-): Promise<{ buffer: Buffer; mimeType: string; dataUrl: string }> {
-  let imageBuffer = originalBuffer;
-  let mimeType = originalMimeType;
+const EXTRACTION_PROMPT = `Extract structured data from this receipt/invoice as JSON.
+Use null for any field you cannot confidently read.
 
-  if (mimeType === "application/pdf") {
-    imageBuffer = await pdfToImage(originalBuffer);
-    mimeType = "image/png";
-  }
-
-  const base64 = imageBuffer.toString("base64");
-  const dataUrl = `data:${mimeType};base64,${base64}`;
-
-  return { buffer: imageBuffer, mimeType, dataUrl };
-}
-
-const EXTRACTION_PROMPT = `You are a receipt/invoice data extractor. Analyze the provided image and extract structured data.
-
-Return a JSON object with these fields. Use null for any field you cannot confidently read:
-
+Required JSON format:
 {
-  "vendorName": "string or null - the supplier/vendor name",
-  "vendorVat": "string or null - the VAT/tax ID number of the vendor",
-  "date": "YYYY-MM-DD or null - the receipt/invoice date",
-  "totalAmount": "string decimal or null - the total amount (e.g. '123.45')",
-  "currency": "string 3-letter ISO code or null (e.g. 'EUR', 'USD')",
-  "description": "string or null - brief description of what was purchased",
-  "category": "string or null - expense category",
-  "lineItems": [
-    {
-      "name": "item description",
-      "quantity": "decimal string (e.g. '1')",
-      "unitPrice": "decimal string (e.g. '10.00')",
-      "taxRate": "decimal percentage string (e.g. '24')"
-    }
-  ],
-  "confidence": {
-    "vendorName": 0.0,
-    "vendorVat": 0.0,
-    "date": 0.0,
-    "totalAmount": 0.0,
-    "currency": 0.0,
-    "description": 0.0,
-    "category": 0.0
-  }
+  "vendorName": "string or null",
+  "vendorVat": "string or null",
+  "date": "YYYY-MM-DD or null",
+  "totalAmount": "number or string or null",
+  "currency": "3-letter ISO code or null",
+  "description": "string or null",
+  "category": "string or null",
+  "lineItems": [{"name": "string", "quantity": "number", "unitPrice": "number", "taxRate": "number"}]
 }
 
-Return ONLY valid JSON. No markdown, no explanation.`;
+Return ONLY valid JSON.`;
 
 export async function extractReceiptData(
-  imageDataUrl: string,
+  buffer: Buffer,
+  mimeType: string,
   apiKey: string,
   model: string,
 ): Promise<ExtractedExpenseData | null> {
   try {
+    const capTimer = log.time("capability-check");
+    const capabilities = await getModelCapabilities(model);
+    capTimer("capabilities resolved", {
+      model,
+      text: capabilities.text,
+      image: capabilities.image,
+      file: capabilities.file,
+    });
+
+    const strategy = getExtractionStrategy(mimeType, capabilities);
+    log.info("extraction strategy selected", { model, mimeType, strategy });
+
+    if (!strategy) {
+      log.warn("model does not support this file type", {
+        model,
+        mimeType,
+        capabilities,
+      });
+      return null;
+    }
+
+    const content = buildContentBlocks(buffer, mimeType, strategy);
     const provider = createAiProvider(apiKey, model);
+    const messages = [{ role: "user" as const, content: content as any }];
+
+    // Try structured output first (mode: json injects schema into prompt)
+    const aiTimer = log.time("ai-api-call");
+    try {
+      const result = await generateObject({
+        model: provider,
+        schema: extractionSchema,
+        messages,
+        maxOutputTokens: 2000,
+      });
+      const data = result.object as z.infer<typeof extractionSchema>;
+      aiTimer("structured extraction succeeded", {
+        model,
+        mode: "generateObject",
+      });
+      log.info("extraction result", {
+        model,
+        hasVendor: !!data.vendorName,
+        hasTotal: !!data.totalAmount,
+        lineItemCount: data.lineItems.length,
+      });
+      return data;
+    } catch (structuredErr) {
+      // Fall back to generateText + manual parse if structured output fails
+      if (!NoObjectGeneratedError.isInstance(structuredErr))
+        throw structuredErr;
+      log.warn("structured output failed, falling back to text parse", {
+        model,
+        error: structuredErr.message,
+      });
+    }
+
+    // Fallback: generateText + manual JSON parse + Zod coercion
     const { text } = await generateText({
       model: provider,
-      messages: [
-        {
-          role: "user",
-          content: [
-            { type: "text", text: EXTRACTION_PROMPT },
-            { type: "image", image: imageDataUrl },
-          ],
-        },
-      ],
+      messages,
       maxOutputTokens: 2000,
     });
+    aiTimer("text fallback extraction", { model, responseLength: text.length });
 
     const cleaned = text
       .replace(/```json\n?/g, "")
       .replace(/```\n?/g, "")
       .trim();
-    const parsed = JSON.parse(cleaned) as Record<string, unknown>;
-    return parseExtractionResponse(parsed);
-  } catch {
+    const raw = JSON.parse(cleaned);
+    const data = extractionSchema.parse(raw);
+
+    log.info("extraction result (fallback)", {
+      model,
+      hasVendor: !!data.vendorName,
+      hasTotal: !!data.totalAmount,
+      lineItemCount: data.lineItems.length,
+    });
+
+    return data;
+  } catch (err) {
+    log.error("extraction failed", {
+      model,
+      mimeType,
+      error: err instanceof Error ? err.message : String(err),
+    });
     return null;
   }
 }
