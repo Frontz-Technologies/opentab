@@ -5,20 +5,40 @@ import { getSession } from "@/lib/session";
 import { PageHeader } from "@/components/layout/page-header";
 import { db } from "@/lib/db";
 import { contacts } from "@opentab/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, count } from "drizzle-orm";
 import { ContactList } from "./contact-list";
+import { Pagination } from "@/components/ui/pagination";
+import {
+  parsePage,
+  paginationOffset,
+  DEFAULT_PAGE_SIZE,
+} from "@/lib/pagination";
 
-export default async function ContactsPage() {
+export default async function ContactsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const session = await getSession();
   if (!session) redirect("/login");
 
   const t = await getTranslations("contacts");
+  const params = await searchParams;
+  const page = parsePage(params);
 
-  const allContacts = await db
-    .select()
-    .from(contacts)
-    .where(eq(contacts.orgId, session.org.id))
-    .orderBy(desc(contacts.createdAt));
+  const [allContacts, [{ total }]] = await Promise.all([
+    db
+      .select()
+      .from(contacts)
+      .where(eq(contacts.orgId, session.org.id))
+      .orderBy(desc(contacts.createdAt))
+      .limit(DEFAULT_PAGE_SIZE)
+      .offset(paginationOffset(page)),
+    db
+      .select({ total: count() })
+      .from(contacts)
+      .where(eq(contacts.orgId, session.org.id)),
+  ]);
 
   return (
     <>
@@ -40,6 +60,12 @@ export default async function ContactsPage() {
       />
       <div className="px-6 py-6">
         <ContactList contacts={allContacts} />
+        <Pagination
+          totalItems={total}
+          pageSize={DEFAULT_PAGE_SIZE}
+          currentPage={page}
+          className="mt-6"
+        />
       </div>
     </>
   );

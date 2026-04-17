@@ -5,20 +5,40 @@ import { getSession } from "@/lib/session";
 import { PageHeader } from "@/components/layout/page-header";
 import { db } from "@/lib/db";
 import { products } from "@opentab/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, count } from "drizzle-orm";
 import { ProductList } from "./product-list";
+import { Pagination } from "@/components/ui/pagination";
+import {
+  parsePage,
+  paginationOffset,
+  DEFAULT_PAGE_SIZE,
+} from "@/lib/pagination";
 
-export default async function ProductsPage() {
+export default async function ProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const session = await getSession();
   if (!session) redirect("/login");
 
   const t = await getTranslations("products");
+  const params = await searchParams;
+  const page = parsePage(params);
 
-  const allProducts = await db
-    .select()
-    .from(products)
-    .where(eq(products.orgId, session.org.id))
-    .orderBy(desc(products.createdAt));
+  const [allProducts, [{ total }]] = await Promise.all([
+    db
+      .select()
+      .from(products)
+      .where(eq(products.orgId, session.org.id))
+      .orderBy(desc(products.createdAt))
+      .limit(DEFAULT_PAGE_SIZE)
+      .offset(paginationOffset(page)),
+    db
+      .select({ total: count() })
+      .from(products)
+      .where(eq(products.orgId, session.org.id)),
+  ]);
 
   return (
     <>
@@ -40,6 +60,12 @@ export default async function ProductsPage() {
       />
       <div className="px-6 py-6">
         <ProductList products={allProducts} />
+        <Pagination
+          totalItems={total}
+          pageSize={DEFAULT_PAGE_SIZE}
+          currentPage={page}
+          className="mt-6"
+        />
       </div>
     </>
   );

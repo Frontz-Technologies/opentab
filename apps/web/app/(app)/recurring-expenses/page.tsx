@@ -5,20 +5,40 @@ import { getSession } from "@/lib/session";
 import { PageHeader } from "@/components/layout/page-header";
 import { db } from "@/lib/db";
 import { recurringExpenses } from "@opentab/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, count } from "drizzle-orm";
 import { RecurringExpenseList } from "./recurring-expense-list";
+import { Pagination } from "@/components/ui/pagination";
+import {
+  parsePage,
+  paginationOffset,
+  DEFAULT_PAGE_SIZE,
+} from "@/lib/pagination";
 
-export default async function RecurringExpensesPage() {
+export default async function RecurringExpensesPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const session = await getSession();
   if (!session) redirect("/login");
 
   const t = await getTranslations("recurringExpenses");
+  const params = await searchParams;
+  const page = parsePage(params);
 
-  const allRecurring = await db
-    .select()
-    .from(recurringExpenses)
-    .where(eq(recurringExpenses.orgId, session.org.id))
-    .orderBy(desc(recurringExpenses.createdAt));
+  const [allRecurring, [{ total }]] = await Promise.all([
+    db
+      .select()
+      .from(recurringExpenses)
+      .where(eq(recurringExpenses.orgId, session.org.id))
+      .orderBy(desc(recurringExpenses.createdAt))
+      .limit(DEFAULT_PAGE_SIZE)
+      .offset(paginationOffset(page)),
+    db
+      .select({ total: count() })
+      .from(recurringExpenses)
+      .where(eq(recurringExpenses.orgId, session.org.id)),
+  ]);
 
   return (
     <>
@@ -40,6 +60,12 @@ export default async function RecurringExpensesPage() {
       />
       <div className="px-6 py-6">
         <RecurringExpenseList items={allRecurring} />
+        <Pagination
+          totalItems={total}
+          pageSize={DEFAULT_PAGE_SIZE}
+          currentPage={page}
+          className="mt-6"
+        />
       </div>
     </>
   );

@@ -5,20 +5,40 @@ import { getSession } from "@/lib/session";
 import { PageHeader } from "@/components/layout/page-header";
 import { db } from "@/lib/db";
 import { invoices } from "@opentab/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, count } from "drizzle-orm";
 import { InvoiceList } from "./invoice-list";
+import { Pagination } from "@/components/ui/pagination";
+import {
+  parsePage,
+  paginationOffset,
+  DEFAULT_PAGE_SIZE,
+} from "@/lib/pagination";
 
-export default async function InvoicesPage() {
+export default async function InvoicesPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const session = await getSession();
   if (!session) redirect("/login");
 
   const t = await getTranslations("invoices");
+  const params = await searchParams;
+  const page = parsePage(params);
 
-  const allInvoices = await db
-    .select()
-    .from(invoices)
-    .where(eq(invoices.orgId, session.org.id))
-    .orderBy(desc(invoices.createdAt));
+  const [allInvoices, [{ total }]] = await Promise.all([
+    db
+      .select()
+      .from(invoices)
+      .where(eq(invoices.orgId, session.org.id))
+      .orderBy(desc(invoices.createdAt))
+      .limit(DEFAULT_PAGE_SIZE)
+      .offset(paginationOffset(page)),
+    db
+      .select({ total: count() })
+      .from(invoices)
+      .where(eq(invoices.orgId, session.org.id)),
+  ]);
 
   return (
     <>
@@ -42,6 +62,12 @@ export default async function InvoicesPage() {
         <InvoiceList
           invoices={allInvoices}
           showMyData={session.org.countryCode === "GR"}
+        />
+        <Pagination
+          totalItems={total}
+          pageSize={DEFAULT_PAGE_SIZE}
+          currentPage={page}
+          className="mt-6"
         />
       </div>
     </>
