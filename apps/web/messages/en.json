@@ -409,6 +409,7 @@
   },
   "recurring": {
     "title": "Recurring Invoices",
+    "lineItems": "Line Items",
     "addRecurring": "New Recurring",
     "editRecurring": "Edit Recurring Invoice",
     "noRecurring": "No recurring invoices yet",
