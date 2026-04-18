@@ -103,10 +103,51 @@
   --color-inverse-primary: #006C49;
 }
 
+/* Light mode palette — activates when the `dark` class is absent from <html>.
+   Dark values above stay as the @theme defaults so the core dark mode is
+   untouched byte-for-byte when the class is present. Uses html:not(.dark) —
+   not :where() — to beat the specificity of Tailwind's layered @theme output. */
+html:not(.dark) {
+  --color-surface-dim: #FAFAF9;
+  --color-surface-container-lowest: #FDFDFC;
+  --color-surface-container-low: #F5F5F0;
+  --color-surface-container: #EEEEE8;
+  --color-surface-container-high: #E5E5DF;
+  --color-surface-container-highest: #DDDDD7;
+  --color-surface: #FAFAF9;
+  --color-surface-bright: #D5D5CF;
+
+  --color-primary: #087055;
+  --color-primary-container: #10B981;
+  --color-on-primary: #FFFFFF;
+
+  --color-secondary: #3D7A5C;
+  --color-secondary-container: #C8EDD8;
+  --color-on-secondary-container: #3D7A5C;
+
+  --color-tertiary: #B3261E;
+  --color-tertiary-container: #F9DEDC;
+  --color-on-tertiary-container: #8C1D18;
+
+  --color-on-surface: #1A1A1A;
+  --color-on-surface-variant: #4A5A4F;
+  --color-on-background: #1A1A1A;
+
+  --color-outline: #8A9A8E;
+  --color-outline-variant: #C2CFC6;
+
+  --color-error: #B3261E;
+  --color-error-container: #F9DEDC;
+
+  --color-inverse-surface: #1A1A1A;
+  --color-inverse-on-surface: #FAFAF9;
+  --color-inverse-primary: #4EDEA3;
+}
+
 body {
   font-family: var(--font-body);
-  background-color: #131313;
-  color: #e5e2e1;
+  background-color: var(--color-surface-dim);
+  color: var(--color-on-surface);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -173,39 +214,41 @@ body {
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* Shadcn compatibility tokens — brand-aligned light values.
+   The .dark override below kicks in when the html.dark class is applied. */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --background: #FAFAF9;
+  --foreground: #1A1A1A;
+  --card: #EEEEE8;
+  --card-foreground: #1A1A1A;
+  --popover: #EEEEE8;
+  --popover-foreground: #1A1A1A;
+  --primary: #087055;
+  --primary-foreground: #FFFFFF;
+  --secondary: #C8EDD8;
+  --secondary-foreground: #3D7A5C;
+  --muted: #E5E5DF;
+  --muted-foreground: #4A5A4F;
+  --accent: #E5E5DF;
+  --accent-foreground: #1A1A1A;
+  --destructive: #B3261E;
+  --border: #C2CFC6;
+  --input: #C2CFC6;
+  --ring: #087055;
+  --chart-1: #087055;
+  --chart-2: #10B981;
+  --chart-3: #3D7A5C;
+  --chart-4: #9ED2B5;
+  --chart-5: #4A5A4F;
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: #EEEEE8;
+  --sidebar-foreground: #1A1A1A;
+  --sidebar-primary: #087055;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #E5E5DF;
+  --sidebar-accent-foreground: #1A1A1A;
+  --sidebar-border: #C2CFC6;
+  --sidebar-ring: #087055;
 }
 
 .dark {
