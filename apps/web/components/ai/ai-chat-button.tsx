@@ -11,7 +11,7 @@ export function AiChatButton() {
     <button
       type="button"
       onClick={open}
-      className="fixed bottom-20 right-4 z-50 flex size-14 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg transition-transform hover:scale-105 md:bottom-6"
+      className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-[max(1.5rem,env(safe-area-inset-right))] z-50 flex size-14 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg transition-transform hover:scale-105 md:bottom-[calc(1.5rem+env(safe-area-inset-bottom))]"
       aria-label={t("open")}
     >
       <span className="material-symbols-outlined text-[24px] leading-none">
