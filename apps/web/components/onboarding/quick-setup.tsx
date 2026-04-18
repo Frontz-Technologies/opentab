@@ -68,11 +68,11 @@ export function QuickSetup({ completedSteps }: QuickSetupProps) {
       </div>
       <div className="w-full h-1.5 bg-surface-container-highest rounded-full mb-6">
         <div
-          className="h-full rounded-full btn-gradient transition-all duration-500"
+          className="h-full rounded-full bg-primary transition-all duration-500"
           style={{ width: `${progress}%` }}
         />
       </div>
-      <div className="space-y-2">
+      <div className="space-y-1">
         {steps.map((step) => {
           const isCompleted = completedSteps.includes(step.id);
           if (step.enabled) {
@@ -80,15 +80,39 @@ export function QuickSetup({ completedSteps }: QuickSetupProps) {
               <Link
                 key={step.id}
                 href={step.href}
-                className={`flex items-center gap-3 p-3 rounded-xl transition-all ${isCompleted ? "bg-primary/5 text-primary" : "hover:bg-surface-container-high text-on-surface"}`}
+                className="group flex items-center gap-3 p-3 rounded-xl transition-colors hover:bg-surface-container-high"
               >
-                <span className="material-symbols-outlined text-xl">
-                  {isCompleted ? "check_circle" : step.icon}
+                <span
+                  className={`flex size-5 shrink-0 items-center justify-center rounded-full transition-colors ${
+                    isCompleted
+                      ? "bg-primary text-on-primary"
+                      : "border border-outline-variant/30 bg-surface-container-low group-hover:border-primary/50"
+                  }`}
+                  aria-hidden
+                >
+                  {isCompleted && (
+                    <span className="material-symbols-outlined text-[14px] font-bold">
+                      check
+                    </span>
+                  )}
+                </span>
+                <span className="material-symbols-outlined text-lg text-on-surface-variant">
+                  {step.icon}
                 </span>
                 <span
-                  className={`font-medium text-sm ${isCompleted ? "line-through opacity-60" : ""}`}
+                  className={`font-medium text-sm ${
+                    isCompleted
+                      ? "line-through text-on-surface/50"
+                      : "text-on-surface"
+                  }`}
                 >
                   {t(step.labelKey)}
+                </span>
+                <span
+                  className="material-symbols-outlined ml-auto text-[18px] text-on-surface-variant opacity-0 transition-opacity group-hover:opacity-100"
+                  aria-hidden
+                >
+                  chevron_right
                 </span>
               </Link>
             );
@@ -96,12 +120,18 @@ export function QuickSetup({ completedSteps }: QuickSetupProps) {
           return (
             <div
               key={step.id}
-              className="flex items-center gap-3 p-3 rounded-xl text-on-surface/30"
+              className="flex items-center gap-3 p-3 rounded-xl opacity-50"
             >
-              <span className="material-symbols-outlined text-xl">
+              <span
+                className="flex size-5 shrink-0 items-center justify-center rounded-full border border-outline-variant/20 bg-surface-container-low"
+                aria-hidden
+              />
+              <span className="material-symbols-outlined text-lg text-on-surface-variant">
                 {step.icon}
               </span>
-              <span className="font-medium text-sm">{t(step.labelKey)}</span>
+              <span className="font-medium text-sm text-on-surface/70">
+                {t(step.labelKey)}
+              </span>
               <span className="ml-auto font-label text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-surface-container-highest/40 text-on-surface-variant">
                 {tCommon("comingSoon")}
               </span>

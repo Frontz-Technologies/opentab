@@ -109,4 +109,18 @@ test.describe("Navigation", () => {
     await page.reload();
     await expect(sidebar).toHaveAttribute("data-state", "expanded");
   });
+
+  test("unknown route renders styled 404 inside the app shell", async () => {
+    await page.goto("/totally-fake-route");
+    // App shell still present
+    await expect(page.locator('[data-slot="sidebar"]')).toBeVisible();
+    // Headline visible (in current locale — asserts on EN copy)
+    await expect(
+      page.getByRole("heading", { name: /lost your way/i }),
+    ).toBeVisible();
+    // Single primary action leading back to dashboard
+    await expect(
+      page.getByRole("link", { name: /Back to Dashboard/i }),
+    ).toBeVisible();
+  });
 });
