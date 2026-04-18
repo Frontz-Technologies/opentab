@@ -16,7 +16,10 @@ import {
   cancelInvoice,
   deleteInvoice,
 } from "../actions";
-import { submitToMyData, cancelOnMyData } from "../mydata-actions";
+import {
+  retryIntegrationSubmission,
+  cancelIntegrationSubmission,
+} from "../integration-actions";
 
 interface InvoiceActionsProps {
   invoice: Invoice;
@@ -136,7 +139,7 @@ export function InvoiceActions({ invoice, mydataStatus }: InvoiceActionsProps) {
             size="sm"
             onClick={() => {
               startTransition(async () => {
-                await submitToMyData(invoice.id);
+                await retryIntegrationSubmission(invoice.id);
                 router.refresh();
               });
             }}
@@ -155,7 +158,7 @@ export function InvoiceActions({ invoice, mydataStatus }: InvoiceActionsProps) {
           onClick={() => {
             if (!confirm(t("mydataCancelConfirm"))) return;
             startTransition(async () => {
-              await cancelOnMyData(invoice.id);
+              await cancelIntegrationSubmission(invoice.id);
               router.refresh();
             });
           }}

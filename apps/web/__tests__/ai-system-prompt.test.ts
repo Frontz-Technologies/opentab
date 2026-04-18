@@ -3,7 +3,7 @@ import { getSystemPrompt } from "@/lib/ai/system-prompt";
 import type { SessionContext } from "@/lib/session";
 
 describe("AI system prompt", () => {
-  it("includes greek tax context for greek organisations", () => {
+  it("includes greek tax context for greek organisations", async () => {
     const session: SessionContext = {
       user: {
         id: "user-1",
@@ -31,7 +31,7 @@ describe("AI system prompt", () => {
       role: "owner",
     };
 
-    const prompt = getSystemPrompt(session);
+    const prompt = await getSystemPrompt(session);
 
     expect(prompt).toContain("Organisation: OpenTab");
     expect(prompt).toContain("Greek Tax Context");

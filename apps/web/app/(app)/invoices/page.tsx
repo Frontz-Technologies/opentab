@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { db } from "@/lib/db";
 import { invoices, countryIntegrationSubmissions } from "@opentab/db/schema";
 import { eq, desc, count, and, inArray } from "drizzle-orm";
+import { getCountryProvider } from "@/lib/country";
 import { InvoiceList } from "./invoice-list";
 import { Pagination } from "@/components/ui/pagination";
 import {
@@ -40,8 +41,12 @@ export default async function InvoicesPage({
       .where(eq(invoices.orgId, session.org.id)),
   ]);
 
+  const provider = getCountryProvider(session.org.countryCode);
+  const mydataIntegration = provider.integrations.find(
+    (i) => i.kind === "mydata",
+  );
   const mydataStatusByInvoice: Record<string, number | null> = {};
-  if (session.org.countryCode === "GR" && allInvoices.length > 0) {
+  if (mydataIntegration && allInvoices.length > 0) {
     const submissions = await db
       .select({
         invoiceId: countryIntegrationSubmissions.invoiceId,
@@ -52,7 +57,7 @@ export default async function InvoicesPage({
       .where(
         and(
           eq(countryIntegrationSubmissions.orgId, session.org.id),
-          eq(countryIntegrationSubmissions.countryCode, "GR"),
+          eq(countryIntegrationSubmissions.countryCode, provider.code),
           eq(countryIntegrationSubmissions.kind, "mydata"),
           inArray(
             countryIntegrationSubmissions.invoiceId,
@@ -90,7 +95,7 @@ export default async function InvoicesPage({
       <div className="px-6 py-6">
         <InvoiceList
           invoices={allInvoices}
-          showMyData={session.org.countryCode === "GR"}
+          showMyData={!!mydataIntegration}
           mydataStatusByInvoice={mydataStatusByInvoice}
         />
         <Pagination

@@ -8,7 +8,6 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { detectCountryFromTaxId } from "@/lib/utils";
 import { getCountryProvider } from "@/lib/country";
-import { lookupGreekAfm } from "@/lib/country/providers/gr/integrations/mydata/services/aade";
 import { validateViesVat } from "@/lib/country/services/vies";
 import type { CompanyLookupResult } from "@/lib/country";
 import { createLogger } from "@/lib/logging/logger";
@@ -254,15 +253,19 @@ export async function lookupVat(vatNumber: string): Promise<{
     detectedCountry: detectedCountry ?? "unknown",
   });
 
-  if (detectedCountry === "GR") {
-    const done = log.time("vat-lookup-gr");
-    const result = await lookupGreekAfm(cleaned);
-    if (result) {
-      done("Greek AFM lookup succeeded");
-      return { success: true, data: result, validated: true };
+  if (detectedCountry) {
+    const provider = getCountryProvider(detectedCountry);
+    if (provider.lookupCompany) {
+      const done = log.time(`vat-lookup-${detectedCountry.toLowerCase()}`);
+      try {
+        const result = await provider.lookupCompany(cleaned);
+        done(`${detectedCountry} company lookup succeeded`);
+        return { success: true, data: result, validated: true };
+      } catch (err) {
+        done(`${detectedCountry} company lookup failed`);
+        // Fall through to VIES for EU VAT numbers
+      }
     }
-    done("Greek AFM lookup failed");
-    return { success: false, error: "Could not find company with this ΑΦΜ" };
   }
 
   if (detectedCountry && /^[A-Z]{2}/.test(cleaned)) {
