@@ -1,17 +1,7 @@
 "use client";
 
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
-
-const COLORS = [
-  "#4EDEA3",
-  "#60A5FA",
-  "#FBBF24",
-  "#A78BFA",
-  "#FB7185",
-  "#2DD4BF",
-  "#FB923C",
-  "#94A3B8",
-];
+import { useChartTheme } from "@/hooks/use-chart-theme";
 
 interface CategoryData {
   category: string;
@@ -49,7 +39,9 @@ export function ExpenseCategoryDonut({
   data: CategoryData[];
   totalExpenses: number;
 }) {
+  const theme = useChartTheme();
   if (!data.length) return null;
+  const colors = theme.series;
   return (
     <div className="relative">
       <ResponsiveContainer width="100%" height={300}>
@@ -66,7 +58,7 @@ export function ExpenseCategoryDonut({
             {data.map((_, i) => (
               <Cell
                 key={i}
-                fill={COLORS[i % COLORS.length]}
+                fill={colors[i % colors.length]}
                 stroke="transparent"
               />
             ))}
@@ -88,7 +80,7 @@ export function ExpenseCategoryDonut({
               <span
                 className="size-2.5 rounded-full"
                 style={{
-                  backgroundColor: COLORS[i % COLORS.length],
+                  backgroundColor: colors[i % colors.length],
                 }}
               />
               <span className="text-xs text-on-surface-variant">

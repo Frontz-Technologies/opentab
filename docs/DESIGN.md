@@ -45,7 +45,7 @@ Both palettes use the same warm undertone family. The light palette's olive-parc
 | Token                       | Hex       | Role                              |
 | --------------------------- | --------- | --------------------------------- |
 | `surface-dim`               | `#FAFAF9` | Page background — warm parchment  |
-| `surface-container-lowest`  | `#FFFFFF` | Recessed wells, input fills       |
+| `surface-container-lowest`  | `#FDFDFC` | Recessed wells, input fills       |
 | `surface-container-low`     | `#F5F5F0` | Subtle inset sections             |
 | `surface-container`         | `#EEEEE8` | Default card surface              |
 | `surface-container-high`    | `#E5E5DF` | Raised cards, hover states        |
@@ -72,7 +72,7 @@ The emerald primary is the brand anchor across both themes. In light mode, the p
 
 | Token                 | Hex       | Usage                                       |
 | --------------------- | --------- | ------------------------------------------- |
-| `primary`             | `#0A8F6C` | Active states, links, focus rings, key data |
+| `primary`             | `#087055` | Active states, links, focus rings, key data |
 | `primary-container`   | `#10B981` | Filled chip backgrounds                     |
 | `on-primary`          | `#FFFFFF` | Text on primary-coloured surfaces           |
 | `secondary`           | `#3D7A5C` | Secondary interactive elements              |
@@ -112,7 +112,7 @@ The emerald primary is the brand anchor across both themes. In light mode, the p
 | Token                | Hex       | Usage                                                  |
 | -------------------- | --------- | ------------------------------------------------------ |
 | `on-surface`         | `#1A1A1A` | Primary body text — deep charcoal, not pure black      |
-| `on-surface-variant` | `#5C6B60` | Secondary text — green-tinted for brand cohesion       |
+| `on-surface-variant` | `#4A5A4F` | Secondary text — green-tinted for brand cohesion       |
 | `outline`            | `#8A9A8E` | Disabled states, decorative separators (use sparingly) |
 | `outline-variant`    | `#C2CFC6` | Ghost border fallback                                  |
 
@@ -190,7 +190,7 @@ OpenTab uses **tonal layering** — not box shadows — to communicate elevation
 
 **Primary (solid emerald):**
 
-- Background: `bg-primary` (dark: `#0A8F6C`, light: `#0A8F6C`) or `bg-primary-container` for the brighter fill
+- Background: `bg-primary` (dark: `#0A8F6C`, light: `#087055`) or `bg-primary-container` for the brighter fill
 - Text: `on-primary` (`#003824`), `font-label`, medium weight
 - Border radius: `rounded-lg` (0.5rem)
 - One per page region — the hero action, nothing more
@@ -265,7 +265,7 @@ Common variants (both themes use the same token references — the values resolv
 
 | Status         | Background | Text      |
 | -------------- | ---------- | --------- |
-| Paid / Active  | `#D1FAE5`  | `#0A8F6C` |
+| Paid / Active  | `#D1FAE5`  | `#067049` |
 | Overdue        | `#F9DEDC`  | `#B3261E` |
 | Draft          | `#DDDDD7`  | `#5C6B60` |
 | Pending / Sent | `#C8EDD8`  | `#3D7A5C` |
@@ -331,7 +331,7 @@ OpenTab supports two themes: **Dark** (default) and **Light**. Dark is the prima
 When building or modifying any component, verify it works in both themes:
 
 1. Surface hierarchy uses token references, not hex
-2. Primary colour contrast is sufficient (dark: `#4EDEA3`, light: `#0A8F6C`)
+2. Primary colour contrast is sufficient (dark: `#4EDEA3`, light: `#087055`)
 3. Glass effects use the correct opacity/blur per theme
 4. Status badges resolve correctly
 5. The No-Line Rule applies in both themes — no opaque borders
@@ -339,10 +339,10 @@ When building or modifying any component, verify it works in both themes:
 ### Light Mode — Quick Reference
 
 ```
-Surfaces:        #FAFAF9 → #FFFFFF → #F5F5F0 → #EEEEE8 → #E5E5DF → #DDDDD7 → #D5D5CF
-Primary:         #0A8F6C (deeper emerald for light bg contrast)
-Primary CTA:     #0A8F6C (solid emerald)
-Text:            #1A1A1A (primary) / #5C6B60 (secondary, green-tinted)
+Surfaces:        #FAFAF9 → #FDFDFC → #F5F5F0 → #EEEEE8 → #E5E5DF → #DDDDD7 → #D5D5CF
+Primary:         #087055 (deep emerald — WCAG AA body on parchment)
+Primary CTA:     #087055 (solid emerald)
+Text:            #1A1A1A (primary) / #4A5A4F (secondary, green-tinted)
 Danger:          #B3261E (text) / #F9DEDC (container)
 Ghost border:    rgba(194, 207, 198, 0.10)
 Glass:           85% opacity, blur(16px)

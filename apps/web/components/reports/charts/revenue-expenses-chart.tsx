@@ -9,6 +9,7 @@ import {
   Tooltip,
   CartesianGrid,
 } from "recharts";
+import { useChartTheme } from "@/hooks/use-chart-theme";
 
 interface DataPoint {
   bucket: string;
@@ -77,21 +78,22 @@ function CustomTooltip({
 }
 
 export function RevenueExpensesChart({ data }: { data: DataPoint[] }) {
+  const theme = useChartTheme();
   if (!data.length) return null;
   return (
     <ResponsiveContainer width="100%" height={300}>
       <AreaChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+        <CartesianGrid strokeDasharray="3 3" stroke={theme.grid} />
         <XAxis
           dataKey="bucket"
           tickFormatter={formatBucketLabel}
-          tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 12 }}
+          tick={{ fill: theme.tickText, fontSize: 12 }}
           axisLine={false}
           tickLine={false}
         />
         <YAxis
           tickFormatter={formatCurrency}
-          tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 12 }}
+          tick={{ fill: theme.tickText, fontSize: 12 }}
           axisLine={false}
           tickLine={false}
           width={70}
@@ -101,8 +103,8 @@ export function RevenueExpensesChart({ data }: { data: DataPoint[] }) {
           type="monotone"
           dataKey="revenue"
           name="Revenue"
-          stroke="#4EDEA3"
-          fill="#4EDEA3"
+          stroke={theme.revenue}
+          fill={theme.revenue}
           fillOpacity={0.2}
           strokeWidth={2}
         />
@@ -110,8 +112,8 @@ export function RevenueExpensesChart({ data }: { data: DataPoint[] }) {
           type="monotone"
           dataKey="expenses"
           name="Expenses"
-          stroke="#FC7C78"
-          fill="#FC7C78"
+          stroke={theme.expense}
+          fill={theme.expense}
           fillOpacity={0.2}
           strokeWidth={2}
         />
