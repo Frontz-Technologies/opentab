@@ -64,4 +64,27 @@ test.describe("Navigation", () => {
       page.getByRole("heading", { name: "Company Information" }),
     ).toBeVisible();
   });
+
+  test("collapsed sidebar shows tooltip for nav icon on hover", async () => {
+    await page.goto("/dashboard");
+    const sidebar = page.locator('[data-slot="sidebar"][data-state]');
+    // Ensure the rail is collapsed (the default).
+    const state = await sidebar.getAttribute("data-state");
+    if (state !== "collapsed") {
+      await page
+        .locator('[data-slot="sidebar-trigger"], [data-sidebar="trigger"]')
+        .first()
+        .click();
+      await expect(sidebar).toHaveAttribute("data-state", "collapsed");
+    }
+
+    await sidebar.getByRole("link", { name: /Invoices/ }).hover();
+    const tooltip = page
+      .locator('[data-slot="tooltip-content"]')
+      .filter({ hasText: /^Invoices$/ });
+    await expect(tooltip).toBeVisible({ timeout: 2000 });
+
+    await page.mouse.move(0, 0);
+    await expect(tooltip).toBeHidden({ timeout: 2000 });
+  });
 });
