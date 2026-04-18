@@ -13,7 +13,7 @@ interface ContactListProps {
 }
 
 const typeColors: Record<string, string> = {
-  client: "bg-emerald-500/20 text-emerald-400",
+  client: "bg-primary text-on-primary",
   supplier: "bg-amber-500/20 text-amber-400",
   both: "bg-blue-500/20 text-blue-400",
 };

@@ -103,7 +103,7 @@ export function ProductForm({ product, vatRates }: ProductFormProps) {
 
       <form onSubmit={handleSubmit} className="space-y-10">
         {/* Product Info */}
-        <section className="bg-surface-container-low rounded-2xl p-6 border border-outline-variant/10 space-y-5">
+        <section className="bg-surface-container rounded-2xl p-6 space-y-5">
           <SectionHeading>{t("name")}</SectionHeading>
           <div className="grid grid-cols-1 gap-5">
             <Field label={t("name")} required>
@@ -128,7 +128,7 @@ export function ProductForm({ product, vatRates }: ProductFormProps) {
         </section>
 
         {/* Pricing */}
-        <section className="bg-surface-container-low rounded-2xl p-6 border border-outline-variant/10 space-y-5">
+        <section className="bg-surface-container rounded-2xl p-6 space-y-5">
           <SectionHeading>{t("unitPrice")}</SectionHeading>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <Field label={t("unitPrice")} required>
@@ -166,7 +166,7 @@ export function ProductForm({ product, vatRates }: ProductFormProps) {
         </section>
 
         {/* Tax */}
-        <section className="bg-surface-container-low rounded-2xl p-6 border border-outline-variant/10 space-y-5">
+        <section className="bg-surface-container rounded-2xl p-6 space-y-5">
           <SectionHeading>{t("taxCategory")}</SectionHeading>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <Field label={t("taxCategory")}>
@@ -213,7 +213,7 @@ export function ProductForm({ product, vatRates }: ProductFormProps) {
         </section>
 
         {/* Status */}
-        <section className="bg-surface-container-low rounded-2xl p-6 border border-outline-variant/10 space-y-5">
+        <section className="bg-surface-container rounded-2xl p-6 space-y-5">
           <div className="flex items-center gap-3">
             <input
               type="checkbox"

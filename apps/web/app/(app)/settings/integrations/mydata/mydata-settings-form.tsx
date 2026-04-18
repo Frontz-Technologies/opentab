@@ -72,7 +72,7 @@ export function MyDataSettingsForm({ credentials }: MyDataSettingsFormProps) {
           <Badge
             className={
               credentials
-                ? "bg-emerald-500/20 text-emerald-400"
+                ? "bg-primary text-on-primary"
                 : "bg-red-500/20 text-red-400"
             }
             variant="outline"
