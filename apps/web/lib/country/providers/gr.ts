@@ -1,7 +1,9 @@
 import type { CountryProvider, TaxOffice, TaxCodeMapping } from "../types";
 import { resolveDocumentType } from "./gr/integrations/mydata/document-types";
 import { resolveClassification } from "./gr/integrations/mydata/classification-codes";
+import { lookupGreekAfm } from "./gr/integrations/mydata/services/aade";
 import { calculateGreekTax } from "./gr/tax-calculator";
+import { MydataIntegration } from "./gr/integrations/mydata";
 
 const greekTaxOffices: TaxOffice[] = [
   { code: "1101", name: "Α' Αθηνών" },
@@ -227,6 +229,12 @@ export const greeceProvider: CountryProvider = {
     return 24;
   },
 
+  async lookupCompany(taxId: string) {
+    const result = await lookupGreekAfm(taxId);
+    if (!result) throw new Error("Company not found");
+    return result;
+  },
+
   resolveDocumentType,
   resolveClassification,
 
@@ -240,11 +248,18 @@ export const greeceProvider: CountryProvider = {
   corporateTax: GREEK_CORPORATE_TAX,
   socialSecurity: GREEK_EFKA_2026,
 
-  // Phase 1 foundation: plugin surface declared, populated in Phase 2.
-  integrations: [],
+  integrations: [MydataIntegration],
   documentTypes: [],
   requiredContactFields: [],
   lineItemExtensions: [],
   taxRegimes: [],
   numberingRules: [],
+
+  aiContext: async () =>
+    [
+      "Greek Tax Context",
+      "- VAT rates: Standard 24%, Reduced 13%, Super-reduced 6%",
+      "- Income tax brackets (2026): 0-10k 9%, 10k-20k 22%, 20k-30k 28%, 30k-40k 36%, 40k+ 44%",
+      "- Tax prepayment may apply to freelancers and companies.",
+    ].join("\n"),
 };

@@ -12,6 +12,7 @@ import { eq, and, asc, desc } from "drizzle-orm";
 import { generatePdfFromHtml } from "@/lib/invoicing/pdf";
 import { renderInvoicePdfHtml } from "@/components/invoicing/invoice-pdf-template";
 import { generateMyDataQR } from "@/lib/country/providers/gr/integrations/mydata/qr";
+import { getCountryProvider } from "@/lib/country";
 
 export async function GET(
   _request: Request,
@@ -45,14 +46,18 @@ export async function GET(
 
   let mydataQrDataUrl: string | undefined;
   let mydataMark: string | undefined;
-  if (session.org.countryCode === "GR") {
+  const provider = getCountryProvider(session.org.countryCode);
+  const mydataIntegration = provider.integrations.find(
+    (i) => i.kind === "mydata",
+  );
+  if (mydataIntegration) {
     const [confirmedSub] = await db
       .select()
       .from(countryIntegrationSubmissions)
       .where(
         and(
           eq(countryIntegrationSubmissions.invoiceId, id),
-          eq(countryIntegrationSubmissions.countryCode, "GR"),
+          eq(countryIntegrationSubmissions.countryCode, provider.code),
           eq(countryIntegrationSubmissions.kind, "mydata"),
           eq(
             countryIntegrationSubmissions.status,

@@ -48,7 +48,7 @@ describe("POST /api/ai/chat", () => {
     createAiProviderMock.mockReturnValue({ provider: "mock" });
     createToolsMock.mockReturnValue({});
     convertToModelMessagesMock.mockImplementation((messages) => messages);
-    getSystemPromptMock.mockReturnValue("system prompt");
+    getSystemPromptMock.mockResolvedValue("system prompt");
     streamTextMock.mockReturnValue({
       toUIMessageStreamResponse: () => new Response("ok"),
     });

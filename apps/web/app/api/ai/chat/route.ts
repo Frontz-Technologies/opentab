@@ -58,7 +58,7 @@ export async function POST(req: Request): Promise<Response> {
     role: session.role,
     confirmToolCall: body.confirmToolCall,
   });
-  const system = getSystemPrompt(session);
+  const system = await getSystemPrompt(session);
 
   const result = streamText({
     model,

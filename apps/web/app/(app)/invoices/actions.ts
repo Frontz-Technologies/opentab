@@ -6,12 +6,12 @@ import {
   invoices,
   invoiceItems,
   invoiceSequences,
-  countryIntegrationCredentials,
-  countryIntegrationSubmissions,
-  COUNTRY_INTEGRATION_SUBMISSION_STATUS,
   INVOICE_STATUS,
 } from "@opentab/db/schema";
-import { getCountryProvider } from "@/lib/country";
+import {
+  submitInvoiceThroughPlugins,
+  cancelInvoiceOnPlugins,
+} from "@/lib/country/submit-invoice";
 import { eq, and } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { z } from "zod";
@@ -343,31 +343,27 @@ export async function sendInvoice(id: string) {
     })
     .where(eq(invoices.id, id));
 
-  // myDATA submission (non-blocking)
-  const provider = getCountryProvider(session.org.countryCode);
-  if (provider.capabilities.eInvoicing) {
-    const [creds] = await db
-      .select()
-      .from(countryIntegrationCredentials)
-      .where(
-        and(
-          eq(countryIntegrationCredentials.orgId, session.org.id),
-          eq(countryIntegrationCredentials.countryCode, "GR"),
-          eq(countryIntegrationCredentials.kind, "mydata"),
-          eq(countryIntegrationCredentials.isActive, true),
-        ),
-      );
-    if (creds) {
-      log.info("submitting to myDATA", { orgId, invoiceId: id });
-      const { submitToMyData } = await import("./mydata-actions");
-      const result = await submitToMyData(id);
-      if (!result.success) {
-        log.error("myDATA submission failed", {
-          orgId,
-          invoiceId: id,
-          error: typeof result.error === "string" ? result.error : "unknown",
-        });
-      }
+  // Submit through the country plugin integrations (non-blocking)
+  const submissionResults = await submitInvoiceThroughPlugins(id, {
+    id: session.org.id,
+    taxId: session.org.taxId,
+    countryCode: session.org.countryCode,
+  });
+  for (const r of submissionResults) {
+    if (!r.ok) {
+      log.error("integration submission failed", {
+        orgId,
+        invoiceId: id,
+        kind: r.kind,
+        error: r.error ?? "unknown",
+      });
+    } else {
+      log.info("integration submission ok", {
+        orgId,
+        invoiceId: id,
+        kind: r.kind,
+        externalId: r.externalId,
+      });
     }
   }
 
@@ -493,31 +489,18 @@ export async function cancelInvoice(id: string) {
     })
     .where(eq(invoices.id, id));
 
-  // Cancel on myDATA if submitted (has a CONFIRMED submission)
-  const [confirmed] = await db
-    .select({ id: countryIntegrationSubmissions.id })
-    .from(countryIntegrationSubmissions)
-    .where(
-      and(
-        eq(countryIntegrationSubmissions.invoiceId, id),
-        eq(countryIntegrationSubmissions.countryCode, "GR"),
-        eq(countryIntegrationSubmissions.kind, "mydata"),
-        eq(
-          countryIntegrationSubmissions.status,
-          COUNTRY_INTEGRATION_SUBMISSION_STATUS.CONFIRMED,
-        ),
-      ),
-    )
-    .limit(1);
-  if (confirmed) {
-    log.info("cancelling on myDATA", { orgId, invoiceId: id });
-    const { cancelOnMyData } = await import("./mydata-actions");
-    const result = await cancelOnMyData(id);
-    if (!result.success) {
-      log.error("myDATA cancellation failed", {
+  const cancellations = await cancelInvoiceOnPlugins(id, {
+    id: session.org.id,
+    taxId: session.org.taxId,
+    countryCode: session.org.countryCode,
+  });
+  for (const r of cancellations) {
+    if (!r.ok) {
+      log.error("integration cancellation failed", {
         orgId,
         invoiceId: id,
-        error: typeof result.error === "string" ? result.error : "unknown",
+        kind: r.kind,
+        error: r.error ?? "unknown",
       });
     }
   }

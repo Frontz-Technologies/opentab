@@ -14,6 +14,7 @@ import { eq, and, asc, desc } from "drizzle-orm";
 import { Badge } from "@/components/ui/badge";
 import { InvoiceActions } from "./invoice-actions";
 import { MYDATA_DOCUMENT_TYPES } from "@/lib/country/providers/gr/integrations/mydata/document-types";
+import { getCountryProvider } from "@/lib/country";
 
 const statusColors: Record<number, string> = {
   [INVOICE_STATUS.DRAFT]:
@@ -49,17 +50,21 @@ export default async function InvoiceDetailPage({
     .where(eq(invoiceItems.invoiceId, id))
     .orderBy(asc(invoiceItems.sortOrder));
 
+  const provider = getCountryProvider(session.org.countryCode);
+  const mydataIntegration = provider.integrations.find(
+    (i) => i.kind === "mydata",
+  );
   let latestTransmission:
     | typeof countryIntegrationSubmissions.$inferSelect
     | null = null;
-  if (session.org.countryCode === "GR") {
+  if (mydataIntegration) {
     const [tx] = await db
       .select()
       .from(countryIntegrationSubmissions)
       .where(
         and(
           eq(countryIntegrationSubmissions.invoiceId, id),
-          eq(countryIntegrationSubmissions.countryCode, "GR"),
+          eq(countryIntegrationSubmissions.countryCode, provider.code),
           eq(countryIntegrationSubmissions.kind, "mydata"),
         ),
       )

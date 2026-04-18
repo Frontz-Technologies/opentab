@@ -1,6 +1,9 @@
 import type { SessionContext } from "@/lib/session";
+import { getCountryProvider } from "@/lib/country";
 
-export function getSystemPrompt(session: SessionContext): string {
+export async function getSystemPrompt(
+  session: SessionContext,
+): Promise<string> {
   const sections = [
     "You are the OpenTab AI assistant - a knowledgeable, concise financial assistant for freelancers and small businesses.",
     "## Context",
@@ -23,13 +26,10 @@ export function getSystemPrompt(session: SessionContext): string {
     "- Avoid legal or tax advice beyond supported calculations.",
   ];
 
-  if (session.org.countryCode === "GR") {
-    sections.push(
-      "## Greek Tax Context",
-      "- VAT rates: Standard 24%, Reduced 13%, Super-reduced 6%",
-      "- Income tax brackets (2026): 0-10k 9%, 10k-20k 22%, 20k-30k 28%, 30k-40k 36%, 40k+ 44%",
-      "- Tax prepayment may apply to freelancers and companies.",
-    );
+  const provider = getCountryProvider(session.org.countryCode);
+  if (provider.aiContext) {
+    const ctx = await provider.aiContext({ orgId: session.org.id });
+    if (ctx) sections.push(`## ${provider.name} Tax Context`, ctx);
   }
 
   return sections.join("\n");

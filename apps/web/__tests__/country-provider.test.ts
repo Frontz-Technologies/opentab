@@ -79,8 +79,19 @@ describe("getCountryProvider", () => {
     }
   });
 
-  it("Phase 1 foundation: GR.integrations is empty (populated in Phase 2)", () => {
+  it("GR provider registers the myDATA integration", () => {
     const provider = getCountryProvider("GR");
-    expect(provider.integrations).toEqual([]);
+    expect(provider.integrations.length).toBeGreaterThan(0);
+    const mydata = provider.integrations.find((i) => i.kind === "mydata");
+    expect(mydata).toBeDefined();
+    expect(mydata?.submit).toBeTypeOf("function");
+    expect(mydata?.validate).toBeTypeOf("function");
+  });
+
+  it("GR provider exposes aiContext hook for the AI agent", async () => {
+    const provider = getCountryProvider("GR");
+    expect(provider.aiContext).toBeTypeOf("function");
+    const ctx = await provider.aiContext!({ orgId: "test-org" });
+    expect(ctx).toContain("VAT rates");
   });
 });

@@ -1,7 +1,9 @@
 import type { InsightCard, InsightContext } from "./types";
+import { getCountryProvider } from "@/lib/country";
 
 export function vatFilingInsight(ctx: InsightContext): InsightCard | null {
-  if (ctx.countryCode !== "GR") return null;
+  const provider = getCountryProvider(ctx.countryCode);
+  if (!provider.capabilities.vatReport) return null;
   const now = new Date();
   const month = now.getMonth();
   // Quarter ends: Mar 31, Jun 30, Sep 30, Dec 31

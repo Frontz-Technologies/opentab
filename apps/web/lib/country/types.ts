@@ -143,10 +143,28 @@ export interface IntegrationValidateResult {
   errors?: string[];
 }
 
-export interface IntegrationSubmitInput<TEntity = unknown> {
+export interface IntegrationInvoiceInput {
   orgId: string;
-  entity: TEntity;
-  credentials: Record<string, unknown>;
+  orgTaxId: string | null;
+  invoice: {
+    id: string;
+    invoiceNumber: string;
+    issueDate: string;
+    currencyCode: string;
+    subtotal: string;
+    taxAmount: string;
+    total: string;
+    contactVatNumber: string | null;
+  };
+  items: Array<{
+    id: string;
+    sortOrder: number;
+    lineTotal: string;
+    taxRate: string;
+    taxAmount: string;
+    unit: string | null;
+  }>;
+  credentials: unknown;
 }
 
 export interface IntegrationSubmitResult {
@@ -184,15 +202,38 @@ export interface Integration {
   label: string;
   description?: string;
 
-  validate?(
-    credentials: Record<string, unknown>,
+  // Credential lifecycle (Phase 3 wires a generic settings form)
+  requiresCredentials?: boolean;
+  validateCredentials?(
+    credentials: unknown,
+    ctx: { orgId: string },
   ): Promise<IntegrationValidateResult>;
 
-  submit?(input: IntegrationSubmitInput): Promise<IntegrationSubmitResult>;
-  getStatus?(externalId: string): Promise<IntegrationStatusResult>;
+  // Invoice flow
+  validate?(input: IntegrationInvoiceInput): Promise<IntegrationValidateResult>;
+  submit?(input: IntegrationInvoiceInput): Promise<IntegrationSubmitResult>;
+  cancel?(ctx: {
+    externalId: string;
+    orgId: string;
+    credentials: unknown;
+  }): Promise<IntegrationSubmitResult>;
+  getStatus?(ctx: {
+    externalId: string;
+    orgId: string;
+    credentials: unknown;
+  }): Promise<IntegrationStatusResult>;
 
-  renderOnPdf?: string;
-  attachToPdf?: string;
+  // PDF composition (iterated by the invoice PDF renderer in Phase 3)
+  renderOnPdf?(ctx: {
+    invoice: { invoiceNumber: string };
+    submission: { externalId: string | null; qrUrl: string | null };
+  }): string;
+  attachToPdf?(ctx: {
+    invoice: { invoiceNumber: string };
+    submission: { externalId: string | null };
+  }): { mime: string; data: Uint8Array };
+
+  // Invoice detail UI — path to a lazy-imported status chip component (Phase 3)
   renderInvoiceStatus?: string;
 
   dashboardModule?: IntegrationDashboardModule;

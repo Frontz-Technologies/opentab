@@ -1,7 +1,10 @@
 import type { InsightCard, InsightContext } from "./types";
+import { getCountryProvider } from "@/lib/country";
 
 export function taxSetAsideInsight(ctx: InsightContext): InsightCard | null {
-  if (ctx.countryCode !== "GR" || ctx.revenue.total <= 0) return null;
+  const provider = getCountryProvider(ctx.countryCode);
+  if (!provider.capabilities.taxProjection || ctx.revenue.total <= 0)
+    return null;
   const monthlyReserve = Math.round((ctx.revenue.total * 0.35) / 12);
   return {
     id: "tax-set-aside",

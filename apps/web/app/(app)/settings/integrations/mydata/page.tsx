@@ -9,7 +9,9 @@ export default async function MyDataIntegrationPage() {
   const session = await getSession();
   if (!session) redirect("/login");
 
-  if (session.org.countryCode !== "GR") {
+  const { getCountryProvider } = await import("@/lib/country");
+  const provider = getCountryProvider(session.org.countryCode);
+  if (!provider.integrations.some((i) => i.kind === "mydata")) {
     redirect("/settings/integrations");
   }
 
