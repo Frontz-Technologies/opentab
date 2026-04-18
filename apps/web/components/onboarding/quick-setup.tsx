@@ -58,11 +58,11 @@ export function QuickSetup({ completedSteps }: QuickSetupProps) {
 
   return (
     <div className="bg-surface-container-low rounded-2xl p-6 border border-outline-variant/10">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-headline font-bold text-lg text-on-surface">
+      <div className="flex items-center justify-between gap-4 mb-4">
+        <h3 className="font-headline font-bold text-lg text-on-surface min-w-0">
           {t("title")}
         </h3>
-        <span className="font-label text-xs text-on-surface-variant">
+        <span className="font-label text-xs text-on-surface-variant shrink-0 whitespace-nowrap">
           {completedCount}/{totalEnabled} {t("complete")}
         </span>
       </div>
@@ -96,11 +96,11 @@ export function QuickSetup({ completedSteps }: QuickSetupProps) {
                     </span>
                   )}
                 </span>
-                <span className="material-symbols-outlined text-lg text-on-surface-variant">
+                <span className="material-symbols-outlined text-lg text-on-surface-variant shrink-0">
                   {step.icon}
                 </span>
                 <span
-                  className={`font-medium text-sm ${
+                  className={`font-medium text-sm min-w-0 flex-1 line-clamp-2 ${
                     isCompleted
                       ? "line-through text-on-surface/50"
                       : "text-on-surface"
@@ -109,7 +109,7 @@ export function QuickSetup({ completedSteps }: QuickSetupProps) {
                   {t(step.labelKey)}
                 </span>
                 <span
-                  className="material-symbols-outlined ml-auto text-[18px] text-on-surface-variant opacity-0 transition-opacity group-hover:opacity-100"
+                  className="material-symbols-outlined ml-auto text-[18px] text-on-surface-variant opacity-0 transition-opacity group-hover:opacity-100 shrink-0"
                   aria-hidden
                 >
                   chevron_right
@@ -126,14 +126,14 @@ export function QuickSetup({ completedSteps }: QuickSetupProps) {
                 className="flex size-5 shrink-0 items-center justify-center rounded-full border border-outline-variant/20 bg-surface-container-low"
                 aria-hidden
               />
-              <span className="material-symbols-outlined text-lg text-on-surface-variant">
+              <span className="material-symbols-outlined text-lg text-on-surface-variant shrink-0">
                 {step.icon}
               </span>
-              <span className="font-medium text-sm text-on-surface/70">
+              <span className="font-medium text-sm text-on-surface/70 min-w-0 flex-1 line-clamp-2">
                 {t(step.labelKey)}
               </span>
-              <span className="ml-auto font-label text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-surface-container-highest/40 text-on-surface-variant">
-                {tCommon("comingSoon")}
+              <span className="ml-auto font-label text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-surface-container-highest/40 text-on-surface-variant shrink-0 whitespace-nowrap">
+                {tCommon("soonBadge")}
               </span>
             </div>
           );

@@ -5,7 +5,8 @@
     "save": "Guardar cambios",
     "cancel": "Cancelar",
     "loading": "Cargando...",
-    "comingSoon": "Pr\u00f3ximamente"
+    "comingSoon": "Pr\u00f3ximamente",
+    "soonBadge": "Pronto"
   },
   "nav": {
     "dashboard": "Panel",
