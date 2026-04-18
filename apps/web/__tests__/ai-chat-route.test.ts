@@ -199,6 +199,7 @@ describe("POST /api/ai/chat", () => {
     expect(createToolsMock).toHaveBeenCalledWith("org-1", {
       role: "accountant",
       confirmToolCall: undefined,
+      countryCode: "GR",
     });
   });
 

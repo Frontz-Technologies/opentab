@@ -57,6 +57,7 @@ export async function POST(req: Request): Promise<Response> {
   const tools = createTools(orgId, {
     role: session.role,
     confirmToolCall: body.confirmToolCall,
+    countryCode: session.org.countryCode,
   });
   const system = await getSystemPrompt(session);
 

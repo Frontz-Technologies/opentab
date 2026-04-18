@@ -1,20 +1,23 @@
 import type { Invoice, InvoiceItem, Organisation } from "@opentab/db/schema";
 
+interface PdfBlocks {
+  footer: string[];
+}
+
 interface InvoicePdfTemplateProps {
   invoice: Invoice;
   items: InvoiceItem[];
   org: Organisation;
-  mydataQrDataUrl?: string;
-  mydataMark?: string;
+  pdfBlocks?: PdfBlocks;
 }
 
 export function renderInvoicePdfHtml({
   invoice,
   items,
   org,
-  mydataQrDataUrl,
-  mydataMark,
+  pdfBlocks,
 }: InvoicePdfTemplateProps): string {
+  const footerBlocks = pdfBlocks?.footer.join("\n") ?? "";
   const itemRows = items
     .map(
       (item) => `
@@ -75,14 +78,6 @@ export function renderInvoicePdfHtml({
     <div class="header-right">
       <h2>INVOICE</h2>
       <p style="font-family: monospace; font-size: 16px;">${escapeHtml(invoice.invoiceNumber)}</p>
-      ${
-        mydataMark
-          ? `<div class="mydata-stamp">
-        <div class="mark-label">MARK</div>
-        <div class="mark-number">${escapeHtml(mydataMark)}</div>
-      </div>`
-          : ""
-      }
     </div>
   </div>
 
@@ -134,16 +129,7 @@ export function renderInvoicePdfHtml({
       : ""
   }
 
-  ${
-    mydataQrDataUrl
-      ? `<div class="mydata-footer">
-    <div>
-      <img src="${mydataQrDataUrl}" alt="myDATA QR" width="80" height="80" />
-      <span class="qr-label">Verify on myDATA</span>
-    </div>
-  </div>`
-      : ""
-  }
+  ${footerBlocks}
 </body>
 </html>`;
 }

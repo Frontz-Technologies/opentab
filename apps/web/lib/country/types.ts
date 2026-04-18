@@ -204,6 +204,15 @@ export interface Integration {
 
   // Credential lifecycle (Phase 3 wires a generic settings form)
   requiresCredentials?: boolean;
+  /** Runtime-validated shape of config_json. Parsed server-side on save. */
+  configSchema?: import("zod").ZodSchema;
+  /**
+   * Field names in config that are NOT encrypted at rest.
+   * Everything else is encrypted by default (opt-OUT encryption) —
+   * if an integration author adds a new field and forgets to list it,
+   * the field defaults to encrypted, not leaked.
+   */
+  publicFields?: string[];
   validateCredentials?(
     credentials: unknown,
     ctx: { orgId: string },
@@ -227,7 +236,7 @@ export interface Integration {
   renderOnPdf?(ctx: {
     invoice: { invoiceNumber: string };
     submission: { externalId: string | null; qrUrl: string | null };
-  }): string;
+  }): string | Promise<string>;
   attachToPdf?(ctx: {
     invoice: { invoiceNumber: string };
     submission: { externalId: string | null };

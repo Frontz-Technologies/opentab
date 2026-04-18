@@ -11,7 +11,6 @@ import {
 import { eq, and, asc, desc } from "drizzle-orm";
 import { generatePdfFromHtml } from "@/lib/invoicing/pdf";
 import { renderInvoicePdfHtml } from "@/components/invoicing/invoice-pdf-template";
-import { generateMyDataQR } from "@/lib/country/providers/gr/integrations/mydata/qr";
 import { getCountryProvider } from "@/lib/country";
 
 export async function GET(
@@ -44,13 +43,11 @@ export async function GET(
     .from(organisations)
     .where(eq(organisations.id, session.org.id));
 
-  let mydataQrDataUrl: string | undefined;
-  let mydataMark: string | undefined;
   const provider = getCountryProvider(session.org.countryCode);
-  const mydataIntegration = provider.integrations.find(
-    (i) => i.kind === "mydata",
-  );
-  if (mydataIntegration) {
+
+  const pdfBlocks: { footer: string[] } = { footer: [] };
+  for (const integration of provider.integrations) {
+    if (!integration.renderOnPdf) continue;
     const [confirmedSub] = await db
       .select()
       .from(countryIntegrationSubmissions)
@@ -58,7 +55,7 @@ export async function GET(
         and(
           eq(countryIntegrationSubmissions.invoiceId, id),
           eq(countryIntegrationSubmissions.countryCode, provider.code),
-          eq(countryIntegrationSubmissions.kind, "mydata"),
+          eq(countryIntegrationSubmissions.kind, integration.kind),
           eq(
             countryIntegrationSubmissions.status,
             COUNTRY_INTEGRATION_SUBMISSION_STATUS.CONFIRMED,
@@ -67,20 +64,22 @@ export async function GET(
       )
       .orderBy(desc(countryIntegrationSubmissions.createdAt))
       .limit(1);
-    if (confirmedSub?.qrUrl) {
-      mydataQrDataUrl = await generateMyDataQR(confirmedSub.qrUrl);
-    }
-    if (confirmedSub?.externalId) {
-      mydataMark = confirmedSub.externalId;
-    }
+    if (!confirmedSub) continue;
+    const block = await integration.renderOnPdf({
+      invoice: { invoiceNumber: invoice.invoiceNumber },
+      submission: {
+        externalId: confirmedSub.externalId,
+        qrUrl: confirmedSub.qrUrl,
+      },
+    });
+    if (block) pdfBlocks.footer.push(block);
   }
 
   const html = renderInvoicePdfHtml({
     invoice,
     items,
     org,
-    mydataQrDataUrl,
-    mydataMark,
+    pdfBlocks,
   });
   const pdf = await generatePdfFromHtml(html);
 

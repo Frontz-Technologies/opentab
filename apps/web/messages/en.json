@@ -22,7 +22,8 @@
     "support": "Support",
     "createNew": "Create New",
     "more": "More",
-    "organisation": "Organisation"
+    "organisation": "Organisation",
+    "integrations": "Integrations"
   },
   "ai": {
     "title": "AI Assistant",

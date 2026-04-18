@@ -1,3 +1,4 @@
+import { z } from "zod";
 import type {
   Integration,
   IntegrationInvoiceInput,
@@ -96,12 +97,20 @@ function buildMyDataInvoice(
   };
 }
 
+const mydataConfigSchema = z.object({
+  aadeUserId: z.string().min(1),
+  subscriptionKey: z.string().min(1),
+  environment: z.enum(["sandbox", "production"]),
+});
+
 export const MydataIntegration: Integration = {
   kind: "mydata",
   label: "myDATA (AADE)",
   description: "Submits Greek invoices to the AADE e-invoicing platform",
 
   requiresCredentials: true,
+  configSchema: mydataConfigSchema,
+  publicFields: ["aadeUserId", "environment"],
 
   async validateCredentials(raw, _ctx): Promise<IntegrationValidateResult> {
     try {
@@ -237,12 +246,30 @@ export const MydataIntegration: Integration = {
     }
   },
 
-  renderOnPdf({ submission }) {
-    if (!submission.externalId) return "";
-    return `<div class="mydata-stamp">
-      <div class="mark-label">MARK</div>
-      <div class="mark-number">${submission.externalId}</div>
-    </div>`;
+  async renderOnPdf({ submission }) {
+    if (!submission.externalId && !submission.qrUrl) return "";
+    const parts: string[] = [];
+    if (submission.externalId) {
+      parts.push(
+        `<div class="mydata-stamp" style="background:#f3f4f6;border-radius:6px;padding:8px 12px;display:inline-block;margin-top:4px;">
+          <div class="mark-label" style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">MARK</div>
+          <div class="mark-number" style="font-family:monospace;font-size:14px;color:#1a1a2e;font-weight:600;">${submission.externalId}</div>
+        </div>`,
+      );
+    }
+    if (submission.qrUrl) {
+      const { generateMyDataQR } = await import("./qr");
+      const dataUrl = await generateMyDataQR(submission.qrUrl);
+      parts.push(
+        `<div class="mydata-footer" style="margin-top:30px;display:flex;justify-content:flex-end;align-items:flex-end;gap:12px;">
+          <div>
+            <img src="${dataUrl}" alt="myDATA QR" width="80" height="80" />
+            <span class="qr-label" style="font-size:9px;color:#6b7280;display:block;text-align:center;margin-top:4px;">Verify on myDATA</span>
+          </div>
+        </div>`,
+      );
+    }
+    return parts.join("\n");
   },
 
   renderInvoiceStatus: "./render-status",

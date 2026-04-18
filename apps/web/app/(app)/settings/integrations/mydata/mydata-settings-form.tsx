@@ -145,6 +145,12 @@ export function MyDataSettingsForm({ credentials }: MyDataSettingsFormProps) {
           </div>
         )}
 
+        <p className="text-on-surface/50 text-xs pt-2">
+          opentab decrypts your credentials at submit time to call the tax
+          authority on your behalf. Self-hosted installs keep everything
+          in-process.
+        </p>
+
         <div className="flex gap-2 pt-2">
           <Button type="submit" disabled={isPending}>
             {t("save")}
