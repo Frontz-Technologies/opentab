@@ -409,6 +409,7 @@
   },
   "recurring": {
     "title": "Recurring Invoices",
+    "lineItems": "Line Items",
     "addRecurring": "New Recurring",
     "editRecurring": "Edit Recurring Invoice",
     "noRecurring": "No recurring invoices yet",
@@ -611,6 +612,7 @@
     "vatDescription": "Output vs input VAT by rate",
     "taxProjection": "Tax Projection",
     "taxProjectionDescription": "Estimated tax obligations",
+    "setCountryCta": "Set your country to enable",
     "periodMonth": "This Month",
     "period30Days": "30 Days",
     "periodQuarter": "Quarter",

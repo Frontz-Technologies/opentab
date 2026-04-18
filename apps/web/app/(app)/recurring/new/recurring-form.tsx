@@ -199,6 +199,11 @@ export function RecurringForm({
       </div>
 
       <div className="bg-surface-container rounded-xl p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <h2 className="font-headline text-lg font-semibold text-on-surface">
+            {t("lineItems")} <span className="text-tertiary">*</span>
+          </h2>
+        </div>
         <LineItemsBuilder
           items={items}
           onChange={setItems}
