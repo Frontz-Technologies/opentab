@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Script from "next/script";
+import { cookies } from "next/headers";
 import {
   Manrope,
   Inter,
@@ -10,6 +12,13 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import { getUserPreferences } from "@/lib/actions/user-preferences";
+import {
+  resolveTheme,
+  THEME_COOKIE_NAME,
+  THEME_PRE_HYDRATION_SCRIPT,
+  type ThemePreference,
+} from "@/lib/theme";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -50,11 +59,30 @@ export default async function RootLayout({
   const locale = await getLocale();
   const messages = await getMessages();
 
+  // Resolve theme preference: DB for authenticated users, cookie fallback
+  // otherwise. The inline pre-hydration Script below corrects the class for
+  // the `system` case before paint, which server rendering cannot know.
+  const cookieStore = await cookies();
+  const cookiePref = cookieStore.get(THEME_COOKIE_NAME)?.value as
+    | ThemePreference
+    | undefined;
+  let pref: ThemePreference = cookiePref ?? "dark";
+  try {
+    const userPref = await getUserPreferences();
+    if (userPref?.theme) {
+      pref = userPref.theme as ThemePreference;
+    }
+  } catch {
+    // unauthenticated or DB unavailable — cookie fallback stands
+  }
+  // Assume system-dark on server; the inline script corrects before paint.
+  const isDark = resolveTheme(pref, true) === "dark";
+
   return (
     <html
       lang={locale}
       className={cn(
-        "dark",
+        isDark && "dark",
         manrope.variable,
         inter.variable,
         spaceGrotesk.variable,
@@ -68,6 +96,9 @@ export default async function RootLayout({
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         />
+        <Script id="theme-init" strategy="beforeInteractive">
+          {THEME_PRE_HYDRATION_SCRIPT}
+        </Script>
       </head>
       <body className="font-body antialiased bg-surface-dim text-on-surface">
         <NextIntlClientProvider messages={messages}>
