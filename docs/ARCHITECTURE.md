@@ -134,8 +134,9 @@ const { user, session: sessionData } = session;
 | `expense_attachments`      | File attachments with AI extraction status               |
 | `recurring_expenses`       | Recurring expense templates with frequency               |
 | `recurring_expense_items`  | Line items per recurring expense template                |
-| `mydata_credentials`       | Encrypted ΑΑΔΕ API credentials per org                   |
-| `mydata_transmissions`     | myDATA submission queue with retry tracking              |
+| `country_integration_credential`  | Encrypted credentials per `(org, country, kind)` — e.g. GR myDATA, DE XRechnung |
+| `country_integration_submission`  | Outbound submission queue with retry, QR, external ID — country/kind-agnostic    |
+| `inbound_document`                | Inbound feed (e.g. AADE counterparty invoices, IT SDI arrivals) with expense/invoice match |
 | `ai_settings`              | Encrypted AI API keys and model preferences per org      |
 
 Better Auth manages its own session/account/verification tables alongside these. Drizzle schema types are exported and used throughout `apps/web` for type-safe queries.
@@ -244,9 +245,108 @@ v4's CSS-native approach (no `tailwind.config.js` for theming, CSS variables as 
 
 ---
 
-## Country Provider
+## Country Plugin Architecture
 
-`apps/web/lib/country/` implements a capability-based country abstraction. Each country (Greece, Germany, international) registers a provider that declares its capabilities (VAT lookup, myDATA, category seeds, etc.).
+OpenTab is an EU-wide bookkeeping tool. The core platform is country-agnostic; every piece of country-specific behaviour — VAT rates, tax IDs, e-invoicing integrations, PDF elements, AI context, dashboards — ships through two contracts: **`CountryProvider`** and **`Integration`**. Adding a country (DE, ES, IT, FR, CY, PT, PL, AT…) is a mechanical provider registration, not a core change.
+
+### Layout
+
+```
+apps/web/lib/country/
+├── index.ts                       # getCountryProvider(code) — switch on country code
+├── types.ts                       # CountryProvider + Integration contracts
+└── providers/
+    ├── international.ts           # Fallback for orgs outside the EU country list
+    ├── gr.ts                      # Greek provider (VAT rates, tax offices, brackets, EFKA)
+    └── gr/
+        ├── tax-calculator.ts       # GR income tax calculator
+        └── integrations/
+            └── mydata/
+                ├── client.ts        # AADE SOAP client
+                ├── xml-builder.ts
+                ├── xml-parser.ts
+                ├── document-types.ts
+                ├── classification-codes.ts
+                ├── retry.ts
+                ├── encryption.ts
+                └── services/aade.ts  # AFM lookup SOAP call
+```
+
+Future countries follow the same pattern: `providers/de.ts` + `providers/de/integrations/xrechnung/*`, etc.
+
+### CountryProvider contract
+
+Each provider declares what the country supports. The interface covers:
+
+| Field                     | Purpose                                                                   |
+| ------------------------- | ------------------------------------------------------------------------- |
+| `code`, `name`            | ISO country code + display name                                           |
+| `capabilities`            | Feature flags (eInvoicing, taxProjection, vatReport, expenseClassification…) |
+| `vatRates`                | Allowed VAT rates with default                                            |
+| `validateTaxId`           | Regex / checksum for country VAT/tax ID                                   |
+| `lookupCompany`           | Optional: public tax-authority lookup (AADE for GR, Gov.uk for UK, …)     |
+| `documentTypes`           | Country-recognised document kinds (invoice / credit note / …)             |
+| `requiredContactFields`   | Country-specific contact fields (e.g. DE steueridentifikationsnummer)     |
+| `lineItemExtensions`      | Per-country line-item extensions (e.g. withholding on service rows in GR) |
+| `taxRegimes`              | OSS, reverse-charge, exempt regimes the country understands               |
+| `numberingRules`          | Series / branch / prefix rules the country expects                        |
+| `vatReport` / `taxProjection` / `returnSchedule` | Report-pipeline hooks (delegation targets for `/reports`) |
+| `aiTools` / `aiContext` / `aiKnowledgeSource` | AI-agent surface: tools the LLM can call, system-prompt context, RAG source |
+| `integrations`            | Array of `Integration` — e-invoicing, VAT-filing, authority connectors    |
+| `mapGroupToTaxCode`       | Map the 16 universal expense groups to the country's tax-code catalogue   |
+
+### Integration contract
+
+An `Integration` is a concrete connector (GR myDATA, DE XRechnung, ES Verifactu, ES TicketBAI, IT FatturaPA, FR Chorus Pro…). It implements whichever of these hooks make sense for the authority:
+
+| Hook                      | Purpose                                                                   |
+| ------------------------- | ------------------------------------------------------------------------- |
+| `validate`                | Pre-submission validation of an invoice / org                             |
+| `submit`                  | Push to the authority; returns an `externalId` + optional QR URL          |
+| `getStatus`               | Re-query the authority for a previously-submitted document                |
+| `renderOnPdf`             | Return PDF blocks (e.g. QR + MARK) for the invoice PDF                    |
+| `attachToPdf`             | Hybrid PDF/A-3 embedded XML (XRechnung, FatturaPA, Factur-X…)             |
+| `renderInvoiceStatus`     | Invoice-detail status chip component                                      |
+| `dashboardModule`         | Integration's own dashboard at `/integrations/{slug}` (sidebar auto-adds) |
+| `settingsPage`            | Integration's own settings at `/settings/integrations/{slug}`             |
+| `syncInbound`             | Pull inbound docs into `inbound_document` on declared cadence             |
+| `aiTools`                 | Integration-scoped AI tools (e.g. "lookup mydata status")                 |
+
+All credentials, submissions, and inbound payloads flow through the three generic tables (`country_integration_credential`, `country_integration_submission`, `inbound_document`) — no country- or kind-specific columns anywhere in the schema.
+
+### Runtime flow (invoice submission)
+
+```
+User publishes invoice
+  └─▶ submitInvoice(invoice, org)
+        └─▶ provider = getCountryProvider(org.countryCode)
+              └─▶ for each integration in provider.integrations:
+                    ├─ integration.validate(invoice, org)    → stop on error
+                    ├─ integration.submit(invoice, org)      → row in country_integration_submission
+                    └─ revalidate /invoices
+```
+
+The core `submitInvoice` service iterates `provider.integrations`; there are no `=== "GR"` branches outside provider code.
+
+### UI slot pattern
+
+- Sidebar iterates `provider.integrations.filter(i => i.dashboardModule)` and injects nav items.
+- `/integrations/[slug]` dynamic route dispatches to `integration.dashboardModule.component`.
+- `/settings/integrations/[slug]` dispatches to `integration.settingsPage`.
+- PDF template exposes regions (header / body / totals / footer / tail); each `renderOnPdf` result is placed in its declared region.
+- AI system prompt composes: base prompt + `provider.aiContext` + each `integration.aiContext`.
+
+### Translations
+
+Each integration owns its UI strings under `integrations.<kind>.*` in `apps/web/messages/{locale}.json`. Example: `integrations.mydata.dashboard.outbound.title`, `integrations.xrechnung.settings.leitweg.label`.
+
+### Adding a new country
+
+See [country-provider onboarding guide](./country-provider-onboarding.md) (tracked in #147). In brief: create `providers/xx.ts`, register in `country/index.ts`, add `integrations.<kind>.*` translation keys, ship.
+
+### Plugin marketplace
+
+Future / optional (#145). Phases 1-3 build a clean `CountryProvider` + `Integration` contract, which is the only real prerequisite for a marketplace. The manifest/SDK/permissions layer is deliberately deferred until a concrete 3rd-party author needs it.
 
 ### Two-Layer Expense Category System
 
@@ -255,7 +355,7 @@ Expense categories use a universal-then-local architecture:
 1. **Expense groups** (`expense_groups` table) — 16 universal groups with string PKs (e.g. `office_supplies`, `travel`, `professional_services`). These are seeded once and shared across all organisations.
 2. **Expense categories** (`expense_categories` table) — per-organisation categories linked to a group. Country-specific seed data creates localised category names and descriptions.
 
-Each country provider implements `mapGroupToTaxCode(groupId)` to map universal groups to country-specific tax deduction codes (e.g. Greek E3 codes). This allows the reporting and myDATA layers to derive tax treatment from the category without country-specific branching.
+Each country provider implements `mapGroupToTaxCode(groupId)` to map universal groups to country-specific tax deduction codes (e.g. Greek E3 codes, German SKR03/04). This allows the reporting and integration layers to derive tax treatment from the category without country-specific branching.
 
 ---
 
@@ -268,7 +368,7 @@ Each country provider implements `mapGroupToTaxCode(groupId)` to map universal g
 - `queries.ts` — core aggregation queries (revenue, expenses, net income, outstanding) scoped by org and date range
 - `periods.ts` — period utilities (month/quarter/year boundaries, comparison periods)
 - `types.ts` — shared TypeScript types for report data
-- `tax/` — Greek tax bracket calculations and projection logic
+- `tax/types.ts` — shared tax projection types (country-specific calculators live under `lib/country/providers/*`)
 - `insights/` — AI-powered financial insight generation via OpenRouter
 - `export/` — report export utilities
 - `cache.ts` — optional Redis cache layer for expensive aggregations
