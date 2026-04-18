@@ -8,6 +8,7 @@ import {
   YAxis,
   Tooltip,
 } from "recharts";
+import { useChartTheme } from "@/hooks/use-chart-theme";
 
 interface ClientData {
   displayName: string;
@@ -42,6 +43,7 @@ function CustomTooltip({
 }
 
 export function RevenueByClientBar({ data }: { data: ClientData[] }) {
+  const theme = useChartTheme();
   if (!data.length) return null;
   const height = Math.max(200, data.length * 40);
   return (
@@ -50,7 +52,7 @@ export function RevenueByClientBar({ data }: { data: ClientData[] }) {
         <XAxis
           type="number"
           tickFormatter={formatCurrency}
-          tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 12 }}
+          tick={{ fill: theme.tickText, fontSize: 12 }}
           axisLine={false}
           tickLine={false}
         />
@@ -59,12 +61,12 @@ export function RevenueByClientBar({ data }: { data: ClientData[] }) {
           dataKey="displayName"
           width={120}
           tickFormatter={(v: string) => truncate(v, 16)}
-          tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 12 }}
+          tick={{ fill: theme.tickText, fontSize: 12 }}
           axisLine={false}
           tickLine={false}
         />
         <Tooltip content={<CustomTooltip />} />
-        <Bar dataKey="total" fill="#4EDEA3" radius={[0, 4, 4, 0]} />
+        <Bar dataKey="total" fill={theme.primary} radius={[0, 4, 4, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );
