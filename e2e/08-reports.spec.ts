@@ -33,11 +33,26 @@ test.describe("Reports", () => {
     await page.screenshot({ path: "e2e/screenshots/reports-index.png" });
   });
 
-  test("reports index shows P&L report card", async () => {
-    // P&L report should always be visible (no capability gate)
+  test("reports index shows all cards; regional ones link to settings when country unset", async () => {
+    // P&L is always unlocked.
     await expect(
       page.getByRole("link", { name: /P.*L|Profit.*Loss/i }),
     ).toBeVisible();
+
+    // VAT and Tax Projection cards are always rendered. When the org has no
+    // country set they point at /settings/organisation (locked state);
+    // when set they point at their own routes.
+    const vat = page.getByRole("link", { name: /VAT/i });
+    const tax = page.getByRole("link", { name: /Tax.*Projection/i });
+    await expect(vat).toBeVisible();
+    await expect(tax).toBeVisible();
+
+    const vatHref = await vat.getAttribute("href");
+    expect(vatHref).toMatch(/^(\/reports\/vat|\/settings\/organisation)$/);
+    const taxHref = await tax.getAttribute("href");
+    expect(taxHref).toMatch(
+      /^(\/reports\/tax-projection|\/settings\/organisation)$/,
+    );
   });
 
   test("P&L report page loads", async () => {

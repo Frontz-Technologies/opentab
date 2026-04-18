@@ -611,6 +611,7 @@
     "vatDescription": "IVA repercutido vs. soportado por tasa",
     "taxProjection": "Proyecci\u00f3n fiscal",
     "taxProjectionDescription": "Obligaciones fiscales estimadas",
+    "setCountryCta": "Configure su país para habilitar",
     "periodMonth": "Este mes",
     "period30Days": "30 d\u00edas",
     "periodQuarter": "Trimestre",
