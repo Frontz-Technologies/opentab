@@ -102,7 +102,7 @@ export function QuickSetup({ completedSteps }: QuickSetupProps) {
                 {step.icon}
               </span>
               <span className="font-medium text-sm">{t(step.labelKey)}</span>
-              <span className="ml-auto status-badge bg-surface-container-highest text-on-surface-variant">
+              <span className="ml-auto font-label text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-surface-container-highest/40 text-on-surface-variant">
                 {tCommon("comingSoon")}
               </span>
             </div>

@@ -428,7 +428,11 @@ export function ContactForm({
             disabled={isPending}
             className="h-12 px-8 rounded-xl btn-gradient text-on-primary font-bold text-sm transition-transform active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {isPending ? "Saving..." : tCommon("save")}
+            {isPending
+              ? "Saving..."
+              : contact
+                ? tCommon("save")
+                : t("addContact")}
           </button>
         </div>
       </form>

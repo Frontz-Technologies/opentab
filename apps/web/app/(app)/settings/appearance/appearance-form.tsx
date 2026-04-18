@@ -41,7 +41,7 @@ function ThemeCard({
       }`}
     >
       {disabled && comingSoonLabel && (
-        <span className="absolute top-2 right-2 font-label text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-secondary-container text-secondary">
+        <span className="absolute top-2 right-2 font-label text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-surface-container-highest/40 text-on-surface-variant">
           {comingSoonLabel}
         </span>
       )}

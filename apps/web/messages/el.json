@@ -613,6 +613,8 @@
     "taxProjection": "Φορολογική Πρόβλεψη",
     "taxProjectionDescription": "Εκτιμώμενες φορολογικές υποχρεώσεις",
     "setCountryCta": "Ορίστε τη χώρα σας για ενεργοποίηση",
+    "apply": "Εφαρμογή",
+    "loading": "Φόρτωση...",
     "periodMonth": "Αυτόν τον Μήνα",
     "period30Days": "30 Ημέρες",
     "periodQuarter": "Τρίμηνο",

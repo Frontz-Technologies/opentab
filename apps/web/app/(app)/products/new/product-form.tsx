@@ -238,7 +238,11 @@ export function ProductForm({ product, vatRates }: ProductFormProps) {
             disabled={isPending}
             className="h-12 px-8 rounded-xl btn-gradient text-on-primary font-bold text-sm transition-transform active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {isPending ? "Saving..." : tCommon("save")}
+            {isPending
+              ? "Saving..."
+              : product
+                ? tCommon("save")
+                : t("addProduct")}
           </button>
         </div>
       </form>
