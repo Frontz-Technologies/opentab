@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { AiChatButton } from "@/components/ai/ai-chat-button";
@@ -15,22 +16,24 @@ export default async function AppLayout({
   if (!session) redirect("/login");
 
   return (
-    <SidebarProvider
-      defaultOpen={false}
-      style={
-        {
-          "--sidebar-width": "240px",
-          "--sidebar-width-icon": "64px",
-        } as React.CSSProperties
-      }
-    >
-      <AppSidebar orgName={session.org.name} />
-      <SidebarInset className="min-h-screen pb-24 md:pb-0">
-        {children}
-      </SidebarInset>
-      <AiChatButton />
-      <AiChatPanel />
-      <MobileNav />
-    </SidebarProvider>
+    <TooltipProvider>
+      <SidebarProvider
+        defaultOpen={false}
+        style={
+          {
+            "--sidebar-width": "240px",
+            "--sidebar-width-icon": "64px",
+          } as React.CSSProperties
+        }
+      >
+        <AppSidebar orgName={session.org.name} />
+        <SidebarInset className="min-h-screen pb-24 md:pb-0">
+          {children}
+        </SidebarInset>
+        <AiChatButton />
+        <AiChatPanel />
+        <MobileNav />
+      </SidebarProvider>
+    </TooltipProvider>
   );
 }
