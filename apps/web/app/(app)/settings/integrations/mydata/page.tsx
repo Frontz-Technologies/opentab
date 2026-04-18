@@ -15,7 +15,7 @@ export default async function MyDataIntegrationPage() {
     redirect("/settings/integrations");
   }
 
-  const t = await getTranslations("mydata");
+  const t = await getTranslations("integrations.mydata");
   const tInt = await getTranslations("settingsIntegrations");
   const credentials = await getMyDataCredentialsStatus();
 

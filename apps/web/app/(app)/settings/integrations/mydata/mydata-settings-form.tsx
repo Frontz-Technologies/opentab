@@ -25,7 +25,7 @@ interface MyDataSettingsFormProps {
 }
 
 export function MyDataSettingsForm({ credentials }: MyDataSettingsFormProps) {
-  const t = useTranslations("mydata");
+  const t = useTranslations("integrations.mydata");
   const [isPending, startTransition] = useTransition();
   const [testResult, setTestResult] = useState<{
     success: boolean;
