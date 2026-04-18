@@ -141,31 +141,26 @@ export function LineItemsBuilder({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="font-headline text-lg font-semibold text-on-surface">
-          {t("lineItems")}
-        </h3>
-        <div className="flex gap-2">
-          {products && products.length > 0 && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setShowProductPicker(!showProductPicker)}
-            >
-              <span className="material-symbols-outlined text-[16px] mr-1">
-                inventory_2
-              </span>
-              {t("addFromCatalogue")}
-            </Button>
-          )}
-          <Button type="button" variant="outline" size="sm" onClick={addItem}>
+      <div className="flex items-center justify-end gap-2">
+        {products && products.length > 0 && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setShowProductPicker(!showProductPicker)}
+          >
             <span className="material-symbols-outlined text-[16px] mr-1">
-              add
+              inventory_2
             </span>
-            {t("addItem")}
+            {t("addFromCatalogue")}
           </Button>
-        </div>
+        )}
+        <Button type="button" variant="outline" size="sm" onClick={addItem}>
+          <span className="material-symbols-outlined text-[16px] mr-1">
+            add
+          </span>
+          {t("addItem")}
+        </Button>
       </div>
 
       {showProductPicker && products && (

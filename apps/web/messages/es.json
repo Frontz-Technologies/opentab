@@ -409,6 +409,7 @@
   },
   "recurring": {
     "title": "Facturas recurrentes",
+    "lineItems": "Partidas",
     "addRecurring": "Nueva recurrente",
     "editRecurring": "Editar factura recurrente",
     "noRecurring": "A\u00fan no hay facturas recurrentes",
