@@ -87,4 +87,26 @@ test.describe("Navigation", () => {
     await page.mouse.move(0, 0);
     await expect(tooltip).toBeHidden({ timeout: 2000 });
   });
+
+  test("sidebar expanded state persists across navigation and reload", async ({
+    context,
+  }) => {
+    await context.addCookies([
+      {
+        name: "sidebar_state",
+        value: "true",
+        url: page.url(),
+      },
+    ]);
+
+    await page.goto("/dashboard");
+    const sidebar = page.locator('[data-slot="sidebar"][data-state]');
+    await expect(sidebar).toHaveAttribute("data-state", "expanded");
+
+    await page.goto("/contacts");
+    await expect(sidebar).toHaveAttribute("data-state", "expanded");
+
+    await page.reload();
+    await expect(sidebar).toHaveAttribute("data-state", "expanded");
+  });
 });
