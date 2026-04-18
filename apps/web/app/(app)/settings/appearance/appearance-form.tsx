@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { SettingsSection } from "@/components/settings/settings-section";
+import { resolveTheme, type ThemePreference } from "@/lib/theme";
 import { updateAppearanceSettings } from "./actions";
 
 interface AppearanceFormProps {
@@ -120,11 +121,11 @@ export function AppearanceForm({ initialData }: AppearanceFormProps) {
     startTransition(async () => {
       await updateAppearanceSettings(formData);
       // Flip the class on <html> optimistically so the theme switches
-      // without a page reload. For 'system', honour prefers-color-scheme.
-      const root = document.documentElement;
+      // without a page reload. Use the same resolveTheme helper as the
+      // server + inline script so the three paths agree.
       const osDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      const isDark = theme === "dark" || (theme === "system" && osDark);
-      root.classList.toggle("dark", isDark);
+      const effective = resolveTheme(theme as ThemePreference, osDark);
+      document.documentElement.classList.toggle("dark", effective === "dark");
       setToast(t("saved"));
       setTimeout(() => setToast(null), 4000);
     });

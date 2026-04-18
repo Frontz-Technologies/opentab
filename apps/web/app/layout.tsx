@@ -81,6 +81,7 @@ export default async function RootLayout({
   return (
     <html
       lang={locale}
+      suppressHydrationWarning
       className={cn(
         isDark && "dark",
         manrope.variable,
