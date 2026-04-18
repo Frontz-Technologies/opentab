@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseResponse } from "../lib/mydata/xml-parser";
+import { parseResponse } from "../lib/country/providers/gr/integrations/mydata/xml-parser";
 
 describe("mydata xml-parser", () => {
   it("parses a successful response", () => {

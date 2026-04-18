@@ -8,7 +8,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { detectCountryFromTaxId } from "@/lib/utils";
 import { getCountryProvider } from "@/lib/country";
-import { lookupGreekAfm } from "@/lib/country/services/aade";
+import { lookupGreekAfm } from "@/lib/country/providers/gr/integrations/mydata/services/aade";
 import { validateViesVat } from "@/lib/country/services/vies";
 import type { CompanyLookupResult } from "@/lib/country";
 import { createLogger } from "@/lib/logging/logger";

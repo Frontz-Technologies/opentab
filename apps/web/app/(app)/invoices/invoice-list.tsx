@@ -5,7 +5,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import type { Invoice } from "@opentab/db/schema";
-import { INVOICE_STATUS, MYDATA_TRANSMISSION_STATUS } from "@opentab/db/schema";
+import {
+  INVOICE_STATUS,
+  COUNTRY_INTEGRATION_SUBMISSION_STATUS,
+} from "@opentab/db/schema";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { AnimatedFilterBar } from "@/components/ui/animated-filter-bar";
@@ -13,6 +16,7 @@ import { AnimatedFilterBar } from "@/components/ui/animated-filter-bar";
 interface InvoiceListProps {
   invoices: Invoice[];
   showMyData?: boolean;
+  mydataStatusByInvoice?: Record<string, number | null>;
 }
 
 const statusColors: Record<number, string> = {
@@ -57,7 +61,7 @@ type StatusFilter = "all" | "draft" | "sent" | "paid" | "overdue";
 
 function MyDataStatusIcon({ status }: { status: number | null }) {
   if (status === null) return null;
-  if (status === MYDATA_TRANSMISSION_STATUS.CONFIRMED) {
+  if (status === COUNTRY_INTEGRATION_SUBMISSION_STATUS.CONFIRMED) {
     return (
       <span
         className="material-symbols-outlined text-[16px] text-emerald-400"
@@ -68,9 +72,9 @@ function MyDataStatusIcon({ status }: { status: number | null }) {
     );
   }
   if (
-    status === MYDATA_TRANSMISSION_STATUS.PENDING ||
-    status === MYDATA_TRANSMISSION_STATUS.SUBMITTED ||
-    status === MYDATA_TRANSMISSION_STATUS.RETRY_SCHEDULED
+    status === COUNTRY_INTEGRATION_SUBMISSION_STATUS.PENDING ||
+    status === COUNTRY_INTEGRATION_SUBMISSION_STATUS.SUBMITTED ||
+    status === COUNTRY_INTEGRATION_SUBMISSION_STATUS.RETRY_SCHEDULED
   ) {
     return (
       <span
@@ -81,7 +85,7 @@ function MyDataStatusIcon({ status }: { status: number | null }) {
       </span>
     );
   }
-  if (status === MYDATA_TRANSMISSION_STATUS.CANCELLED) {
+  if (status === COUNTRY_INTEGRATION_SUBMISSION_STATUS.CANCELLED) {
     return (
       <span
         className="material-symbols-outlined text-[16px] text-zinc-400"
@@ -101,7 +105,11 @@ function MyDataStatusIcon({ status }: { status: number | null }) {
   );
 }
 
-export function InvoiceList({ invoices, showMyData }: InvoiceListProps) {
+export function InvoiceList({
+  invoices,
+  showMyData,
+  mydataStatusByInvoice,
+}: InvoiceListProps) {
   const t = useTranslations("invoices");
   const router = useRouter();
   const [search, setSearch] = useState("");
@@ -226,7 +234,9 @@ export function InvoiceList({ invoices, showMyData }: InvoiceListProps) {
                       </td>
                       {showMyData && (
                         <td className="px-4 py-3 text-center">
-                          <MyDataStatusIcon status={invoice.mydataStatus} />
+                          <MyDataStatusIcon
+                            status={mydataStatusByInvoice?.[invoice.id] ?? null}
+                          />
                         </td>
                       )}
                     </tr>

@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import {
   calculateGreekTax,
   getDefaultProjectionInput,
-} from "@/lib/reports/tax/gr-tax-calculator";
+} from "@/lib/country/providers/gr/tax-calculator";
 import type { EntityType, OrgTaxSettings } from "@/lib/reports/tax/types";
 import { TaxProjectionSlider } from "@/components/reports/tax-projection-slider";
 import { TaxBracketTable } from "@/components/reports/tax-bracket-table";

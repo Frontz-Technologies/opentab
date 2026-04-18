@@ -4,8 +4,8 @@ import Link from "next/link";
 import { getSession } from "@/lib/session";
 import { PageHeader } from "@/components/layout/page-header";
 import { db } from "@/lib/db";
-import { invoices } from "@opentab/db/schema";
-import { eq, desc, count } from "drizzle-orm";
+import { invoices, countryIntegrationSubmissions } from "@opentab/db/schema";
+import { eq, desc, count, and, inArray } from "drizzle-orm";
 import { InvoiceList } from "./invoice-list";
 import { Pagination } from "@/components/ui/pagination";
 import {
@@ -40,6 +40,35 @@ export default async function InvoicesPage({
       .where(eq(invoices.orgId, session.org.id)),
   ]);
 
+  const mydataStatusByInvoice: Record<string, number | null> = {};
+  if (session.org.countryCode === "GR" && allInvoices.length > 0) {
+    const submissions = await db
+      .select({
+        invoiceId: countryIntegrationSubmissions.invoiceId,
+        status: countryIntegrationSubmissions.status,
+        createdAt: countryIntegrationSubmissions.createdAt,
+      })
+      .from(countryIntegrationSubmissions)
+      .where(
+        and(
+          eq(countryIntegrationSubmissions.orgId, session.org.id),
+          eq(countryIntegrationSubmissions.countryCode, "GR"),
+          eq(countryIntegrationSubmissions.kind, "mydata"),
+          inArray(
+            countryIntegrationSubmissions.invoiceId,
+            allInvoices.map((i) => i.id),
+          ),
+        ),
+      )
+      .orderBy(desc(countryIntegrationSubmissions.createdAt));
+
+    for (const s of submissions) {
+      if (s.invoiceId && mydataStatusByInvoice[s.invoiceId] === undefined) {
+        mydataStatusByInvoice[s.invoiceId] = s.status;
+      }
+    }
+  }
+
   return (
     <>
       <PageHeader
@@ -62,6 +91,7 @@ export default async function InvoicesPage({
         <InvoiceList
           invoices={allInvoices}
           showMyData={session.org.countryCode === "GR"}
+          mydataStatusByInvoice={mydataStatusByInvoice}
         />
         <Pagination
           totalItems={total}

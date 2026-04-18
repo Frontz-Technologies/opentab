@@ -1,7 +1,7 @@
 import type { CountryProvider, TaxOffice, TaxCodeMapping } from "../types";
-import { resolveDocumentType } from "@/lib/mydata/document-types";
-import { resolveClassification } from "@/lib/mydata/classification-codes";
-import { calculateGreekTax } from "@/lib/reports/tax/gr-tax-calculator";
+import { resolveDocumentType } from "./gr/integrations/mydata/document-types";
+import { resolveClassification } from "./gr/integrations/mydata/classification-codes";
+import { calculateGreekTax } from "./gr/tax-calculator";
 
 const greekTaxOffices: TaxOffice[] = [
   { code: "1101", name: "Α' Αθηνών" },
@@ -239,4 +239,12 @@ export const greeceProvider: CountryProvider = {
   incomeTaxBrackets: GREEK_INCOME_TAX_BRACKETS_2026,
   corporateTax: GREEK_CORPORATE_TAX,
   socialSecurity: GREEK_EFKA_2026,
+
+  // Phase 1 foundation: plugin surface declared, populated in Phase 2.
+  integrations: [],
+  documentTypes: [],
+  requiredContactFields: [],
+  lineItemExtensions: [],
+  taxRegimes: [],
+  numberingRules: [],
 };

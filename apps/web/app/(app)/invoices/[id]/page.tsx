@@ -6,15 +6,14 @@ import { db } from "@/lib/db";
 import {
   invoices,
   invoiceItems,
-  mydataTransmissions,
-  mydataCredentials,
+  countryIntegrationSubmissions,
   INVOICE_STATUS,
-  MYDATA_TRANSMISSION_STATUS,
+  COUNTRY_INTEGRATION_SUBMISSION_STATUS,
 } from "@opentab/db/schema";
 import { eq, and, asc, desc } from "drizzle-orm";
 import { Badge } from "@/components/ui/badge";
 import { InvoiceActions } from "./invoice-actions";
-import { MYDATA_DOCUMENT_TYPES } from "@/lib/mydata/document-types";
+import { MYDATA_DOCUMENT_TYPES } from "@/lib/country/providers/gr/integrations/mydata/document-types";
 
 const statusColors: Record<number, string> = {
   [INVOICE_STATUS.DRAFT]:
@@ -50,20 +49,30 @@ export default async function InvoiceDetailPage({
     .where(eq(invoiceItems.invoiceId, id))
     .orderBy(asc(invoiceItems.sortOrder));
 
-  // Check if org has myDATA enabled
-  const hasMyData =
-    session.org.countryCode === "GR" && invoice.mydataStatus !== null;
-
-  let latestTransmission = null;
-  if (hasMyData) {
+  let latestTransmission:
+    | typeof countryIntegrationSubmissions.$inferSelect
+    | null = null;
+  if (session.org.countryCode === "GR") {
     const [tx] = await db
       .select()
-      .from(mydataTransmissions)
-      .where(eq(mydataTransmissions.invoiceId, id))
-      .orderBy(desc(mydataTransmissions.createdAt))
+      .from(countryIntegrationSubmissions)
+      .where(
+        and(
+          eq(countryIntegrationSubmissions.invoiceId, id),
+          eq(countryIntegrationSubmissions.countryCode, "GR"),
+          eq(countryIntegrationSubmissions.kind, "mydata"),
+        ),
+      )
+      .orderBy(desc(countryIntegrationSubmissions.createdAt))
       .limit(1);
     latestTransmission = tx ?? null;
   }
+  const hasMyData = latestTransmission !== null;
+  const mydataStatus = latestTransmission?.status ?? null;
+  const mydataMark = latestTransmission?.externalId ?? null;
+  const mydataDocumentType =
+    (latestTransmission?.requestJson as { documentType?: string } | null)
+      ?.documentType ?? null;
 
   const statusLabels: Record<number, string> = {
     [INVOICE_STATUS.DRAFT]: t("statusDraft"),
@@ -94,7 +103,7 @@ export default async function InvoiceDetailPage({
             {statusLabels[invoice.status]}
           </Badge>
         </div>
-        <InvoiceActions invoice={invoice} />
+        <InvoiceActions invoice={invoice} mydataStatus={mydataStatus} />
       </div>
 
       <div className="bg-surface-container rounded-xl p-6 space-y-4">
@@ -258,51 +267,50 @@ export default async function InvoiceDetailPage({
             </h3>
             <Badge
               className={
-                invoice.mydataStatus === MYDATA_TRANSMISSION_STATUS.CONFIRMED
+                mydataStatus === COUNTRY_INTEGRATION_SUBMISSION_STATUS.CONFIRMED
                   ? "bg-primary text-on-primary"
-                  : invoice.mydataStatus ===
-                        MYDATA_TRANSMISSION_STATUS.PENDING ||
-                      invoice.mydataStatus ===
-                        MYDATA_TRANSMISSION_STATUS.SUBMITTED
+                  : mydataStatus ===
+                        COUNTRY_INTEGRATION_SUBMISSION_STATUS.PENDING ||
+                      mydataStatus ===
+                        COUNTRY_INTEGRATION_SUBMISSION_STATUS.SUBMITTED
                     ? "bg-blue-500/20 text-blue-400"
-                    : invoice.mydataStatus ===
-                        MYDATA_TRANSMISSION_STATUS.CANCELLED
+                    : mydataStatus ===
+                        COUNTRY_INTEGRATION_SUBMISSION_STATUS.CANCELLED
                       ? "bg-zinc-500/20 text-zinc-400"
                       : "bg-red-500/20 text-red-400"
               }
               variant="outline"
             >
-              {invoice.mydataStatus === MYDATA_TRANSMISSION_STATUS.CONFIRMED
+              {mydataStatus === COUNTRY_INTEGRATION_SUBMISSION_STATUS.CONFIRMED
                 ? t("mydataConfirmed")
-                : invoice.mydataStatus === MYDATA_TRANSMISSION_STATUS.PENDING
+                : mydataStatus === COUNTRY_INTEGRATION_SUBMISSION_STATUS.PENDING
                   ? t("mydataPending")
-                  : invoice.mydataStatus ===
-                      MYDATA_TRANSMISSION_STATUS.CANCELLED
+                  : mydataStatus ===
+                      COUNTRY_INTEGRATION_SUBMISSION_STATUS.CANCELLED
                     ? t("mydataCancelled")
                     : t("mydataFailed")}
             </Badge>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            {invoice.mydataMark && (
+            {mydataMark && (
               <div>
                 <span className="font-label text-sm text-on-surface/60">
                   MARK:
                 </span>{" "}
                 <span className="text-on-surface text-sm font-mono">
-                  {invoice.mydataMark}
+                  {mydataMark}
                 </span>
               </div>
             )}
-            {invoice.mydataDocumentType && (
+            {mydataDocumentType && (
               <div>
                 <span className="font-label text-sm text-on-surface/60">
                   {t("mydataDocumentType")}:
                 </span>{" "}
                 <span className="text-on-surface text-sm">
-                  {invoice.mydataDocumentType}{" "}
-                  {MYDATA_DOCUMENT_TYPES[invoice.mydataDocumentType]?.nameEn ??
-                    ""}
+                  {mydataDocumentType}{" "}
+                  {MYDATA_DOCUMENT_TYPES[mydataDocumentType]?.nameEn ?? ""}
                 </span>
               </div>
             )}
