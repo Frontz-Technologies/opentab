@@ -71,7 +71,7 @@ export function ContactList({ contacts }: ContactListProps) {
                 <thead>
                   <tr className="border-b border-on-surface/10">
                     <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
-                      {t("company")} / Name
+                      {t("company")} / {t("contactName")}
                     </th>
                     <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
                       {t("type")}
@@ -106,7 +106,9 @@ export function ContactList({ contacts }: ContactListProps) {
                           className={typeColors[contact.type] || ""}
                           variant="outline"
                         >
-                          {contact.type}
+                          {t(
+                            `type${contact.type.charAt(0).toUpperCase() + contact.type.slice(1)}`,
+                          )}
                         </Badge>
                       </td>
                       <td className="px-4 py-3 text-on-surface/60 text-sm">

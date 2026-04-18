@@ -221,6 +221,7 @@
     "noContacts": "No contacts yet",
     "noContactsDescription": "Add your first client or supplier to get started.",
     "type": "Type",
+    "contactName": "Name",
     "typeClient": "Client",
     "typeSupplier": "Supplier",
     "typeBoth": "Both",

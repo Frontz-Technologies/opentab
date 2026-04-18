@@ -221,6 +221,7 @@
     "noContacts": "Δεν υπάρχουν επαφές",
     "noContactsDescription": "Προσθέστε τον πρώτο σας πελάτη ή προμηθευτή για να ξεκινήσετε.",
     "type": "Τύπος",
+    "contactName": "Όνομα",
     "typeClient": "Πελάτης",
     "typeSupplier": "Προμηθευτής",
     "typeBoth": "Και τα δύο",

@@ -221,6 +221,7 @@
     "noContacts": "A\u00fan no hay contactos",
     "noContactsDescription": "Agregue su primer cliente o proveedor para comenzar.",
     "type": "Tipo",
+    "contactName": "Nombre",
     "typeClient": "Cliente",
     "typeSupplier": "Proveedor",
     "typeBoth": "Ambos",
