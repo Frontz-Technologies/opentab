@@ -10,7 +10,9 @@
   },
   "nav": {
     "dashboard": "Dashboard",
+    "sales": "Sales",
     "invoices": "Invoices",
+    "quotes": "Quotes",
     "expenses": "Expenses",
     "contacts": "Contacts",
     "products": "Products",

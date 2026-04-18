@@ -10,7 +10,9 @@
   },
   "nav": {
     "dashboard": "Panel",
+    "sales": "Ventas",
     "invoices": "Facturas",
+    "quotes": "Presupuestos",
     "expenses": "Gastos",
     "contacts": "Contactos",
     "products": "Productos",

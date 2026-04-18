@@ -10,7 +10,9 @@
   },
   "nav": {
     "dashboard": "Επισκόπηση",
+    "sales": "Πωλήσεις",
     "invoices": "Τιμολόγια",
+    "quotes": "Προσφορές",
     "expenses": "Δαπάνες",
     "contacts": "Επαφές",
     "products": "Προϊόντα",
