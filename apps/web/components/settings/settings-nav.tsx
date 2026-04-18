@@ -50,11 +50,6 @@ const sections: NavSection[] = [
         subtitleKey: "appearanceSubtitle",
         href: "/settings/appearance",
       },
-    ],
-  },
-  {
-    titleKey: "sectionIntegrations",
-    items: [
       {
         icon: "extension",
         labelKey: "integrations",

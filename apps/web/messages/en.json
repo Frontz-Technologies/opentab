@@ -613,6 +613,8 @@
     "taxProjection": "Tax Projection",
     "taxProjectionDescription": "Estimated tax obligations",
     "setCountryCta": "Set your country to enable",
+    "apply": "Apply",
+    "loading": "Loading...",
     "periodMonth": "This Month",
     "period30Days": "30 Days",
     "periodQuarter": "Quarter",

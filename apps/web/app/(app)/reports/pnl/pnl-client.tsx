@@ -101,7 +101,7 @@ export function PnlClient({
           disabled={isPending}
           className="px-4 py-2 rounded-lg btn-gradient text-on-primary font-bold text-sm"
         >
-          {isPending ? t("noData") : t("title")}
+          {isPending ? t("loading") : t("apply")}
         </button>
         <div className="flex gap-1">
           {(["month", "quarter", "year"] as const).map((p) => (
