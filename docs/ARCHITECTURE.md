@@ -113,31 +113,31 @@ const { user, session: sessionData } = session;
 
 ### Schema (packages/db)
 
-| Table                      | Purpose                                                  |
-| -------------------------- | -------------------------------------------------------- |
-| `users`                    | Authentication identity, profile data                    |
-| `organisations`            | One per user — the financial entity                      |
-| `org_memberships`          | Links users to orgs with a role (owner/member)           |
-| `contacts`                 | Clients and suppliers with VAT, address, defaults        |
-| `products`                 | Product/service catalogue with tax categories            |
-| `invoices`                 | Sales invoices with status flow and denormalized contact |
-| `invoice_items`            | Line items per invoice (separate table, not JSON)        |
-| `quotes`                   | Estimates with conversion to invoice                     |
-| `quote_items`              | Line items per quote                                     |
-| `recurring_invoices`       | Recurring invoice templates with frequency               |
-| `recurring_invoice_items`  | Line items per recurring template                        |
-| `invoice_number_sequences` | Auto-numbering configuration per org                     |
-| `expense_groups`           | 16 universal expense groups (string PK)                  |
-| `expense_categories`       | Per-org categories linked to groups                      |
-| `expenses`                 | Expense records with status flow and category            |
-| `expense_items`            | Line items per expense                                   |
-| `expense_attachments`      | File attachments with AI extraction status               |
-| `recurring_expenses`       | Recurring expense templates with frequency               |
-| `recurring_expense_items`  | Line items per recurring expense template                |
-| `country_integration_credential`  | Encrypted credentials per `(org, country, kind)` — e.g. GR myDATA, DE XRechnung |
-| `country_integration_submission`  | Outbound submission queue with retry, QR, external ID — country/kind-agnostic    |
-| `inbound_document`                | Inbound feed (e.g. AADE counterparty invoices, IT SDI arrivals) with expense/invoice match |
-| `ai_settings`              | Encrypted AI API keys and model preferences per org      |
+| Table                            | Purpose                                                                                    |
+| -------------------------------- | ------------------------------------------------------------------------------------------ |
+| `users`                          | Authentication identity, profile data                                                      |
+| `organisations`                  | One per user — the financial entity                                                        |
+| `org_memberships`                | Links users to orgs with a role (owner/member)                                             |
+| `contacts`                       | Clients and suppliers with VAT, address, defaults                                          |
+| `products`                       | Product/service catalogue with tax categories                                              |
+| `invoices`                       | Sales invoices with status flow and denormalized contact                                   |
+| `invoice_items`                  | Line items per invoice (separate table, not JSON)                                          |
+| `quotes`                         | Estimates with conversion to invoice                                                       |
+| `quote_items`                    | Line items per quote                                                                       |
+| `recurring_invoices`             | Recurring invoice templates with frequency                                                 |
+| `recurring_invoice_items`        | Line items per recurring template                                                          |
+| `invoice_number_sequences`       | Auto-numbering configuration per org                                                       |
+| `expense_groups`                 | 16 universal expense groups (string PK)                                                    |
+| `expense_categories`             | Per-org categories linked to groups                                                        |
+| `expenses`                       | Expense records with status flow and category                                              |
+| `expense_items`                  | Line items per expense                                                                     |
+| `expense_attachments`            | File attachments with AI extraction status                                                 |
+| `recurring_expenses`             | Recurring expense templates with frequency                                                 |
+| `recurring_expense_items`        | Line items per recurring expense template                                                  |
+| `country_integration_credential` | Encrypted credentials per `(org, country, kind)` — e.g. GR myDATA, DE XRechnung            |
+| `country_integration_submission` | Outbound submission queue with retry, QR, external ID — country/kind-agnostic              |
+| `inbound_document`               | Inbound feed (e.g. AADE counterparty invoices, IT SDI arrivals) with expense/invoice match |
+| `ai_settings`                    | Encrypted AI API keys and model preferences per org                                        |
 
 Better Auth manages its own session/account/verification tables alongside these. Drizzle schema types are exported and used throughout `apps/web` for type-safe queries.
 
@@ -278,39 +278,39 @@ Future countries follow the same pattern: `providers/de.ts` + `providers/de/inte
 
 Each provider declares what the country supports. The interface covers:
 
-| Field                     | Purpose                                                                   |
-| ------------------------- | ------------------------------------------------------------------------- |
-| `code`, `name`            | ISO country code + display name                                           |
-| `capabilities`            | Feature flags (eInvoicing, taxProjection, vatReport, expenseClassification…) |
-| `vatRates`                | Allowed VAT rates with default                                            |
-| `validateTaxId`           | Regex / checksum for country VAT/tax ID                                   |
-| `lookupCompany`           | Optional: public tax-authority lookup (AADE for GR, Gov.uk for UK, …)     |
-| `documentTypes`           | Country-recognised document kinds (invoice / credit note / …)             |
-| `requiredContactFields`   | Country-specific contact fields (e.g. DE steueridentifikationsnummer)     |
-| `lineItemExtensions`      | Per-country line-item extensions (e.g. withholding on service rows in GR) |
-| `taxRegimes`              | OSS, reverse-charge, exempt regimes the country understands               |
-| `numberingRules`          | Series / branch / prefix rules the country expects                        |
-| `vatReport` / `taxProjection` / `returnSchedule` | Report-pipeline hooks (delegation targets for `/reports`) |
-| `aiTools` / `aiContext` / `aiKnowledgeSource` | AI-agent surface: tools the LLM can call, system-prompt context, RAG source |
-| `integrations`            | Array of `Integration` — e-invoicing, VAT-filing, authority connectors    |
-| `mapGroupToTaxCode`       | Map the 16 universal expense groups to the country's tax-code catalogue   |
+| Field                                            | Purpose                                                                      |
+| ------------------------------------------------ | ---------------------------------------------------------------------------- |
+| `code`, `name`                                   | ISO country code + display name                                              |
+| `capabilities`                                   | Feature flags (eInvoicing, taxProjection, vatReport, expenseClassification…) |
+| `vatRates`                                       | Allowed VAT rates with default                                               |
+| `validateTaxId`                                  | Regex / checksum for country VAT/tax ID                                      |
+| `lookupCompany`                                  | Optional: public tax-authority lookup (AADE for GR, Gov.uk for UK, …)        |
+| `documentTypes`                                  | Country-recognised document kinds (invoice / credit note / …)                |
+| `requiredContactFields`                          | Country-specific contact fields (e.g. DE steueridentifikationsnummer)        |
+| `lineItemExtensions`                             | Per-country line-item extensions (e.g. withholding on service rows in GR)    |
+| `taxRegimes`                                     | OSS, reverse-charge, exempt regimes the country understands                  |
+| `numberingRules`                                 | Series / branch / prefix rules the country expects                           |
+| `vatReport` / `taxProjection` / `returnSchedule` | Report-pipeline hooks (delegation targets for `/reports`)                    |
+| `aiTools` / `aiContext` / `aiKnowledgeSource`    | AI-agent surface: tools the LLM can call, system-prompt context, RAG source  |
+| `integrations`                                   | Array of `Integration` — e-invoicing, VAT-filing, authority connectors       |
+| `mapGroupToTaxCode`                              | Map the 16 universal expense groups to the country's tax-code catalogue      |
 
 ### Integration contract
 
 An `Integration` is a concrete connector (GR myDATA, DE XRechnung, ES Verifactu, ES TicketBAI, IT FatturaPA, FR Chorus Pro…). It implements whichever of these hooks make sense for the authority:
 
-| Hook                      | Purpose                                                                   |
-| ------------------------- | ------------------------------------------------------------------------- |
-| `validate`                | Pre-submission validation of an invoice / org                             |
-| `submit`                  | Push to the authority; returns an `externalId` + optional QR URL          |
-| `getStatus`               | Re-query the authority for a previously-submitted document                |
-| `renderOnPdf`             | Return PDF blocks (e.g. QR + MARK) for the invoice PDF                    |
-| `attachToPdf`             | Hybrid PDF/A-3 embedded XML (XRechnung, FatturaPA, Factur-X…)             |
-| `renderInvoiceStatus`     | Invoice-detail status chip component                                      |
-| `dashboardModule`         | Integration's own dashboard at `/integrations/{slug}` (sidebar auto-adds) |
-| `settingsPage`            | Integration's own settings at `/settings/integrations/{slug}`             |
-| `syncInbound`             | Pull inbound docs into `inbound_document` on declared cadence             |
-| `aiTools`                 | Integration-scoped AI tools (e.g. "lookup mydata status")                 |
+| Hook                  | Purpose                                                                   |
+| --------------------- | ------------------------------------------------------------------------- |
+| `validate`            | Pre-submission validation of an invoice / org                             |
+| `submit`              | Push to the authority; returns an `externalId` + optional QR URL          |
+| `getStatus`           | Re-query the authority for a previously-submitted document                |
+| `renderOnPdf`         | Return PDF blocks (e.g. QR + MARK) for the invoice PDF                    |
+| `attachToPdf`         | Hybrid PDF/A-3 embedded XML (XRechnung, FatturaPA, Factur-X…)             |
+| `renderInvoiceStatus` | Invoice-detail status chip component                                      |
+| `dashboardModule`     | Integration's own dashboard at `/integrations/{slug}` (sidebar auto-adds) |
+| `settingsPage`        | Integration's own settings at `/settings/integrations/{slug}`             |
+| `syncInbound`         | Pull inbound docs into `inbound_document` on declared cadence             |
+| `aiTools`             | Integration-scoped AI tools (e.g. "lookup mydata status")                 |
 
 All credentials, submissions, and inbound payloads flow through the three generic tables (`country_integration_credential`, `country_integration_submission`, `inbound_document`) — no country- or kind-specific columns anywhere in the schema.
 
