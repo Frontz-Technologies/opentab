@@ -64,4 +64,26 @@ test.describe("Navigation", () => {
       page.getByRole("heading", { name: "Company Information" }),
     ).toBeVisible();
   });
+
+  test("sidebar expanded state persists across navigation and reload", async ({
+    context,
+  }) => {
+    await context.addCookies([
+      {
+        name: "sidebar_state",
+        value: "true",
+        url: page.url(),
+      },
+    ]);
+
+    await page.goto("/dashboard");
+    const sidebar = page.locator('[data-slot="sidebar"][data-state]');
+    await expect(sidebar).toHaveAttribute("data-state", "expanded");
+
+    await page.goto("/contacts");
+    await expect(sidebar).toHaveAttribute("data-state", "expanded");
+
+    await page.reload();
+    await expect(sidebar).toHaveAttribute("data-state", "expanded");
+  });
 });

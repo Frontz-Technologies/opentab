@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/app-sidebar";
@@ -14,9 +15,12 @@ export default async function AppLayout({
   const session = await getSession();
   if (!session) redirect("/login");
 
+  const cookieStore = await cookies();
+  const sidebarOpen = cookieStore.get("sidebar_state")?.value === "true";
+
   return (
     <SidebarProvider
-      defaultOpen={false}
+      defaultOpen={sidebarOpen}
       style={
         {
           "--sidebar-width": "240px",
