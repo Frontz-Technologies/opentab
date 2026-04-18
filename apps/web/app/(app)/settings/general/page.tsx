@@ -10,12 +10,13 @@ export default async function GeneralSettingsPage() {
   if (!session) redirect("/login");
 
   const t = await getTranslations("settingsGeneral");
+  const tNav = await getTranslations("nav");
   const prefs = await getUserPreferences();
 
   return (
     <>
       <PageHeader
-        headingPrefix="Settings"
+        headingPrefix={tNav("settings")}
         heading={t("title")}
         userName={session.user.name}
         userEmail={session.user.email}

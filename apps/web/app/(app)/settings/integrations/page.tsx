@@ -11,6 +11,7 @@ export default async function IntegrationsPage() {
   if (!session) redirect("/login");
 
   const t = await getTranslations("settingsIntegrations");
+  const tNav = await getTranslations("nav");
   const isGreek = session.org.countryCode === "GR";
   const isOwnerOrAdmin = session.role === "owner" || session.role === "admin";
 
@@ -28,7 +29,7 @@ export default async function IntegrationsPage() {
   return (
     <>
       <PageHeader
-        headingPrefix="Settings"
+        headingPrefix={tNav("settings")}
         heading={t("title")}
         userName={session.user.name}
         userEmail={session.user.email}

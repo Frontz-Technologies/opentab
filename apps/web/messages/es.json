@@ -64,7 +64,12 @@
     "periodQuarter": "Trimestre",
     "periodYear": "A\u00f1o",
     "periodAll": "Todo",
-    "viewReports": "Ver informes"
+    "viewReports": "Ver informes",
+    "invoicesCount": "{count, plural, =0 {sin facturas} one {# factura} other {# facturas}}",
+    "expensesCount": "{count, plural, =0 {sin gastos} one {# gasto} other {# gastos}}",
+    "pendingCount": "{count, plural, =0 {nada pendiente} one {# pendiente} other {# pendientes}}",
+    "overdueCount": "{count, plural, one {# vencida} other {# vencidas}} ({total})",
+    "marginLabel": "{value}% margen"
   },
   "quickSetup": {
     "title": "Primeros pasos",
@@ -78,6 +83,7 @@
   "settings": {
     "company": "Empresa",
     "companyInfo": "Informaci\u00f3n de la empresa",
+    "organisationHeading": "Configuraci\u00f3n de la organizaci\u00f3n",
     "taxInfo": "Informaci\u00f3n fiscal",
     "address": "Direcci\u00f3n",
     "contact": "Contacto",

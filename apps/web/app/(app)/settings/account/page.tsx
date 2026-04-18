@@ -9,11 +9,12 @@ export default async function AccountSettingsPage() {
   if (!session) redirect("/login");
 
   const t = await getTranslations("settingsAccount");
+  const tNav = await getTranslations("nav");
 
   return (
     <>
       <PageHeader
-        headingPrefix="Settings"
+        headingPrefix={tNav("settings")}
         heading={t("title")}
         userName={session.user.name}
         userEmail={session.user.email}
