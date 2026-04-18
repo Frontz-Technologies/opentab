@@ -75,8 +75,12 @@ export default async function RootLayout({
   } catch {
     // unauthenticated or DB unavailable — cookie fallback stands
   }
-  // Assume system-dark on server; the inline script corrects before paint.
-  const isDark = resolveTheme(pref, true) === "dark";
+  // For 'system' preference, omit the class server-side and let the inline
+  // pre-hydration script set it based on the actual OS preference. This
+  // avoids a reconciliation loop after Server Actions where the server's
+  // assumed class keeps overwriting the client-side optimistic flip.
+  // For 'dark' / 'light', we can stamp the class authoritatively.
+  const isDark = pref !== "system" && resolveTheme(pref, false) === "dark";
 
   return (
     <html
