@@ -63,7 +63,7 @@ The emerald primary is the brand anchor across both themes. In light mode, the p
 | Token                 | Hex       | Usage                                       |
 | --------------------- | --------- | ------------------------------------------- |
 | `primary`             | `#4EDEA3` | Active states, links, focus rings, key data |
-| `primary-container`   | `#10B981` | Gradient endpoint, filled chip backgrounds  |
+| `primary-container`   | `#10B981` | Filled chip backgrounds                     |
 | `on-primary`          | `#003824` | Text on primary-coloured surfaces           |
 | `secondary`           | `#9ED2B5` | Secondary interactive elements              |
 | `secondary-container` | `#21523C` | Secondary chip/badge backgrounds            |
@@ -73,12 +73,10 @@ The emerald primary is the brand anchor across both themes. In light mode, the p
 | Token                 | Hex       | Usage                                       |
 | --------------------- | --------- | ------------------------------------------- |
 | `primary`             | `#0A8F6C` | Active states, links, focus rings, key data |
-| `primary-container`   | `#10B981` | Gradient endpoint, filled chip backgrounds  |
+| `primary-container`   | `#10B981` | Filled chip backgrounds                     |
 | `on-primary`          | `#FFFFFF` | Text on primary-coloured surfaces           |
 | `secondary`           | `#3D7A5C` | Secondary interactive elements              |
 | `secondary-container` | `#C8EDD8` | Secondary chip/badge backgrounds            |
-
-The CTA gradient in light mode becomes `linear-gradient(135deg, #10B981, #0A8F6C)` — reversed to keep the brighter shade as the start point.
 
 ### Tertiary / Danger
 
@@ -136,17 +134,15 @@ Avoid pure `#FFFFFF` (dark mode) and pure `#000000` (light mode). Both text colo
 - Backdrop blur: `blur(16px)` (reduced to avoid the "frosted shower door" effect)
 - Combined with a ghost border at `outline-variant` 10% opacity
 
-**Call-to-action buttons** use the gradient:
-
-```css
-/* Dark mode */
-background: linear-gradient(135deg, #4edea3, #10b981);
-
-/* Light mode */
-background: linear-gradient(135deg, #10b981, #0a8f6c);
-```
-
-This gradient is reserved for the single primary action per screen. Don't apply it to secondary or tertiary buttons.
+**Call-to-action buttons** use the solid emerald primary token. A
+`.btn-gradient` utility exists in `apps/web/app/globals.css` for legacy
+reasons but is **reserved** — do not use in product code. We evaluated
+a gradient CTA (`linear-gradient(135deg, #4EDEA3, #10B981)`) and
+decided against it: a single flat colour is easier to reason about
+across Button / Link / disabled / hover / focus states, and reduces the
+visual noise on screens that already carry several surface tiers. The
+utility stays defined so removing it later is a one-commit cleanup; new
+code must not reference it.
 
 ---
 
@@ -192,12 +188,13 @@ OpenTab uses **tonal layering** — not box shadows — to communicate elevation
 
 ### Buttons
 
-**Primary (gradient):**
+**Primary (solid emerald):**
 
-- Background: `linear-gradient(135deg, #4EDEA3, #10B981)` via `.btn-gradient`
+- Background: `bg-primary` (dark: `#0A8F6C`, light: `#0A8F6C`) or `bg-primary-container` for the brighter fill
 - Text: `on-primary` (`#003824`), `font-label`, medium weight
 - Border radius: `rounded-lg` (0.5rem)
-- One per page region — do not scatter gradient buttons
+- One per page region — the hero action, nothing more
+- Note: `.btn-gradient` is reserved, not used. New code must not reference it.
 
 **Secondary (surface):**
 
@@ -303,7 +300,7 @@ Never mix the two systems within a single UI region. Navigation uses Material; i
 - Layer surfaces tonally — depth without shadows
 - Apply **asymmetric padding** in layouts: wider gutters on the right, compressed on the left creates editorial tension
 - Keep the emerald primary as the _only_ saturated colour anchor in both themes
-- Reserve the gradient CTA for the single most important action
+- Use the solid emerald primary button sparingly — one hero action per page region
 - Use **token references** (not hex values) so both themes resolve automatically
 
 ### Don't
@@ -344,7 +341,7 @@ When building or modifying any component, verify it works in both themes:
 ```
 Surfaces:        #FAFAF9 → #FFFFFF → #F5F5F0 → #EEEEE8 → #E5E5DF → #DDDDD7 → #D5D5CF
 Primary:         #0A8F6C (deeper emerald for light bg contrast)
-Primary CTA:     linear-gradient(135deg, #10B981, #0A8F6C)
+Primary CTA:     #0A8F6C (solid emerald)
 Text:            #1A1A1A (primary) / #5C6B60 (secondary, green-tinted)
 Danger:          #B3261E (text) / #F9DEDC (container)
 Ghost border:    rgba(194, 207, 198, 0.10)
