@@ -43,34 +43,36 @@ export function ExpenseCategoryDonut({
   if (!data.length) return null;
   const colors = theme.series;
   return (
-    <div className="relative">
-      <ResponsiveContainer width="100%" height={300}>
-        <PieChart>
-          <Pie
-            data={data}
-            dataKey="total"
-            nameKey="category"
-            cx="50%"
-            cy="40%"
-            innerRadius={60}
-            outerRadius={90}
-          >
-            {data.map((_, i) => (
-              <Cell
-                key={i}
-                fill={colors[i % colors.length]}
-                stroke="transparent"
-              />
-            ))}
-          </Pie>
-          <Tooltip content={<CustomTooltip />} />
-        </PieChart>
-      </ResponsiveContainer>
-      <div className="absolute top-[40%] left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
-        <p className="text-lg font-bold text-on-surface">
-          {formatCurrency(totalExpenses)}
-        </p>
-        <p className="text-xs text-on-surface-variant">Total</p>
+    <div>
+      <div className="relative h-[300px]">
+        <ResponsiveContainer width="100%" height={300}>
+          <PieChart>
+            <Pie
+              data={data}
+              dataKey="total"
+              nameKey="category"
+              cx="50%"
+              cy="50%"
+              innerRadius={60}
+              outerRadius={90}
+            >
+              {data.map((_, i) => (
+                <Cell
+                  key={i}
+                  fill={colors[i % colors.length]}
+                  stroke="transparent"
+                />
+              ))}
+            </Pie>
+            <Tooltip content={<CustomTooltip />} />
+          </PieChart>
+        </ResponsiveContainer>
+        <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
+          <p className="text-lg font-bold text-on-surface">
+            {formatCurrency(totalExpenses)}
+          </p>
+          <p className="text-xs text-on-surface-variant">Total</p>
+        </div>
       </div>
       <div className="flex flex-wrap gap-3 justify-center mt-2">
         {data

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
 export interface ChartTheme {
   revenue: string;
@@ -47,27 +47,33 @@ const LIGHT: ChartTheme = {
   ],
 };
 
-function readTheme(): ChartTheme {
-  if (typeof document === "undefined") return DARK;
+function subscribe(onChange: () => void): () => void {
+  const observer = new MutationObserver(onChange);
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["class"],
+  });
+  return () => observer.disconnect();
+}
+
+function getSnapshot(): ChartTheme {
   return document.documentElement.classList.contains("dark") ? DARK : LIGHT;
+}
+
+function getServerSnapshot(): ChartTheme {
+  return DARK;
 }
 
 /**
  * Returns a palette that adapts to the current theme (reads the `dark`
  * class on <html> and re-reads when it toggles). Recharts doesn't resolve
  * CSS custom properties, so charts need concrete hex values.
+ *
+ * Uses useSyncExternalStore so the server snapshot (DARK) matches the
+ * first client render and there's no hydration mismatch. After hydration
+ * the subscription kicks in and the theme flips if the user is actually
+ * in light mode — a single re-paint, no hydration error.
  */
 export function useChartTheme(): ChartTheme {
-  const [theme, setTheme] = useState<ChartTheme>(readTheme);
-
-  useEffect(() => {
-    const observer = new MutationObserver(() => setTheme(readTheme()));
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class"],
-    });
-    return () => observer.disconnect();
-  }, []);
-
-  return theme;
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
