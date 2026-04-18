@@ -30,7 +30,7 @@ export const auth = betterAuth({
 
           const [org] = await db
             .insert(schema.organisations)
-            .values({ name: orgName, slug })
+            .values({ name: orgName, slug, countryCode: "GR" })
             .returning();
 
           await db.insert(schema.orgMemberships).values({

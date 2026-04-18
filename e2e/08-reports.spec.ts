@@ -33,10 +33,15 @@ test.describe("Reports", () => {
     await page.screenshot({ path: "e2e/screenshots/reports-index.png" });
   });
 
-  test("reports index shows P&L report card", async () => {
-    // P&L report should always be visible (no capability gate)
+  test("reports index shows all three report cards for GR org", async () => {
+    // Newly-registered users default to countryCode "GR" (see auth-server.ts),
+    // so the reports overview must show P&L, VAT, and Tax Projection.
     await expect(
       page.getByRole("link", { name: /P.*L|Profit.*Loss/i }),
+    ).toBeVisible();
+    await expect(page.getByRole("link", { name: /VAT/i })).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /Tax.*Projection/i }),
     ).toBeVisible();
   });
 
@@ -62,37 +67,22 @@ test.describe("Reports", () => {
     ).toBeVisible();
   });
 
-  test("VAT report page loads (or redirects if not GR org)", async () => {
+  test("VAT report page loads for GR org", async () => {
     await page.goto("/reports/vat");
-    // For non-GR orgs, this will redirect back to /reports
-    // For GR orgs, it shows the VAT report with date inputs
-    const url = page.url();
-    if (url.includes("/reports/vat")) {
-      // GR org — verify date inputs render
-      await expect(page.locator('input[type="date"]').first()).toBeVisible();
-      // Quarter buttons Q1-Q4
-      await expect(
-        page.locator("button").filter({ hasText: "Q1" }),
-      ).toBeVisible();
-      await page.screenshot({ path: "e2e/screenshots/reports-vat.png" });
-    } else {
-      // Non-GR org — should redirect to /reports
-      expect(url).toMatch(/\/reports$/);
-    }
+    expect(page.url()).toContain("/reports/vat");
+    await expect(page.locator('input[type="date"]').first()).toBeVisible();
+    await expect(
+      page.locator("button").filter({ hasText: "Q1" }),
+    ).toBeVisible();
+    await page.screenshot({ path: "e2e/screenshots/reports-vat.png" });
   });
 
-  test("tax projection page loads (or redirects if not GR org)", async () => {
+  test("tax projection page loads for GR org", async () => {
     await page.goto("/reports/tax-projection");
-    const url = page.url();
-    if (url.includes("/reports/tax-projection")) {
-      // GR org — page renders
-      await expect(page.locator("h2").first()).toBeVisible();
-      await page.screenshot({
-        path: "e2e/screenshots/reports-tax-projection.png",
-      });
-    } else {
-      // Non-GR org — should redirect to /reports
-      expect(url).toMatch(/\/reports$/);
-    }
+    expect(page.url()).toContain("/reports/tax-projection");
+    await expect(page.locator("h2").first()).toBeVisible();
+    await page.screenshot({
+      path: "e2e/screenshots/reports-tax-projection.png",
+    });
   });
 });

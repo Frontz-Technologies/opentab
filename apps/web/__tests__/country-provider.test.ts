@@ -25,6 +25,12 @@ describe("getCountryProvider", () => {
     expect(provider.capabilities.taxOfficeList).toBe(true);
   });
 
+  it("Greece provider has vatReport and taxProjection capabilities", () => {
+    const provider = getCountryProvider("GR");
+    expect(provider.capabilities.vatReport).toBe(true);
+    expect(provider.capabilities.taxProjection).toBe(true);
+  });
+
   it("international provider has no special capabilities", () => {
     const provider = getCountryProvider(null);
     expect(provider.capabilities.companyLookup).toBe(false);
