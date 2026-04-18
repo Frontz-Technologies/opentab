@@ -101,4 +101,33 @@ test.describe("Settings", () => {
     const generalLink = page.locator('a[href="/settings/general"]').first();
     await expect(generalLink).toBeVisible();
   });
+
+  test("Appearance → Light removes the dark class on <html>", async () => {
+    await page.goto("/settings/appearance");
+    const root = page.locator("html");
+    // Dark is the default; ensure starting state
+    await expect(root).toHaveClass(/(^| )dark( |$)/);
+
+    await page.getByRole("button", { name: /Light/i }).first().click();
+    await page.getByRole("button", { name: /^Save changes$/i }).click();
+
+    // Optimistic client-side flip — class disappears
+    await expect(root).not.toHaveClass(/(^| )dark( |$)/, { timeout: 3000 });
+  });
+
+  test("Light preference persists across reload", async () => {
+    await page.goto("/settings/appearance");
+    await expect(page.locator("html")).not.toHaveClass(/(^| )dark( |$)/);
+    await page.reload();
+    await expect(page.locator("html")).not.toHaveClass(/(^| )dark( |$)/);
+  });
+
+  test("Appearance → Dark re-adds the dark class", async () => {
+    await page.goto("/settings/appearance");
+    await page.getByRole("button", { name: /Dark/i }).first().click();
+    await page.getByRole("button", { name: /^Save changes$/i }).click();
+    await expect(page.locator("html")).toHaveClass(/(^| )dark( |$)/, {
+      timeout: 3000,
+    });
+  });
 });
