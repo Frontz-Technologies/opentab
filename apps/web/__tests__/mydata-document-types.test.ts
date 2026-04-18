@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { resolveDocumentType } from "../lib/mydata/document-types";
-import { resolveClassification } from "../lib/mydata/classification-codes";
+import { resolveDocumentType } from "../lib/country/providers/gr/integrations/mydata/document-types";
+import { resolveClassification } from "../lib/country/providers/gr/integrations/mydata/classification-codes";
 
 describe("resolveDocumentType", () => {
   it("Greek B2B service → 2.1", () => {

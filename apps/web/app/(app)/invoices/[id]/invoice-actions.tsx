@@ -4,7 +4,10 @@ import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import type { Invoice } from "@opentab/db/schema";
-import { INVOICE_STATUS, MYDATA_TRANSMISSION_STATUS } from "@opentab/db/schema";
+import {
+  INVOICE_STATUS,
+  COUNTRY_INTEGRATION_SUBMISSION_STATUS,
+} from "@opentab/db/schema";
 import { Button } from "@/components/ui/button";
 import {
   publishInvoice,
@@ -17,9 +20,10 @@ import { submitToMyData, cancelOnMyData } from "../mydata-actions";
 
 interface InvoiceActionsProps {
   invoice: Invoice;
+  mydataStatus?: number | null;
 }
 
-export function InvoiceActions({ invoice }: InvoiceActionsProps) {
+export function InvoiceActions({ invoice, mydataStatus }: InvoiceActionsProps) {
   const t = useTranslations("invoices");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -122,9 +126,10 @@ export function InvoiceActions({ invoice }: InvoiceActionsProps) {
         </span>
         {t("downloadPdf")}
       </Button>
-      {invoice.mydataStatus !== null &&
-        invoice.mydataStatus !== MYDATA_TRANSMISSION_STATUS.CONFIRMED &&
-        invoice.mydataStatus !== MYDATA_TRANSMISSION_STATUS.CANCELLED &&
+      {mydataStatus !== null &&
+        mydataStatus !== undefined &&
+        mydataStatus !== COUNTRY_INTEGRATION_SUBMISSION_STATUS.CONFIRMED &&
+        mydataStatus !== COUNTRY_INTEGRATION_SUBMISSION_STATUS.CANCELLED &&
         invoice.status !== INVOICE_STATUS.DRAFT && (
           <Button
             variant="outline"
@@ -143,7 +148,7 @@ export function InvoiceActions({ invoice }: InvoiceActionsProps) {
             {t("mydataRetry")}
           </Button>
         )}
-      {invoice.mydataStatus === MYDATA_TRANSMISSION_STATUS.CONFIRMED && (
+      {mydataStatus === COUNTRY_INTEGRATION_SUBMISSION_STATUS.CONFIRMED && (
         <Button
           variant="outline"
           size="sm"

@@ -7,7 +7,7 @@ import type {
   TaxProjectionInput,
   TaxProjectionResult,
   BracketBreakdown,
-} from "./types";
+} from "@/lib/reports/tax/types";
 
 function getAge(birthDate: string, atDate: Date): number {
   const birth = new Date(birthDate);

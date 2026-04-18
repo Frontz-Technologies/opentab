@@ -26,4 +26,11 @@ export const internationalProvider: CountryProvider = {
   mapGroupToTaxCode(_groupCode: string): TaxCodeMapping | null {
     return null;
   },
+
+  integrations: [],
+  documentTypes: [],
+  requiredContactFields: [],
+  lineItemExtensions: [],
+  taxRegimes: [],
+  numberingRules: [],
 };

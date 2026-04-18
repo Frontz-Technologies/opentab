@@ -5,43 +5,65 @@ import { getSession } from "@/lib/session";
 import {
   invoices,
   invoiceItems,
-  mydataCredentials,
-  mydataTransmissions,
-  MYDATA_TRANSMISSION_STATUS,
+  countryIntegrationCredentials,
+  countryIntegrationSubmissions,
+  COUNTRY_INTEGRATION_SUBMISSION_STATUS,
 } from "@opentab/db/schema";
-import { eq, and, asc } from "drizzle-orm";
+import { eq, and, asc, desc } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { MyDataClient, MyDataApiError } from "@/lib/mydata/client";
-import { decrypt } from "@/lib/mydata/encryption";
-import { resolveDocumentType } from "@/lib/mydata/document-types";
+import {
+  MyDataClient,
+  MyDataApiError,
+} from "@/lib/country/providers/gr/integrations/mydata/client";
+import { decrypt } from "@/lib/country/providers/gr/integrations/mydata/encryption";
+import { resolveDocumentType } from "@/lib/country/providers/gr/integrations/mydata/document-types";
 import {
   resolveClassification,
   MYDATA_VAT_CATEGORIES,
-} from "@/lib/mydata/classification-codes";
-import { shouldRetry, getNextRetryAt } from "@/lib/mydata/retry";
-import type { MyDataInvoice, MyDataConfig } from "@/lib/mydata/types";
+} from "@/lib/country/providers/gr/integrations/mydata/classification-codes";
+import {
+  shouldRetry,
+  getNextRetryAt,
+} from "@/lib/country/providers/gr/integrations/mydata/retry";
+import type {
+  MyDataInvoice,
+  MyDataConfig,
+} from "@/lib/country/providers/gr/integrations/mydata/types";
+
+const GR = "GR";
+const MYDATA = "mydata";
+
+interface MydataCredConfig {
+  aadeUserId: string;
+  subscriptionKey: string;
+  environment: "production" | "sandbox";
+}
 
 async function getCredentials(
   orgId: string,
 ): Promise<{ config: MyDataConfig; credId: string } | null> {
   const [cred] = await db
     .select()
-    .from(mydataCredentials)
+    .from(countryIntegrationCredentials)
     .where(
       and(
-        eq(mydataCredentials.orgId, orgId),
-        eq(mydataCredentials.isActive, true),
+        eq(countryIntegrationCredentials.orgId, orgId),
+        eq(countryIntegrationCredentials.countryCode, GR),
+        eq(countryIntegrationCredentials.kind, MYDATA),
+        eq(countryIntegrationCredentials.isActive, true),
       ),
     );
 
   if (!cred) return null;
 
+  const cfg = cred.configJson as MydataCredConfig;
+
   return {
     credId: cred.id,
     config: {
-      aadeUserId: cred.aadeUserId,
-      subscriptionKey: decrypt(cred.subscriptionKey),
-      environment: cred.environment as "production" | "sandbox",
+      aadeUserId: cfg.aadeUserId,
+      subscriptionKey: decrypt(cfg.subscriptionKey),
+      environment: cfg.environment,
     },
   };
 }
@@ -162,29 +184,22 @@ export async function submitToMyData(invoiceId: string) {
     classification,
   );
 
-  // Create transmission record
-  const [transmission] = await db
-    .insert(mydataTransmissions)
+  const [submission] = await db
+    .insert(countryIntegrationSubmissions)
     .values({
       orgId: session.org.id,
+      countryCode: GR,
+      kind: MYDATA,
       invoiceId,
-      documentType,
-      classificationCategory: classification.category,
-      classificationType: classification.type,
-      paymentMethod: 5,
-      status: MYDATA_TRANSMISSION_STATUS.PENDING,
+      status: COUNTRY_INTEGRATION_SUBMISSION_STATUS.PENDING,
+      requestJson: {
+        documentType,
+        classificationCategory: classification.category,
+        classificationType: classification.type,
+        paymentMethod: 5,
+      },
     })
     .returning();
-
-  // Update invoice mydata status
-  await db
-    .update(invoices)
-    .set({
-      mydataDocumentType: documentType,
-      mydataStatus: MYDATA_TRANSMISSION_STATUS.PENDING,
-      updatedAt: new Date(),
-    })
-    .where(eq(invoices.id, invoiceId));
 
   try {
     const client = new MyDataClient(creds.config);
@@ -196,63 +211,56 @@ export async function submitToMyData(invoiceId: string) {
 
     if (result.statusCode === "Success") {
       await db
-        .update(mydataTransmissions)
+        .update(countryIntegrationSubmissions)
         .set({
-          status: MYDATA_TRANSMISSION_STATUS.CONFIRMED,
-          invoiceUid: result.invoiceUid,
-          invoiceMark: result.invoiceMark,
+          status: COUNTRY_INTEGRATION_SUBMISSION_STATUS.CONFIRMED,
+          externalId: result.invoiceMark,
           qrUrl: result.qrUrl,
-          requestXml,
-          responseXml,
+          requestJson: {
+            documentType,
+            classificationCategory: classification.category,
+            classificationType: classification.type,
+            paymentMethod: 5,
+            invoiceUid: result.invoiceUid,
+            xml: requestXml,
+          },
+          responseJson: { xml: responseXml },
           attemptCount: 1,
           submittedAt: new Date(),
           updatedAt: new Date(),
         })
-        .where(eq(mydataTransmissions.id, transmission.id));
+        .where(eq(countryIntegrationSubmissions.id, submission.id));
 
       await db
-        .update(invoices)
-        .set({
-          mydataMark: result.invoiceMark,
-          mydataQrUrl: result.qrUrl,
-          mydataStatus: MYDATA_TRANSMISSION_STATUS.CONFIRMED,
-          updatedAt: new Date(),
-        })
-        .where(eq(invoices.id, invoiceId));
-
-      // Update credential last validated
-      await db
-        .update(mydataCredentials)
+        .update(countryIntegrationCredentials)
         .set({ lastValidatedAt: new Date(), updatedAt: new Date() })
-        .where(eq(mydataCredentials.id, creds.credId));
+        .where(eq(countryIntegrationCredentials.id, creds.credId));
     } else {
       const errorMsg =
         result.errors?.map((e) => e.message).join("; ") ?? "Unknown error";
       const errorCode = result.errors?.[0]?.code ?? "UNKNOWN";
 
       await db
-        .update(mydataTransmissions)
+        .update(countryIntegrationSubmissions)
         .set({
           status: shouldRetry(1)
-            ? MYDATA_TRANSMISSION_STATUS.RETRY_SCHEDULED
-            : MYDATA_TRANSMISSION_STATUS.FAILED_PERMANENT,
+            ? COUNTRY_INTEGRATION_SUBMISSION_STATUS.RETRY_SCHEDULED
+            : COUNTRY_INTEGRATION_SUBMISSION_STATUS.FAILED_PERMANENT,
           errorCode,
           errorMessage: errorMsg,
-          requestXml,
-          responseXml,
+          requestJson: {
+            documentType,
+            classificationCategory: classification.category,
+            classificationType: classification.type,
+            paymentMethod: 5,
+            xml: requestXml,
+          },
+          responseJson: { xml: responseXml },
           attemptCount: 1,
           nextRetryAt: shouldRetry(1) ? getNextRetryAt(1) : null,
           updatedAt: new Date(),
         })
-        .where(eq(mydataTransmissions.id, transmission.id));
-
-      await db
-        .update(invoices)
-        .set({
-          mydataStatus: MYDATA_TRANSMISSION_STATUS.FAILED,
-          updatedAt: new Date(),
-        })
-        .where(eq(invoices.id, invoiceId));
+        .where(eq(countryIntegrationSubmissions.id, submission.id));
     }
   } catch (error) {
     const errorMsg =
@@ -263,32 +271,24 @@ export async function submitToMyData(invoiceId: string) {
           : "Unknown error";
 
     await db
-      .update(mydataTransmissions)
+      .update(countryIntegrationSubmissions)
       .set({
         status: shouldRetry(1)
-          ? MYDATA_TRANSMISSION_STATUS.RETRY_SCHEDULED
-          : MYDATA_TRANSMISSION_STATUS.FAILED_PERMANENT,
+          ? COUNTRY_INTEGRATION_SUBMISSION_STATUS.RETRY_SCHEDULED
+          : COUNTRY_INTEGRATION_SUBMISSION_STATUS.FAILED_PERMANENT,
         errorMessage: errorMsg,
         attemptCount: 1,
         nextRetryAt: shouldRetry(1) ? getNextRetryAt(1) : null,
         updatedAt: new Date(),
       })
-      .where(eq(mydataTransmissions.id, transmission.id));
+      .where(eq(countryIntegrationSubmissions.id, submission.id));
 
-    await db
-      .update(invoices)
-      .set({
-        mydataStatus: MYDATA_TRANSMISSION_STATUS.FAILED,
-        updatedAt: new Date(),
-      })
-      .where(eq(invoices.id, invoiceId));
-
-    return { success: false, error: errorMsg, transmissionId: transmission.id };
+    return { success: false, error: errorMsg, submissionId: submission.id };
   }
 
   revalidatePath("/invoices");
   revalidatePath(`/invoices/${invoiceId}`);
-  return { success: true, transmissionId: transmission.id };
+  return { success: true, submissionId: submission.id };
 }
 
 export async function cancelOnMyData(invoiceId: string) {
@@ -304,50 +304,46 @@ export async function cancelOnMyData(invoiceId: string) {
     .where(and(eq(invoices.id, invoiceId), eq(invoices.orgId, session.org.id)));
 
   if (!invoice) return { success: false, error: "Invoice not found" };
-  if (!invoice.mydataMark) {
+
+  const [latest] = await db
+    .select()
+    .from(countryIntegrationSubmissions)
+    .where(
+      and(
+        eq(countryIntegrationSubmissions.invoiceId, invoiceId),
+        eq(countryIntegrationSubmissions.countryCode, GR),
+        eq(countryIntegrationSubmissions.kind, MYDATA),
+        eq(
+          countryIntegrationSubmissions.status,
+          COUNTRY_INTEGRATION_SUBMISSION_STATUS.CONFIRMED,
+        ),
+      ),
+    )
+    .orderBy(desc(countryIntegrationSubmissions.createdAt))
+    .limit(1);
+
+  if (!latest?.externalId) {
     return { success: false, error: "Invoice has no myDATA MARK" };
   }
 
   try {
     const client = new MyDataClient(creds.config);
     const { result, responseXml } = await client.cancelInvoice(
-      invoice.mydataMark,
+      latest.externalId,
     );
 
     if (result.statusCode === "Success") {
-      // Update transmission
-      const [tx] = await db
-        .select()
-        .from(mydataTransmissions)
-        .where(
-          and(
-            eq(mydataTransmissions.invoiceId, invoiceId),
-            eq(
-              mydataTransmissions.status,
-              MYDATA_TRANSMISSION_STATUS.CONFIRMED,
-            ),
-          ),
-        );
-
-      if (tx) {
-        await db
-          .update(mydataTransmissions)
-          .set({
-            status: MYDATA_TRANSMISSION_STATUS.CANCELLED,
-            cancellationMark: result.invoiceMark,
-            responseXml,
-            updatedAt: new Date(),
-          })
-          .where(eq(mydataTransmissions.id, tx.id));
-      }
-
       await db
-        .update(invoices)
+        .update(countryIntegrationSubmissions)
         .set({
-          mydataStatus: MYDATA_TRANSMISSION_STATUS.CANCELLED,
+          status: COUNTRY_INTEGRATION_SUBMISSION_STATUS.CANCELLED,
+          responseJson: {
+            xml: responseXml,
+            cancellationMark: result.invoiceMark,
+          },
           updatedAt: new Date(),
         })
-        .where(eq(invoices.id, invoiceId));
+        .where(eq(countryIntegrationSubmissions.id, latest.id));
 
       revalidatePath("/invoices");
       revalidatePath(`/invoices/${invoiceId}`);
@@ -363,34 +359,36 @@ export async function cancelOnMyData(invoiceId: string) {
   }
 }
 
-export async function retryMyDataSubmission(transmissionId: string) {
+export async function retryMyDataSubmission(submissionId: string) {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
 
-  const [tx] = await db
+  const [sub] = await db
     .select()
-    .from(mydataTransmissions)
+    .from(countryIntegrationSubmissions)
     .where(
       and(
-        eq(mydataTransmissions.id, transmissionId),
-        eq(mydataTransmissions.orgId, session.org.id),
+        eq(countryIntegrationSubmissions.id, submissionId),
+        eq(countryIntegrationSubmissions.orgId, session.org.id),
       ),
     );
 
-  if (!tx) return { success: false, error: "Transmission not found" };
+  if (!sub) return { success: false, error: "Submission not found" };
+  if (!sub.invoiceId)
+    return { success: false, error: "Submission has no invoice" };
 
   // Reset and resubmit
   await db
-    .update(mydataTransmissions)
+    .update(countryIntegrationSubmissions)
     .set({
-      status: MYDATA_TRANSMISSION_STATUS.PENDING,
+      status: COUNTRY_INTEGRATION_SUBMISSION_STATUS.PENDING,
       attemptCount: 0,
       errorCode: null,
       errorMessage: null,
       nextRetryAt: null,
       updatedAt: new Date(),
     })
-    .where(eq(mydataTransmissions.id, transmissionId));
+    .where(eq(countryIntegrationSubmissions.id, submissionId));
 
-  return submitToMyData(tx.invoiceId);
+  return submitToMyData(sub.invoiceId);
 }

@@ -6,7 +6,9 @@ import {
   invoices,
   invoiceItems,
   invoiceSequences,
-  mydataCredentials,
+  countryIntegrationCredentials,
+  countryIntegrationSubmissions,
+  COUNTRY_INTEGRATION_SUBMISSION_STATUS,
   INVOICE_STATUS,
 } from "@opentab/db/schema";
 import { getCountryProvider } from "@/lib/country";
@@ -346,11 +348,13 @@ export async function sendInvoice(id: string) {
   if (provider.capabilities.eInvoicing) {
     const [creds] = await db
       .select()
-      .from(mydataCredentials)
+      .from(countryIntegrationCredentials)
       .where(
         and(
-          eq(mydataCredentials.orgId, session.org.id),
-          eq(mydataCredentials.isActive, true),
+          eq(countryIntegrationCredentials.orgId, session.org.id),
+          eq(countryIntegrationCredentials.countryCode, "GR"),
+          eq(countryIntegrationCredentials.kind, "mydata"),
+          eq(countryIntegrationCredentials.isActive, true),
         ),
       );
     if (creds) {
@@ -489,8 +493,23 @@ export async function cancelInvoice(id: string) {
     })
     .where(eq(invoices.id, id));
 
-  // Cancel on myDATA if submitted
-  if (invoice.mydataMark) {
+  // Cancel on myDATA if submitted (has a CONFIRMED submission)
+  const [confirmed] = await db
+    .select({ id: countryIntegrationSubmissions.id })
+    .from(countryIntegrationSubmissions)
+    .where(
+      and(
+        eq(countryIntegrationSubmissions.invoiceId, id),
+        eq(countryIntegrationSubmissions.countryCode, "GR"),
+        eq(countryIntegrationSubmissions.kind, "mydata"),
+        eq(
+          countryIntegrationSubmissions.status,
+          COUNTRY_INTEGRATION_SUBMISSION_STATUS.CONFIRMED,
+        ),
+      ),
+    )
+    .limit(1);
+  if (confirmed) {
     log.info("cancelling on myDATA", { orgId, invoiceId: id });
     const { cancelOnMyData } = await import("./mydata-actions");
     const result = await cancelOnMyData(id);

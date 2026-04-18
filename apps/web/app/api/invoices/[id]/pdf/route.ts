@@ -1,11 +1,17 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { db } from "@/lib/db";
-import { invoices, invoiceItems, organisations } from "@opentab/db/schema";
-import { eq, and, asc } from "drizzle-orm";
+import {
+  invoices,
+  invoiceItems,
+  organisations,
+  countryIntegrationSubmissions,
+  COUNTRY_INTEGRATION_SUBMISSION_STATUS,
+} from "@opentab/db/schema";
+import { eq, and, asc, desc } from "drizzle-orm";
 import { generatePdfFromHtml } from "@/lib/invoicing/pdf";
 import { renderInvoicePdfHtml } from "@/components/invoicing/invoice-pdf-template";
-import { generateMyDataQR } from "@/lib/mydata/qr";
+import { generateMyDataQR } from "@/lib/country/providers/gr/integrations/mydata/qr";
 
 export async function GET(
   _request: Request,
@@ -38,11 +44,39 @@ export async function GET(
     .where(eq(organisations.id, session.org.id));
 
   let mydataQrDataUrl: string | undefined;
-  if (invoice.mydataQrUrl) {
-    mydataQrDataUrl = await generateMyDataQR(invoice.mydataQrUrl);
+  let mydataMark: string | undefined;
+  if (session.org.countryCode === "GR") {
+    const [confirmedSub] = await db
+      .select()
+      .from(countryIntegrationSubmissions)
+      .where(
+        and(
+          eq(countryIntegrationSubmissions.invoiceId, id),
+          eq(countryIntegrationSubmissions.countryCode, "GR"),
+          eq(countryIntegrationSubmissions.kind, "mydata"),
+          eq(
+            countryIntegrationSubmissions.status,
+            COUNTRY_INTEGRATION_SUBMISSION_STATUS.CONFIRMED,
+          ),
+        ),
+      )
+      .orderBy(desc(countryIntegrationSubmissions.createdAt))
+      .limit(1);
+    if (confirmedSub?.qrUrl) {
+      mydataQrDataUrl = await generateMyDataQR(confirmedSub.qrUrl);
+    }
+    if (confirmedSub?.externalId) {
+      mydataMark = confirmedSub.externalId;
+    }
   }
 
-  const html = renderInvoicePdfHtml({ invoice, items, org, mydataQrDataUrl });
+  const html = renderInvoicePdfHtml({
+    invoice,
+    items,
+    org,
+    mydataQrDataUrl,
+    mydataMark,
+  });
   const pdf = await generatePdfFromHtml(html);
 
   return new NextResponse(new Uint8Array(pdf), {

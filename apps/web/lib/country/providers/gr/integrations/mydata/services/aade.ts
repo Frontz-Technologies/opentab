@@ -1,4 +1,4 @@
-import type { CompanyLookupResult } from "../types";
+import type { CompanyLookupResult } from "@/lib/country/types";
 
 const AADE_URL = "https://www1.gsis.gr/wsaade/RgWsPublic2/RgWsPublic2";
 

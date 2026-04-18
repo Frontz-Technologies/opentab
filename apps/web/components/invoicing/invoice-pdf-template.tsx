@@ -5,6 +5,7 @@ interface InvoicePdfTemplateProps {
   items: InvoiceItem[];
   org: Organisation;
   mydataQrDataUrl?: string;
+  mydataMark?: string;
 }
 
 export function renderInvoicePdfHtml({
@@ -12,6 +13,7 @@ export function renderInvoicePdfHtml({
   items,
   org,
   mydataQrDataUrl,
+  mydataMark,
 }: InvoicePdfTemplateProps): string {
   const itemRows = items
     .map(
@@ -74,10 +76,10 @@ export function renderInvoicePdfHtml({
       <h2>INVOICE</h2>
       <p style="font-family: monospace; font-size: 16px;">${escapeHtml(invoice.invoiceNumber)}</p>
       ${
-        invoice.mydataMark
+        mydataMark
           ? `<div class="mydata-stamp">
         <div class="mark-label">MARK</div>
-        <div class="mark-number">${escapeHtml(invoice.mydataMark)}</div>
+        <div class="mark-number">${escapeHtml(mydataMark)}</div>
       </div>`
           : ""
       }

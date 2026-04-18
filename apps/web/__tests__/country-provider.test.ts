@@ -66,4 +66,21 @@ describe("getCountryProvider", () => {
     const provider = getCountryProvider(null);
     expect(provider.getDefaultVatRate()).toBe(0);
   });
+
+  it("GR and international providers expose the plugin surface", () => {
+    for (const code of [null, "GR"] as const) {
+      const provider = getCountryProvider(code);
+      expect(Array.isArray(provider.integrations)).toBe(true);
+      expect(Array.isArray(provider.documentTypes)).toBe(true);
+      expect(Array.isArray(provider.requiredContactFields)).toBe(true);
+      expect(Array.isArray(provider.lineItemExtensions)).toBe(true);
+      expect(Array.isArray(provider.taxRegimes)).toBe(true);
+      expect(Array.isArray(provider.numberingRules)).toBe(true);
+    }
+  });
+
+  it("Phase 1 foundation: GR.integrations is empty (populated in Phase 2)", () => {
+    const provider = getCountryProvider("GR");
+    expect(provider.integrations).toEqual([]);
+  });
 });

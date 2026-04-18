@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   calculateGreekTax,
   getDefaultProjectionInput,
-} from "../lib/reports/tax/gr-tax-calculator";
+} from "../lib/country/providers/gr/tax-calculator";
 import type { TaxProjectionInput } from "../lib/reports/tax/types";
 import { GREEK_EFKA_2026 } from "../lib/country/providers/gr";
 

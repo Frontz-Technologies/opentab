@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { buildInvoicesDoc } from "../lib/mydata/xml-builder";
-import type { MyDataInvoice } from "../lib/mydata/types";
+import { buildInvoicesDoc } from "../lib/country/providers/gr/integrations/mydata/xml-builder";
+import type { MyDataInvoice } from "../lib/country/providers/gr/integrations/mydata/types";
 
 function makeInvoice(overrides: Partial<MyDataInvoice> = {}): MyDataInvoice {
   return {

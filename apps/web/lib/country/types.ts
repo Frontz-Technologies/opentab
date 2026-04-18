@@ -71,6 +71,137 @@ export interface TaxCodeMapping {
   deductibilityNote?: string;
 }
 
+export interface DocumentTypeSpec {
+  code: string;
+  label: string;
+  nature: "invoice" | "credit_note" | "debit_note" | "receipt";
+}
+
+export interface RequiredContactField {
+  key: string;
+  label: string;
+  validator?: (value: string) => boolean;
+}
+
+export interface LineItemExtensionField {
+  key: string;
+  label: string;
+  kind: "string" | "number" | "boolean" | "date";
+  required?: boolean;
+}
+
+export interface TaxRegime {
+  code: string;
+  label: string;
+  appliesTo: "issuer" | "counterpart" | "both";
+}
+
+export interface NumberingRule {
+  kind: "series" | "branch" | "prefix";
+  label: string;
+  pattern?: string;
+  required?: boolean;
+}
+
+export interface VatReportInput {
+  orgId: string;
+  periodStart: string;
+  periodEnd: string;
+}
+
+export interface VatReportResult {
+  orgId: string;
+  periodStart: string;
+  periodEnd: string;
+  totals: Record<string, number>;
+  lines: Array<{ code: string; label: string; amount: number }>;
+}
+
+export interface ReturnDeadline {
+  code: string;
+  label: string;
+  cadence: "monthly" | "quarterly" | "annual" | "custom";
+  dayOfMonth?: number;
+}
+
+export interface AiTool {
+  name: string;
+  description: string;
+  inputSchema: Record<string, unknown>;
+  handler: (input: unknown, ctx: { orgId: string }) => Promise<unknown>;
+}
+
+export interface AiKnowledgeSource {
+  id: string;
+  title: string;
+  url?: string;
+  summary: string;
+}
+
+export interface IntegrationValidateResult {
+  ok: boolean;
+  errors?: string[];
+}
+
+export interface IntegrationSubmitInput<TEntity = unknown> {
+  orgId: string;
+  entity: TEntity;
+  credentials: Record<string, unknown>;
+}
+
+export interface IntegrationSubmitResult {
+  ok: boolean;
+  externalId?: string;
+  qrUrl?: string;
+  errorCode?: string;
+  errorMessage?: string;
+  requestPayload?: unknown;
+  responsePayload?: unknown;
+}
+
+export interface IntegrationStatusResult {
+  status: "pending" | "submitted" | "confirmed" | "failed" | "cancelled";
+  detail?: string;
+}
+
+export interface IntegrationDashboardModule {
+  slot: "summary" | "alerts" | "actions";
+  component: string;
+}
+
+export interface IntegrationSettingsPage {
+  slug: string;
+  component: string;
+}
+
+export interface IntegrationInboundSync {
+  cadence: "hourly" | "daily" | "weekly" | "manual";
+  run: (ctx: { orgId: string }) => Promise<{ fetched: number }>;
+}
+
+export interface Integration {
+  kind: string;
+  label: string;
+  description?: string;
+
+  validate?(
+    credentials: Record<string, unknown>,
+  ): Promise<IntegrationValidateResult>;
+
+  submit?(input: IntegrationSubmitInput): Promise<IntegrationSubmitResult>;
+  getStatus?(externalId: string): Promise<IntegrationStatusResult>;
+
+  renderOnPdf?: string;
+  attachToPdf?: string;
+  renderInvoiceStatus?: string;
+
+  dashboardModule?: IntegrationDashboardModule;
+  settingsPage?: IntegrationSettingsPage;
+  syncInbound?: IntegrationInboundSync;
+
+  aiTools?: AiTool[];
+}
+
 export interface CountryProvider {
   code: string;
   name: string;
@@ -109,4 +240,20 @@ export interface CountryProvider {
   incomeTaxBrackets?: TaxBracket[];
   corporateTax?: CorporateTaxRates;
   socialSecurity?: SocialSecurityConfig;
+
+  // Country plugin surface (Phase 1 foundation — populated per-provider in Phase 2+)
+  integrations: Integration[];
+  documentTypes: DocumentTypeSpec[];
+  requiredContactFields: RequiredContactField[];
+  lineItemExtensions: LineItemExtensionField[];
+  taxRegimes: TaxRegime[];
+  numberingRules: NumberingRule[];
+
+  vatReport?(input: VatReportInput): Promise<VatReportResult>;
+  taxProjection?(input: TaxProjectionInput): TaxProjectionResult;
+  returnSchedule?: ReturnDeadline[];
+
+  aiTools?: AiTool[];
+  aiContext?(ctx: { orgId: string }): Promise<string>;
+  aiKnowledgeSource?: AiKnowledgeSource[];
 }
