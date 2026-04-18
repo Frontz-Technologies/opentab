@@ -79,12 +79,6 @@ export function PageHeader({
         <div className="flex flex-shrink-0 items-center gap-2">
           {actions}
 
-          <button className="flex size-9 items-center justify-center rounded-full text-on-surface/60 transition-colors hover:bg-surface-container-low hover:text-on-surface">
-            <span className="material-symbols-outlined text-[22px] leading-none">
-              notifications
-            </span>
-          </button>
-
           <UserMenu name={userName} email={userEmail} />
         </div>
       </div>
