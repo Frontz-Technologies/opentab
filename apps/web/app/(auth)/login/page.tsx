@@ -40,8 +40,8 @@ export default function LoginPage() {
     <div>
       {/* Mobile logo — hidden on desktop */}
       <div className="flex lg:hidden items-center gap-3 mb-8">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#4EDEA3] to-[#10b981] flex items-center justify-center">
-          <span className="material-symbols-outlined text-[#131313] text-lg">
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center">
+          <span className="material-symbols-outlined text-on-primary text-lg">
             account_balance
           </span>
         </div>
