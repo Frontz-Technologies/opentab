@@ -199,6 +199,11 @@
     "connected": "Connected",
     "notConfigured": "Not configured"
   },
+  "notFound": {
+    "title": "Looks like you've lost your way…",
+    "backToDashboard": "Back to Dashboard",
+    "goToSignIn": "Go to sign in"
+  },
   "mobileNav": {
     "more": "More"
   },

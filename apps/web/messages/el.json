@@ -199,6 +199,11 @@
     "connected": "Συνδεδεμένο",
     "notConfigured": "Δεν έχει ρυθμιστεί"
   },
+  "notFound": {
+    "title": "Φαίνεται ότι χάσατε το δρόμο σας…",
+    "backToDashboard": "Επιστροφή στον Πίνακα",
+    "goToSignIn": "Σύνδεση"
+  },
   "mobileNav": {
     "more": "Άλλα"
   },

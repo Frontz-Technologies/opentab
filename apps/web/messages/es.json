@@ -199,6 +199,11 @@
     "connected": "Conectado",
     "notConfigured": "No configurado"
   },
+  "notFound": {
+    "title": "Parece que te has perdido…",
+    "backToDashboard": "Volver al Panel",
+    "goToSignIn": "Iniciar sesión"
+  },
   "mobileNav": {
     "more": "M\u00e1s"
   },
