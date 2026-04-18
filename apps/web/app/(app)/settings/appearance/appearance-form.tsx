@@ -119,6 +119,12 @@ export function AppearanceForm({ initialData }: AppearanceFormProps) {
     const formData = new FormData(e.currentTarget);
     startTransition(async () => {
       await updateAppearanceSettings(formData);
+      // Flip the class on <html> optimistically so the theme switches
+      // without a page reload. For 'system', honour prefers-color-scheme.
+      const root = document.documentElement;
+      const osDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const isDark = theme === "dark" || (theme === "system" && osDark);
+      root.classList.toggle("dark", isDark);
       setToast(t("saved"));
       setTimeout(() => setToast(null), 4000);
     });
@@ -147,16 +153,12 @@ export function AppearanceForm({ initialData }: AppearanceFormProps) {
             name="light"
             label={t("themeLight")}
             selected={theme === "light"}
-            disabled
-            comingSoonLabel={tCommon("comingSoon")}
             onSelect={setTheme}
           />
           <ThemeCard
             name="system"
             label={t("themeSystem")}
             selected={theme === "system"}
-            disabled
-            comingSoonLabel={tCommon("comingSoon")}
             onSelect={setTheme}
           />
         </div>
