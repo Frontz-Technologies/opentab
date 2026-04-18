@@ -34,7 +34,7 @@ function ThemeCard({
       disabled={disabled}
       className={`relative flex flex-col items-center gap-2 p-5 rounded-xl transition-colors duration-200 ${
         selected
-          ? "bg-surface-container-high ring-2 ring-primary"
+          ? "bg-surface-bright"
           : disabled
             ? "bg-surface-container opacity-60 cursor-not-allowed"
             : "bg-surface-container hover:bg-surface-container-high cursor-pointer"
@@ -53,11 +53,6 @@ function ThemeCard({
             : "contrast"}
       </span>
       <span className="font-label text-sm text-on-surface">{label}</span>
-      {selected && (
-        <span className="material-symbols-outlined text-[18px] text-primary">
-          check_circle
-        </span>
-      )}
     </button>
   );
 }
@@ -85,7 +80,7 @@ function DensityCard({
       onClick={() => onSelect(name)}
       className={`flex flex-col gap-3 p-5 rounded-xl transition-colors duration-200 text-left ${
         selected
-          ? "bg-surface-container-high ring-2 ring-primary"
+          ? "bg-surface-bright"
           : "bg-surface-container hover:bg-surface-container-high cursor-pointer"
       }`}
     >
