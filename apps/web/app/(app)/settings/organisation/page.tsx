@@ -1,15 +1,18 @@
+import { getTranslations } from "next-intl/server";
 import { getSession } from "@/lib/session";
 import { PageHeader } from "@/components/layout/page-header";
 import { CompanyForm } from "./company-form";
 
 export default async function OrganisationSettingsPage() {
   const session = (await getSession())!;
+  const t = await getTranslations("settings");
+  const tNav = await getTranslations("nav");
 
   return (
     <>
       <PageHeader
-        headingPrefix="Settings"
-        heading="Organisation Settings"
+        headingPrefix={tNav("settings")}
+        heading={t("organisationHeading")}
         userName={session.user.name}
         userEmail={session.user.email}
       />

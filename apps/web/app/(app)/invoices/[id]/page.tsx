@@ -259,7 +259,7 @@ export default async function InvoiceDetailPage({
             <Badge
               className={
                 invoice.mydataStatus === MYDATA_TRANSMISSION_STATUS.CONFIRMED
-                  ? "bg-emerald-500/20 text-emerald-400"
+                  ? "bg-primary text-on-primary"
                   : invoice.mydataStatus ===
                         MYDATA_TRANSMISSION_STATUS.PENDING ||
                       invoice.mydataStatus ===

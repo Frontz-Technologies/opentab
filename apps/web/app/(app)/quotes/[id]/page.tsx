@@ -11,7 +11,7 @@ import { QuoteActions } from "./quote-actions";
 const statusColors: Record<number, string> = {
   [QUOTE_STATUS.DRAFT]: "bg-zinc-500/20 text-zinc-400",
   [QUOTE_STATUS.SENT]: "bg-blue-500/20 text-blue-400",
-  [QUOTE_STATUS.ACCEPTED]: "bg-emerald-500/20 text-emerald-400",
+  [QUOTE_STATUS.ACCEPTED]: "bg-primary text-on-primary",
   [QUOTE_STATUS.REJECTED]: "bg-red-500/20 text-red-400",
   [QUOTE_STATUS.CONVERTED]: "bg-purple-500/20 text-purple-400",
 };

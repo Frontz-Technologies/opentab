@@ -246,7 +246,7 @@ export default async function ExpenseDetailPage({
                 <Badge
                   className={
                     att.aiStatus === "completed"
-                      ? "bg-emerald-500/20 text-emerald-400"
+                      ? "bg-primary text-on-primary"
                       : att.aiStatus === "failed"
                         ? "bg-red-500/20 text-red-400"
                         : "bg-zinc-500/20 text-zinc-400"

@@ -5,11 +5,14 @@
     "save": "Save changes",
     "cancel": "Cancel",
     "loading": "Loading...",
-    "comingSoon": "Coming soon"
+    "comingSoon": "Coming soon",
+    "soonBadge": "Soon"
   },
   "nav": {
     "dashboard": "Dashboard",
+    "sales": "Sales",
     "invoices": "Invoices",
+    "quotes": "Quotes",
     "expenses": "Expenses",
     "contacts": "Contacts",
     "products": "Products",
@@ -64,7 +67,12 @@
     "periodQuarter": "Quarter",
     "periodYear": "Year",
     "periodAll": "All Time",
-    "viewReports": "View Reports"
+    "viewReports": "View Reports",
+    "invoicesCount": "{count, plural, =0 {no invoices} one {# invoice} other {# invoices}}",
+    "expensesCount": "{count, plural, =0 {no expenses} one {# expense} other {# expenses}}",
+    "pendingCount": "{count, plural, =0 {nothing pending} one {# pending} other {# pending}}",
+    "overdueCount": "{count, plural, one {# overdue} other {# overdue}} ({total})",
+    "marginLabel": "{value}% margin"
   },
   "quickSetup": {
     "title": "Get Started",
@@ -78,6 +86,7 @@
   "settings": {
     "company": "Company",
     "companyInfo": "Company Information",
+    "organisationHeading": "Organisation Settings",
     "taxInfo": "Tax Information",
     "address": "Address",
     "contact": "Contact",
@@ -214,6 +223,7 @@
     "noContacts": "No contacts yet",
     "noContactsDescription": "Add your first client or supplier to get started.",
     "type": "Type",
+    "contactName": "Name",
     "typeClient": "Client",
     "typeSupplier": "Supplier",
     "typeBoth": "Both",

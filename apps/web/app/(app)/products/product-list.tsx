@@ -114,7 +114,7 @@ export function ProductList({ products }: ProductListProps) {
                     <Badge
                       className={
                         product.active
-                          ? "bg-emerald-500/20 text-emerald-400"
+                          ? "bg-primary text-on-primary"
                           : "bg-surface-container-highest text-on-surface/40"
                       }
                       variant="outline"

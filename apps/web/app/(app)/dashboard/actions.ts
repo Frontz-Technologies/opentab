@@ -1,5 +1,6 @@
 "use server";
 
+import { getTranslations } from "next-intl/server";
 import { getSession } from "@/lib/session";
 import type { DashboardData, PeriodKey } from "@/lib/reports/types";
 import {
@@ -37,6 +38,7 @@ export async function getDashboardData(
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
   const orgId = session.org.id;
+  const t = await getTranslations("dashboard");
 
   return getCachedOrCompute(
     `reports:${orgId}:dashboard:${period}`,
@@ -87,13 +89,13 @@ export async function getDashboardData(
           value: rev.total,
           previousValue: prevRev?.total ?? null,
           changePercent: changePercent(rev.total, prevRev?.total ?? null),
-          secondary: `${rev.count} invoice${rev.count !== 1 ? "s" : ""}`,
+          secondary: t("invoicesCount", { count: rev.count }),
         },
         expenses: {
           value: exp.total,
           previousValue: prevExp?.total ?? null,
           changePercent: changePercent(exp.total, prevExp?.total ?? null),
-          secondary: `${exp.count} expense${exp.count !== 1 ? "s" : ""}`,
+          secondary: t("expensesCount", { count: exp.count }),
         },
         outstanding: {
           value: outstanding.total,
@@ -101,8 +103,11 @@ export async function getDashboardData(
           changePercent: null,
           secondary:
             outstanding.overdueCount > 0
-              ? `${outstanding.overdueCount} overdue (${formatEur(outstanding.overdueTotal)})`
-              : `${outstanding.count} pending`,
+              ? t("overdueCount", {
+                  count: outstanding.overdueCount,
+                  total: formatEur(outstanding.overdueTotal),
+                })
+              : t("pendingCount", { count: outstanding.count }),
         },
         netProfit: {
           value: netProfit,
@@ -110,7 +115,9 @@ export async function getDashboardData(
           changePercent: changePercent(netProfit, prevNetProfit),
           secondary:
             rev.total > 0
-              ? `${((netProfit / rev.total) * 100).toFixed(1)}% margin`
+              ? t("marginLabel", {
+                  value: ((netProfit / rev.total) * 100).toFixed(1),
+                })
               : "",
         },
         cashFlow,

@@ -15,11 +15,11 @@ export function KpiCard({
 }: KpiCardProps) {
   return (
     <div className="bg-surface-container-low rounded-2xl p-6 border border-outline-variant/10">
-      <div className="flex items-center gap-2 mb-3">
-        <span className="material-symbols-outlined text-on-surface-variant text-lg">
+      <div className="flex items-center gap-2 mb-3 min-w-0">
+        <span className="material-symbols-outlined text-on-surface-variant text-lg shrink-0">
           {icon}
         </span>
-        <p className="font-label text-xs uppercase tracking-widest text-on-surface-variant">
+        <p className="font-label text-xs uppercase tracking-wider text-on-surface-variant truncate">
           {label}
         </p>
       </div>
