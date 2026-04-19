@@ -708,7 +708,24 @@
       "saveFailed": "Error al guardar"
     },
     "common": {
-      "decryptNotice": "opentab descifra sus credenciales al momento del envío para contactar con la autoridad fiscal en su nombre. Las instalaciones autoalojadas mantienen todo en el proceso."
+      "decryptNotice": "opentab descifra sus credenciales al momento del envío para contactar con la autoridad fiscal en su nombre. Las instalaciones autoalojadas mantienen todo en el proceso.",
+      "connectionStatus": "Estado de conexión",
+      "lastValidated": "Última validación",
+      "connected": "Conectado",
+      "connectionFailing": "Conexión fallando",
+      "notConnected": "No conectado",
+      "credentials": "Credenciales",
+      "secretPlaceholder": "Ingrese un nuevo valor para actualizar",
+      "testSuccess": "Conexión exitosa",
+      "testFailed": "Conexión fallida: {error}",
+      "unknownError": "Error desconocido",
+      "save": "Guardar",
+      "saveSuccess": "Credenciales guardadas",
+      "saveFailed": "Error al guardar",
+      "testConnection": "Probar conexión",
+      "delete": "Eliminar",
+      "deleteSuccess": "Credenciales eliminadas",
+      "deleteConfirm": "¿Eliminar credenciales de {label}? Las transmisiones pendientes fallarán."
     }
   }
 }

@@ -708,7 +708,24 @@
       "saveFailed": "Save failed"
     },
     "common": {
-      "decryptNotice": "opentab decrypts your credentials at submit time to call the tax authority on your behalf. Self-hosted installs keep everything in-process."
+      "decryptNotice": "opentab decrypts your credentials at submit time to call the tax authority on your behalf. Self-hosted installs keep everything in-process.",
+      "connectionStatus": "Connection Status",
+      "lastValidated": "Last validated",
+      "connected": "Connected",
+      "connectionFailing": "Connection Failing",
+      "notConnected": "Not Connected",
+      "credentials": "Credentials",
+      "secretPlaceholder": "Enter new value to update",
+      "testSuccess": "Connection successful",
+      "testFailed": "Connection failed: {error}",
+      "unknownError": "Unknown error",
+      "save": "Save",
+      "saveSuccess": "Credentials saved",
+      "saveFailed": "Save failed",
+      "testConnection": "Test Connection",
+      "delete": "Delete",
+      "deleteSuccess": "Credentials deleted",
+      "deleteConfirm": "Delete {label} credentials? Pending transmissions will fail."
     }
   }
 }
