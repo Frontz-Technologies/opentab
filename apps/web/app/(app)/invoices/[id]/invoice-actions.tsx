@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import type { Invoice } from "@opentab/db/schema";
@@ -9,6 +9,7 @@ import {
   COUNTRY_INTEGRATION_SUBMISSION_STATUS,
 } from "@opentab/db/schema";
 import { Button } from "@/components/ui/button";
+import { useActionToast } from "@/components/ui/action-toast";
 import {
   publishInvoice,
   sendInvoice,
@@ -30,6 +31,17 @@ export function InvoiceActions({ invoice, mydataStatus }: InvoiceActionsProps) {
   const t = useTranslations("invoices");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [retryResult, setRetryResult] = useState<{
+    success: boolean;
+    error?: string;
+  } | null>(null);
+  const [cancelSubmissionResult, setCancelSubmissionResult] = useState<{
+    success: boolean;
+    error?: string;
+  } | null>(null);
+
+  useActionToast(retryResult, t("mydataRetrySuccess"));
+  useActionToast(cancelSubmissionResult, t("mydataCancelSuccess"));
 
   function handleAction(
     action: (id: string) => Promise<{ success: boolean; error?: string }>,
@@ -139,7 +151,8 @@ export function InvoiceActions({ invoice, mydataStatus }: InvoiceActionsProps) {
             size="sm"
             onClick={() => {
               startTransition(async () => {
-                await retryIntegrationSubmission(invoice.id);
+                const result = await retryIntegrationSubmission(invoice.id);
+                setRetryResult(result);
                 router.refresh();
               });
             }}
@@ -158,7 +171,8 @@ export function InvoiceActions({ invoice, mydataStatus }: InvoiceActionsProps) {
           onClick={() => {
             if (!confirm(t("mydataCancelConfirm"))) return;
             startTransition(async () => {
-              await cancelIntegrationSubmission(invoice.id);
+              const result = await cancelIntegrationSubmission(invoice.id);
+              setCancelSubmissionResult(result);
               router.refresh();
             });
           }}

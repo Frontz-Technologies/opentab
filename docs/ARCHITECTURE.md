@@ -428,3 +428,48 @@ Tools are role-scoped: accountants see different capabilities than owners. All t
 - The chat route validates the session and org membership before every request
 - Tools are read-only by default; write operations go through a confirmation step
 - Rate limiting prevents runaway API costs
+
+---
+
+## Credential Encryption
+
+Every country integration (myDATA, future FatturaPA, Chorus Pro, etc.) stores its per-org credentials in `country_integration_credential.config_json`. The storage layer uses a shared implementation in `apps/web/lib/country/crypto.ts`.
+
+### Algorithm
+
+- **AES-256-GCM** per field, with a random 12-byte IV and a 16-byte auth tag
+- Key material: 32 bytes, loaded at runtime from the `ENCRYPTION_KEY` env var (hex-encoded)
+- Wire format: `base64(iv) + ':' + base64(authTag) + ':' + base64(ciphertext)`
+- Non-string values are JSON-serialised before encryption
+
+### Opt-OUT encryption model
+
+Each `Integration` declares `publicFields: string[]` listing the config keys that are safe to store in plaintext (environment flags, public endpoint IDs, VAT numbers). **Every other key is encrypted.** An integration author who adds a new field and forgets to list it gets encryption by default — the safer failure mode.
+
+```ts
+// Example — GR myDATA
+configSchema = z.object({
+  aadeUserId: z.string(), // public
+  subscriptionKey: z.string(), // encrypted
+  environment: z.enum(["sandbox", "production"]), // public
+});
+publicFields = ["aadeUserId", "environment"];
+```
+
+### Submit-time decryption
+
+Credentials are decrypted only when the server invokes an integration's `submit()` or `validateCredentials()` — i.e. at the moment we need to call the tax authority on the user's behalf. The decrypted bundle never leaves the server; the browser only ever sees public-field values.
+
+This is a **server-side trust boundary**. Users who need a stricter guarantee (end-to-end zero-knowledge) run the self-hosted build, which keeps everything in-process.
+
+### Logging
+
+`maskConfig(config, publicFields)` redacts every non-public field value to `"***"`. All log statements that touch a decrypted config MUST pass it through `maskConfig` first. Never log raw `configJson` or a decrypted bundle.
+
+### Rotation playbook
+
+1. Generate a new key: `openssl rand -hex 32`
+2. Add it as `ENCRYPTION_KEY_NEW` alongside the existing `ENCRYPTION_KEY`
+3. Run the admin `re-encrypt` command (deferred — land when first rotation is needed). It walks every `country_integration_credential` row, decrypts with the old key, re-encrypts with the new key, writes back atomically.
+4. Swap `ENCRYPTION_KEY_NEW` → `ENCRYPTION_KEY` and retire the old key.
+5. Backups: `ENCRYPTION_KEY` MUST be stored separately from `pg_dump` output. A compromised backup with the key in the same tarball is equivalent to plaintext.

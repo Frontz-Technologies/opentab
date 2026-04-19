@@ -6,11 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { useActionToast } from "@/components/ui/action-toast";
 import {
   saveMyDataCredentials,
   testMyDataConnection,
   deleteMyDataCredentials,
 } from "./actions";
+
+type ActionResult = {
+  success: boolean;
+  error?: string | Record<string, string[]>;
+} | null;
 
 interface CredentialStatus {
   id: string;
@@ -25,17 +31,34 @@ interface MyDataSettingsFormProps {
 }
 
 export function MyDataSettingsForm({ credentials }: MyDataSettingsFormProps) {
-  const t = useTranslations("mydata");
+  const t = useTranslations("integrations.mydata");
+  const tCommon = useTranslations("integrations.common");
   const [isPending, startTransition] = useTransition();
   const [testResult, setTestResult] = useState<{
     success: boolean;
     error?: string;
   } | null>(null);
+  const [saveResult, setSaveResult] = useState<ActionResult>(null);
+  const [deleteResult, setDeleteResult] = useState<ActionResult>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+
+  useActionToast(saveResult, t("saveSuccess"));
+  useActionToast(deleteResult, t("deleteSuccess"));
 
   function handleSubmit(formData: FormData) {
     startTransition(async () => {
       setTestResult(null);
-      await saveMyDataCredentials(formData);
+      setFieldErrors({});
+      const result = await saveMyDataCredentials(formData);
+      setSaveResult(result as ActionResult);
+      if (
+        result &&
+        !result.success &&
+        result.error &&
+        typeof result.error !== "string"
+      ) {
+        setFieldErrors(result.error as Record<string, string[]>);
+      }
     });
   }
 
@@ -49,7 +72,8 @@ export function MyDataSettingsForm({ credentials }: MyDataSettingsFormProps) {
   function handleDelete() {
     if (!confirm(t("deleteConfirm"))) return;
     startTransition(async () => {
-      await deleteMyDataCredentials();
+      const result = await deleteMyDataCredentials();
+      setDeleteResult(result);
     });
   }
 
@@ -99,7 +123,13 @@ export function MyDataSettingsForm({ credentials }: MyDataSettingsFormProps) {
             defaultValue={credentials?.aadeUserId ?? ""}
             placeholder={t("aadeUserIdPlaceholder")}
             required
+            aria-invalid={fieldErrors.aadeUserId ? true : undefined}
           />
+          {fieldErrors.aadeUserId && (
+            <p className="text-xs text-red-400">
+              {fieldErrors.aadeUserId.join(". ")}
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -114,7 +144,13 @@ export function MyDataSettingsForm({ credentials }: MyDataSettingsFormProps) {
                 : t("subscriptionKeyPlaceholder")
             }
             required={!credentials}
+            aria-invalid={fieldErrors.subscriptionKey ? true : undefined}
           />
+          {fieldErrors.subscriptionKey && (
+            <p className="text-xs text-red-400">
+              {fieldErrors.subscriptionKey.join(". ")}
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -144,6 +180,10 @@ export function MyDataSettingsForm({ credentials }: MyDataSettingsFormProps) {
               : t("testFailed", { error: testResult.error ?? "Unknown error" })}
           </div>
         )}
+
+        <p className="text-on-surface/50 text-xs pt-2">
+          {tCommon("decryptNotice")}
+        </p>
 
         <div className="flex gap-2 pt-2">
           <Button type="submit" disabled={isPending}>

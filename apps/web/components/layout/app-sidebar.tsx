@@ -16,18 +16,27 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+interface IntegrationNavEntry {
+  kind: string;
+  label: string;
+  slug: string;
+}
+
 interface AppSidebarProps {
   orgName: string;
+  integrationNav?: IntegrationNavEntry[];
 }
 
 interface NavItem {
   icon: string;
-  labelKey: string;
+  labelKey?: string;
+  label?: string;
   href: string;
 }
 
 interface NavGroup {
   labelKey?: string;
+  literalLabel?: string;
   items: NavItem[];
 }
 
@@ -57,11 +66,23 @@ const navGroups: NavGroup[] = [
   },
 ];
 
-export function AppSidebar({ orgName }: AppSidebarProps) {
+export function AppSidebar({ orgName, integrationNav }: AppSidebarProps) {
   const pathname = usePathname();
   const t = useTranslations("nav");
   const { state, toggleSidebar } = useSidebar();
   const isCollapsed = state === "collapsed";
+
+  const groups: NavGroup[] = [...navGroups];
+  if (integrationNav && integrationNav.length > 0) {
+    groups.push({
+      literalLabel: "Integrations",
+      items: integrationNav.map((entry) => ({
+        icon: "cloud_sync",
+        label: entry.label,
+        href: `/integrations/${entry.slug}`,
+      })),
+    });
+  }
 
   return (
     <Sidebar
@@ -87,46 +108,56 @@ export function AppSidebar({ orgName }: AppSidebarProps) {
       </SidebarHeader>
 
       <SidebarContent className="px-2">
-        {navGroups.map((group, groupIdx) => (
-          <SidebarGroup key={group.labelKey ?? `group-${groupIdx}`}>
-            {group.labelKey && !isCollapsed && (
-              <SidebarGroupLabel className="px-3 font-label text-xs uppercase tracking-widest text-on-surface-variant">
-                {t(group.labelKey)}
-              </SidebarGroupLabel>
-            )}
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {group.items.map((item) => {
-                  const isActive =
-                    pathname === item.href ||
-                    (item.href !== "/dashboard" &&
-                      pathname.startsWith(item.href));
-                  return (
-                    <SidebarMenuItem key={item.href}>
-                      <SidebarMenuButton
-                        isActive={isActive}
-                        tooltip={isCollapsed ? t(item.labelKey) : undefined}
-                        render={<Link href={item.href} />}
-                        className={
-                          isActive
-                            ? "bg-surface-container-low text-primary font-semibold"
-                            : "text-on-surface/60 hover:text-on-surface hover:bg-surface-container-low"
-                        }
-                      >
-                        <span className="material-symbols-outlined text-[20px] leading-none">
-                          {item.icon}
-                        </span>
-                        <span className="font-label text-sm">
-                          {t(item.labelKey)}
-                        </span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ))}
+        {groups.map((group, groupIdx) => {
+          const groupLabel = group.labelKey
+            ? t(group.labelKey)
+            : group.literalLabel;
+          return (
+            <SidebarGroup
+              key={group.labelKey ?? group.literalLabel ?? `group-${groupIdx}`}
+            >
+              {groupLabel && !isCollapsed && (
+                <SidebarGroupLabel className="px-3 font-label text-xs uppercase tracking-widest text-on-surface-variant">
+                  {groupLabel}
+                </SidebarGroupLabel>
+              )}
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {group.items.map((item) => {
+                    const isActive =
+                      pathname === item.href ||
+                      (item.href !== "/dashboard" &&
+                        pathname.startsWith(item.href));
+                    const itemLabel = item.labelKey
+                      ? t(item.labelKey)
+                      : (item.label ?? "");
+                    return (
+                      <SidebarMenuItem key={item.href}>
+                        <SidebarMenuButton
+                          isActive={isActive}
+                          tooltip={isCollapsed ? itemLabel : undefined}
+                          render={<Link href={item.href} />}
+                          className={
+                            isActive
+                              ? "bg-surface-container-low text-primary font-semibold"
+                              : "text-on-surface/60 hover:text-on-surface hover:bg-surface-container-low"
+                          }
+                        >
+                          <span className="material-symbols-outlined text-[20px] leading-none">
+                            {item.icon}
+                          </span>
+                          <span className="font-label text-sm">
+                            {itemLabel}
+                          </span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          );
+        })}
       </SidebarContent>
 
       <SidebarFooter className="px-2 pb-2">

@@ -47,6 +47,12 @@ const REDACTED_KEYS = new Set([
   "apiKeyIv",
   "secretAccessKey",
   "accessKeyId",
+  "subscriptionKey",
+  "aadeUserId",
+  "configJson",
+  "responseBody",
+  "requestXml",
+  "responseXml",
 ]);
 
 function sanitize(data: Record<string, unknown>): Record<string, unknown> {

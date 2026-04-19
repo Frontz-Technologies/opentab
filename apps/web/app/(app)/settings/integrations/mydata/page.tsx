@@ -15,7 +15,7 @@ export default async function MyDataIntegrationPage() {
     redirect("/settings/integrations");
   }
 
-  const t = await getTranslations("mydata");
+  const t = await getTranslations("integrations.mydata");
   const tInt = await getTranslations("settingsIntegrations");
   const credentials = await getMyDataCredentialsStatus();
 
@@ -27,7 +27,7 @@ export default async function MyDataIntegrationPage() {
         userName={session.user.name}
         userEmail={session.user.email}
       />
-      <main>
+      <main className="px-6 py-6">
         <p className="text-on-surface/60 text-sm mb-8">{t("description")}</p>
         <MyDataSettingsForm credentials={credentials} />
       </main>

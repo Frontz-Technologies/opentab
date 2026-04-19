@@ -1,3 +1,4 @@
+import { z } from "zod";
 import type {
   Integration,
   IntegrationInvoiceInput,
@@ -12,6 +13,9 @@ import {
   MYDATA_VAT_CATEGORIES,
 } from "./classification-codes";
 import type { MyDataConfig, MyDataInvoice } from "./types";
+import { createLogger } from "@/lib/logging/logger";
+
+const log = createLogger("mydata");
 
 interface MydataCredentials {
   aadeUserId: string;
@@ -96,33 +100,79 @@ function buildMyDataInvoice(
   };
 }
 
+const mydataConfigSchema = z.object({
+  aadeUserId: z.string().min(1),
+  subscriptionKey: z.string().min(1),
+  environment: z.enum(["sandbox", "production"]),
+});
+
 export const MydataIntegration: Integration = {
   kind: "mydata",
   label: "myDATA (AADE)",
   description: "Submits Greek invoices to the AADE e-invoicing platform",
 
   requiresCredentials: true,
+  configSchema: mydataConfigSchema,
+  publicFields: ["aadeUserId", "environment"],
 
-  async validateCredentials(raw, _ctx): Promise<IntegrationValidateResult> {
+  async validateCredentials(raw, ctx): Promise<IntegrationValidateResult> {
+    let config: MyDataConfig;
     try {
-      const config = decryptCredentials(raw);
-      if (!config.aadeUserId || !config.subscriptionKey) {
-        return { ok: false, errors: ["Missing aadeUserId or subscriptionKey"] };
-      }
+      config = decryptCredentials(raw);
+    } catch (error) {
+      log.error("validateCredentials: decrypt failed", {
+        orgId: ctx.orgId,
+        errorMessage: error instanceof Error ? error.message : String(error),
+      });
+      return {
+        ok: false,
+        errors: ["Unable to decrypt credentials — contact support"],
+      };
+    }
+
+    if (!config.aadeUserId || !config.subscriptionKey) {
+      log.warn("validateCredentials: missing fields", {
+        orgId: ctx.orgId,
+        environment: config.environment,
+      });
+      return { ok: false, errors: ["Missing aadeUserId or subscriptionKey"] };
+    }
+
+    try {
       const client = new MyDataClient(config);
-      await client.sendInvoices([]);
+      await client.checkCredentials();
+      log.info("validateCredentials: ok", {
+        orgId: ctx.orgId,
+        environment: config.environment,
+      });
       return { ok: true };
     } catch (error) {
       if (error instanceof MyDataApiError) {
         if (error.statusCode === 401 || error.statusCode === 403) {
+          log.warn("validateCredentials: invalid credentials", {
+            orgId: ctx.orgId,
+            status: error.statusCode,
+          });
           return { ok: false, errors: ["Invalid credentials"] };
         }
-        return { ok: true };
+        log.error("validateCredentials: non-auth HTTP error", {
+          orgId: ctx.orgId,
+          status: error.statusCode,
+        });
+        return {
+          ok: false,
+          errors: [`myDATA returned HTTP ${error.statusCode}`],
+        };
       }
-      return {
-        ok: false,
-        errors: [error instanceof Error ? error.message : "Unknown error"],
-      };
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      log.error("validateCredentials: network error", {
+        orgId: ctx.orgId,
+        errorMessage,
+      });
+      // Don't surface raw fetch error messages to the browser — they may
+      // include endpoint URLs, DNS names, etc. Log detail server-side.
+      return { ok: false, errors: ["Network error"] };
     }
   },
 
@@ -160,7 +210,20 @@ export const MydataIntegration: Integration = {
       documentType,
       classification,
     );
-    const config = decryptCredentials(input.credentials);
+
+    let config: MyDataConfig;
+    try {
+      config = decryptCredentials(input.credentials);
+    } catch (error) {
+      log.error("submit: decrypt failed", {
+        orgId: input.orgId,
+        errorMessage: error instanceof Error ? error.message : String(error),
+      });
+      return {
+        ok: false,
+        errorMessage: "Unable to decrypt credentials — contact support",
+      };
+    }
 
     try {
       const client = new MyDataClient(config);
@@ -213,8 +276,24 @@ export const MydataIntegration: Integration = {
     }
   },
 
-  async cancel({ externalId, credentials }): Promise<IntegrationSubmitResult> {
-    const config = decryptCredentials(credentials);
+  async cancel({
+    externalId,
+    orgId,
+    credentials,
+  }): Promise<IntegrationSubmitResult> {
+    let config: MyDataConfig;
+    try {
+      config = decryptCredentials(credentials);
+    } catch (error) {
+      log.error("cancel: decrypt failed", {
+        orgId,
+        errorMessage: error instanceof Error ? error.message : String(error),
+      });
+      return {
+        ok: false,
+        errorMessage: "Unable to decrypt credentials — contact support",
+      };
+    }
     try {
       const client = new MyDataClient(config);
       const { result, responseXml } = await client.cancelInvoice(externalId);
@@ -237,12 +316,30 @@ export const MydataIntegration: Integration = {
     }
   },
 
-  renderOnPdf({ submission }) {
-    if (!submission.externalId) return "";
-    return `<div class="mydata-stamp">
-      <div class="mark-label">MARK</div>
-      <div class="mark-number">${submission.externalId}</div>
-    </div>`;
+  async renderOnPdf({ submission }) {
+    if (!submission.externalId && !submission.qrUrl) return "";
+    const parts: string[] = [];
+    if (submission.externalId) {
+      parts.push(
+        `<div class="mydata-stamp" style="background:#f3f4f6;border-radius:6px;padding:8px 12px;display:inline-block;margin-top:4px;">
+          <div class="mark-label" style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">MARK</div>
+          <div class="mark-number" style="font-family:monospace;font-size:14px;color:#1a1a2e;font-weight:600;">${submission.externalId}</div>
+        </div>`,
+      );
+    }
+    if (submission.qrUrl) {
+      const { generateMyDataQR } = await import("./qr");
+      const dataUrl = await generateMyDataQR(submission.qrUrl);
+      parts.push(
+        `<div class="mydata-footer" style="margin-top:30px;display:flex;justify-content:flex-end;align-items:flex-end;gap:12px;">
+          <div>
+            <img src="${dataUrl}" alt="myDATA QR" width="80" height="80" />
+            <span class="qr-label" style="font-size:9px;color:#6b7280;display:block;text-align:center;margin-top:4px;">Verify on myDATA</span>
+          </div>
+        </div>`,
+      );
+    }
+    return parts.join("\n");
   },
 
   renderInvoiceStatus: "./render-status",

@@ -6,11 +6,12 @@ import { countryIntegrationCredentials } from "@opentab/db/schema";
 import { eq, and } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import {
-  encrypt,
-  decrypt,
-} from "@/lib/country/providers/gr/integrations/mydata/encryption";
-import { MyDataClient } from "@/lib/country/providers/gr/integrations/mydata/client";
+import { encrypt } from "@/lib/country/providers/gr/integrations/mydata/encryption";
+import { MydataIntegration } from "@/lib/country/providers/gr/integrations/mydata";
+import { createLogger } from "@/lib/logging/logger";
+import { throttleTestConnection } from "@/lib/country/test-connection-throttle";
+
+const log = createLogger("country-integration-credentials");
 
 const GR = "GR";
 const MYDATA = "mydata";
@@ -75,12 +76,22 @@ export async function saveMyDataCredentials(formData: FormData) {
         updatedAt: new Date(),
       })
       .where(eq(countryIntegrationCredentials.id, existing.id));
+    log.info("credentials updated", {
+      orgId: session.org.id,
+      kind: MYDATA,
+      environment,
+    });
   } else {
     await db.insert(countryIntegrationCredentials).values({
       orgId: session.org.id,
       countryCode: GR,
       kind: MYDATA,
       configJson,
+    });
+    log.info("credentials created", {
+      orgId: session.org.id,
+      kind: MYDATA,
+      environment,
     });
   }
 
@@ -92,45 +103,49 @@ export async function testMyDataConnection() {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
 
+  if (session.role !== "owner" && session.role !== "admin") {
+    throw new Error("Forbidden");
+  }
+
   const [cred] = await db
     .select()
     .from(countryIntegrationCredentials)
     .where(grMydataFilter(session.org.id));
 
-  if (!cred) return { success: false, error: "No credentials found" };
-
-  const cfg = cred.configJson as MydataCredConfig;
-
-  try {
-    const client = new MyDataClient({
-      aadeUserId: cfg.aadeUserId,
-      subscriptionKey: decrypt(cfg.subscriptionKey),
-      environment: cfg.environment,
+  if (!cred) {
+    log.warn("test-connection: no credentials found", {
+      orgId: session.org.id,
+      kind: MYDATA,
     });
+    return { success: false, error: "No credentials found" };
+  }
 
-    await client.sendInvoices([]);
+  const throttleError = throttleTestConnection(cred.lastValidatedAt);
+  if (throttleError) return { success: false, error: throttleError };
 
+  const done = log.time("test-connection");
+  const result = await MydataIntegration.validateCredentials!(
+    cred.configJson as Record<string, unknown>,
+    { orgId: session.org.id },
+  );
+  done("test-connection finished", {
+    orgId: session.org.id,
+    kind: MYDATA,
+    ok: result.ok,
+  });
+
+  if (result.ok) {
     await db
       .update(countryIntegrationCredentials)
       .set({ lastValidatedAt: new Date(), updatedAt: new Date() })
       .where(eq(countryIntegrationCredentials.id, cred.id));
-
-    return { success: true };
-  } catch (error) {
-    if (error instanceof Error && error.message.includes("401")) {
-      return { success: false, error: "Invalid credentials" };
-    }
-    if (error instanceof Error && error.message.includes("403")) {
-      return { success: false, error: "Access denied" };
-    }
-
-    await db
-      .update(countryIntegrationCredentials)
-      .set({ lastValidatedAt: new Date(), updatedAt: new Date() })
-      .where(eq(countryIntegrationCredentials.id, cred.id));
-
     return { success: true };
   }
+
+  return {
+    success: false,
+    error: result.errors?.join("; ") ?? "Validation failed",
+  };
 }
 
 export async function deleteMyDataCredentials() {
@@ -144,6 +159,8 @@ export async function deleteMyDataCredentials() {
   await db
     .delete(countryIntegrationCredentials)
     .where(grMydataFilter(session.org.id));
+
+  log.info("credentials deleted", { orgId: session.org.id, kind: MYDATA });
 
   revalidatePath("/settings/mydata");
   return { success: true };
