@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +40,7 @@ export function GenericIntegrationSettingsForm({
   hasCredentials,
   lastValidatedAt,
 }: Props) {
+  const t = useTranslations("integrations.common");
   const [isPending, startTransition] = useTransition();
   const [testResult, setTestResult] = useState<{
     success: boolean;
@@ -54,14 +56,14 @@ export function GenericIntegrationSettingsForm({
       setFieldErrors({});
       const result = await saveIntegrationCredentials(slug, formData);
       if (result.success) {
-        toast.success("Credentials saved");
+        toast.success(t("saveSuccess"));
       } else if (result.error) {
         if (typeof result.error === "string") {
           toast.error(result.error);
         } else {
           setFieldErrors(result.error as Record<string, string[]>);
           const summary = Object.values(result.error).flat().join(". ");
-          toast.error(summary || "Save failed");
+          toast.error(summary || t("saveFailed"));
         }
       }
     });
@@ -75,22 +77,21 @@ export function GenericIntegrationSettingsForm({
       };
       setTestResult(result);
       if (result.success) {
-        toast.success("Connection successful");
+        toast.success(t("testSuccess"));
       } else {
-        toast.error(`Connection failed: ${result.error ?? "Unknown error"}`);
+        toast.error(
+          t("testFailed", { error: result.error ?? t("unknownError") }),
+        );
       }
     });
   }
 
   function handleDelete() {
-    if (
-      !confirm(`Delete ${label} credentials? Pending transmissions will fail.`)
-    )
-      return;
+    if (!confirm(t("deleteConfirm", { label }))) return;
     startTransition(async () => {
       const result = await deleteIntegrationCredentials(slug);
       if (result.success) {
-        toast.success("Credentials deleted");
+        toast.success(t("deleteSuccess"));
       } else if (result.error && typeof result.error === "string") {
         toast.error(result.error);
       }
@@ -109,11 +110,12 @@ export function GenericIntegrationSettingsForm({
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-headline text-lg font-semibold text-on-surface">
-              Connection Status
+              {t("connectionStatus")}
             </h3>
             {lastValidatedAt && (
               <p className="text-on-surface/50 text-xs mt-1">
-                Last validated: {new Date(lastValidatedAt).toLocaleDateString()}
+                {t("lastValidated")}:{" "}
+                {new Date(lastValidatedAt).toLocaleDateString()}
               </p>
             )}
           </div>
@@ -128,10 +130,10 @@ export function GenericIntegrationSettingsForm({
             variant="outline"
           >
             {badgeState === "connected"
-              ? "Connected"
+              ? t("connected")
               : badgeState === "failing"
-                ? "Connection Failing"
-                : "Not Connected"}
+                ? t("connectionFailing")
+                : t("notConnected")}
           </Badge>
         </div>
       </div>
@@ -141,7 +143,7 @@ export function GenericIntegrationSettingsForm({
         className="bg-surface-container rounded-xl p-6 space-y-4"
       >
         <h3 className="font-headline text-lg font-semibold text-on-surface mb-4">
-          Credentials
+          {t("credentials")}
         </h3>
 
         {fields.map((field) => {
@@ -203,7 +205,7 @@ export function GenericIntegrationSettingsForm({
                 }
                 placeholder={
                   isSecret && hasCredentials
-                    ? "Enter new value to update"
+                    ? t("secretPlaceholder")
                     : undefined
                 }
                 required={field.required && !(isSecret && hasCredentials)}
@@ -228,20 +230,18 @@ export function GenericIntegrationSettingsForm({
             }`}
           >
             {testResult.success
-              ? "Connection successful"
-              : `Connection failed: ${testResult.error ?? "Unknown error"}`}
+              ? t("testSuccess")
+              : t("testFailed", {
+                  error: testResult.error ?? t("unknownError"),
+                })}
           </div>
         )}
 
-        <p className="text-on-surface/50 text-xs pt-2">
-          opentab decrypts your credentials at submit time to call the tax
-          authority on your behalf. Self-hosted installs keep everything
-          in-process.
-        </p>
+        <p className="text-on-surface/50 text-xs pt-2">{t("decryptNotice")}</p>
 
         <div className="flex gap-2 pt-2">
           <Button type="submit" disabled={isPending}>
-            Save
+            {t("save")}
           </Button>
           {hasCredentials && (
             <>
@@ -251,7 +251,7 @@ export function GenericIntegrationSettingsForm({
                 onClick={handleTest}
                 disabled={isPending}
               >
-                Test Connection
+                {t("testConnection")}
               </Button>
               <Button
                 type="button"
@@ -260,7 +260,7 @@ export function GenericIntegrationSettingsForm({
                 disabled={isPending}
                 className="text-red-400 hover:text-red-300"
               >
-                Delete
+                {t("delete")}
               </Button>
             </>
           )}
