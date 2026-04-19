@@ -8,6 +8,10 @@ type SubmitAiChatMessageOptions = {
   input?: string;
   confirmToolCall?: ConfirmToolCall;
   fetch?: FetchImplementation;
+  // Called every time the message list changes: once with just the user
+  // bubble before fetch, then again for every partial assistant snapshot
+  // yielded by the stream. Consumers use this to render progressively.
+  onProgress?: (messages: UIMessage[]) => void;
 };
 
 function createUserMessage(text: string): UIMessage {
@@ -23,6 +27,7 @@ export async function submitAiChatMessage({
   messages,
   confirmToolCall,
   fetch: fetchImplementation = fetch,
+  onProgress,
 }: SubmitAiChatMessageOptions): Promise<UIMessage[]> {
   const trimmedInput = input?.trim() ?? "";
   if (!trimmedInput) {
@@ -34,6 +39,10 @@ export async function submitAiChatMessage({
   const nextMessages = trimmedInput
     ? [...messages, createUserMessage(trimmedInput)]
     : [...messages];
+
+  // Emit the user bubble immediately so the UI can render it before the
+  // network round-trip finishes.
+  onProgress?.([...nextMessages]);
 
   const response = await fetchImplementation("/api/ai/chat", {
     method: "POST",
@@ -60,6 +69,10 @@ export async function submitAiChatMessage({
   let lastMessage: UIMessage | null = null;
   for await (const message of messageStream) {
     lastMessage = message;
+    // Emit a progressive snapshot on every delta so React re-renders as
+    // tokens arrive. revalidatePath in the /api route cannot cancel this
+    // because we're inside an async iterator, not a useEffect.
+    onProgress?.([...nextMessages, message]);
   }
 
   if (lastMessage) {
@@ -73,15 +86,18 @@ export async function confirmAiToolCall({
   messages,
   confirmToolCall,
   fetch,
+  onProgress,
 }: {
   messages: UIMessage[];
   confirmToolCall: ConfirmToolCall;
   fetch?: FetchImplementation;
+  onProgress?: (messages: UIMessage[]) => void;
 }) {
   return submitAiChatMessage({
     messages,
     input: "Approved. Continue.",
     confirmToolCall,
     fetch,
+    onProgress,
   });
 }

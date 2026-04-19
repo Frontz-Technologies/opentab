@@ -38,14 +38,17 @@ describe("AI chat store", () => {
       args: { contactId: "contact-1" },
     });
 
-    expect(confirmAiToolCallMock).toHaveBeenCalledWith({
-      messages: [],
-      confirmToolCall: {
-        approved: true,
-        toolName: "createDraftInvoice",
-        args: { contactId: "contact-1" },
-      },
-    });
+    expect(confirmAiToolCallMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        messages: [],
+        confirmToolCall: {
+          approved: true,
+          toolName: "createDraftInvoice",
+          args: { contactId: "contact-1" },
+        },
+        onProgress: expect.any(Function),
+      }),
+    );
     expect(useAiChatStore.getState().messages).toEqual([
       {
         id: "assistant-2",

@@ -2,7 +2,9 @@ import { type UIMessage } from "ai";
 import { describe, expect, it, vi } from "vitest";
 import { confirmAiToolCall, submitAiChatMessage } from "../lib/ai/chat-client";
 
-// Mock readUIMessageStream to return a simple async iterable
+// Mock readUIMessageStream to return a simple async iterable.
+// The default mock yields a single completed message; individual tests
+// can override via vi.mocked(readUIMessageStream).mockReturnValueOnce(...).
 vi.mock("ai", async (importOriginal) => {
   const actual = await importOriginal<typeof import("ai")>();
   return {
@@ -18,6 +20,8 @@ vi.mock("ai", async (importOriginal) => {
     ),
   };
 });
+
+const { readUIMessageStream } = await import("ai");
 
 describe("submitAiChatMessage", () => {
   it("posts the new user message and appends the streamed assistant response", async () => {
@@ -64,6 +68,64 @@ describe("submitAiChatMessage", () => {
       messages: existing,
     });
     expect(result).toBe(existing);
+  });
+
+  it("emits progressive onProgress updates — user bubble first, then each assistant delta (#154)", async () => {
+    // Override the default mock to yield TWO progressive assistant snapshots,
+    // simulating a real SSE stream where UIMessage grows over time.
+    vi.mocked(readUIMessageStream).mockReturnValueOnce(
+      (async function* () {
+        yield {
+          id: "assistant-1",
+          role: "assistant" as const,
+          parts: [{ type: "text" as const, text: "Revenue" }],
+        };
+        yield {
+          id: "assistant-1",
+          role: "assistant" as const,
+          parts: [{ type: "text" as const, text: "Revenue is up 12%." }],
+        };
+      })(),
+    );
+
+    const fetchMock = vi.fn(async () => new Response(new ReadableStream()));
+    const progressCalls: UIMessage[][] = [];
+
+    await submitAiChatMessage({
+      input: "How is revenue?",
+      messages: [],
+      fetch: fetchMock,
+      onProgress: (msgs) => progressCalls.push(msgs.map((m) => ({ ...m }))),
+    });
+
+    // Expect at least three emissions: user bubble, partial assistant,
+    // complete assistant. Order matters — user must come first.
+    expect(progressCalls.length).toBeGreaterThanOrEqual(3);
+
+    // First emission is user-only (before fetch resolves).
+    expect(progressCalls[0]).toHaveLength(1);
+    expect(progressCalls[0][0]).toMatchObject({
+      role: "user",
+      parts: [{ type: "text", text: "How is revenue?" }],
+    });
+
+    // Later emissions include the assistant message alongside the user.
+    const last = progressCalls[progressCalls.length - 1];
+    expect(last).toHaveLength(2);
+    expect(last[0].role).toBe("user");
+    expect(last[1]).toMatchObject({
+      role: "assistant",
+      parts: [{ type: "text", text: "Revenue is up 12%." }],
+    });
+
+    // Somewhere in between the assistant text should still be partial.
+    const mid = progressCalls[progressCalls.length - 2];
+    const midAssistant = mid.find((m) => m.role === "assistant");
+    expect(midAssistant).toBeDefined();
+    const midText = midAssistant?.parts?.find(
+      (p: { type: string }) => p.type === "text",
+    ) as { text: string } | undefined;
+    expect(midText?.text).toBe("Revenue");
   });
 
   it("sends a confirmation payload when approving a pending tool action", async () => {
