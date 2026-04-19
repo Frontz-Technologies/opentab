@@ -17,8 +17,8 @@ export function KpiCard({
 }: KpiCardProps) {
   const valueClass =
     variant === "hero"
-      ? "font-headline text-5xl font-bold text-on-surface leading-none tracking-tight"
-      : "font-headline text-4xl font-bold text-on-surface leading-none tracking-tight";
+      ? "font-headline text-4xl sm:text-5xl font-bold text-on-surface leading-none tracking-tight"
+      : "font-headline text-3xl sm:text-4xl font-bold text-on-surface leading-none tracking-tight";
 
   return (
     <div className="bg-surface-container-low rounded-2xl p-6">

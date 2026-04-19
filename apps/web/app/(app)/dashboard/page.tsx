@@ -27,7 +27,7 @@ export default async function DashboardPage({
         userEmail={session.user.email}
       />
       <main className="px-6 py-8 max-w-7xl mx-auto">
-        <h1 className="font-headline text-4xl font-bold text-on-surface tracking-tight mb-8">
+        <h1 className="font-headline text-3xl sm:text-4xl font-bold text-on-surface tracking-tight mb-8">
           {t("title")}
         </h1>
         {dataExists ? (
@@ -55,7 +55,9 @@ export default async function DashboardPage({
                     </div>
                     <p
                       className={`font-headline font-bold text-on-surface leading-none tracking-tight ${
-                        kpi.hero ? "text-5xl" : "text-4xl"
+                        kpi.hero
+                          ? "text-4xl sm:text-5xl"
+                          : "text-3xl sm:text-4xl"
                       }`}
                     >
                       &euro;0.00

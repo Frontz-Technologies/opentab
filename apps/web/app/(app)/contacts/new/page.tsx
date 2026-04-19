@@ -28,7 +28,7 @@ export default async function NewContactPage() {
 
   return (
     <div className="p-6 lg:p-8 max-w-7xl mx-auto">
-      <h1 className="font-headline text-3xl font-bold text-on-surface mb-6">
+      <h1 className="font-headline text-2xl sm:text-3xl font-bold text-on-surface mb-6">
         {t("addContact")}
       </h1>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
