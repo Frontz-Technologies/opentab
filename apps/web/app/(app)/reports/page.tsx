@@ -49,7 +49,7 @@ export default async function ReportsPage() {
                 <Link
                   key={card.key}
                   href={card.href}
-                  className="bg-surface-container-low rounded-2xl p-6 border border-outline-variant/10 hover:border-primary/30 hover:bg-surface-container-low/80 transition-all group"
+                  className="bg-surface-container-low rounded-2xl p-6 hover:bg-surface-container transition-colors group"
                 >
                   <span className="material-symbols-outlined text-3xl text-primary mb-4 block">
                     {card.icon}
@@ -67,7 +67,7 @@ export default async function ReportsPage() {
               <Link
                 key={card.key}
                 href="/settings/organisation"
-                className="bg-surface-container-low rounded-2xl p-6 border border-outline-variant/10 hover:border-primary/30 hover:bg-surface-container-low/80 transition-all group relative"
+                className="bg-surface-container-low rounded-2xl p-6 hover:bg-surface-container transition-colors group relative"
                 data-locked="true"
               >
                 <span className="material-symbols-outlined text-3xl text-on-surface/40 mb-4 block">

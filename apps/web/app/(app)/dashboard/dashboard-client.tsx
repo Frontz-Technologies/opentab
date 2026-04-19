@@ -108,6 +108,7 @@ export function DashboardClient({
           icon="trending_up"
           changePercent={data.revenue.changePercent}
           secondary={data.revenue.secondary}
+          variant="hero"
         />
         <KpiCard
           label={t("outstanding")}
@@ -132,7 +133,7 @@ export function DashboardClient({
         />
       </div>
 
-      <div className="bg-surface-container-low rounded-2xl p-6 border border-outline-variant/10 mb-8">
+      <div className="bg-surface-container-low rounded-2xl p-6 mb-8">
         <h3 className="font-label text-sm text-on-surface-variant mb-4">
           {t("revenue")} vs {t("expenses")}
         </h3>

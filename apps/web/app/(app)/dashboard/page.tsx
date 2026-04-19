@@ -26,7 +26,10 @@ export default async function DashboardPage({
         userName={session.user.name}
         userEmail={session.user.email}
       />
-      <main className="px-6 py-6 max-w-7xl mx-auto">
+      <main className="px-6 py-8 max-w-7xl mx-auto">
+        <h1 className="font-headline text-3xl sm:text-4xl font-bold text-on-surface tracking-tight mb-8">
+          {t("title")}
+        </h1>
         {dataExists ? (
           <DashboardWithData period={period} session={session} />
         ) : (
@@ -34,15 +37,15 @@ export default async function DashboardPage({
             <div className="lg:col-span-2 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[
-                  { label: t("revenue"), icon: "trending_up" },
-                  { label: t("outstanding"), icon: "schedule" },
-                  { label: t("expenses"), icon: "payments" },
+                  { label: t("revenue"), icon: "trending_up", hero: true },
+                  { label: t("outstanding"), icon: "schedule", hero: false },
+                  { label: t("expenses"), icon: "payments", hero: false },
                 ].map((kpi) => (
                   <div
                     key={kpi.label}
-                    className="bg-surface-container-low rounded-2xl p-6 border border-outline-variant/10"
+                    className="bg-surface-container-low rounded-2xl p-6"
                   >
-                    <div className="flex items-center gap-2 mb-3">
+                    <div className="flex items-center gap-2 mb-4">
                       <span className="material-symbols-outlined text-on-surface-variant text-lg">
                         {kpi.icon}
                       </span>
@@ -50,13 +53,19 @@ export default async function DashboardPage({
                         {kpi.label}
                       </p>
                     </div>
-                    <p className="font-label text-2xl font-bold text-on-surface">
+                    <p
+                      className={`font-headline font-bold text-on-surface leading-none tracking-tight ${
+                        kpi.hero
+                          ? "text-4xl sm:text-5xl"
+                          : "text-3xl sm:text-4xl"
+                      }`}
+                    >
                       &euro;0.00
                     </p>
                   </div>
                 ))}
               </div>
-              <div className="bg-surface-container-low rounded-2xl p-8 border border-outline-variant/10 min-h-[300px] flex flex-col items-center justify-center">
+              <div className="bg-surface-container-low rounded-2xl p-8 min-h-[300px] flex flex-col items-center justify-center">
                 <span className="material-symbols-outlined text-4xl text-on-surface/20 mb-4">
                   bar_chart
                 </span>

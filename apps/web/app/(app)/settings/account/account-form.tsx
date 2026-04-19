@@ -105,7 +105,7 @@ export function AccountForm({ initialData }: AccountFormProps) {
             <label className="block font-medium text-sm text-on-surface mb-1.5">
               {t("avatar")}
             </label>
-            <div className="flex flex-col items-center justify-center min-h-[100px] rounded-xl border-2 border-dashed border-outline-variant/30 text-on-surface/30 gap-2">
+            <div className="flex flex-col items-center justify-center min-h-[100px] rounded-xl bg-surface-container-lowest text-on-surface/30 gap-2">
               <span className="material-symbols-outlined text-3xl">
                 account_circle
               </span>
