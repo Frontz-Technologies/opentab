@@ -119,14 +119,17 @@ export const MydataIntegration: Integration = {
         return { ok: false, errors: ["Missing aadeUserId or subscriptionKey"] };
       }
       const client = new MyDataClient(config);
-      await client.sendInvoices([]);
+      await client.checkCredentials();
       return { ok: true };
     } catch (error) {
       if (error instanceof MyDataApiError) {
         if (error.statusCode === 401 || error.statusCode === 403) {
           return { ok: false, errors: ["Invalid credentials"] };
         }
-        return { ok: true };
+        return {
+          ok: false,
+          errors: [`myDATA returned HTTP ${error.statusCode}`],
+        };
       }
       return {
         ok: false,

@@ -689,6 +689,9 @@
       "aboutTitle": "About myDATA",
       "aboutDescription": "myDATA is the digital platform of AADE (Independent Authority for Public Revenue) for electronic bookkeeping. When enabled, invoices are automatically transmitted to AADE when sent, and MARK numbers are added to your PDFs.",
       "aadePortalLink": "AADE Developer Portal"
+    },
+    "common": {
+      "decryptNotice": "opentab decrypts your credentials at submit time to call the tax authority on your behalf. Self-hosted installs keep everything in-process."
     }
   }
 }

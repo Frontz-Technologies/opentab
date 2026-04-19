@@ -26,6 +26,7 @@ interface MyDataSettingsFormProps {
 
 export function MyDataSettingsForm({ credentials }: MyDataSettingsFormProps) {
   const t = useTranslations("integrations.mydata");
+  const tCommon = useTranslations("integrations.common");
   const [isPending, startTransition] = useTransition();
   const [testResult, setTestResult] = useState<{
     success: boolean;
@@ -146,9 +147,7 @@ export function MyDataSettingsForm({ credentials }: MyDataSettingsFormProps) {
         )}
 
         <p className="text-on-surface/50 text-xs pt-2">
-          opentab decrypts your credentials at submit time to call the tax
-          authority on your behalf. Self-hosted installs keep everything
-          in-process.
+          {tCommon("decryptNotice")}
         </p>
 
         <div className="flex gap-2 pt-2">

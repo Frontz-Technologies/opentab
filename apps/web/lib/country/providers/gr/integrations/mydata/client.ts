@@ -53,6 +53,22 @@ export class MyDataClient {
     return { results, requestXml, responseXml };
   }
 
+  async checkCredentials(): Promise<void> {
+    const response = await fetch(
+      `${this.baseUrl}/RequestTransmittedDocs?mark=0`,
+      { method: "GET", headers: this.getHeaders() },
+    );
+
+    if (!response.ok) {
+      const responseXml = await response.text();
+      throw new MyDataApiError(
+        `myDATA API error: ${response.status} ${response.statusText}`,
+        response.status,
+        responseXml,
+      );
+    }
+  }
+
   async cancelInvoice(mark: string): Promise<{
     result: SendInvoiceResult;
     responseXml: string;
