@@ -1,4 +1,10 @@
-import { readUIMessageStream, type UIMessage } from "ai";
+import {
+  parseJsonEventStream,
+  readUIMessageStream,
+  uiMessageChunkSchema,
+  type UIMessage,
+  type UIMessageChunk,
+} from "ai";
 import type { ConfirmToolCall } from "@/lib/ai/types";
 
 type FetchImplementation = typeof globalThis.fetch;
@@ -61,10 +67,30 @@ export async function submitAiChatMessage({
     throw new Error("AI response did not include a stream");
   }
 
-  // Read the UI message stream — the async iterable yields updated messages
-  const messageStream = readUIMessageStream({
-    stream: response.body as ReadableStream,
-  });
+  // The server emits the UI message stream as SSE (via
+  // `result.toUIMessageStreamResponse()`). `readUIMessageStream` expects a
+  // ReadableStream<UIMessageChunk> of parsed JSON objects, not raw bytes, so
+  // we first decode the `data: {...}\n\n` frames back into chunks — mirroring
+  // what the AI SDK's DefaultChatTransport does internally.
+  type EventParseResult =
+    | { success: true; value: UIMessageChunk }
+    | { success: false; error: Error };
+
+  const chunkStream = parseJsonEventStream({
+    stream: response.body,
+    schema: uiMessageChunkSchema,
+  }).pipeThrough(
+    new TransformStream<EventParseResult, UIMessageChunk>({
+      transform(chunk, controller) {
+        if (!chunk.success) {
+          throw chunk.error;
+        }
+        controller.enqueue(chunk.value);
+      },
+    }),
+  );
+
+  const messageStream = readUIMessageStream({ stream: chunkStream });
 
   let lastMessage: UIMessage | null = null;
   for await (const message of messageStream) {
