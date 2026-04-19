@@ -1,22 +1,17 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { useActionToast } from "@/components/ui/action-toast";
 import type { IntrospectedField } from "@/lib/country/schema-introspect";
 import {
   saveIntegrationCredentials,
   testIntegrationConnection,
   deleteIntegrationCredentials,
 } from "@/app/(app)/settings/integrations/[slug]/actions";
-
-type ActionResult = {
-  success: boolean;
-  error?: string | Record<string, string[]>;
-} | null;
 
 interface Props {
   slug: string;
@@ -49,12 +44,7 @@ export function GenericIntegrationSettingsForm({
     success: boolean;
     error?: string;
   } | null>(null);
-  const [saveResult, setSaveResult] = useState<ActionResult>(null);
-  const [deleteResult, setDeleteResult] = useState<ActionResult>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
-
-  useActionToast(saveResult, "Credentials saved");
-  useActionToast(deleteResult, "Credentials deleted");
 
   const publicSet = new Set(publicFields);
 
@@ -63,22 +53,32 @@ export function GenericIntegrationSettingsForm({
       setTestResult(null);
       setFieldErrors({});
       const result = await saveIntegrationCredentials(slug, formData);
-      setSaveResult(result as ActionResult);
-      if (
-        result &&
-        !result.success &&
-        result.error &&
-        typeof result.error !== "string"
-      ) {
-        setFieldErrors(result.error as Record<string, string[]>);
+      if (result.success) {
+        toast.success("Credentials saved");
+      } else if (result.error) {
+        if (typeof result.error === "string") {
+          toast.error(result.error);
+        } else {
+          setFieldErrors(result.error as Record<string, string[]>);
+          const summary = Object.values(result.error).flat().join(". ");
+          toast.error(summary || "Save failed");
+        }
       }
     });
   }
 
   function handleTest() {
     startTransition(async () => {
-      const result = await testIntegrationConnection(slug);
-      setTestResult(result as { success: boolean; error?: string });
+      const result = (await testIntegrationConnection(slug)) as {
+        success: boolean;
+        error?: string;
+      };
+      setTestResult(result);
+      if (result.success) {
+        toast.success("Connection successful");
+      } else {
+        toast.error(`Connection failed: ${result.error ?? "Unknown error"}`);
+      }
     });
   }
 
@@ -89,9 +89,19 @@ export function GenericIntegrationSettingsForm({
       return;
     startTransition(async () => {
       const result = await deleteIntegrationCredentials(slug);
-      setDeleteResult(result);
+      if (result.success) {
+        toast.success("Credentials deleted");
+      } else if (result.error && typeof result.error === "string") {
+        toast.error(result.error);
+      }
     });
   }
+
+  const badgeState: "connected" | "failing" | "notConnected" = !hasCredentials
+    ? "notConnected"
+    : testResult && !testResult.success
+      ? "failing"
+      : "connected";
 
   return (
     <div className="space-y-6">
@@ -109,13 +119,19 @@ export function GenericIntegrationSettingsForm({
           </div>
           <Badge
             className={
-              hasCredentials
+              badgeState === "connected"
                 ? "bg-primary text-on-primary"
-                : "bg-red-500/20 text-red-400"
+                : badgeState === "failing"
+                  ? "bg-amber-500/20 text-amber-300"
+                  : "bg-red-500/20 text-red-400"
             }
             variant="outline"
           >
-            {hasCredentials ? "Connected" : "Not Connected"}
+            {badgeState === "connected"
+              ? "Connected"
+              : badgeState === "failing"
+                ? "Connection Failing"
+                : "Not Connected"}
           </Badge>
         </div>
       </div>

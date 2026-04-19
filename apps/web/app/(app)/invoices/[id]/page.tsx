@@ -19,11 +19,11 @@ import { getCountryProvider } from "@/lib/country";
 const statusColors: Record<number, string> = {
   [INVOICE_STATUS.DRAFT]:
     "bg-surface-container-highest text-on-surface-variant",
-  [INVOICE_STATUS.PUBLISHED]: "bg-blue-500/20 text-blue-400",
-  [INVOICE_STATUS.SENT]: "bg-secondary-container text-secondary",
-  [INVOICE_STATUS.PARTIAL]: "bg-amber-500/20 text-amber-400",
-  [INVOICE_STATUS.PAID]: "bg-primary-container/20 text-primary",
-  [INVOICE_STATUS.CANCELLED]: "bg-tertiary-container/20 text-tertiary",
+  [INVOICE_STATUS.PUBLISHED]: "bg-sky-500/20 text-sky-300",
+  [INVOICE_STATUS.SENT]: "bg-blue-500/20 text-blue-300",
+  [INVOICE_STATUS.PARTIAL]: "bg-amber-500/20 text-amber-200",
+  [INVOICE_STATUS.PAID]: "bg-emerald-500/25 text-emerald-200",
+  [INVOICE_STATUS.CANCELLED]: "bg-zinc-500/20 text-zinc-300",
 };
 
 export default async function InvoiceDetailPage({
@@ -331,12 +331,6 @@ export default async function InvoiceDetailPage({
               </div>
             )}
           </div>
-
-          {latestTransmission?.errorMessage && (
-            <div className="rounded-lg bg-red-500/10 p-3 text-sm text-red-400">
-              {latestTransmission.errorMessage}
-            </div>
-          )}
         </div>
       )}
     </div>

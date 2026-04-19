@@ -2,21 +2,16 @@
 
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { useActionToast } from "@/components/ui/action-toast";
 import {
   saveMyDataCredentials,
   testMyDataConnection,
   deleteMyDataCredentials,
 } from "./actions";
-
-type ActionResult = {
-  success: boolean;
-  error?: string | Record<string, string[]>;
-} | null;
 
 interface CredentialStatus {
   id: string;
@@ -38,26 +33,26 @@ export function MyDataSettingsForm({ credentials }: MyDataSettingsFormProps) {
     success: boolean;
     error?: string;
   } | null>(null);
-  const [saveResult, setSaveResult] = useState<ActionResult>(null);
-  const [deleteResult, setDeleteResult] = useState<ActionResult>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
-
-  useActionToast(saveResult, t("saveSuccess"));
-  useActionToast(deleteResult, t("deleteSuccess"));
 
   function handleSubmit(formData: FormData) {
     startTransition(async () => {
       setTestResult(null);
       setFieldErrors({});
       const result = await saveMyDataCredentials(formData);
-      setSaveResult(result as ActionResult);
-      if (
-        result &&
-        !result.success &&
-        result.error &&
-        typeof result.error !== "string"
-      ) {
-        setFieldErrors(result.error as Record<string, string[]>);
+      // Fire toast directly rather than through a useEffect-based hook —
+      // revalidatePath triggers a re-render that can cancel the effect
+      // before it runs on the success path.
+      if (result.success) {
+        toast.success(t("saveSuccess"));
+      } else if (result.error) {
+        if (typeof result.error === "string") {
+          toast.error(result.error);
+        } else {
+          setFieldErrors(result.error as Record<string, string[]>);
+          const summary = Object.values(result.error).flat().join(". ");
+          toast.error(summary || t("saveFailed"));
+        }
       }
     });
   }
@@ -66,6 +61,13 @@ export function MyDataSettingsForm({ credentials }: MyDataSettingsFormProps) {
     startTransition(async () => {
       const result = await testMyDataConnection();
       setTestResult(result);
+      if (result.success) {
+        toast.success(t("testSuccess"));
+      } else {
+        toast.error(
+          t("testFailed", { error: result.error ?? "Unknown error" }),
+        );
+      }
     });
   }
 
@@ -73,9 +75,21 @@ export function MyDataSettingsForm({ credentials }: MyDataSettingsFormProps) {
     if (!confirm(t("deleteConfirm"))) return;
     startTransition(async () => {
       const result = await deleteMyDataCredentials();
-      setDeleteResult(result);
+      if (result.success) {
+        toast.success(t("deleteSuccess"));
+      } else if (result.error && typeof result.error === "string") {
+        toast.error(result.error);
+      }
     });
   }
+
+  // Derived badge state: red if no credentials, amber if last test failed,
+  // emerald if last test (or a save) succeeded.
+  const badgeState: "connected" | "failing" | "notConnected" = !credentials
+    ? "notConnected"
+    : testResult && !testResult.success
+      ? "failing"
+      : "connected";
 
   return (
     <div className="space-y-6">
@@ -95,13 +109,19 @@ export function MyDataSettingsForm({ credentials }: MyDataSettingsFormProps) {
           </div>
           <Badge
             className={
-              credentials
+              badgeState === "connected"
                 ? "bg-primary text-on-primary"
-                : "bg-red-500/20 text-red-400"
+                : badgeState === "failing"
+                  ? "bg-amber-500/20 text-amber-300"
+                  : "bg-red-500/20 text-red-400"
             }
             variant="outline"
           >
-            {credentials ? t("connected") : t("notConnected")}
+            {badgeState === "connected"
+              ? t("connected")
+              : badgeState === "failing"
+                ? t("connectionFailing")
+                : t("notConnected")}
           </Badge>
         </div>
       </div>
