@@ -13,6 +13,9 @@ import {
   MYDATA_VAT_CATEGORIES,
 } from "./classification-codes";
 import type { MyDataConfig, MyDataInvoice } from "./types";
+import { createLogger } from "@/lib/logging/logger";
+
+const log = createLogger("mydata");
 
 interface MydataCredentials {
   aadeUserId: string;
@@ -112,29 +115,48 @@ export const MydataIntegration: Integration = {
   configSchema: mydataConfigSchema,
   publicFields: ["aadeUserId", "environment"],
 
-  async validateCredentials(raw, _ctx): Promise<IntegrationValidateResult> {
+  async validateCredentials(raw, ctx): Promise<IntegrationValidateResult> {
     try {
       const config = decryptCredentials(raw);
       if (!config.aadeUserId || !config.subscriptionKey) {
+        log.warn("validateCredentials: missing fields", {
+          orgId: ctx.orgId,
+          environment: config.environment,
+        });
         return { ok: false, errors: ["Missing aadeUserId or subscriptionKey"] };
       }
       const client = new MyDataClient(config);
       await client.checkCredentials();
+      log.info("validateCredentials: ok", {
+        orgId: ctx.orgId,
+        environment: config.environment,
+      });
       return { ok: true };
     } catch (error) {
       if (error instanceof MyDataApiError) {
         if (error.statusCode === 401 || error.statusCode === 403) {
+          log.warn("validateCredentials: invalid credentials", {
+            orgId: ctx.orgId,
+            status: error.statusCode,
+          });
           return { ok: false, errors: ["Invalid credentials"] };
         }
+        log.error("validateCredentials: non-auth HTTP error", {
+          orgId: ctx.orgId,
+          status: error.statusCode,
+        });
         return {
           ok: false,
           errors: [`myDATA returned HTTP ${error.statusCode}`],
         };
       }
-      return {
-        ok: false,
-        errors: [error instanceof Error ? error.message : "Unknown error"],
-      };
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      log.error("validateCredentials: unexpected error", {
+        orgId: ctx.orgId,
+        errorMessage,
+      });
+      return { ok: false, errors: [errorMessage] };
     }
   },
 

@@ -1,6 +1,9 @@
 import type { MyDataConfig, MyDataInvoice, SendInvoiceResult } from "./types";
 import { buildInvoicesDoc } from "./xml-builder";
 import { parseResponse } from "./xml-parser";
+import { createLogger } from "@/lib/logging/logger";
+
+const log = createLogger("mydata-client");
 
 const ENDPOINTS = {
   production: "https://mydatapi.aade.gr/myDATA",
@@ -33,13 +36,20 @@ export class MyDataClient {
   }> {
     const requestXml = buildInvoicesDoc(invoices);
 
-    const response = await fetch(`${this.baseUrl}/SendInvoicesDoc`, {
+    const endpoint = `${this.baseUrl}/SendInvoicesDoc`;
+    const done = log.time("sendInvoicesDoc");
+    const response = await fetch(endpoint, {
       method: "POST",
       headers: this.getHeaders(),
       body: requestXml,
     });
 
     const responseXml = await response.text();
+    done("SendInvoicesDoc response", {
+      endpoint,
+      status: response.status,
+      invoiceCount: invoices.length,
+    });
 
     if (!response.ok) {
       throw new MyDataApiError(
@@ -54,10 +64,16 @@ export class MyDataClient {
   }
 
   async checkCredentials(): Promise<void> {
-    const response = await fetch(
-      `${this.baseUrl}/RequestTransmittedDocs?mark=0`,
-      { method: "GET", headers: this.getHeaders() },
-    );
+    const endpoint = `${this.baseUrl}/RequestTransmittedDocs?mark=0`;
+    const done = log.time("checkCredentials");
+    const response = await fetch(endpoint, {
+      method: "GET",
+      headers: this.getHeaders(),
+    });
+    done("RequestTransmittedDocs response", {
+      endpoint,
+      status: response.status,
+    });
 
     if (!response.ok) {
       const responseXml = await response.text();
@@ -73,15 +89,15 @@ export class MyDataClient {
     result: SendInvoiceResult;
     responseXml: string;
   }> {
-    const response = await fetch(
-      `${this.baseUrl}/CancelInvoice?mark=${encodeURIComponent(mark)}`,
-      {
-        method: "POST",
-        headers: this.getHeaders(),
-      },
-    );
+    const endpoint = `${this.baseUrl}/CancelInvoice?mark=${encodeURIComponent(mark)}`;
+    const done = log.time("cancelInvoice");
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: this.getHeaders(),
+    });
 
     const responseXml = await response.text();
+    done("CancelInvoice response", { endpoint, status: response.status });
 
     if (!response.ok) {
       throw new MyDataApiError(

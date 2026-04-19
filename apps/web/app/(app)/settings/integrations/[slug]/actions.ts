@@ -8,6 +8,9 @@ import { countryIntegrationCredentials } from "@opentab/db/schema";
 import { getCountryProvider } from "@/lib/country";
 import type { Integration } from "@/lib/country/types";
 import { encryptConfig, decryptConfig } from "@/lib/country/crypto";
+import { createLogger } from "@/lib/logging/logger";
+
+const log = createLogger("country-integration-credentials");
 
 function findIntegrationBySlug(
   countryCode: string | null,
@@ -91,6 +94,11 @@ export async function saveIntegrationCredentials(
         updatedAt: new Date(),
       })
       .where(eq(countryIntegrationCredentials.id, existing.id));
+    log.info("credentials updated", {
+      orgId: session.org.id,
+      countryCode,
+      kind: integration.kind,
+    });
   } else {
     await db.insert(countryIntegrationCredentials).values({
       orgId: session.org.id,
@@ -98,6 +106,11 @@ export async function saveIntegrationCredentials(
       kind: integration.kind,
       configJson: encrypted,
       isActive: true,
+    });
+    log.info("credentials created", {
+      orgId: session.org.id,
+      countryCode,
+      kind: integration.kind,
     });
   }
 
@@ -135,8 +148,15 @@ export async function testIntegrationConnection(slug: string) {
     integration.publicFields ?? [],
   );
 
+  const done = log.time("test-connection");
   const result = await integration.validateCredentials(decrypted, {
     orgId: session.org.id,
+  });
+  done("test-connection finished", {
+    orgId: session.org.id,
+    countryCode,
+    kind: integration.kind,
+    ok: result.ok,
   });
 
   if (result.ok) {
@@ -171,6 +191,12 @@ export async function deleteIntegrationCredentials(slug: string) {
         eq(countryIntegrationCredentials.kind, integration.kind),
       ),
     );
+
+  log.info("credentials deleted", {
+    orgId: session.org.id,
+    countryCode,
+    kind: integration.kind,
+  });
 
   revalidatePath(`/settings/integrations/${slug}`);
   return { success: true };

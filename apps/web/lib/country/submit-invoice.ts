@@ -9,6 +9,9 @@ import {
 import { and, asc, desc, eq } from "drizzle-orm";
 import { getCountryProvider } from "@/lib/country";
 import type { Integration, IntegrationInvoiceInput } from "@/lib/country/types";
+import { createLogger } from "@/lib/logging/logger";
+
+const log = createLogger("country-submit");
 
 export interface SubmitInvoiceResult {
   kind: string;
@@ -86,6 +89,7 @@ export async function submitInvoiceThroughPlugins(
     .from(invoices)
     .where(and(eq(invoices.id, invoiceId), eq(invoices.orgId, orgCtx.id)));
   if (!invoice) {
+    log.warn("submit: invoice not found", { invoiceId, orgId: orgCtx.id });
     return [{ kind: "unknown", ok: false, error: "Invoice not found" }];
   }
 
@@ -100,6 +104,13 @@ export async function submitInvoiceThroughPlugins(
   for (const integration of provider.integrations) {
     if (!integration.submit) continue;
 
+    const ctx = {
+      invoiceId,
+      orgId: orgCtx.id,
+      countryCode: provider.code,
+      kind: integration.kind,
+    };
+
     let credentials: unknown = undefined;
     let credId: string | undefined;
     if (integration.requiresCredentials !== false) {
@@ -109,6 +120,7 @@ export async function submitInvoiceThroughPlugins(
         integration.kind,
       );
       if (!cred) {
+        log.info("submit: skipping — no credentials configured", ctx);
         results.push({
           kind: integration.kind,
           ok: false,
@@ -121,14 +133,39 @@ export async function submitInvoiceThroughPlugins(
     }
 
     if (integration.validate) {
-      const validation = await integration.validate(
-        buildInput(orgCtx, invoice, items, credentials),
-      );
-      if (!validation.ok) {
+      let validation;
+      try {
+        validation = await integration.validate(
+          buildInput(orgCtx, invoice, items, credentials),
+        );
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Validation threw";
+        log.error("submit: validate() threw", { ...ctx, errorMessage });
+        await persistPreflightFailure({
+          ...ctx,
+          errorMessage: `validate threw: ${errorMessage}`,
+        });
         results.push({
           kind: integration.kind,
           ok: false,
-          error: validation.errors?.join("; "),
+          error: errorMessage,
+        });
+        continue;
+      }
+      if (!validation.ok) {
+        const errorMessage =
+          validation.errors?.join("; ") ?? "Validation failed";
+        log.info("submit: preflight rejected", { ...ctx, errorMessage });
+        const { id: submissionId } = await persistPreflightFailure({
+          ...ctx,
+          errorMessage,
+        });
+        results.push({
+          kind: integration.kind,
+          ok: false,
+          submissionId,
+          error: errorMessage,
         });
         continue;
       }
@@ -145,9 +182,45 @@ export async function submitInvoiceThroughPlugins(
       })
       .returning();
 
-    const result = await integration.submit(
-      buildInput(orgCtx, invoice, items, credentials),
-    );
+    const done = log.time("submit");
+    let result;
+    try {
+      result = await integration.submit(
+        buildInput(orgCtx, invoice, items, credentials),
+      );
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Submit threw";
+      done("submit threw", {
+        ...ctx,
+        submissionId: submission.id,
+        errorMessage,
+      });
+      await db
+        .update(countryIntegrationSubmissions)
+        .set({
+          status: COUNTRY_INTEGRATION_SUBMISSION_STATUS.FAILED,
+          errorMessage,
+          attemptCount: 1,
+          updatedAt: new Date(),
+        })
+        .where(eq(countryIntegrationSubmissions.id, submission.id));
+      results.push({
+        kind: integration.kind,
+        ok: false,
+        submissionId: submission.id,
+        error: errorMessage,
+      });
+      continue;
+    }
+
+    done("submit finished", {
+      ...ctx,
+      submissionId: submission.id,
+      ok: result.ok,
+      ...(result.externalId ? { externalId: result.externalId } : {}),
+      ...(result.errorCode ? { errorCode: result.errorCode } : {}),
+    });
 
     if (result.ok) {
       await db
@@ -196,6 +269,28 @@ export async function submitInvoiceThroughPlugins(
   return results;
 }
 
+async function persistPreflightFailure(input: {
+  invoiceId: string;
+  orgId: string;
+  countryCode: string;
+  kind: string;
+  errorMessage: string;
+}) {
+  const [row] = await db
+    .insert(countryIntegrationSubmissions)
+    .values({
+      orgId: input.orgId,
+      countryCode: input.countryCode,
+      kind: input.kind,
+      invoiceId: input.invoiceId,
+      status: COUNTRY_INTEGRATION_SUBMISSION_STATUS.FAILED,
+      errorMessage: input.errorMessage,
+      attemptCount: 0,
+    })
+    .returning();
+  return row;
+}
+
 export async function cancelInvoiceOnPlugins(
   invoiceId: string,
   orgCtx: OrgContext,
@@ -233,11 +328,36 @@ export async function cancelInvoiceOnPlugins(
     );
     if (!cred) continue;
 
-    const result = await integration.cancel({
-      externalId: latest.externalId,
+    const ctx = {
+      invoiceId,
       orgId: orgCtx.id,
-      credentials: cred.configJson,
-    });
+      countryCode: provider.code,
+      kind: integration.kind,
+      externalId: latest.externalId,
+    };
+    const done = log.time("cancel");
+
+    let result;
+    try {
+      result = await integration.cancel({
+        externalId: latest.externalId,
+        orgId: orgCtx.id,
+        credentials: cred.configJson,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Cancel threw";
+      done("cancel threw", { ...ctx, errorMessage });
+      results.push({
+        kind: integration.kind,
+        ok: false,
+        submissionId: latest.id,
+        error: errorMessage,
+      });
+      continue;
+    }
+
+    done("cancel finished", { ...ctx, ok: result.ok });
 
     if (result.ok) {
       await db
