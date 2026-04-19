@@ -1,15 +1,15 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import type { Invoice } from "@opentab/db/schema";
 import {
   INVOICE_STATUS,
   COUNTRY_INTEGRATION_SUBMISSION_STATUS,
 } from "@opentab/db/schema";
 import { Button } from "@/components/ui/button";
-import { useActionToast } from "@/components/ui/action-toast";
 import {
   publishInvoice,
   sendInvoice,
@@ -31,17 +31,6 @@ export function InvoiceActions({ invoice, mydataStatus }: InvoiceActionsProps) {
   const t = useTranslations("invoices");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [retryResult, setRetryResult] = useState<{
-    success: boolean;
-    error?: string;
-  } | null>(null);
-  const [cancelSubmissionResult, setCancelSubmissionResult] = useState<{
-    success: boolean;
-    error?: string;
-  } | null>(null);
-
-  useActionToast(retryResult, t("mydataRetrySuccess"));
-  useActionToast(cancelSubmissionResult, t("mydataCancelSuccess"));
 
   function handleAction(
     action: (id: string) => Promise<{ success: boolean; error?: string }>,
@@ -152,7 +141,11 @@ export function InvoiceActions({ invoice, mydataStatus }: InvoiceActionsProps) {
             onClick={() => {
               startTransition(async () => {
                 const result = await retryIntegrationSubmission(invoice.id);
-                setRetryResult(result);
+                if (result.success) {
+                  toast.success(t("mydataRetrySuccess"));
+                } else if (result.error) {
+                  toast.error(result.error);
+                }
                 router.refresh();
               });
             }}
@@ -172,7 +165,11 @@ export function InvoiceActions({ invoice, mydataStatus }: InvoiceActionsProps) {
             if (!confirm(t("mydataCancelConfirm"))) return;
             startTransition(async () => {
               const result = await cancelIntegrationSubmission(invoice.id);
-              setCancelSubmissionResult(result);
+              if (result.success) {
+                toast.success(t("mydataCancelSuccess"));
+              } else if (result.error) {
+                toast.error(result.error);
+              }
               router.refresh();
             });
           }}

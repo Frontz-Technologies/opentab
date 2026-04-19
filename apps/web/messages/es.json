@@ -693,7 +693,9 @@
       "aboutDescription": "myDATA es la plataforma digital de AADE (Autoridad Independiente de Ingresos Públicos) para la contabilidad electrónica. Cuando está habilitado, las facturas se transmiten automáticamente a AADE al enviarlas, y los números MARK se agregan a sus PDFs.",
       "aadePortalLink": "Portal de desarrolladores de AADE",
       "saveSuccess": "Credenciales guardadas",
-      "deleteSuccess": "Credenciales eliminadas"
+      "deleteSuccess": "Credenciales eliminadas",
+      "connectionFailing": "Conexión fallando",
+      "saveFailed": "Error al guardar"
     },
     "common": {
       "decryptNotice": "opentab descifra sus credenciales al momento del envío para contactar con la autoridad fiscal en su nombre. Las instalaciones autoalojadas mantienen todo en el proceso."
