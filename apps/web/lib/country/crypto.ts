@@ -16,14 +16,6 @@ function getEncryptionKey(): Buffer {
   return buf;
 }
 
-/**
- * Boot-time check: surfaces misconfigured ENCRYPTION_KEY at server start,
- * not on the first user action that decrypts. Called from instrumentation.ts.
- */
-export function assertEncryptionKey(): void {
-  getEncryptionKey();
-}
-
 export function encryptField(plaintext: string): string {
   const key = getEncryptionKey();
   const iv = randomBytes(IV_LENGTH);
