@@ -46,13 +46,9 @@ export function MyDataSettingsForm({ credentials }: MyDataSettingsFormProps) {
       if (result.success) {
         toast.success(t("saveSuccess"));
       } else if (result.error) {
-        if (typeof result.error === "string") {
-          toast.error(result.error);
-        } else {
-          setFieldErrors(result.error as Record<string, string[]>);
-          const summary = Object.values(result.error).flat().join(". ");
-          toast.error(summary || t("saveFailed"));
-        }
+        setFieldErrors(result.error);
+        const summary = Object.values(result.error).flat().join(". ");
+        toast.error(summary || t("saveFailed"));
       }
     });
   }
@@ -74,12 +70,8 @@ export function MyDataSettingsForm({ credentials }: MyDataSettingsFormProps) {
   function handleDelete() {
     if (!confirm(t("deleteConfirm"))) return;
     startTransition(async () => {
-      const result = await deleteMyDataCredentials();
-      if (result.success) {
-        toast.success(t("deleteSuccess"));
-      } else if (result.error && typeof result.error === "string") {
-        toast.error(result.error);
-      }
+      await deleteMyDataCredentials();
+      toast.success(t("deleteSuccess"));
     });
   }
 
