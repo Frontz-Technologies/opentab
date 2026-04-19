@@ -48,7 +48,7 @@ export default async function IntegrationSettingsPage({ params }: Props) {
           userName={session.user.name}
           userEmail={session.user.email}
         />
-        <main>
+        <main className="px-6 py-6">
           <div className="bg-surface-container rounded-xl p-6">
             <h3 className="font-headline text-lg font-semibold text-on-surface mb-2">
               {integration.label}
@@ -91,7 +91,7 @@ export default async function IntegrationSettingsPage({ params }: Props) {
         userName={session.user.name}
         userEmail={session.user.email}
       />
-      <main>
+      <main className="px-6 py-6">
         {integration.description && (
           <p className="text-on-surface/60 text-sm mb-8">
             {integration.description}
