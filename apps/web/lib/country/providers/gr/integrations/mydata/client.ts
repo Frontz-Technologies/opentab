@@ -121,4 +121,15 @@ export class MyDataApiError extends Error {
     super(message);
     this.name = "MyDataApiError";
   }
+
+  // responseBody can contain VAT IDs and invoice internals; keep it out of
+  // JSON.stringify / structured clone output so future log aggregators or
+  // error reporters don't ship it unintentionally.
+  toJSON() {
+    return {
+      name: this.name,
+      message: this.message,
+      statusCode: this.statusCode,
+    };
+  }
 }

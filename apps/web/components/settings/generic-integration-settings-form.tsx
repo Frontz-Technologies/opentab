@@ -5,12 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { useActionToast } from "@/components/ui/action-toast";
 import type { IntrospectedField } from "@/lib/country/schema-introspect";
 import {
   saveIntegrationCredentials,
   testIntegrationConnection,
   deleteIntegrationCredentials,
 } from "@/app/(app)/settings/integrations/[slug]/actions";
+
+type ActionResult = {
+  success: boolean;
+  error?: string | Record<string, string[]>;
+} | null;
 
 interface Props {
   slug: string;
@@ -43,13 +49,29 @@ export function GenericIntegrationSettingsForm({
     success: boolean;
     error?: string;
   } | null>(null);
+  const [saveResult, setSaveResult] = useState<ActionResult>(null);
+  const [deleteResult, setDeleteResult] = useState<ActionResult>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+
+  useActionToast(saveResult, "Credentials saved");
+  useActionToast(deleteResult, "Credentials deleted");
 
   const publicSet = new Set(publicFields);
 
   function handleSubmit(formData: FormData) {
     startTransition(async () => {
       setTestResult(null);
-      await saveIntegrationCredentials(slug, formData);
+      setFieldErrors({});
+      const result = await saveIntegrationCredentials(slug, formData);
+      setSaveResult(result as ActionResult);
+      if (
+        result &&
+        !result.success &&
+        result.error &&
+        typeof result.error !== "string"
+      ) {
+        setFieldErrors(result.error as Record<string, string[]>);
+      }
     });
   }
 
@@ -66,7 +88,8 @@ export function GenericIntegrationSettingsForm({
     )
       return;
     startTransition(async () => {
-      await deleteIntegrationCredentials(slug);
+      const result = await deleteIntegrationCredentials(slug);
+      setDeleteResult(result);
     });
   }
 
@@ -169,7 +192,13 @@ export function GenericIntegrationSettingsForm({
                 }
                 required={field.required && !(isSecret && hasCredentials)}
                 inputMode={field.kind === "number" ? "numeric" : undefined}
+                aria-invalid={fieldErrors[field.name] ? true : undefined}
               />
+              {fieldErrors[field.name] && (
+                <p className="text-xs text-red-400">
+                  {fieldErrors[field.name].join(". ")}
+                </p>
+              )}
             </div>
           );
         })}

@@ -16,6 +16,14 @@ function getEncryptionKey(): Buffer {
   return buf;
 }
 
+/**
+ * Boot-time check: surfaces misconfigured ENCRYPTION_KEY at server start,
+ * not on the first user action that decrypts. Called from instrumentation.ts.
+ */
+export function assertEncryptionKey(): void {
+  getEncryptionKey();
+}
+
 export function encryptField(plaintext: string): string {
   const key = getEncryptionKey();
   const iv = randomBytes(IV_LENGTH);
@@ -92,13 +100,18 @@ export function encryptConfig(
   return out;
 }
 
+const UNSAFE_KEYS = new Set(["__proto__", "prototype", "constructor"]);
+
 export function decryptConfig<T extends Record<string, unknown>>(
   stored: Record<string, unknown>,
   publicFields: string[],
 ): T {
-  const out: Record<string, unknown> = {};
+  // Object.create(null) defeats prototype pollution via a crafted DB row
+  // whose encrypted JSON payload embeds "__proto__" / "constructor" keys.
+  const out: Record<string, unknown> = Object.create(null);
   const publicSet = new Set(publicFields);
   for (const [k, v] of Object.entries(stored)) {
+    if (UNSAFE_KEYS.has(k)) continue;
     if (publicSet.has(k) || v === null || v === undefined) {
       out[k] = v;
       continue;
@@ -109,7 +122,9 @@ export function decryptConfig<T extends Record<string, unknown>>(
     }
     const plaintext = decryptField(v);
     try {
-      out[k] = JSON.parse(plaintext);
+      out[k] = JSON.parse(plaintext, (key, value) =>
+        UNSAFE_KEYS.has(key) ? undefined : value,
+      );
     } catch {
       out[k] = plaintext;
     }

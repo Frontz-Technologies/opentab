@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/sonner";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { AiChatButton } from "@/components/ai/ai-chat-button";
@@ -50,6 +51,7 @@ export default async function AppLayout({
         <AiChatButton />
         <AiChatPanel />
         <MobileNav />
+        <Toaster richColors position="top-right" />
       </SidebarProvider>
     </TooltipProvider>
   );

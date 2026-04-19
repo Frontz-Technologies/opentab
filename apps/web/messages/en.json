@@ -381,7 +381,10 @@
     "mydataRetry": "Retry myDATA",
     "mydataCancel": "Cancel on myDATA",
     "mydataCancelConfirm": "Cancel this invoice on myDATA? This will send a cancellation to AADE.",
-    "itemRequired": "At least one item is required"
+    "itemRequired": "At least one item is required",
+    "mydataRetrySuccess": "Retry sent",
+    "mydataCancelSuccess": "Cancellation sent",
+    "mydataFailedTooltip": "Last error: {error}"
   },
   "quotes": {
     "title": "Quotes",
@@ -688,7 +691,9 @@
       "deleteConfirm": "Are you sure you want to delete your myDATA credentials? Pending transmissions will fail.",
       "aboutTitle": "About myDATA",
       "aboutDescription": "myDATA is the digital platform of AADE (Independent Authority for Public Revenue) for electronic bookkeeping. When enabled, invoices are automatically transmitted to AADE when sent, and MARK numbers are added to your PDFs.",
-      "aadePortalLink": "AADE Developer Portal"
+      "aadePortalLink": "AADE Developer Portal",
+      "saveSuccess": "Credentials saved",
+      "deleteSuccess": "Credentials deleted"
     },
     "common": {
       "decryptNotice": "opentab decrypts your credentials at submit time to call the tax authority on your behalf. Self-hosted installs keep everything in-process."

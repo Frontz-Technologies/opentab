@@ -116,15 +116,29 @@ export const MydataIntegration: Integration = {
   publicFields: ["aadeUserId", "environment"],
 
   async validateCredentials(raw, ctx): Promise<IntegrationValidateResult> {
+    let config: MyDataConfig;
     try {
-      const config = decryptCredentials(raw);
-      if (!config.aadeUserId || !config.subscriptionKey) {
-        log.warn("validateCredentials: missing fields", {
-          orgId: ctx.orgId,
-          environment: config.environment,
-        });
-        return { ok: false, errors: ["Missing aadeUserId or subscriptionKey"] };
-      }
+      config = decryptCredentials(raw);
+    } catch (error) {
+      log.error("validateCredentials: decrypt failed", {
+        orgId: ctx.orgId,
+        errorMessage: error instanceof Error ? error.message : String(error),
+      });
+      return {
+        ok: false,
+        errors: ["Unable to decrypt credentials — contact support"],
+      };
+    }
+
+    if (!config.aadeUserId || !config.subscriptionKey) {
+      log.warn("validateCredentials: missing fields", {
+        orgId: ctx.orgId,
+        environment: config.environment,
+      });
+      return { ok: false, errors: ["Missing aadeUserId or subscriptionKey"] };
+    }
+
+    try {
       const client = new MyDataClient(config);
       await client.checkCredentials();
       log.info("validateCredentials: ok", {
@@ -152,11 +166,13 @@ export const MydataIntegration: Integration = {
       }
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
-      log.error("validateCredentials: unexpected error", {
+      log.error("validateCredentials: network error", {
         orgId: ctx.orgId,
         errorMessage,
       });
-      return { ok: false, errors: [errorMessage] };
+      // Don't surface raw fetch error messages to the browser — they may
+      // include endpoint URLs, DNS names, etc. Log detail server-side.
+      return { ok: false, errors: ["Network error"] };
     }
   },
 
@@ -194,7 +210,20 @@ export const MydataIntegration: Integration = {
       documentType,
       classification,
     );
-    const config = decryptCredentials(input.credentials);
+
+    let config: MyDataConfig;
+    try {
+      config = decryptCredentials(input.credentials);
+    } catch (error) {
+      log.error("submit: decrypt failed", {
+        orgId: input.orgId,
+        errorMessage: error instanceof Error ? error.message : String(error),
+      });
+      return {
+        ok: false,
+        errorMessage: "Unable to decrypt credentials — contact support",
+      };
+    }
 
     try {
       const client = new MyDataClient(config);
@@ -247,8 +276,24 @@ export const MydataIntegration: Integration = {
     }
   },
 
-  async cancel({ externalId, credentials }): Promise<IntegrationSubmitResult> {
-    const config = decryptCredentials(credentials);
+  async cancel({
+    externalId,
+    orgId,
+    credentials,
+  }): Promise<IntegrationSubmitResult> {
+    let config: MyDataConfig;
+    try {
+      config = decryptCredentials(credentials);
+    } catch (error) {
+      log.error("cancel: decrypt failed", {
+        orgId,
+        errorMessage: error instanceof Error ? error.message : String(error),
+      });
+      return {
+        ok: false,
+        errorMessage: "Unable to decrypt credentials — contact support",
+      };
+    }
     try {
       const client = new MyDataClient(config);
       const { result, responseXml } = await client.cancelInvoice(externalId);

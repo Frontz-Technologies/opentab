@@ -381,7 +381,10 @@
     "mydataRetry": "Reintentar myDATA",
     "mydataCancel": "Cancelar en myDATA",
     "mydataCancelConfirm": "¿Cancelar esta factura en myDATA? Esto enviará una cancelación a AADE.",
-    "itemRequired": "Se requiere al menos un artículo"
+    "itemRequired": "Se requiere al menos un artículo",
+    "mydataRetrySuccess": "Reintento enviado",
+    "mydataCancelSuccess": "Cancelación enviada",
+    "mydataFailedTooltip": "Último error: {error}"
   },
   "quotes": {
     "title": "Cotizaciones",
@@ -688,7 +691,9 @@
       "deleteConfirm": "¿Está seguro de que desea eliminar sus credenciales de myDATA? Las transmisiones pendientes fallarán.",
       "aboutTitle": "Acerca de myDATA",
       "aboutDescription": "myDATA es la plataforma digital de AADE (Autoridad Independiente de Ingresos Públicos) para la contabilidad electrónica. Cuando está habilitado, las facturas se transmiten automáticamente a AADE al enviarlas, y los números MARK se agregan a sus PDFs.",
-      "aadePortalLink": "Portal de desarrolladores de AADE"
+      "aadePortalLink": "Portal de desarrolladores de AADE",
+      "saveSuccess": "Credenciales guardadas",
+      "deleteSuccess": "Credenciales eliminadas"
     },
     "common": {
       "decryptNotice": "opentab descifra sus credenciales al momento del envío para contactar con la autoridad fiscal en su nombre. Las instalaciones autoalojadas mantienen todo en el proceso."

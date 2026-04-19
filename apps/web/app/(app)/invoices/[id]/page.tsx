@@ -75,6 +75,7 @@ export default async function InvoiceDetailPage({
   const hasMyData = latestTransmission !== null;
   const mydataStatus = latestTransmission?.status ?? null;
   const mydataMark = latestTransmission?.externalId ?? null;
+  const mydataError = latestTransmission?.errorMessage ?? null;
   const mydataDocumentType =
     (latestTransmission?.requestJson as { documentType?: string } | null)
       ?.documentType ?? null;
@@ -296,6 +297,16 @@ export default async function InvoiceDetailPage({
                     : t("mydataFailed")}
             </Badge>
           </div>
+
+          {mydataStatus === COUNTRY_INTEGRATION_SUBMISSION_STATUS.FAILED &&
+            mydataError && (
+              <div className="rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-400 flex items-start gap-2">
+                <span className="material-symbols-outlined text-[16px] leading-none">
+                  error
+                </span>
+                <span>{t("mydataFailedTooltip", { error: mydataError })}</span>
+              </div>
+            )}
 
           <div className="grid grid-cols-2 gap-4">
             {mydataMark && (

@@ -9,6 +9,7 @@ import { z } from "zod";
 import { encrypt } from "@/lib/country/providers/gr/integrations/mydata/encryption";
 import { MydataIntegration } from "@/lib/country/providers/gr/integrations/mydata";
 import { createLogger } from "@/lib/logging/logger";
+import { throttleTestConnection } from "@/lib/country/test-connection-throttle";
 
 const log = createLogger("country-integration-credentials");
 
@@ -102,6 +103,10 @@ export async function testMyDataConnection() {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
 
+  if (session.role !== "owner" && session.role !== "admin") {
+    throw new Error("Forbidden");
+  }
+
   const [cred] = await db
     .select()
     .from(countryIntegrationCredentials)
@@ -114,6 +119,9 @@ export async function testMyDataConnection() {
     });
     return { success: false, error: "No credentials found" };
   }
+
+  const throttleError = throttleTestConnection(cred.lastValidatedAt);
+  if (throttleError) return { success: false, error: throttleError };
 
   const done = log.time("test-connection");
   const result = await MydataIntegration.validateCredentials!(

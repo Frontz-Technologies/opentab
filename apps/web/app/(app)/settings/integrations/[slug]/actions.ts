@@ -9,6 +9,7 @@ import { getCountryProvider } from "@/lib/country";
 import type { Integration } from "@/lib/country/types";
 import { encryptConfig, decryptConfig } from "@/lib/country/crypto";
 import { createLogger } from "@/lib/logging/logger";
+import { throttleTestConnection } from "@/lib/country/test-connection-throttle";
 
 const log = createLogger("country-integration-credentials");
 
@@ -121,6 +122,7 @@ export async function saveIntegrationCredentials(
 export async function testIntegrationConnection(slug: string) {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
+  assertRole(session.role);
 
   const match = findIntegrationBySlug(session.org.countryCode, slug);
   if (!match) return { success: false, error: "Integration not found" };
@@ -143,10 +145,27 @@ export async function testIntegrationConnection(slug: string) {
 
   if (!cred) return { success: false, error: "No credentials found" };
 
-  const decrypted = decryptConfig(
-    cred.configJson as Record<string, unknown>,
-    integration.publicFields ?? [],
-  );
+  const throttleError = throttleTestConnection(cred.lastValidatedAt);
+  if (throttleError) return { success: false, error: throttleError };
+
+  let decrypted;
+  try {
+    decrypted = decryptConfig(
+      cred.configJson as Record<string, unknown>,
+      integration.publicFields ?? [],
+    );
+  } catch (error) {
+    log.error("test-connection: decrypt failed", {
+      orgId: session.org.id,
+      countryCode,
+      kind: integration.kind,
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
+    return {
+      success: false,
+      error: "Unable to decrypt credentials — contact support",
+    };
+  }
 
   const done = log.time("test-connection");
   const result = await integration.validateCredentials(decrypted, {
