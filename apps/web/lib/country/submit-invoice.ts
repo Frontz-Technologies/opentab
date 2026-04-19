@@ -269,14 +269,17 @@ export async function submitInvoiceThroughPlugins(
   return results;
 }
 
-async function persistPreflightFailure(input: {
-  invoiceId: string;
-  orgId: string;
-  countryCode: string;
-  kind: string;
-  errorMessage: string;
-}) {
-  const [row] = await db
+export async function persistPreflightFailure(
+  input: {
+    invoiceId: string;
+    orgId: string;
+    countryCode: string;
+    kind: string;
+    errorMessage: string;
+  },
+  dbInstance: typeof db = db,
+) {
+  const [row] = await dbInstance
     .insert(countryIntegrationSubmissions)
     .values({
       orgId: input.orgId,
