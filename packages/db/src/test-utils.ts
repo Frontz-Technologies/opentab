@@ -54,6 +54,7 @@ async function pushSchema(pglite: PGlite) {
       "logo_url" text,
       "tax_settings" jsonb,
       "setup_completed_steps" jsonb NOT NULL DEFAULT '[]',
+      "is_demo" boolean NOT NULL DEFAULT false,
       "created_at" timestamp NOT NULL DEFAULT now(),
       "updated_at" timestamp NOT NULL DEFAULT now()
     )`,

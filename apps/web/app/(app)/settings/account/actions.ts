@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { getSession } from "@/lib/session";
 import { auth } from "@/lib/auth-server";
+import { resetDemoOrg } from "@/lib/demo/ensure";
+import { isDemoModeEnabled } from "@/lib/demo/ensure";
 
 export async function updateProfile(formData: FormData) {
   const session = await getSession();
@@ -47,4 +49,33 @@ export async function changePassword(formData: FormData) {
   } catch {
     return { success: false, error: "wrongPassword" };
   }
+}
+
+// Resets the current org's business data back to the demo baseline.
+// Only works when:
+// - the deployment has DEMO_SAMPLE_DATA_ENABLED=true (feature flag)
+// - the caller is the org owner
+// - the org is already flagged as a demo org (prevents accidental
+//   wipe of real-org data via route manipulation)
+export async function resetDemoAction() {
+  if (!isDemoModeEnabled()) {
+    return { success: false, error: "Demo mode is not enabled." };
+  }
+  const session = await getSession();
+  if (!session) return { success: false, error: "Not authenticated" };
+  if (session.role !== "owner") {
+    return { success: false, error: "Only owners can reset the demo." };
+  }
+  if (!session.org.isDemo) {
+    return { success: false, error: "This is not a demo organisation." };
+  }
+  await resetDemoOrg(session.org.id);
+  revalidatePath("/dashboard");
+  revalidatePath("/contacts");
+  revalidatePath("/products");
+  revalidatePath("/invoices");
+  revalidatePath("/expenses");
+  revalidatePath("/reports");
+  revalidatePath("/settings/account");
+  return { success: true };
 }
