@@ -1,4 +1,15 @@
 import { defineConfig, devices } from "@playwright/test";
+import { randomUUID } from "node:crypto";
+
+// Generate a single RUN_ID for the whole test invocation, set it as an
+// env var, and let helpers.ts read it. Setting it here (at config
+// module load) guarantees it exists before workers spawn and is
+// inherited via `process.env`. Workers re-evaluate `helpers.ts` per
+// spec file, so generating the ID inside helpers would produce a
+// different value per spec and defeat the cross-spec user share.
+// See #178 / PR #179 tester regression.
+process.env.OPENTAB_E2E_RUN_ID ??= randomUUID().slice(0, 8);
+console.log(`[playwright] run id = ${process.env.OPENTAB_E2E_RUN_ID}`);
 
 export default defineConfig({
   testDir: "./e2e",
@@ -7,6 +18,13 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: 1,
+  // Raise the default per-test/hook timeout from 30s. Specs 05–09
+  // beforeAll hooks do a full sign-in redirect chain on first compile;
+  // under Colima dev-VM latency this can exceed 30s and the fired
+  // timeout tears down the context mid-POST, surfacing as
+  // "apiRequestContext.post: Target page, context or browser has been
+  // closed" on /api/auth/sign-in/email. See #179 tester follow-up.
+  timeout: 60_000,
   reporter: process.env.CI ? "github" : "html",
   use: {
     baseURL: process.env.E2E_BASE_URL || "http://localhost:3000",

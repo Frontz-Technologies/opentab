@@ -21,9 +21,19 @@ test.describe("Contacts", () => {
 
   test("contacts list page shows empty state", async () => {
     await page.goto("/contacts");
-    await expect(page.getByRole("heading", { name: "Contacts" })).toBeVisible();
+    // `{ exact: true }` prevents the matcher from also picking up the
+    // empty-state "No contacts yet" h3 (substring match includes the
+    // word "Contacts"). See #179 tester follow-up.
+    await expect(
+      page.getByRole("heading", { name: "Contacts", exact: true }),
+    ).toBeVisible();
     await expect(page.getByText("No contacts yet")).toBeVisible();
-    await expect(page.getByRole("link", { name: "Add Contact" })).toBeVisible();
+    // Two "Add Contact" links render on the empty-state page: the
+    // header CTA and the empty-state body CTA. Assert that at least
+    // one is visible rather than triggering strict-mode on the pair.
+    await expect(
+      page.getByRole("link", { name: "Add Contact" }).first(),
+    ).toBeVisible();
   });
 
   test("contacts list has search and type filters", async () => {
@@ -34,7 +44,7 @@ test.describe("Contacts", () => {
   });
 
   test("navigate to create contact page", async () => {
-    await page.getByRole("link", { name: "Add Contact" }).click();
+    await page.getByRole("link", { name: "Add Contact" }).first().click();
     await page.waitForURL("**/contacts/new");
     await expect(
       page.getByRole("heading", { name: "Add Contact" }),
@@ -95,7 +105,7 @@ test.describe("Contacts", () => {
   });
 
   test("create a supplier contact", async () => {
-    await page.getByRole("link", { name: "Add Contact" }).click();
+    await page.getByRole("link", { name: "Add Contact" }).first().click();
     await page.waitForURL("**/contacts/new");
 
     await page.locator('select[name="type"]').selectOption("supplier");

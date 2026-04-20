@@ -1,7 +1,12 @@
 import { test, expect, type Page } from "@playwright/test";
 import { registerTestUser, loginTestUser } from "./helpers";
 
-test.describe.configure({ mode: "serial" });
+// retries:1 mitigates the dev-server instability class flagged in the
+// PR #179 tester follow-up (socket hang-up / page-closed mid-
+// navigation on the auth redirect chain). Short-term — the real fix
+// is a separate investigation into HMR recompile / shared
+// apiRequestContext keep-alive.
+test.describe.configure({ mode: "serial", retries: 1 });
 
 test.describe("Navigation", () => {
   let page: Page;
@@ -13,6 +18,16 @@ test.describe("Navigation", () => {
     } catch {
       await loginTestUser(page);
     }
+    // Expand the sidebar so nav-link labels are in the accessible name
+    // tree. The sidebar defaults to icon-collapsed, which strips label
+    // spans (`group-data-[collapsible=icon]:hidden`) and breaks
+    // `getByRole("link", { name: /Dashboard/ })`. Tests that require
+    // the collapsed rail (68) toggle it back explicitly; the expanded-
+    // persistence test (91) re-adds the same cookie. See #179 tester
+    // follow-up.
+    await page
+      .context()
+      .addCookies([{ name: "sidebar_state", value: "true", url: page.url() }]);
   });
 
   test.afterAll(async () => {
@@ -38,7 +53,11 @@ test.describe("Navigation", () => {
 
     await sidebar.getByRole("link", { name: /Contacts/ }).click();
     await page.waitForURL("**/contacts");
-    await expect(page.getByRole("heading", { name: "Contacts" })).toBeVisible();
+    // `exact: true` prevents the matcher from also picking up the
+    // empty-state "No contacts yet" h3. Same pattern as 02-contacts.
+    await expect(
+      page.getByRole("heading", { name: "Contacts", exact: true }),
+    ).toBeVisible();
 
     await sidebar.getByRole("link", { name: /Products/ }).click();
     await page.waitForURL("**/products");

@@ -74,8 +74,24 @@ test.describe("Authentication", () => {
     ).toBeVisible();
   });
 
-  test("dashboard shows correct org name after registration", async () => {
-    await expect(page.getByText(`${TEST_USER.name}'s Company`)).toBeVisible();
+  test("dashboard shows correct org name after registration", async ({
+    context,
+  }) => {
+    // The org name is rendered only in the expanded sidebar header
+    // (see `app-sidebar.tsx`'s `!isCollapsed` branch). The sidebar
+    // defaults to collapsed (the `sidebar_state` cookie is unset), so
+    // we expand it here before asserting — this test is about org-name
+    // rendering, not sidebar layout.
+    await context.addCookies([
+      { name: "sidebar_state", value: "true", url: page.url() },
+    ]);
+    await page.reload();
+    // Scope to the sidebar's org-name slot via data-testid and check
+    // DOM text content — `truncate` on the span can confuse a plain
+    // `getByText(...).toBeVisible()` when the container is narrow.
+    await expect(page.getByTestId("sidebar-org-name")).toContainText(
+      `${TEST_USER.name}'s Company`,
+    );
   });
 
   test.skip("logout and login again — dropdown trigger needs data-testid", async () => {

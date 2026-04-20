@@ -23,6 +23,15 @@ const WARMUP_ROUTES: Array<{
   { method: "GET", path: "/login" },
   { method: "GET", path: "/register" },
   { method: "GET", path: "/dashboard" },
+  // Auth-gated routes that specs navigate to after login. Cold-compile
+  // on first visit otherwise lands inside a spec's test body and blows
+  // the test timeout. Unauthenticated GETs get redirected to /login,
+  // which is fine — middleware + the page component still compile. See
+  // PR #179 tester report (spec 03 `/products` cold-compile stall).
+  { method: "GET", path: "/products" },
+  { method: "GET", path: "/contacts" },
+  { method: "GET", path: "/invoices" },
+  { method: "GET", path: "/expenses" },
   {
     method: "POST",
     path: "/api/auth/sign-up/email",

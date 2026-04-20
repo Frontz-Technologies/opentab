@@ -1,7 +1,12 @@
 import { test, expect, type Page } from "@playwright/test";
 import { registerTestUser, loginTestUser } from "./helpers";
 
-test.describe.configure({ mode: "serial" });
+// retries:1 mitigates the dev-server instability class flagged in the
+// PR #179 tester follow-up (socket hang-up / page-closed mid-
+// navigation on the auth redirect chain). Short-term — the real fix
+// is a separate investigation into HMR recompile / shared
+// apiRequestContext keep-alive.
+test.describe.configure({ mode: "serial", retries: 1 });
 
 test.describe("Products", () => {
   let page: Page;
@@ -25,7 +30,11 @@ test.describe("Products", () => {
       page.getByRole("heading", { name: "Products & Services" }),
     ).toBeVisible();
     await expect(page.getByText("No products yet")).toBeVisible();
-    await expect(page.getByRole("link", { name: "Add Product" })).toBeVisible();
+    // Two "Add Product" links render (desktop header CTA + mobile nav).
+    // Asserting at least one is visible is the right semantics here.
+    await expect(
+      page.getByRole("link", { name: "Add Product" }).first(),
+    ).toBeVisible();
   });
 
   test("products list has search and inactive toggle", async () => {
@@ -34,7 +43,7 @@ test.describe("Products", () => {
   });
 
   test("navigate to create product page", async () => {
-    await page.getByRole("link", { name: "Add Product" }).click();
+    await page.getByRole("link", { name: "Add Product" }).first().click();
     await page.waitForURL("**/products/new");
     await expect(
       page.getByRole("heading", { name: "Add Product" }),
@@ -88,7 +97,7 @@ test.describe("Products", () => {
   });
 
   test("create a second product", async () => {
-    await page.getByRole("link", { name: "Add Product" }).click();
+    await page.getByRole("link", { name: "Add Product" }).first().click();
     await page.waitForURL("**/products/new");
 
     await page.locator('input[name="name"]').fill("Monthly Hosting");
