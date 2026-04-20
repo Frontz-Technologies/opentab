@@ -9,6 +9,33 @@ import { createLogger } from "@/lib/logging/logger";
 
 const log = createLogger("ai-extraction");
 
+const loggedSchemaKeys = new Set<string>();
+
+// Dump the JSON-Schema form of the extraction schema once per
+// category-code set per process. #175 diagnostic step 2: we need to
+// inspect what the provider's structured-output layer actually sees —
+// the Zod → JSON-Schema conversion can silently produce shapes (oneOf,
+// nullable expansions, enum constraints) that a given model rejects.
+function logSchemaOnce(categoryCodes: readonly string[]): void {
+  const key = [...categoryCodes].sort().join(",");
+  if (loggedSchemaKeys.has(key)) return;
+  loggedSchemaKeys.add(key);
+  try {
+    const schema = buildExtractionSchema(categoryCodes);
+    const jsonSchema = (
+      z as unknown as { toJSONSchema: (s: unknown) => unknown }
+    ).toJSONSchema(schema);
+    log.info("extraction JSON schema", {
+      categoryCount: categoryCodes.length,
+      jsonSchema,
+    });
+  } catch (err) {
+    log.warn("schema dump skipped", {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
 export interface ExtractedLineItem {
   name: string;
   quantity: string;
@@ -228,9 +255,9 @@ export async function extractReceiptData(
       return null;
     }
 
-    const extractionSchema = buildExtractionSchema(
-      categories.map((c) => c.code),
-    );
+    const categoryCodes = categories.map((c) => c.code);
+    const extractionSchema = buildExtractionSchema(categoryCodes);
+    logSchemaOnce(categoryCodes);
     const prompt = buildExtractionPrompt(categories);
     const content = buildContentBlocks(buffer, mimeType, strategy, prompt);
     const provider = createAiProvider(apiKey, model);
@@ -260,9 +287,21 @@ export async function extractReceiptData(
     } catch (structuredErr) {
       if (!NoObjectGeneratedError.isInstance(structuredErr))
         throw structuredErr;
+      // Surface the raw model output so #175 diagnostic step 1 can
+      // distinguish markdown-wrapped JSON, garbage, and schema-shape
+      // mismatch. Clipped to 1 KB — receipts are well under this; we
+      // only need a shape hint, not the full payload.
+      const rawText =
+        typeof (structuredErr as { text?: unknown }).text === "string"
+          ? (structuredErr as { text: string }).text
+          : undefined;
+      const RAW_LIMIT = 1024;
+      const clipped = rawText ? rawText.slice(0, RAW_LIMIT) : undefined;
       log.warn("structured output failed, falling back to text parse", {
         model,
         error: structuredErr.message,
+        rawResponse: clipped,
+        rawResponseClipped: rawText ? rawText.length > RAW_LIMIT : false,
       });
     }
 
