@@ -65,7 +65,9 @@ test.describe("Settings", () => {
     await expect(
       page.getByRole("heading", { name: /Appearance/i }).first(),
     ).toBeVisible();
-    await expect(page.getByText("Dark")).toBeVisible();
+    // `getByText("Dark")` was resolving to 4 elements (icon + label
+    // across radio options). Target the actual radio control instead.
+    await expect(page.getByRole("radio", { name: "Dark" })).toBeVisible();
   });
 
   test("integrations page renders", async () => {

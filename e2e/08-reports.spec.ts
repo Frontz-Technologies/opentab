@@ -40,9 +40,12 @@ test.describe("Reports", () => {
   });
 
   test("reports index shows all cards; regional ones link to settings when country unset", async () => {
-    // P&L is always unlocked.
+    // P&L is always unlocked. The previous regex `/P.*L/i` cross-matched
+    // sidebar items (e.g. "Products" + "Invoices") and the two locked
+    // report cards, blowing strict-mode. Pin to the exact accessible
+    // name instead.
     await expect(
-      page.getByRole("link", { name: /P.*L|Profit.*Loss/i }),
+      page.getByRole("link", { name: "Profit & Loss", exact: true }),
     ).toBeVisible();
 
     // VAT and Tax Projection cards are always rendered. When the org has no

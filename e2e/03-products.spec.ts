@@ -30,7 +30,11 @@ test.describe("Products", () => {
       page.getByRole("heading", { name: "Products & Services" }),
     ).toBeVisible();
     await expect(page.getByText("No products yet")).toBeVisible();
-    await expect(page.getByRole("link", { name: "Add Product" })).toBeVisible();
+    // Two "Add Product" links render (desktop header CTA + mobile nav).
+    // Asserting at least one is visible is the right semantics here.
+    await expect(
+      page.getByRole("link", { name: "Add Product" }).first(),
+    ).toBeVisible();
   });
 
   test("products list has search and inactive toggle", async () => {
