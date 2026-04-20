@@ -178,20 +178,36 @@ Tests use `@electric-sql/pglite` — an in-process WebAssembly PostgreSQL build.
 
 ## Testing Strategy
 
-| Type        | Tool            | What it tests                           |
-| ----------- | --------------- | --------------------------------------- |
-| Unit        | Vitest          | Pure functions, utilities, schema types |
-| Integration | Vitest + PGlite | DB queries, auth flows, server actions  |
-| Visual      | Playwright MCP  | UI rendering, user journeys             |
+| Type        | Tool                | What it tests                                                      |
+| ----------- | ------------------- | ------------------------------------------------------------------ |
+| Unit        | Vitest              | Pure functions, utilities, schema types                            |
+| Integration | Vitest + PGlite     | DB queries, auth flows, server actions                             |
+| E2E         | Playwright (`e2e/`) | Full user journeys against the dev stack (login → create → verify) |
+| Visual      | Playwright MCP      | Ad-hoc UI inspection during review                                 |
 
 **Philosophy:** TDD. Tests are written before implementation code. The test suite is the living specification of behaviour.
 
 Run tests:
 
 ```bash
-pnpm test            # all packages via Turborepo
+pnpm test            # unit + integration across packages via Turborepo
 pnpm test --filter=web  # web app only
+pnpm e2e             # Playwright end-to-end suite (requires docker dev stack up)
 ```
+
+### E2E notes
+
+- `e2e/global-setup.ts` warms cold Next.js dev routes before tests run, so the first spec doesn't time out on first-compile cost.
+- `e2e/helpers.ts` exposes `TEST_USER` (email randomised per run to avoid cross-run state leakage) plus `registerTestUser` / `loginTestUser`.
+- Specs share a single worker (`workers: 1` in `playwright.config.ts`) — rely on serial execution; tests are not parallel-safe.
+- Post-auth assertion style: prefer `expect(page).toHaveURL(/\/dashboard/)` over `getByRole("heading", …)` — URL stability is the stable post-auth marker.
+
+### Schema + JSON-Schema conversion
+
+Zod schemas that will be handed to the AI SDK's `generateObject({ schema })` call go through Zod v4's built-in `z.toJSONSchema()` before the provider is contacted. Features that cannot be represented in JSON Schema — notably **`.transform()`** — throw at conversion time before any network call. When writing a schema for `generateObject`:
+
+- Keep the schema as pure data shape: scalar unions, arrays, enums, nullable, optional. Do any coercion or default-filling in a post-parse plain-JS normaliser.
+- Add a conversion regression test: `expect(() => z.toJSONSchema(buildSchema())).not.toThrow()`. `.safeParse()` tests do not cover the conversion path.
 
 ---
 
