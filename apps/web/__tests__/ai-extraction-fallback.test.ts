@@ -65,9 +65,8 @@ describe("extractReceiptData — NoObjectGeneratedError observability (#175)", (
       text: JSON.stringify({ vendorName: "Acme", totalAmount: 10 }),
     });
 
-    const { extractReceiptData } = await import(
-      "../lib/expenses/ai-extraction"
-    );
+    const { extractReceiptData } =
+      await import("../lib/expenses/ai-extraction");
     await extractReceiptData(
       Buffer.from("fake-pdf"),
       "application/pdf",
@@ -86,5 +85,36 @@ describe("extractReceiptData — NoObjectGeneratedError observability (#175)", (
     expect(typeof meta.rawResponse).toBe("string");
     expect((meta.rawResponse as string).length).toBeLessThanOrEqual(1024);
     expect(meta.rawResponseClipped).toBe(true);
+  });
+
+  it("logs the generated JSON Schema at most once per category-code set per process", async () => {
+    generateObjectMock.mockResolvedValue({ object: { vendorName: "A" } });
+
+    const { extractReceiptData } =
+      await import("../lib/expenses/ai-extraction");
+    const categories = [{ code: "gr_rent", name: "Rent" }];
+    await extractReceiptData(
+      Buffer.from("x"),
+      "image/png",
+      "apiKey",
+      "google/gemini-2.5-flash-lite",
+      categories,
+    );
+    await extractReceiptData(
+      Buffer.from("x"),
+      "image/png",
+      "apiKey",
+      "google/gemini-2.5-flash-lite",
+      categories,
+    );
+
+    const schemaDumpCalls = infoSpy.mock.calls.filter(
+      ([message]) =>
+        typeof message === "string" && message === "extraction JSON schema",
+    );
+    expect(schemaDumpCalls).toHaveLength(1);
+    const meta = schemaDumpCalls[0]?.[1] as Record<string, unknown>;
+    expect(meta.jsonSchema).toBeDefined();
+    expect(meta.categoryCount).toBe(1);
   });
 });
