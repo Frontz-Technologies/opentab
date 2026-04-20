@@ -15,6 +15,7 @@ import {
   LineItemsBuilder,
   type LineItem,
 } from "@/components/invoicing/line-items-builder";
+import { buildAutofilledLineItems } from "@/lib/expenses/autofill-line-items";
 import {
   createExpense,
   uploadAndExtractReceipt,
@@ -108,40 +109,16 @@ export function ExpenseForm({
       setCategoryId(data.categoryId);
     }
 
-    if (data.lineItems.length > 0 && items.length === 0) {
+    if (items.length === 0 && (data.lineItems.length > 0 || data.totalAmount)) {
       setItems(
-        data.lineItems.map((li, i) => ({
-          id: crypto.randomUUID(),
-          productId: "",
-          sortOrder: i,
-          name: li.name,
-          description: "",
-          quantity: li.quantity,
-          unitPrice: li.unitPrice,
-          unit: "",
-          taxCategory: "",
-          taxRate: li.taxRate || defaultTaxRate,
-          taxAmount: "0",
-          lineTotal: "0",
-        })),
+        buildAutofilledLineItems({
+          lineItems: data.lineItems,
+          totalAmount: data.totalAmount,
+          description: data.description,
+          defaultTaxRate,
+          usesInclusiveTax,
+        }),
       );
-    } else if (data.totalAmount && items.length === 0) {
-      setItems([
-        {
-          id: crypto.randomUUID(),
-          productId: "",
-          sortOrder: 0,
-          name: data.description || "Receipt item",
-          description: "",
-          quantity: "1",
-          unitPrice: data.totalAmount,
-          unit: "",
-          taxCategory: "",
-          taxRate: defaultTaxRate,
-          taxAmount: "0",
-          lineTotal: "0",
-        },
-      ]);
     }
 
     setShowAutofillPrompt(false);
