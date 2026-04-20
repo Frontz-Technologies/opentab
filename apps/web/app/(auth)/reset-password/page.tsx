@@ -61,7 +61,8 @@ function ResetPasswordForm() {
   if (!token) {
     return (
       <div className="bg-surface-container-low rounded-2xl p-8">
-        <div className="flex items-center gap-3 mb-8">
+        {/* Mobile logo — hidden on desktop */}
+        <div className="flex lg:hidden items-center gap-3 mb-8">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center">
             <span className="material-symbols-outlined text-on-primary text-lg">
               account_balance
@@ -87,8 +88,8 @@ function ResetPasswordForm() {
 
   return (
     <div className="bg-surface-container-low rounded-2xl p-8">
-      {/* Logo */}
-      <div className="flex items-center gap-3 mb-8">
+      {/* Mobile logo — hidden on desktop */}
+      <div className="flex lg:hidden items-center gap-3 mb-8">
         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center">
           <span className="material-symbols-outlined text-on-primary text-lg">
             account_balance
