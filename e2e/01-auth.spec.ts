@@ -74,7 +74,18 @@ test.describe("Authentication", () => {
     ).toBeVisible();
   });
 
-  test("dashboard shows correct org name after registration", async () => {
+  test("dashboard shows correct org name after registration", async ({
+    context,
+  }) => {
+    // The org name is rendered only in the expanded sidebar header
+    // (see `app-sidebar.tsx`'s `!isCollapsed` branch). The sidebar
+    // defaults to collapsed (the `sidebar_state` cookie is unset), so
+    // we expand it here before asserting — this test is about org-name
+    // rendering, not sidebar layout.
+    await context.addCookies([
+      { name: "sidebar_state", value: "true", url: page.url() },
+    ]);
+    await page.reload();
     await expect(page.getByText(`${TEST_USER.name}'s Company`)).toBeVisible();
   });
 

@@ -13,6 +13,16 @@ test.describe("Navigation", () => {
     } catch {
       await loginTestUser(page);
     }
+    // Expand the sidebar so nav-link labels are in the accessible name
+    // tree. The sidebar defaults to icon-collapsed, which strips label
+    // spans (`group-data-[collapsible=icon]:hidden`) and breaks
+    // `getByRole("link", { name: /Dashboard/ })`. Tests that require
+    // the collapsed rail (68) toggle it back explicitly; the expanded-
+    // persistence test (91) re-adds the same cookie. See #179 tester
+    // follow-up.
+    await page
+      .context()
+      .addCookies([{ name: "sidebar_state", value: "true", url: page.url() }]);
   });
 
   test.afterAll(async () => {
