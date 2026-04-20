@@ -2,36 +2,19 @@
 
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/session";
-import { products } from "@opentab/db/schema";
+import {
+  products,
+  createProductSchema,
+  updateProductSchema,
+} from "@/lib/entities/product";
 import { eq, and } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { z } from "zod";
-
-const productSchema = z.object({
-  name: z.string().min(1, "Name is required").max(255),
-  description: z.string().optional().default(""),
-  unitPrice: z.coerce.number().min(0, "Price must be non-negative"),
-  unit: z.enum(["item", "hour", "day", "service", "kg", "unit"]),
-  taxCategory: z.enum([
-    "standard",
-    "reduced",
-    "super_reduced",
-    "zero_rated",
-    "exempt",
-    "reverse_charge",
-  ]),
-  vatRate: z.coerce.number().min(0).max(100).optional(),
-  active: z
-    .string()
-    .optional()
-    .transform((v) => v === "true" || v === "on"),
-});
 
 export async function createProduct(formData: FormData) {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
 
-  const parsed = productSchema.safeParse({
+  const parsed = createProductSchema.safeParse({
     name: formData.get("name"),
     description: formData.get("description"),
     unitPrice: formData.get("unitPrice"),
@@ -69,7 +52,7 @@ export async function updateProduct(id: string, formData: FormData) {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
 
-  const parsed = productSchema.safeParse({
+  const parsed = updateProductSchema.safeParse({
     name: formData.get("name"),
     description: formData.get("description"),
     unitPrice: formData.get("unitPrice"),
