@@ -29,8 +29,12 @@ export default async function DashboardPage({
       <main className="px-6 py-8 max-w-7xl mx-auto">
         {/* Hero display — PageHeader already carries the page's h1,
             so this is a styled div, not a duplicate heading. Avoids
-            the ambiguous role=heading match that surfaced in #178. */}
-        <div className="font-headline text-3xl sm:text-4xl font-bold text-on-surface tracking-tight mb-8">
+            the ambiguous role=heading match that surfaced in #178.
+            aria-hidden stops assistive tech reading "Dashboard" twice. */}
+        <div
+          aria-hidden="true"
+          className="font-headline text-3xl sm:text-4xl font-bold text-on-surface tracking-tight mb-8"
+        >
           {t("title")}
         </div>
         {dataExists ? (

@@ -1,4 +1,14 @@
 import { defineConfig, devices } from "@playwright/test";
+import { randomUUID } from "node:crypto";
+
+// Generate a single RUN_ID for the whole test invocation, set it as an
+// env var, and let helpers.ts read it. Setting it here (at config
+// module load) guarantees it exists before workers spawn and is
+// inherited via `process.env`. Workers re-evaluate `helpers.ts` per
+// spec file, so generating the ID inside helpers would produce a
+// different value per spec and defeat the cross-spec user share.
+// See #178 / PR #179 tester regression.
+process.env.OPENTAB_E2E_RUN_ID ??= randomUUID().slice(0, 8);
 
 export default defineConfig({
   testDir: "./e2e",

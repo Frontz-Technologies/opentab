@@ -4,13 +4,17 @@ import { randomUUID } from "node:crypto";
 /**
  * Test user fixture.
  *
- * `email` is randomised per `pnpm e2e` run (one randomUUID slice per
- * test process, shared across all specs in that run via module cache).
- * This prevents cross-run user-state leakage: previous runs'
- * `e2e@opentab.dev` rows that may have been left in different states
- * don't collide with the current run. See #178.
+ * `email` uses `OPENTAB_E2E_RUN_ID`, which Playwright's config
+ * generates once per invocation and exports to every worker via
+ * process env. This gives every spec in the same `pnpm e2e` run the
+ * same email (so cross-spec `loginTestUser` hits the user that
+ * `registerTestUser` just created) while still rotating between runs
+ * (so yesterday's leftover `e2e-*` rows never collide). See #178.
+ *
+ * A local fallback UUID is used if the env var is unset — e.g. when
+ * running a helper import outside Playwright for ad-hoc scripts.
  */
-const RUN_ID = randomUUID().slice(0, 8);
+const RUN_ID = process.env.OPENTAB_E2E_RUN_ID ?? randomUUID().slice(0, 8);
 export const TEST_USER = {
   name: "E2E Test User",
   email: `e2e-${RUN_ID}@opentab.dev`,
