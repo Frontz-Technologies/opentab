@@ -103,7 +103,7 @@ export default function LoginPage() {
         <Button
           type="submit"
           disabled={loading}
-          className="w-full h-12 btn-gradient text-on-primary font-bold text-base border-none hover:opacity-90"
+          className="w-full h-12 bg-primary text-on-primary font-bold text-base border-none hover:opacity-90"
         >
           {loading ? t("signingIn") : t("login")}
         </Button>

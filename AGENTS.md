@@ -187,7 +187,7 @@ e2e/                    # Playwright end-to-end tests
 
 - **One org per user** — org context from session, no slug in URLs
 - **Better Auth as library** — runs inside the app, not an external service
-- **Dark-only theme** — no light mode, see `docs/DESIGN.md`
+- **Dual theme** — Dark (default) + Light, see `docs/DESIGN.md` section "Dual Theme Architecture"
 - **Server components by default** — `"use client"` only when needed
 - **Shared DB instance** — single connection pool via `apps/web/lib/db.ts`
 - **EU-only cloud infrastructure** — Hetzner (Germany), no US services

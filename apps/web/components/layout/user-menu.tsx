@@ -67,7 +67,7 @@ export function UserMenu({ name, email }: UserMenuProps) {
           <span className="material-symbols-outlined text-[16px] leading-none">
             settings
           </span>
-          Settings
+          {t("settings")}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem

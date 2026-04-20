@@ -39,6 +39,7 @@
     "login": "Iniciar sesión",
     "register": "Crear cuenta",
     "logout": "Cerrar sesión",
+    "settings": "Ajustes",
     "email": "Correo electrónico",
     "password": "Contraseña",
     "confirmPassword": "Confirmar contraseña",
@@ -68,7 +69,7 @@
     "emailPlaceholder": "tu@ejemplo.com",
     "namePlaceholder": "María García",
     "passwordAtLeast8": "Al menos 8 caracteres",
-    "rememberedIt": "¿La recordó?",
+    "rememberedIt": "¿Recordó su contraseña?",
     "backToSignIn": "Volver al inicio de sesión",
     "forgotTitle": "Restablecer contraseña",
     "forgotDescription": "Introduzca su correo electrónico y le enviaremos un enlace de restablecimiento.",
@@ -240,7 +241,8 @@
     "aiName": "Asistente de IA",
     "aiDescription": "Información financiera e historial de chat con IA",
     "connected": "Conectado",
-    "notConfigured": "No configurado"
+    "notConfigured": "No configurado",
+    "noCredentialsDescription": "Esta integración funciona automáticamente. No se requieren credenciales."
   },
   "notFound": {
     "title": "Parece que te has perdido…",

@@ -39,6 +39,7 @@
     "login": "Sign in",
     "register": "Create account",
     "logout": "Log out",
+    "settings": "Settings",
     "email": "Email",
     "password": "Password",
     "confirmPassword": "Confirm password",
@@ -240,7 +241,8 @@
     "aiName": "AI Assistant",
     "aiDescription": "AI-powered financial insights and chat assistant",
     "connected": "Connected",
-    "notConfigured": "Not configured"
+    "notConfigured": "Not configured",
+    "noCredentialsDescription": "This integration works automatically. No credentials required."
   },
   "notFound": {
     "title": "Looks like you've lost your way…",

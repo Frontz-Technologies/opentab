@@ -54,8 +54,7 @@ export default async function IntegrationSettingsPage({ params }: Props) {
               {integration.label}
             </h3>
             <p className="text-on-surface/60 text-sm">
-              {integration.description ??
-                "This integration works automatically. No credentials required."}
+              {integration.description ?? tInt("noCredentialsDescription")}
             </p>
           </div>
         </main>
