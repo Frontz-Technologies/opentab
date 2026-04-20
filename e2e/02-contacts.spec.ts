@@ -44,7 +44,7 @@ test.describe("Contacts", () => {
   });
 
   test("navigate to create contact page", async () => {
-    await page.getByRole("link", { name: "Add Contact" }).click();
+    await page.getByRole("link", { name: "Add Contact" }).first().click();
     await page.waitForURL("**/contacts/new");
     await expect(
       page.getByRole("heading", { name: "Add Contact" }),
@@ -105,7 +105,7 @@ test.describe("Contacts", () => {
   });
 
   test("create a supplier contact", async () => {
-    await page.getByRole("link", { name: "Add Contact" }).click();
+    await page.getByRole("link", { name: "Add Contact" }).first().click();
     await page.waitForURL("**/contacts/new");
 
     await page.locator('select[name="type"]').selectOption("supplier");

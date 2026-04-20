@@ -53,7 +53,11 @@ test.describe("Navigation", () => {
 
     await sidebar.getByRole("link", { name: /Contacts/ }).click();
     await page.waitForURL("**/contacts");
-    await expect(page.getByRole("heading", { name: "Contacts" })).toBeVisible();
+    // `exact: true` prevents the matcher from also picking up the
+    // empty-state "No contacts yet" h3. Same pattern as 02-contacts.
+    await expect(
+      page.getByRole("heading", { name: "Contacts", exact: true }),
+    ).toBeVisible();
 
     await sidebar.getByRole("link", { name: /Products/ }).click();
     await page.waitForURL("**/products");

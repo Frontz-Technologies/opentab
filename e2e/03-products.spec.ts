@@ -43,7 +43,7 @@ test.describe("Products", () => {
   });
 
   test("navigate to create product page", async () => {
-    await page.getByRole("link", { name: "Add Product" }).click();
+    await page.getByRole("link", { name: "Add Product" }).first().click();
     await page.waitForURL("**/products/new");
     await expect(
       page.getByRole("heading", { name: "Add Product" }),
@@ -97,7 +97,7 @@ test.describe("Products", () => {
   });
 
   test("create a second product", async () => {
-    await page.getByRole("link", { name: "Add Product" }).click();
+    await page.getByRole("link", { name: "Add Product" }).first().click();
     await page.waitForURL("**/products/new");
 
     await page.locator('input[name="name"]').fill("Monthly Hosting");
