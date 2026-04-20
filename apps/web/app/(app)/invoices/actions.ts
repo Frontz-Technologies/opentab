@@ -2,19 +2,20 @@
 
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/session";
+import { invoiceSequences } from "@opentab/db/schema";
 import {
   invoices,
   invoiceItems,
-  invoiceSequences,
   INVOICE_STATUS,
-} from "@opentab/db/schema";
+  createInvoiceSchema,
+  updateInvoiceSchema,
+} from "@/lib/entities/invoice";
 import {
   submitInvoiceThroughPlugins,
   cancelInvoiceOnPlugins,
 } from "@/lib/country/submit-invoice";
 import { eq, and } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { z } from "zod";
 import { formatInvoiceNumber } from "@/lib/invoicing/numbering";
 import {
   calculateLineTotal,
@@ -24,38 +25,6 @@ import { createDraftInvoice } from "@/lib/invoicing/draft-invoices";
 import { createLogger } from "@/lib/logging/logger";
 
 const log = createLogger("invoices");
-
-const lineItemSchema = z.object({
-  productId: z.string().uuid().optional().or(z.literal("")),
-  sortOrder: z.coerce.number().int().min(0),
-  name: z.string().min(1).max(255),
-  description: z.string().optional().default(""),
-  quantity: z.string().regex(/^\d+(\.\d{1,4})?$/),
-  unitPrice: z.string().regex(/^\d+(\.\d{1,2})?$/),
-  unit: z.string().max(50).optional().default(""),
-  taxCategory: z.string().max(50).default("standard"),
-  taxRate: z.string().regex(/^\d+(\.\d{1,2})?$/),
-});
-
-const invoiceSchema = z.object({
-  contactId: z.string().uuid(),
-  issueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  dueDate: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/)
-    .optional()
-    .or(z.literal("")),
-  currencyCode: z.string().length(3).default("EUR"),
-  usesInclusiveTax: z.coerce.boolean().default(false),
-  contactName: z.string().min(1).max(255),
-  contactEmail: z.string().email().optional().or(z.literal("")),
-  contactVatNumber: z.string().max(50).optional().default(""),
-  contactAddress: z.string().optional().default(""),
-  notes: z.string().optional().default(""),
-  terms: z.string().optional().default(""),
-  internalNotes: z.string().optional().default(""),
-  items: z.array(lineItemSchema).min(1, "At least one line item is required"),
-});
 
 async function getOrCreateSequence(orgId: string, type: string) {
   const [existing] = await db
@@ -131,7 +100,7 @@ export async function createInvoice(formData: FormData) {
     return { success: false, error: { items: ["Invalid line items data"] } };
   }
 
-  const parsed = invoiceSchema.safeParse({
+  const parsed = createInvoiceSchema.safeParse({
     contactId: formData.get("contactId"),
     issueDate: formData.get("issueDate"),
     dueDate: formData.get("dueDate") || undefined,
@@ -210,7 +179,7 @@ export async function updateInvoice(id: string, formData: FormData) {
     return { success: false, error: { items: ["Invalid line items data"] } };
   }
 
-  const parsed = invoiceSchema.safeParse({
+  const parsed = updateInvoiceSchema.safeParse({
     contactId: formData.get("contactId"),
     issueDate: formData.get("issueDate"),
     dueDate: formData.get("dueDate") || undefined,

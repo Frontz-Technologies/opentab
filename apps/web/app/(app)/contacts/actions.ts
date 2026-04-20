@@ -2,7 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/session";
-import { contacts } from "@opentab/db/schema";
+import {
+  contacts,
+  createContactSchema,
+  updateContactSchema,
+} from "@/lib/entities/contact";
 import { eq, and } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { z } from "zod";
@@ -13,28 +17,6 @@ import type { CompanyLookupResult } from "@/lib/country";
 import { createLogger } from "@/lib/logging/logger";
 
 const log = createLogger("contacts");
-
-const contactSchema = z.object({
-  type: z.enum(["client", "supplier", "both"]),
-  classification: z.enum(["individual", "business", "government"]),
-  company: z.string().max(255).optional().default(""),
-  firstName: z.string().max(255).optional().default(""),
-  lastName: z.string().max(255).optional().default(""),
-  email: z.string().email().max(255).optional().or(z.literal("")),
-  phone: z.string().max(50).optional().default(""),
-  vatNumber: z.string().max(50).optional().default(""),
-  countryCode: z.string().max(2).optional().default(""),
-  taxOffice: z.string().max(255).optional().default(""),
-  addressLine1: z.string().max(255).optional().default(""),
-  addressLine2: z.string().max(255).optional().default(""),
-  city: z.string().max(100).optional().default(""),
-  postalCode: z.string().max(20).optional().default(""),
-  region: z.string().max(100).optional().default(""),
-  defaultCurrency: z.string().max(3).optional().default(""),
-  defaultLanguage: z.string().max(5).optional().default(""),
-  defaultPaymentTerms: z.coerce.number().int().min(0).max(365).optional(),
-  notes: z.string().optional().default(""),
-});
 
 function computeDisplayName(
   company: string,
@@ -52,7 +34,7 @@ export async function createContact(formData: FormData) {
   const orgId = session.org.id;
   log.info("contact creation started", { orgId });
 
-  const parsed = contactSchema.safeParse({
+  const parsed = createContactSchema.safeParse({
     type: formData.get("type"),
     classification: formData.get("classification"),
     company: formData.get("company") ?? "",
@@ -147,7 +129,7 @@ export async function updateContact(id: string, formData: FormData) {
   const orgId = session.org.id;
   log.info("contact update started", { orgId, contactId: id });
 
-  const parsed = contactSchema.safeParse({
+  const parsed = updateContactSchema.safeParse({
     type: formData.get("type"),
     classification: formData.get("classification"),
     company: formData.get("company") ?? "",
