@@ -184,6 +184,30 @@ OpenTab uses **tonal layering** — not box shadows — to communicate elevation
 
 ---
 
+## Voice & Tone
+
+OpenTab's copy should sound like a confident colleague, not a press release. Direct, specific, free of filler. The interface already carries the brand; text should carry meaning.
+
+### Rules
+
+- **No em-dashes (`—`) in user-facing copy.** This applies to anything a user reads: translation files, hardcoded JSX strings, page titles, marketing taglines, error messages, placeholder text. Rewrite each case on its merits:
+  - **Comma** for a soft aside: _"…your finances, without calling your accountant."_
+  - **Colon** when announcing a consequence or definition: _"OpenTab: keep tabs on your business."_
+  - **Period** when the fragments are really two sentences: _"Greek business detected. Greek features will follow."_
+  - Never swap a `—` for `--` or `-`. Rewrite the sentence.
+  - Code comments, JSDoc, git commits, and internal docs (this file, ARCHITECTURE.md, CONVENTIONS.md, CLAUDE.md) are exempt.
+- **Prefer active voice.** _"We saved your invoice"_ beats _"Your invoice has been saved."_
+- **No corporate filler.** Drop "simply", "just", "please note", "kindly". If the sentence works without them, remove them.
+- **Numbers are facts, not dramatics.** _"3 clients overdue"_ beats _"You have 3 clients overdue!"_. Save exclamation marks for the one per-page moment that earns them.
+
+### Localisation notes
+
+- Greek quote marks are `«»`, not `""`. Greek question mark is `;`, not `?`.
+- Spanish opens questions with `¿`. Keep both marks.
+- When an English sentence reads naturally with a comma aside, the Greek and Spanish equivalents usually do too. Resist the urge to translate punctuation structure one-to-one. Translate the rhythm.
+
+---
+
 ## Components
 
 ### Buttons

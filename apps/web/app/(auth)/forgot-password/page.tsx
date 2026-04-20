@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export default function ForgotPasswordPage() {
+  const t = useTranslations("auth");
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -51,39 +53,40 @@ export default function ForgotPasswordPage() {
             </span>
           </div>
           <h1 className="font-headline text-3xl font-bold text-on-surface mb-2">
-            Check your email
+            {t("forgotSuccessTitle")}
           </h1>
           <p className="text-on-surface-variant mb-8 leading-relaxed">
-            If an account exists for{" "}
-            <span className="text-on-surface font-medium">{email}</span>,
-            we&apos;ve sent a password reset link. Check your inbox and spam
-            folder.
+            {t.rich("forgotSuccessBody", {
+              email: () => (
+                <span className="text-on-surface font-medium">{email}</span>
+              ),
+            })}
           </p>
           <Link
             href="/login"
             className="text-primary hover:text-primary-container transition-colors text-sm font-medium"
           >
-            ← Back to sign in
+            ← {t("backToSignIn")}
           </Link>
         </div>
       ) : (
         <div>
           <h1 className="font-headline text-3xl font-bold text-on-surface mb-2">
-            Reset password
+            {t("forgotTitle")}
           </h1>
           <p className="text-on-surface-variant mb-8">
-            Enter your email and we&apos;ll send you a reset link.
+            {t("forgotDescription")}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-on-surface-variant">
-                Email
+                {t("email")}
               </Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="you@example.com"
+                placeholder={t("emailPlaceholder")}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -94,19 +97,19 @@ export default function ForgotPasswordPage() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-12 btn-gradient text-on-primary font-bold text-base border-none hover:opacity-90"
+              className="w-full h-12 bg-primary text-on-primary font-bold text-base border-none hover:opacity-90"
             >
-              {loading ? "Sending…" : "Send reset link"}
+              {loading ? t("sending") : t("sendResetLink")}
             </Button>
           </form>
 
           <p className="mt-6 text-center text-on-surface-variant text-sm">
-            Remembered it?{" "}
+            {t("rememberedIt")}{" "}
             <Link
               href="/login"
               className="text-primary hover:text-primary-container transition-colors font-medium"
             >
-              Sign in
+              {t("login")}
             </Link>
           </p>
         </div>

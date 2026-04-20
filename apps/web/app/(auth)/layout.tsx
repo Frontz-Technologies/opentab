@@ -1,11 +1,15 @@
-export default function AuthLayout({
+import { getTranslations } from "next-intl/server";
+
+export default async function AuthLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const t = await getTranslations("auth");
+
   return (
     <div className="min-h-screen flex">
-      {/* Left panel — branding atmosphere (hidden on mobile) */}
+      {/* Left panel: branding atmosphere (hidden on mobile) */}
       <div className="hidden lg:flex lg:w-1/2 bg-surface-container-low items-center justify-center p-12 relative overflow-hidden">
         <div className="absolute -top-32 -left-32 w-96 h-96 bg-primary/5 blur-3xl rounded-full" />
         <div className="absolute bottom-0 right-0 w-64 h-64 bg-primary-container/10 blur-3xl rounded-full" />
@@ -21,19 +25,17 @@ export default function AuthLayout({
             </span>
           </div>
           <h2 className="font-headline text-4xl font-extrabold text-on-surface tracking-tight mb-4">
-            Keep tabs on your business
+            {t("brandTagline")}
           </h2>
           <p className="text-on-surface-variant text-lg leading-relaxed">
-            AI-native financial platform for freelancers and startups. Invoice,
-            track expenses, and understand your finances — without calling your
-            accountant.
+            {t("brandDescription")}
           </p>
           <p className="mt-8 text-sm font-label text-on-surface-variant/60 uppercase tracking-widest">
             opentab.tech
           </p>
         </div>
       </div>
-      {/* Right panel — auth form */}
+      {/* Right panel: auth form */}
       <div className="flex-1 flex items-center justify-center p-8 bg-surface-dim">
         <div className="w-full max-w-md">{children}</div>
       </div>

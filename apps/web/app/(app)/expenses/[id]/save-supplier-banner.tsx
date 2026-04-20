@@ -50,7 +50,7 @@ export function SaveSupplierBanner({
           </p>
           <p className="text-xs text-on-surface/60">
             {supplierName}
-            {supplierVat ? ` — ${supplierVat}` : ""}
+            {supplierVat ? `, ${supplierVat}` : ""}
           </p>
         </div>
       </div>

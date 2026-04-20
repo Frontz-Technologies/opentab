@@ -47,7 +47,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "OpenTab — Keep tabs on your business",
+  title: "OpenTab: Keep tabs on your business",
   description: "AI-native financial platform for freelancers and startups.",
 };
 

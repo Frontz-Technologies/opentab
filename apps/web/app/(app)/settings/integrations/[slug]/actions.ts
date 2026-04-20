@@ -163,7 +163,7 @@ export async function testIntegrationConnection(slug: string) {
     });
     return {
       success: false,
-      error: "Unable to decrypt credentials — contact support",
+      error: "Unable to decrypt credentials. Contact support.",
     };
   }
 

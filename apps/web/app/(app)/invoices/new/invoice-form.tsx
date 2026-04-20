@@ -331,7 +331,7 @@ export function InvoiceForm({
             {t("lineItems")} <span className="text-tertiary">*</span>
           </h2>
           {items.length === 0 && (
-            <p className="text-sm text-on-surface/50">— {t("itemRequired")}</p>
+            <p className="text-sm text-on-surface/50">{t("itemRequired")}</p>
           )}
         </div>
         <LineItemsBuilder
