@@ -1,6 +1,8 @@
-import { db } from "@/lib/db";
+import { db as defaultDb } from "@/lib/db";
 import { expenseCategories } from "@opentab/db/schema";
 import { eq, count } from "drizzle-orm";
+
+type Db = typeof defaultDb;
 
 type SeedCategoryData = {
   groupCode: string;
@@ -279,6 +281,7 @@ const COUNTRY_SEED_MAP: Record<string, SeedCategoryData[]> = {
 export async function seedExpenseCategories(
   orgId: string,
   countryCode: string | null,
+  db: Db = defaultDb,
 ): Promise<void> {
   const [result] = await db
     .select({ value: count() })
@@ -292,26 +295,35 @@ export async function seedExpenseCategories(
     await import("@opentab/db/schema");
   const [groupCount] = await db.select({ value: count() }).from(expenseGroups);
   if (groupCount.value === 0) {
-    await db.insert(expenseGroups).values(EXPENSE_GROUPS_SEED);
+    await db
+      .insert(expenseGroups)
+      .values(EXPENSE_GROUPS_SEED)
+      .onConflictDoNothing();
   }
 
   const seed = COUNTRY_SEED_MAP[countryCode ?? ""] ?? INTL_CATEGORIES;
 
-  await db.insert(expenseCategories).values(
-    seed.map((cat) => ({
-      orgId,
-      groupCode: cat.groupCode,
-      code: cat.code,
-      name: cat.name,
-      sortOrder: cat.sortOrder,
-      isDefault: true,
-    })),
-  );
+  await db
+    .insert(expenseCategories)
+    .values(
+      seed.map((cat) => ({
+        orgId,
+        groupCode: cat.groupCode,
+        code: cat.code,
+        name: cat.name,
+        sortOrder: cat.sortOrder,
+        isDefault: true,
+      })),
+    )
+    .onConflictDoNothing({
+      target: [expenseCategories.orgId, expenseCategories.code],
+    });
 }
 
 export async function ensureCategoriesSeeded(
   orgId: string,
   countryCode: string | null,
+  db: Db = defaultDb,
 ): Promise<void> {
-  await seedExpenseCategories(orgId, countryCode);
+  await seedExpenseCategories(orgId, countryCode, db);
 }
