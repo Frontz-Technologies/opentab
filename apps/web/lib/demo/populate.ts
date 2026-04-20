@@ -450,7 +450,6 @@ async function seedExpenses(
       name: rng.pick(EXPENSE_MEMOS),
       quantity: qty,
       unitPrice,
-      taxCategory: "standard",
       taxRate,
       taxAmount: calc.taxAmount,
       lineTotal: calc.lineTotal,
