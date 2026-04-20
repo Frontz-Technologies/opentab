@@ -2,15 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/session";
+import { expenseAttachments, invoiceSequences } from "@opentab/db/schema";
 import {
   expenses,
   expenseItems,
-  expenseAttachments,
-  invoiceSequences,
-} from "@opentab/db/schema";
+  createExpenseSchema,
+  updateExpenseSchema,
+} from "@/lib/entities/expense";
 import { eq, and } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { z } from "zod";
 import {
   calculateLineTotal,
   calculateInvoiceTotals,
@@ -34,34 +34,6 @@ import {
 import { createLogger } from "@/lib/logging/logger";
 
 const log = createLogger("expenses");
-
-const lineItemSchema = z.object({
-  sortOrder: z.coerce.number().int().min(0),
-  name: z.string().min(1).max(255),
-  description: z.string().optional().default(""),
-  quantity: z.string().regex(/^\d+(\.\d{1,4})?$/),
-  unitPrice: z.string().regex(/^\d+(\.\d{1,2})?$/),
-  taxRate: z.string().regex(/^\d+(\.\d{1,2})?$/),
-});
-
-const expenseSchema = z.object({
-  contactId: z.string().uuid().optional().or(z.literal("")),
-  categoryId: z.string().uuid().optional().or(z.literal("")),
-  expenseDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  paymentDate: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/)
-    .optional()
-    .or(z.literal("")),
-  currencyCode: z.string().length(3).default("EUR"),
-  usesInclusiveTax: z.coerce.boolean().default(false),
-  supplierInvoiceNumber: z.string().max(100).optional().default(""),
-  contactName: z.string().max(255).optional().default(""),
-  contactVatNumber: z.string().max(50).optional().default(""),
-  description: z.string().optional().default(""),
-  notes: z.string().optional().default(""),
-  items: z.array(lineItemSchema).min(1, "At least one line item is required"),
-});
 
 async function getOrCreateExpenseSequence(orgId: string) {
   const [existing] = await db
@@ -132,7 +104,7 @@ export async function createExpense(formData: FormData) {
     return { success: false, error: { items: ["Invalid line items data"] } };
   }
 
-  const parsed = expenseSchema.safeParse({
+  const parsed = createExpenseSchema.safeParse({
     contactId: formData.get("contactId") ?? "",
     categoryId: formData.get("categoryId") ?? "",
     expenseDate: formData.get("expenseDate"),
@@ -367,7 +339,7 @@ export async function updateExpense(id: string, formData: FormData) {
     return { success: false, error: { items: ["Invalid line items data"] } };
   }
 
-  const parsed = expenseSchema.safeParse({
+  const parsed = updateExpenseSchema.safeParse({
     contactId: formData.get("contactId") ?? "",
     categoryId: formData.get("categoryId") ?? "",
     expenseDate: formData.get("expenseDate"),

@@ -198,6 +198,7 @@ e2e/                    # Playwright end-to-end tests
 - File naming: kebab-case (`user-menu.tsx`), PascalCase components (`UserMenu`)
 - All user-facing strings through next-intl
 - Zod validation on all server action inputs
+- Entity Zod schemas live in `apps/web/lib/entities/<name>.ts` (one file per CRUD entity, exports `create*Schema` / `update*Schema` + inferred types); actions and forms import from there
 - See `docs/CONVENTIONS.md` for full details
 
 ---
