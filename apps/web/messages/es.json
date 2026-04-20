@@ -544,6 +544,8 @@
     "autofillApply": "Aplicar",
     "autofillIgnore": "Ignorar",
     "autofillAlways": "Siempre aplicar",
+    "receiptNoDataTitle": "No se pudo leer este recibo",
+    "receiptNoDataBody": "El archivo se guardó, pero la IA no pudo extraer ningún campo. Rellene el formulario manualmente.",
     "discardConfirm": "¿Descartar el gasto actual? Los archivos adjuntos se eliminarán.",
     "removeAttachment": "Eliminar",
     "editExpense": "Editar gasto",

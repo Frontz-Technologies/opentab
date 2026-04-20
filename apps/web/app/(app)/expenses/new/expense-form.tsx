@@ -64,6 +64,7 @@ export function ExpenseForm({
   const [extractResult, setExtractResult] =
     useState<UploadReceiptResult | null>(null);
   const [showAutofillPrompt, setShowAutofillPrompt] = useState(false);
+  const [showNoDataNotice, setShowNoDataNotice] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -102,6 +103,9 @@ export function ExpenseForm({
     }
     if (data.description && !description) {
       setDescription(data.description);
+    }
+    if (data.categoryId && !categoryId) {
+      setCategoryId(data.categoryId);
     }
 
     if (data.lineItems.length > 0 && items.length === 0) {
@@ -157,12 +161,15 @@ export function ExpenseForm({
       }
       setUploadedFile(result.fileInfo ?? null);
       setExtractResult(result);
+      setShowAutofillPrompt(false);
+      setShowNoDataNotice(false);
 
       const hasData =
         result.extractedData &&
         (result.extractedData.vendorName ||
           result.extractedData.totalAmount ||
           result.extractedData.date ||
+          result.extractedData.categoryId ||
           result.extractedData.lineItems.length > 0);
 
       if (hasData) {
@@ -172,6 +179,8 @@ export function ExpenseForm({
         } else {
           setShowAutofillPrompt(true);
         }
+      } else {
+        setShowNoDataNotice(true);
       }
     } catch {
       setError("Failed to upload receipt");
@@ -185,6 +194,7 @@ export function ExpenseForm({
       setUploadedFile(null);
       setExtractResult(null);
       setShowAutofillPrompt(false);
+      setShowNoDataNotice(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   }
@@ -292,6 +302,32 @@ export function ExpenseForm({
                 {t("removeAttachment")}
               </Button>
             </div>
+
+            {showNoDataNotice && (
+              <div className="flex items-start gap-3 rounded-lg bg-surface-container-high px-4 py-3">
+                <span className="material-symbols-outlined text-on-surface-variant text-[20px]">
+                  info
+                </span>
+                <div className="flex-1 space-y-1">
+                  <p className="text-sm text-on-surface font-medium">
+                    {t("receiptNoDataTitle")}
+                  </p>
+                  <p className="text-xs text-on-surface-variant">
+                    {t("receiptNoDataBody")}
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  type="button"
+                  onClick={() => setShowNoDataNotice(false)}
+                >
+                  <span className="material-symbols-outlined text-[16px]">
+                    close
+                  </span>
+                </Button>
+              </div>
+            )}
 
             {showAutofillPrompt && (
               <div className="flex items-center gap-3 rounded-lg bg-primary/10 px-4 py-3">
