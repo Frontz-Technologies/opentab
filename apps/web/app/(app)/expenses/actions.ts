@@ -2,7 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/session";
-import { expenseAttachments, invoiceSequences } from "@opentab/db/schema";
+import {
+  expenseAttachments,
+  expenseCategories,
+  invoiceSequences,
+} from "@opentab/db/schema";
 import {
   expenses,
   expenseItems,
@@ -170,7 +174,7 @@ export interface UploadReceiptResult {
     totalAmount: string | null;
     currency: string | null;
     description: string | null;
-    category: string | null;
+    categoryId: string | null;
     lineItems: {
       name: string;
       quantity: string;
@@ -239,8 +243,8 @@ export async function uploadAndExtractReceipt(
   };
 
   // Try AI extraction if enabled
-  let extractedData = null;
-  let supplierMatch = null;
+  let extractedData: UploadReceiptResult["extractedData"] = null;
+  let supplierMatch: UploadReceiptResult["supplierMatch"] = null;
 
   const extractionEnabled = await isReceiptExtractionEnabled(session.org.id);
   if (extractionEnabled) {
@@ -252,37 +256,68 @@ export async function uploadAndExtractReceipt(
         mimeType,
       });
 
+      // Fetch the org's active categories so the model can pick a real code.
+      const activeCategories = await db
+        .select({
+          id: expenseCategories.id,
+          code: expenseCategories.code,
+          name: expenseCategories.name,
+        })
+        .from(expenseCategories)
+        .where(
+          and(
+            eq(expenseCategories.orgId, session.org.id),
+            eq(expenseCategories.active, true),
+          ),
+        );
+
       const extractTimer = log.time("ai-extraction");
-      extractedData = await extractReceiptData(
+      const raw = await extractReceiptData(
         buffer,
         mimeType,
         aiSecrets.apiKey,
         aiSecrets.model,
+        activeCategories.map((c) => ({ code: c.code, name: c.name })),
       );
       extractTimer(
-        extractedData
-          ? "ai extraction succeeded"
-          : "ai extraction returned no data",
+        raw ? "ai extraction succeeded" : "ai extraction returned no data",
         {
           model: aiSecrets.model,
-          hasResult: !!extractedData,
-          vendorName: extractedData?.vendorName ?? null,
-          totalAmount: extractedData?.totalAmount ?? null,
+          hasResult: !!raw,
+          vendorName: raw?.vendorName ?? null,
+          totalAmount: raw?.totalAmount ?? null,
         },
       );
 
+      if (raw) {
+        const categoryId = raw.categoryCode
+          ? (activeCategories.find((c) => c.code === raw.categoryCode)?.id ??
+            null)
+          : null;
+        extractedData = {
+          vendorName: raw.vendorName,
+          vendorVat: raw.vendorVat,
+          date: raw.date,
+          totalAmount: raw.totalAmount,
+          currency: raw.currency,
+          description: raw.description,
+          categoryId,
+          lineItems: raw.lineItems,
+        };
+      }
+
       // Try supplier matching if we got a VAT number or name
-      if (extractedData?.vendorVat) {
+      if (raw?.vendorVat) {
         supplierMatch = await matchSupplier(
           session.org.id,
-          extractedData.vendorVat,
-          extractedData.vendorName,
+          raw.vendorVat,
+          raw.vendorName,
         );
-      } else if (extractedData?.vendorName) {
+      } else if (raw?.vendorName) {
         supplierMatch = await matchSupplier(
           session.org.id,
           null,
-          extractedData.vendorName,
+          raw.vendorName,
         );
       }
 

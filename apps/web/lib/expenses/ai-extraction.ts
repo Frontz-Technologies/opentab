@@ -23,39 +23,105 @@ export interface ExtractedExpenseData {
   totalAmount: string | null;
   currency: string | null;
   description: string | null;
-  category: string | null;
+  categoryCode: string | null;
   lineItems: ExtractedLineItem[];
 }
 
-/** Coerce any value to string or null */
-const coerceString = z
-  .union([z.string(), z.number(), z.null(), z.undefined()])
-  .transform((v) => (v != null ? String(v) : null));
+export interface CategoryHint {
+  code: string;
+  name: string;
+}
 
-const coerceStringRequired = z
-  .union([z.string(), z.number()])
-  .transform((v) => String(v));
+/**
+ * Build the extraction schema.
+ *
+ * IMPORTANT: Zod v4's `z.toJSONSchema()` (which AI SDK v6 invokes under
+ * the hood when `generateObject({ schema })` is called) cannot represent
+ * `.transform()` — it throws "Transforms cannot be represented in JSON
+ * Schema". Keep this schema pure data-shape: scalar types, unions,
+ * arrays, enums, nullable. All coercion (e.g. number → string) happens
+ * post-parse in `normalizeExtractedData`.
+ */
+const scalar = z.union([z.string(), z.number(), z.null()]);
 
-const extractionSchema = z.object({
-  vendorName: coerceString.optional().default(null),
-  vendorVat: coerceString.optional().default(null),
-  date: coerceString.optional().default(null),
-  totalAmount: coerceString.optional().default(null),
-  currency: coerceString.optional().default(null),
-  description: coerceString.optional().default(null),
-  category: coerceString.optional().default(null),
-  lineItems: z
-    .array(
-      z.object({
-        name: coerceStringRequired.optional().default(""),
-        quantity: coerceStringRequired.optional().default("1"),
-        unitPrice: coerceStringRequired.optional().default("0"),
-        taxRate: coerceStringRequired.optional().default("0"),
-      }),
-    )
-    .optional()
-    .default([]),
-});
+export function buildExtractionSchema(categoryCodes: readonly string[]) {
+  const categoryField =
+    categoryCodes.length > 0
+      ? z
+          .enum(categoryCodes as unknown as [string, ...string[]])
+          .nullable()
+          .optional()
+      : z.null().optional();
+
+  return z.object({
+    vendorName: scalar.optional(),
+    vendorVat: scalar.optional(),
+    date: scalar.optional(),
+    totalAmount: scalar.optional(),
+    currency: scalar.optional(),
+    description: scalar.optional(),
+    categoryCode: categoryField,
+    lineItems: z
+      .array(
+        z.object({
+          name: scalar.optional(),
+          quantity: scalar.optional(),
+          unitPrice: scalar.optional(),
+          taxRate: scalar.optional(),
+        }),
+      )
+      .optional(),
+  });
+}
+
+function coerceStringOrNull(v: unknown): string | null {
+  if (v == null) return null;
+  if (typeof v === "string") return v;
+  if (typeof v === "number") return String(v);
+  return null;
+}
+
+function coerceString(v: unknown, fallback: string): string {
+  if (v == null) return fallback;
+  if (typeof v === "string") return v;
+  if (typeof v === "number") return String(v);
+  return fallback;
+}
+
+/** Post-parse normalization — the Zod schema deliberately keeps raw
+ * shape (union of string|number|null); this function turns it into the
+ * tidy string-or-null form consumers expect. */
+export function normalizeExtractedData(raw: {
+  vendorName?: string | number | null;
+  vendorVat?: string | number | null;
+  date?: string | number | null;
+  totalAmount?: string | number | null;
+  currency?: string | number | null;
+  description?: string | number | null;
+  categoryCode?: string | null;
+  lineItems?: {
+    name?: string | number | null;
+    quantity?: string | number | null;
+    unitPrice?: string | number | null;
+    taxRate?: string | number | null;
+  }[];
+}): ExtractedExpenseData {
+  return {
+    vendorName: coerceStringOrNull(raw.vendorName),
+    vendorVat: coerceStringOrNull(raw.vendorVat),
+    date: coerceStringOrNull(raw.date),
+    totalAmount: coerceStringOrNull(raw.totalAmount),
+    currency: coerceStringOrNull(raw.currency),
+    description: coerceStringOrNull(raw.description),
+    categoryCode: raw.categoryCode ?? null,
+    lineItems: (raw.lineItems ?? []).map((li) => ({
+      name: coerceString(li.name, ""),
+      quantity: coerceString(li.quantity, "1"),
+      unitPrice: coerceString(li.unitPrice, "0"),
+      taxRate: coerceString(li.taxRate, "0"),
+    })),
+  };
+}
 
 /**
  * Check if the model can process the given file type.
@@ -84,28 +150,38 @@ export function getExtractionStrategy(
 
 /**
  * Prepare content blocks for the AI message based on the extraction strategy.
+ * AI SDK v6 (ai@^6): file/image parts use `mediaType`, not `mimeType`.
  */
 function buildContentBlocks(
   buffer: Buffer,
   mimeType: string,
   strategy: "file" | "image",
+  prompt: string,
 ) {
   const base64 = buffer.toString("base64");
 
   if (strategy === "file") {
     return [
-      { type: "text", text: EXTRACTION_PROMPT },
-      { type: "file", data: base64, mimeType },
+      { type: "text", text: prompt },
+      { type: "file", data: base64, mediaType: mimeType },
     ];
   }
 
   return [
-    { type: "text", text: EXTRACTION_PROMPT },
-    { type: "image", image: `data:${mimeType};base64,${base64}` },
+    { type: "text", text: prompt },
+    { type: "image", image: base64, mediaType: mimeType },
   ];
 }
 
-const EXTRACTION_PROMPT = `Extract structured data from this receipt/invoice as JSON.
+function buildExtractionPrompt(categories: readonly CategoryHint[]): string {
+  const categoryBlock =
+    categories.length > 0
+      ? `\n\nPick the best-matching categoryCode from this list (use its code, not its display name); use null if no category clearly fits:\n${categories
+          .map((c) => `- ${c.code}: ${c.name}`)
+          .join("\n")}`
+      : "\n\nSet categoryCode to null (no categories available).";
+
+  return `Extract structured data from this receipt/invoice as JSON.
 Use null for any field you cannot confidently read.
 
 Required JSON format:
@@ -116,17 +192,19 @@ Required JSON format:
   "totalAmount": "number or string or null",
   "currency": "3-letter ISO code or null",
   "description": "string or null",
-  "category": "string or null",
+  "categoryCode": "string code from the list below, or null",
   "lineItems": [{"name": "string", "quantity": "number", "unitPrice": "number", "taxRate": "number"}]
-}
+}${categoryBlock}
 
 Return ONLY valid JSON.`;
+}
 
 export async function extractReceiptData(
   buffer: Buffer,
   mimeType: string,
   apiKey: string,
   model: string,
+  categories: readonly CategoryHint[] = [],
 ): Promise<ExtractedExpenseData | null> {
   try {
     const capTimer = log.time("capability-check");
@@ -150,11 +228,14 @@ export async function extractReceiptData(
       return null;
     }
 
-    const content = buildContentBlocks(buffer, mimeType, strategy);
+    const extractionSchema = buildExtractionSchema(
+      categories.map((c) => c.code),
+    );
+    const prompt = buildExtractionPrompt(categories);
+    const content = buildContentBlocks(buffer, mimeType, strategy, prompt);
     const provider = createAiProvider(apiKey, model);
     const messages = [{ role: "user" as const, content: content as any }];
 
-    // Try structured output first (mode: json injects schema into prompt)
     const aiTimer = log.time("ai-api-call");
     try {
       const result = await generateObject({
@@ -163,20 +244,20 @@ export async function extractReceiptData(
         messages,
         maxOutputTokens: 2000,
       });
-      const data = result.object as z.infer<typeof extractionSchema>;
+      const normalized = normalizeExtractedData(result.object);
       aiTimer("structured extraction succeeded", {
         model,
         mode: "generateObject",
       });
       log.info("extraction result", {
         model,
-        hasVendor: !!data.vendorName,
-        hasTotal: !!data.totalAmount,
-        lineItemCount: data.lineItems.length,
+        hasVendor: !!normalized.vendorName,
+        hasTotal: !!normalized.totalAmount,
+        hasCategory: !!normalized.categoryCode,
+        lineItemCount: normalized.lineItems.length,
       });
-      return data;
+      return normalized;
     } catch (structuredErr) {
-      // Fall back to generateText + manual parse if structured output fails
       if (!NoObjectGeneratedError.isInstance(structuredErr))
         throw structuredErr;
       log.warn("structured output failed, falling back to text parse", {
@@ -198,16 +279,18 @@ export async function extractReceiptData(
       .replace(/```\n?/g, "")
       .trim();
     const raw = JSON.parse(cleaned);
-    const data = extractionSchema.parse(raw);
+    const parsed = extractionSchema.parse(raw);
+    const normalized = normalizeExtractedData(parsed);
 
     log.info("extraction result (fallback)", {
       model,
-      hasVendor: !!data.vendorName,
-      hasTotal: !!data.totalAmount,
-      lineItemCount: data.lineItems.length,
+      hasVendor: !!normalized.vendorName,
+      hasTotal: !!normalized.totalAmount,
+      hasCategory: !!normalized.categoryCode,
+      lineItemCount: normalized.lineItems.length,
     });
 
-    return data;
+    return normalized;
   } catch (err) {
     log.error("extraction failed", {
       model,
