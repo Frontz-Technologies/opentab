@@ -291,12 +291,12 @@ shadcn components are installed into `apps/web/components/ui/` and owned by this
 **Rules for customising shadcn components:**
 
 - Override defaults to match the design system (surfaces, fonts, colours)
-- Remove all light mode CSS variables — we are dark-only
-- Replace default buttons with gradient or surface variants
-- Apply `backdrop-blur-[24px]` and opacity to Dialog/Sheet overlays for the glassmorphic effect
+- Use the semantic tokens (`bg-surface-container`, `text-on-surface`, etc.) — they resolve per theme, so the component works in both dark and light mode without branching
+- Replace default buttons with surface variants; the solid emerald primary is the CTA (`.btn-gradient` is reserved per `docs/DESIGN.md:197`, do not use in new code)
+- Apply `backdrop-blur-[24px]` (dark) / `backdrop-blur-[16px]` (light) and theme-appropriate opacity to Dialog/Sheet overlays for the glassmorphic effect — see `docs/DESIGN.md` "Glass & Gradient Rule"
 - Use `font-label` (Space Grotesk) for component labels, `font-body` (Inter) for content
 
-**Do not** add a `<ThemeProvider>` that toggles between light and dark. The app runs in dark mode always.
+The app is **dual-theme** (Dark default + Light companion). Theme state is handled by the dedicated provider wired in `apps/web/app/layout.tsx` — don't add a second `<ThemeProvider>`.
 
 ---
 
@@ -337,7 +337,7 @@ const t = useTranslations("invoices");
 
 **Namespace convention:** use the feature/route name as the top-level namespace (`invoices`, `clients`, `settings`, `auth`). Shared strings go under `common`.
 
-**Only `en.json` is required for now.** Other locales are added by duplicating `en.json` and translating — the structure must match exactly.
+**Active locales:** `en`, `el`, `es`. Any new key must be added to **all three** locale files — missing keys render as raw `namespace.key` strings at runtime. `el.json` and `es.json` are maintained in lockstep with `en.json`; keep structures identical.
 
 ---
 
