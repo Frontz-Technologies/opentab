@@ -773,7 +773,7 @@
   },
   "demo": {
     "loginCardTitle": "Try OpenTab with sample data",
-    "loginCardBody": "Explore invoicing, expenses, and reports with a ready-made sample business — no signup required.",
+    "loginCardBody": "Explore invoicing, expenses, and reports with a ready-made sample business. No signup required.",
     "loginCardAction": "Try the demo",
     "loginCardLoading": "Preparing demo…",
     "bannerText": "You're exploring sample data. Numbers, clients, and invoices are fictional.",

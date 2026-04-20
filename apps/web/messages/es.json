@@ -773,7 +773,7 @@
   },
   "demo": {
     "loginCardTitle": "Prueba OpenTab con datos de demostración",
-    "loginCardBody": "Explora facturación, gastos e informes con una empresa de ejemplo lista — sin registrarte.",
+    "loginCardBody": "Explora facturación, gastos e informes con una empresa de ejemplo lista. Sin registrarte.",
     "loginCardAction": "Probar la demo",
     "loginCardLoading": "Preparando demo…",
     "bannerText": "Estás explorando datos de muestra. Los números, clientes y facturas son ficticios.",

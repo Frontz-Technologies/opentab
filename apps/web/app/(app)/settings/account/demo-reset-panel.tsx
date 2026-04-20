@@ -63,7 +63,7 @@ export function DemoResetPanel() {
             type="button"
             onClick={handleReset}
             disabled={isPending}
-            className="bg-amber-500 text-amber-50 hover:opacity-90"
+            className="bg-tertiary-container text-on-tertiary-container hover:bg-tertiary-container/90"
           >
             {isPending ? t("resetPanelLoading") : t("resetPanelConfirm")}
           </Button>
