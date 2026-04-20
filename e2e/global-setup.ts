@@ -38,6 +38,7 @@ const WARMUP_ROUTES: Array<{
 export default async function globalSetup(config: FullConfig): Promise<void> {
   const baseURL = config.projects[0]?.use?.baseURL ?? "http://localhost:3000";
   const ctx = await request.newContext({ baseURL, timeout: 120_000 });
+  const startedAt = Date.now();
 
   for (const r of WARMUP_ROUTES) {
     try {
@@ -46,12 +47,25 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
       } else {
         await ctx.post(r.path, { data: r.data });
       }
-    } catch {
-      // Compile-time errors and auth failures are fine — we only care
-      // about forcing Next.js to compile the route. Tests will exercise
-      // actual behaviour after this setup completes.
+    } catch (err) {
+      // Auth-validation failures on dummy payloads (400/422) are
+      // expected and swallowed silently — the HTTP call already forced
+      // Next.js to compile the route, which is all we need. Log
+      // anything else (connection refused, DNS failure, timeout) so a
+      // real misconfiguration doesn't fail quietly.
+      const msg = err instanceof Error ? err.message : String(err);
+      if (!/\b(40\d|41\d|42\d)\b/.test(msg)) {
+        console.warn(
+          `[e2e global-setup] ${r.method} ${r.path} warmup warning: ${msg}`,
+        );
+      }
     }
   }
 
   await ctx.dispose();
+  const durationMs = Date.now() - startedAt;
+  console.log(
+    `[e2e global-setup] warmup complete in ${durationMs} ms ` +
+      `(${WARMUP_ROUTES.length} routes)`,
+  );
 }
