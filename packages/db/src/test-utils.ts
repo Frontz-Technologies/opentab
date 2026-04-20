@@ -295,6 +295,8 @@ async function pushSchema(pglite: PGlite) {
       "created_at" timestamp NOT NULL DEFAULT now()
     )`,
 
+    `CREATE TYPE expense_group_type AS ENUM ('operating_expense', 'purchase', 'asset', 'other')`,
+
     `CREATE TABLE IF NOT EXISTS "expense_group" (
       "code" varchar(30) PRIMARY KEY,
       "name_en" varchar(100) NOT NULL,
@@ -305,26 +307,32 @@ async function pushSchema(pglite: PGlite) {
       "icon" varchar(50),
       "sort_order" integer NOT NULL DEFAULT 0,
       "active" boolean NOT NULL DEFAULT true,
+      "type" expense_group_type NOT NULL DEFAULT 'operating_expense',
+      "type_color" varchar(7),
       "created_at" timestamp NOT NULL DEFAULT now()
     )`,
 
-    `INSERT INTO "expense_group" ("code", "name_en", "sort_order") VALUES
-      ('rent', 'Rent & Leasing', 1),
-      ('utilities', 'Utilities', 2),
-      ('telecom', 'Telecommunications', 3),
-      ('office_supplies', 'Office Supplies & Materials', 4),
-      ('software', 'Software & Subscriptions', 5),
-      ('hardware', 'Hardware & Equipment', 6),
-      ('professional_services', 'Professional Services', 7),
-      ('marketing', 'Marketing & Advertising', 8),
-      ('travel', 'Travel', 9),
-      ('transport', 'Local Transport', 10),
-      ('insurance', 'Insurance', 11),
-      ('meals_entertainment', 'Meals & Entertainment', 12),
-      ('bank_fees', 'Bank & Financial Fees', 13),
-      ('training', 'Training & Education', 14),
-      ('taxes_contributions', 'Taxes & Social Contributions', 15),
-      ('other', 'Other Expenses', 16)
+    `INSERT INTO "expense_group" ("code", "name_en", "sort_order", "type") VALUES
+      ('rent', 'Rent & Leasing', 1, 'operating_expense'),
+      ('utilities', 'Utilities', 2, 'operating_expense'),
+      ('telecom', 'Telecommunications', 3, 'operating_expense'),
+      ('office_supplies', 'Office Supplies & Materials', 4, 'operating_expense'),
+      ('software', 'Software & Subscriptions', 5, 'operating_expense'),
+      ('hardware', 'Hardware & Equipment', 6, 'operating_expense'),
+      ('professional_services', 'Professional Services', 7, 'operating_expense'),
+      ('marketing', 'Marketing & Advertising', 8, 'operating_expense'),
+      ('travel', 'Travel', 9, 'operating_expense'),
+      ('transport', 'Local Transport', 10, 'operating_expense'),
+      ('insurance', 'Insurance', 11, 'operating_expense'),
+      ('meals_entertainment', 'Meals & Entertainment', 12, 'operating_expense'),
+      ('bank_fees', 'Bank & Financial Fees', 13, 'operating_expense'),
+      ('training', 'Training & Education', 14, 'operating_expense'),
+      ('taxes_contributions', 'Taxes & Social Contributions', 15, 'other'),
+      ('other', 'Other Expenses', 16, 'other'),
+      ('salaries', 'Salaries', 17, 'operating_expense'),
+      ('employee_benefits', 'Employee Benefits', 18, 'operating_expense'),
+      ('repairs_maintenance', 'Repairs & Maintenance', 19, 'operating_expense'),
+      ('purchases', 'Purchases & Inventory', 20, 'purchase')
     ON CONFLICT DO NOTHING`,
 
     `CREATE TABLE IF NOT EXISTS "expense_category" (

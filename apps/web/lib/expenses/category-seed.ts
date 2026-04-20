@@ -98,6 +98,25 @@ const GR_CATEGORIES: SeedCategoryData[] = [
     sortOrder: 15,
   },
   { groupCode: "other", code: "gr_other", name: "Λοιπά έξοδα", sortOrder: 16 },
+  { groupCode: "salaries", code: "gr_salaries", name: "Μισθοί", sortOrder: 17 },
+  {
+    groupCode: "employee_benefits",
+    code: "gr_employee_benefits",
+    name: "Παροχές εργαζομένων",
+    sortOrder: 18,
+  },
+  {
+    groupCode: "repairs_maintenance",
+    code: "gr_repairs",
+    name: "Επισκευή & συντήρηση",
+    sortOrder: 19,
+  },
+  {
+    groupCode: "purchases",
+    code: "gr_purchases",
+    name: "Αγορές & απόθεμα",
+    sortOrder: 20,
+  },
 ];
 
 const DE_CATEGORIES: SeedCategoryData[] = [
@@ -187,6 +206,30 @@ const DE_CATEGORIES: SeedCategoryData[] = [
     name: "Sonstige Ausgaben",
     sortOrder: 16,
   },
+  {
+    groupCode: "salaries",
+    code: "de_salaries",
+    name: "Gehälter",
+    sortOrder: 17,
+  },
+  {
+    groupCode: "employee_benefits",
+    code: "de_employee_benefits",
+    name: "Mitarbeiter-Leistungen",
+    sortOrder: 18,
+  },
+  {
+    groupCode: "repairs_maintenance",
+    code: "de_repairs",
+    name: "Reparatur & Wartung",
+    sortOrder: 19,
+  },
+  {
+    groupCode: "purchases",
+    code: "de_purchases",
+    name: "Einkäufe & Lager",
+    sortOrder: 20,
+  },
 ];
 
 const INTL_CATEGORIES: SeedCategoryData[] = [
@@ -271,6 +314,30 @@ const INTL_CATEGORIES: SeedCategoryData[] = [
     sortOrder: 15,
   },
   { groupCode: "other", code: "int_other", name: "Other", sortOrder: 16 },
+  {
+    groupCode: "salaries",
+    code: "int_salaries",
+    name: "Salaries",
+    sortOrder: 17,
+  },
+  {
+    groupCode: "employee_benefits",
+    code: "int_employee_benefits",
+    name: "Employee Benefits",
+    sortOrder: 18,
+  },
+  {
+    groupCode: "repairs_maintenance",
+    code: "int_repairs",
+    name: "Repairs & Maintenance",
+    sortOrder: 19,
+  },
+  {
+    groupCode: "purchases",
+    code: "int_purchases",
+    name: "Purchases & Inventory",
+    sortOrder: 20,
+  },
 ];
 
 const COUNTRY_SEED_MAP: Record<string, SeedCategoryData[]> = {

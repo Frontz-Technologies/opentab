@@ -5,7 +5,19 @@ import {
   integer,
   boolean,
   timestamp,
+  pgEnum,
 } from "drizzle-orm/pg-core";
+
+// Accounting classification for expense groups. Drives P&L grouping,
+// VAT-report splits (input VAT on purchases vs. operating), and (future)
+// GL-account routing. Applied universally — GAAP + IFRS agree on this
+// COGS / OpEx / Asset / Other split. See #140.
+export const expenseGroupTypeEnum = pgEnum("expense_group_type", [
+  "operating_expense",
+  "purchase",
+  "asset",
+  "other",
+]);
 
 export const expenseGroups = pgTable("expense_group", {
   code: varchar("code", { length: 30 }).primaryKey(),
@@ -17,11 +29,14 @@ export const expenseGroups = pgTable("expense_group", {
   icon: varchar("icon", { length: 50 }),
   sortOrder: integer("sort_order").notNull().default(0),
   active: boolean("active").notNull().default(true),
+  type: expenseGroupTypeEnum("type").notNull().default("operating_expense"),
+  typeColor: varchar("type_color", { length: 7 }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 export type ExpenseGroup = typeof expenseGroups.$inferSelect;
 export type NewExpenseGroup = typeof expenseGroups.$inferInsert;
+export type ExpenseGroupType = (typeof expenseGroupTypeEnum.enumValues)[number];
 
 export const EXPENSE_GROUPS_SEED: NewExpenseGroup[] = [
   {
@@ -31,6 +46,7 @@ export const EXPENSE_GROUPS_SEED: NewExpenseGroup[] = [
     nameEl: "Ενοίκιο & Leasing",
     nameDe: "Miete & Leasing",
     sortOrder: 1,
+    type: "operating_expense",
   },
   {
     code: "utilities",
@@ -39,6 +55,7 @@ export const EXPENSE_GROUPS_SEED: NewExpenseGroup[] = [
     nameEl: "Κοινόχρηστα",
     nameDe: "Nebenkosten",
     sortOrder: 2,
+    type: "operating_expense",
   },
   {
     code: "telecom",
@@ -47,6 +64,7 @@ export const EXPENSE_GROUPS_SEED: NewExpenseGroup[] = [
     nameEl: "Τηλεπικοινωνίες",
     nameDe: "Telefon & Internet",
     sortOrder: 3,
+    type: "operating_expense",
   },
   {
     code: "office_supplies",
@@ -55,6 +73,7 @@ export const EXPENSE_GROUPS_SEED: NewExpenseGroup[] = [
     nameEl: "Αναλώσιμα γραφείου",
     nameDe: "Büromaterial",
     sortOrder: 4,
+    type: "operating_expense",
   },
   {
     code: "software",
@@ -63,6 +82,7 @@ export const EXPENSE_GROUPS_SEED: NewExpenseGroup[] = [
     nameEl: "Λογισμικό & συνδρομές",
     nameDe: "Software & Abos",
     sortOrder: 5,
+    type: "operating_expense",
   },
   {
     code: "hardware",
@@ -71,6 +91,7 @@ export const EXPENSE_GROUPS_SEED: NewExpenseGroup[] = [
     nameEl: "Εξοπλισμός & hardware",
     nameDe: "Hardware & Geräte",
     sortOrder: 6,
+    type: "operating_expense",
   },
   {
     code: "professional_services",
@@ -79,6 +100,7 @@ export const EXPENSE_GROUPS_SEED: NewExpenseGroup[] = [
     nameEl: "Επαγγελματικές υπηρεσίες",
     nameDe: "Beratung & Buchhaltung",
     sortOrder: 7,
+    type: "operating_expense",
   },
   {
     code: "marketing",
@@ -87,6 +109,7 @@ export const EXPENSE_GROUPS_SEED: NewExpenseGroup[] = [
     nameEl: "Διαφήμιση & marketing",
     nameDe: "Werbung & Marketing",
     sortOrder: 8,
+    type: "operating_expense",
   },
   {
     code: "travel",
@@ -95,6 +118,7 @@ export const EXPENSE_GROUPS_SEED: NewExpenseGroup[] = [
     nameEl: "Ταξίδια",
     nameDe: "Reisekosten",
     sortOrder: 9,
+    type: "operating_expense",
   },
   {
     code: "transport",
@@ -103,6 +127,7 @@ export const EXPENSE_GROUPS_SEED: NewExpenseGroup[] = [
     nameEl: "Μεταφορικά",
     nameDe: "Fahrtkosten",
     sortOrder: 10,
+    type: "operating_expense",
   },
   {
     code: "insurance",
@@ -111,6 +136,7 @@ export const EXPENSE_GROUPS_SEED: NewExpenseGroup[] = [
     nameEl: "Ασφάλιστρα",
     nameDe: "Versicherungen",
     sortOrder: 11,
+    type: "operating_expense",
   },
   {
     code: "meals_entertainment",
@@ -119,6 +145,7 @@ export const EXPENSE_GROUPS_SEED: NewExpenseGroup[] = [
     nameEl: "Γεύματα & φιλοξενία",
     nameDe: "Bewirtung",
     sortOrder: 12,
+    type: "operating_expense",
   },
   {
     code: "bank_fees",
@@ -127,6 +154,7 @@ export const EXPENSE_GROUPS_SEED: NewExpenseGroup[] = [
     nameEl: "Τραπεζικά έξοδα",
     nameDe: "Bankgebühren",
     sortOrder: 13,
+    type: "operating_expense",
   },
   {
     code: "training",
@@ -135,6 +163,7 @@ export const EXPENSE_GROUPS_SEED: NewExpenseGroup[] = [
     nameEl: "Εκπαίδευση",
     nameDe: "Fortbildung",
     sortOrder: 14,
+    type: "operating_expense",
   },
   {
     code: "taxes_contributions",
@@ -143,6 +172,7 @@ export const EXPENSE_GROUPS_SEED: NewExpenseGroup[] = [
     nameEl: "Φόροι & εισφορές",
     nameDe: "Steuern & Beiträge",
     sortOrder: 15,
+    type: "other",
   },
   {
     code: "other",
@@ -151,5 +181,43 @@ export const EXPENSE_GROUPS_SEED: NewExpenseGroup[] = [
     nameEl: "Λοιπά έξοδα",
     nameDe: "Sonstige Ausgaben",
     sortOrder: 16,
+    type: "other",
+  },
+  // New groups added in #140 — universal to every country seed.
+  {
+    code: "salaries",
+    nameEn: "Salaries",
+    nameEs: "Salarios",
+    nameEl: "Μισθοί",
+    nameDe: "Gehälter",
+    sortOrder: 17,
+    type: "operating_expense",
+  },
+  {
+    code: "employee_benefits",
+    nameEn: "Employee Benefits",
+    nameEs: "Beneficios para empleados",
+    nameEl: "Παροχές εργαζομένων",
+    nameDe: "Mitarbeiter-Leistungen",
+    sortOrder: 18,
+    type: "operating_expense",
+  },
+  {
+    code: "repairs_maintenance",
+    nameEn: "Repairs & Maintenance",
+    nameEs: "Reparaciones y mantenimiento",
+    nameEl: "Επισκευή & συντήρηση",
+    nameDe: "Reparatur & Wartung",
+    sortOrder: 19,
+    type: "operating_expense",
+  },
+  {
+    code: "purchases",
+    nameEn: "Purchases & Inventory",
+    nameEs: "Compras e inventario",
+    nameEl: "Αγορές & απόθεμα",
+    nameDe: "Einkäufe & Lager",
+    sortOrder: 20,
+    type: "purchase",
   },
 ];

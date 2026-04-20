@@ -16,6 +16,7 @@ import {
   type LineItem,
 } from "@/components/invoicing/line-items-builder";
 import { buildAutofilledLineItems } from "@/lib/expenses/autofill-line-items";
+import { GROUP_TYPE_MARKER } from "@/lib/expenses/group-type";
 import {
   createExpense,
   uploadAndExtractReceipt,
@@ -425,7 +426,10 @@ export function ExpenseForm({
               {groupedCategories
                 .filter((g) => g.items.length > 0)
                 .map((g) => (
-                  <optgroup key={g.group.code} label={g.group.nameEn}>
+                  <optgroup
+                    key={g.group.code}
+                    label={`${GROUP_TYPE_MARKER[g.group.type]} ${g.group.nameEn}`}
+                  >
                     {g.items.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.name}

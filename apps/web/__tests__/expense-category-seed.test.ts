@@ -39,10 +39,10 @@ describe("seedExpenseCategories race safety (#170)", () => {
       .select()
       .from(expenseCategories)
       .where(eq(expenseCategories.orgId, org.id));
-    expect(cats.length).toBe(16);
+    expect(cats.length).toBe(20);
 
     const groups = await db.select().from(expenseGroups);
-    expect(groups.length).toBe(16);
+    expect(groups.length).toBe(20);
   });
 
   it("two concurrent calls for different orgs do not collide on the global expense_group seed", async () => {
@@ -63,7 +63,7 @@ describe("seedExpenseCategories race safety (#170)", () => {
     ).resolves.not.toThrow();
 
     const groups = await db.select().from(expenseGroups);
-    expect(groups.length).toBe(16);
+    expect(groups.length).toBe(20);
   });
 
   it("subsequent calls for the same org are idempotent (early-return)", async () => {
@@ -80,6 +80,6 @@ describe("seedExpenseCategories race safety (#170)", () => {
       .select()
       .from(expenseCategories)
       .where(eq(expenseCategories.orgId, org.id));
-    expect(cats.length).toBe(16);
+    expect(cats.length).toBe(20);
   });
 });
