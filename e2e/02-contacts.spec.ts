@@ -28,7 +28,12 @@ test.describe("Contacts", () => {
       page.getByRole("heading", { name: "Contacts", exact: true }),
     ).toBeVisible();
     await expect(page.getByText("No contacts yet")).toBeVisible();
-    await expect(page.getByRole("link", { name: "Add Contact" })).toBeVisible();
+    // Two "Add Contact" links render on the empty-state page: the
+    // header CTA and the empty-state body CTA. Assert that at least
+    // one is visible rather than triggering strict-mode on the pair.
+    await expect(
+      page.getByRole("link", { name: "Add Contact" }).first(),
+    ).toBeVisible();
   });
 
   test("contacts list has search and type filters", async () => {

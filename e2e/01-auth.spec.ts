@@ -86,7 +86,12 @@ test.describe("Authentication", () => {
       { name: "sidebar_state", value: "true", url: page.url() },
     ]);
     await page.reload();
-    await expect(page.getByText(`${TEST_USER.name}'s Company`)).toBeVisible();
+    // Scope to the sidebar's org-name slot via data-testid and check
+    // DOM text content — `truncate` on the span can confuse a plain
+    // `getByText(...).toBeVisible()` when the container is narrow.
+    await expect(page.getByTestId("sidebar-org-name")).toContainText(
+      `${TEST_USER.name}'s Company`,
+    );
   });
 
   test.skip("logout and login again — dropdown trigger needs data-testid", async () => {

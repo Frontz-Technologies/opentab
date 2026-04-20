@@ -13,6 +13,12 @@ test.describe("Reports", () => {
     } catch {
       await loginTestUser(page);
     }
+    // Expand the sidebar so nav-link labels enter the accessible-name
+    // tree; the first test clicks the Reports link via `getByRole`.
+    // Same pattern used in 04-navigation.spec.ts.
+    await page
+      .context()
+      .addCookies([{ name: "sidebar_state", value: "true", url: page.url() }]);
   });
 
   test.afterAll(async () => {

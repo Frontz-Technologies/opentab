@@ -99,7 +99,10 @@ export function AppSidebar({ orgName, integrationNav }: AppSidebarProps) {
               <span className="font-headline font-semibold text-on-surface text-sm leading-tight">
                 OpenTab
               </span>
-              <span className="text-on-surface/50 text-xs truncate leading-tight">
+              <span
+                data-testid="sidebar-org-name"
+                className="text-on-surface/50 text-xs truncate leading-tight"
+              >
                 {orgName}
               </span>
             </div>
