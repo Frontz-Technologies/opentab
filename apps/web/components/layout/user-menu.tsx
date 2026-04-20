@@ -72,7 +72,7 @@ export function UserMenu({ name, email }: UserMenuProps) {
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={handleLogout}
-          className="flex items-center gap-2 cursor-pointer text-tertiary-container focus:text-tertiary-container"
+          className="flex items-center gap-2 cursor-pointer text-tertiary focus:text-tertiary"
         >
           <span className="material-symbols-outlined text-[16px] leading-none">
             logout

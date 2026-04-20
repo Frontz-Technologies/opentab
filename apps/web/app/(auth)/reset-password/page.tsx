@@ -3,6 +3,7 @@
 import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +12,7 @@ import { Label } from "@/components/ui/label";
 function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations("auth");
   const token = searchParams.get("token") ?? "";
 
   const [password, setPassword] = useState("");
@@ -23,17 +25,17 @@ function ResetPasswordForm() {
     setError("");
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError(t("passwordMismatch"));
       return;
     }
 
     if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
+      setError(t("passwordTooShort"));
       return;
     }
 
     if (!token) {
-      setError("Invalid or expired reset link. Please request a new one.");
+      setError(t("invalidLinkInline"));
       return;
     }
 
@@ -45,15 +47,12 @@ function ResetPasswordForm() {
         token,
       });
       if (result.error) {
-        setError(
-          result.error.message ??
-            "Failed to reset password. The link may have expired.",
-        );
+        setError(result.error.message ?? t("resetFailed"));
       } else {
         router.push("/login");
       }
     } catch {
-      setError("Something went wrong. Please try again.");
+      setError(t("somethingWentWrong"));
     } finally {
       setLoading(false);
     }
@@ -73,16 +72,14 @@ function ResetPasswordForm() {
           </span>
         </div>
         <h1 className="font-headline text-3xl font-bold text-on-surface mb-2">
-          Invalid link
+          {t("invalidLinkTitle")}
         </h1>
-        <p className="text-on-surface-variant mb-6">
-          This password reset link is invalid or has expired.
-        </p>
+        <p className="text-on-surface-variant mb-6">{t("invalidLinkBody")}</p>
         <Link
           href="/forgot-password"
           className="text-primary hover:text-primary-container transition-colors text-sm font-medium"
         >
-          Request a new reset link →
+          {t("requestNewLink")} →
         </Link>
       </div>
     );
@@ -103,14 +100,12 @@ function ResetPasswordForm() {
       </div>
 
       <h1 className="font-headline text-3xl font-bold text-on-surface mb-2">
-        Set new password
+        {t("resetTitle")}
       </h1>
-      <p className="text-on-surface-variant mb-8">
-        Choose a strong password for your account.
-      </p>
+      <p className="text-on-surface-variant mb-8">{t("resetDescription")}</p>
 
       {error && (
-        <div className="p-4 rounded-xl bg-error-container/20 text-tertiary-container text-sm mb-6">
+        <div className="p-4 rounded-xl bg-tertiary-container/20 text-on-tertiary-container text-sm mb-6">
           {error}
         </div>
       )}
@@ -118,12 +113,12 @@ function ResetPasswordForm() {
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-2">
           <Label htmlFor="password" className="text-on-surface-variant">
-            New password
+            {t("resetNewLabel")}
           </Label>
           <Input
             id="password"
             type="password"
-            placeholder="At least 8 characters"
+            placeholder={t("passwordAtLeast8")}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -133,7 +128,7 @@ function ResetPasswordForm() {
 
         <div className="space-y-2">
           <Label htmlFor="confirmPassword" className="text-on-surface-variant">
-            Confirm new password
+            {t("resetConfirmLabel")}
           </Label>
           <Input
             id="confirmPassword"
@@ -151,7 +146,7 @@ function ResetPasswordForm() {
           disabled={loading}
           className="w-full h-12 btn-gradient text-on-primary font-bold text-base border-none hover:opacity-90"
         >
-          {loading ? "Updating…" : "Update password"}
+          {loading ? t("updating") : t("updatePassword")}
         </Button>
       </form>
 
@@ -160,7 +155,7 @@ function ResetPasswordForm() {
           href="/login"
           className="text-primary hover:text-primary-container transition-colors font-medium"
         >
-          ← Back to sign in
+          ← {t("backToSignIn")}
         </Link>
       </p>
     </div>

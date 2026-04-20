@@ -25,19 +25,19 @@ export default function LoginPage() {
     try {
       const result = await signIn.email({ email, password });
       if (result.error) {
-        setError(result.error.message ?? "Invalid email or password.");
+        setError(result.error.message ?? t("invalidCredentials"));
       } else {
         router.push("/dashboard");
       }
     } catch {
-      setError("Something went wrong. Please try again.");
+      setError(t("somethingWentWrong"));
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div>
+    <div className="bg-surface-container-low rounded-2xl p-8">
       {/* Mobile logo — hidden on desktop */}
       <div className="flex lg:hidden items-center gap-3 mb-8">
         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center">
@@ -53,12 +53,10 @@ export default function LoginPage() {
       <h1 className="font-headline text-3xl font-bold text-on-surface mb-2">
         {t("welcomeBack")}
       </h1>
-      <p className="text-on-surface-variant mb-8">
-        Sign in to your account to continue.
-      </p>
+      <p className="text-on-surface-variant mb-8">{t("loginSubtitle")}</p>
 
       {error && (
-        <div className="p-4 rounded-xl bg-error-container/20 text-tertiary-container text-sm mb-6">
+        <div className="p-4 rounded-xl bg-tertiary-container/20 text-on-tertiary-container text-sm mb-6">
           {error}
         </div>
       )}
@@ -71,7 +69,7 @@ export default function LoginPage() {
           <Input
             id="email"
             type="email"
-            placeholder="you@example.com"
+            placeholder={t("emailPlaceholder")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -107,7 +105,7 @@ export default function LoginPage() {
           disabled={loading}
           className="w-full h-12 btn-gradient text-on-primary font-bold text-base border-none hover:opacity-90"
         >
-          {loading ? "Signing in…" : t("login")}
+          {loading ? t("signingIn") : t("login")}
         </Button>
       </form>
 
@@ -121,14 +119,14 @@ export default function LoginPage() {
         </Link>
       </p>
 
-      <p className="mt-4 text-center text-on-surface-variant/40 text-xs">
+      <p className="mt-4 text-center text-on-surface-variant/60 text-xs">
         <a
           href="https://opentab.tech/terms"
           target="_blank"
           rel="noopener noreferrer"
           className="hover:text-on-surface-variant transition-colors"
         >
-          Terms
+          {t("terms")}
         </a>
         {" · "}
         <a
@@ -137,7 +135,7 @@ export default function LoginPage() {
           rel="noopener noreferrer"
           className="hover:text-on-surface-variant transition-colors"
         >
-          Privacy
+          {t("privacy")}
         </a>
       </p>
     </div>

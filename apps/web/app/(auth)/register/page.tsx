@@ -24,12 +24,12 @@ export default function RegisterPage() {
     setError("");
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError(t("passwordMismatch"));
       return;
     }
 
     if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
+      setError(t("passwordTooShort"));
       return;
     }
 
@@ -38,19 +38,19 @@ export default function RegisterPage() {
     try {
       const result = await signUp.email({ name, email, password });
       if (result.error) {
-        setError(result.error.message ?? "Failed to create account.");
+        setError(result.error.message ?? t("signUpFailed"));
       } else {
         router.push("/dashboard");
       }
     } catch {
-      setError("Something went wrong. Please try again.");
+      setError(t("somethingWentWrong"));
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div>
+    <div className="bg-surface-container-low rounded-2xl p-8">
       {/* Mobile logo — hidden on desktop */}
       <div className="flex lg:hidden items-center gap-3 mb-8">
         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center">
@@ -66,12 +66,10 @@ export default function RegisterPage() {
       <h1 className="font-headline text-3xl font-bold text-on-surface mb-2">
         {t("createYourAccount")}
       </h1>
-      <p className="text-on-surface-variant mb-8">
-        Get started with OpenTab for free.
-      </p>
+      <p className="text-on-surface-variant mb-8">{t("registerSubtitle")}</p>
 
       {error && (
-        <div className="p-4 rounded-xl bg-error-container/20 text-tertiary-container text-sm mb-6">
+        <div className="p-4 rounded-xl bg-tertiary-container/20 text-on-tertiary-container text-sm mb-6">
           {error}
         </div>
       )}
@@ -84,7 +82,7 @@ export default function RegisterPage() {
           <Input
             id="name"
             type="text"
-            placeholder="Jane Smith"
+            placeholder={t("namePlaceholder")}
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
@@ -99,7 +97,7 @@ export default function RegisterPage() {
           <Input
             id="email"
             type="email"
-            placeholder="you@example.com"
+            placeholder={t("emailPlaceholder")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -114,7 +112,7 @@ export default function RegisterPage() {
           <Input
             id="password"
             type="password"
-            placeholder="At least 8 characters"
+            placeholder={t("passwordAtLeast8")}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -138,25 +136,28 @@ export default function RegisterPage() {
         </div>
 
         <p className="text-xs text-on-surface-variant/60 text-center">
-          By creating an account you agree to our{" "}
-          <a
-            href="https://opentab.tech/terms"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary hover:text-primary-container transition-colors"
-          >
-            Terms of Service
-          </a>{" "}
-          and{" "}
-          <a
-            href="https://opentab.tech/privacy"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary hover:text-primary-container transition-colors"
-          >
-            Privacy Policy
-          </a>
-          .
+          {t.rich("legalConsent", {
+            terms: (chunks) => (
+              <a
+                href="https://opentab.tech/terms"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:text-primary-container transition-colors"
+              >
+                {chunks}
+              </a>
+            ),
+            privacy: (chunks) => (
+              <a
+                href="https://opentab.tech/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:text-primary-container transition-colors"
+              >
+                {chunks}
+              </a>
+            ),
+          })}
         </p>
 
         <Button
@@ -164,7 +165,7 @@ export default function RegisterPage() {
           disabled={loading}
           className="w-full h-12 btn-gradient text-on-primary font-bold text-base border-none hover:opacity-90"
         >
-          {loading ? "Creating account…" : t("register")}
+          {loading ? t("creatingAccount") : t("register")}
         </Button>
       </form>
 
