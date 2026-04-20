@@ -32,17 +32,17 @@ export interface CategoryHint {
   name: string;
 }
 
-/** Coerce any scalar value to string or null. No z.undefined() — that
- * value cannot be represented in JSON Schema and crashes the AI SDK's
- * Zod → JSON Schema converter. .optional() on the outer field already
- * handles the missing-key case. */
-const coerceString = z
-  .union([z.string(), z.number(), z.null()])
-  .transform((v) => (v != null ? String(v) : null));
-
-const coerceStringRequired = z
-  .union([z.string(), z.number()])
-  .transform((v) => String(v));
+/**
+ * Build the extraction schema.
+ *
+ * IMPORTANT: Zod v4's `z.toJSONSchema()` (which AI SDK v6 invokes under
+ * the hood when `generateObject({ schema })` is called) cannot represent
+ * `.transform()` — it throws "Transforms cannot be represented in JSON
+ * Schema". Keep this schema pure data-shape: scalar types, unions,
+ * arrays, enums, nullable. All coercion (e.g. number → string) happens
+ * post-parse in `normalizeExtractedData`.
+ */
+const scalar = z.union([z.string(), z.number(), z.null()]);
 
 export function buildExtractionSchema(categoryCodes: readonly string[]) {
   const categoryField =
@@ -51,29 +51,76 @@ export function buildExtractionSchema(categoryCodes: readonly string[]) {
           .enum(categoryCodes as unknown as [string, ...string[]])
           .nullable()
           .optional()
-          .default(null)
-      : z.null().optional().default(null);
+      : z.null().optional();
 
   return z.object({
-    vendorName: coerceString.optional().default(null),
-    vendorVat: coerceString.optional().default(null),
-    date: coerceString.optional().default(null),
-    totalAmount: coerceString.optional().default(null),
-    currency: coerceString.optional().default(null),
-    description: coerceString.optional().default(null),
+    vendorName: scalar.optional(),
+    vendorVat: scalar.optional(),
+    date: scalar.optional(),
+    totalAmount: scalar.optional(),
+    currency: scalar.optional(),
+    description: scalar.optional(),
     categoryCode: categoryField,
     lineItems: z
       .array(
         z.object({
-          name: coerceStringRequired.optional().default(""),
-          quantity: coerceStringRequired.optional().default("1"),
-          unitPrice: coerceStringRequired.optional().default("0"),
-          taxRate: coerceStringRequired.optional().default("0"),
+          name: scalar.optional(),
+          quantity: scalar.optional(),
+          unitPrice: scalar.optional(),
+          taxRate: scalar.optional(),
         }),
       )
-      .optional()
-      .default([]),
+      .optional(),
   });
+}
+
+function coerceStringOrNull(v: unknown): string | null {
+  if (v == null) return null;
+  if (typeof v === "string") return v;
+  if (typeof v === "number") return String(v);
+  return null;
+}
+
+function coerceString(v: unknown, fallback: string): string {
+  if (v == null) return fallback;
+  if (typeof v === "string") return v;
+  if (typeof v === "number") return String(v);
+  return fallback;
+}
+
+/** Post-parse normalization — the Zod schema deliberately keeps raw
+ * shape (union of string|number|null); this function turns it into the
+ * tidy string-or-null form consumers expect. */
+export function normalizeExtractedData(raw: {
+  vendorName?: string | number | null;
+  vendorVat?: string | number | null;
+  date?: string | number | null;
+  totalAmount?: string | number | null;
+  currency?: string | number | null;
+  description?: string | number | null;
+  categoryCode?: string | null;
+  lineItems?: {
+    name?: string | number | null;
+    quantity?: string | number | null;
+    unitPrice?: string | number | null;
+    taxRate?: string | number | null;
+  }[];
+}): ExtractedExpenseData {
+  return {
+    vendorName: coerceStringOrNull(raw.vendorName),
+    vendorVat: coerceStringOrNull(raw.vendorVat),
+    date: coerceStringOrNull(raw.date),
+    totalAmount: coerceStringOrNull(raw.totalAmount),
+    currency: coerceStringOrNull(raw.currency),
+    description: coerceStringOrNull(raw.description),
+    categoryCode: raw.categoryCode ?? null,
+    lineItems: (raw.lineItems ?? []).map((li) => ({
+      name: coerceString(li.name, ""),
+      quantity: coerceString(li.quantity, "1"),
+      unitPrice: coerceString(li.unitPrice, "0"),
+      taxRate: coerceString(li.taxRate, "0"),
+    })),
+  };
 }
 
 /**
@@ -189,7 +236,6 @@ export async function extractReceiptData(
     const provider = createAiProvider(apiKey, model);
     const messages = [{ role: "user" as const, content: content as any }];
 
-    // Try structured output first (mode: json injects schema into prompt)
     const aiTimer = log.time("ai-api-call");
     try {
       const result = await generateObject({
@@ -198,21 +244,19 @@ export async function extractReceiptData(
         messages,
         maxOutputTokens: 2000,
       });
-      const data = result.object as z.infer<
-        ReturnType<typeof buildExtractionSchema>
-      >;
+      const normalized = normalizeExtractedData(result.object);
       aiTimer("structured extraction succeeded", {
         model,
         mode: "generateObject",
       });
       log.info("extraction result", {
         model,
-        hasVendor: !!data.vendorName,
-        hasTotal: !!data.totalAmount,
-        hasCategory: !!data.categoryCode,
-        lineItemCount: data.lineItems.length,
+        hasVendor: !!normalized.vendorName,
+        hasTotal: !!normalized.totalAmount,
+        hasCategory: !!normalized.categoryCode,
+        lineItemCount: normalized.lineItems.length,
       });
-      return data;
+      return normalized;
     } catch (structuredErr) {
       if (!NoObjectGeneratedError.isInstance(structuredErr))
         throw structuredErr;
@@ -235,17 +279,18 @@ export async function extractReceiptData(
       .replace(/```\n?/g, "")
       .trim();
     const raw = JSON.parse(cleaned);
-    const data = extractionSchema.parse(raw);
+    const parsed = extractionSchema.parse(raw);
+    const normalized = normalizeExtractedData(parsed);
 
     log.info("extraction result (fallback)", {
       model,
-      hasVendor: !!data.vendorName,
-      hasTotal: !!data.totalAmount,
-      hasCategory: !!data.categoryCode,
-      lineItemCount: data.lineItems.length,
+      hasVendor: !!normalized.vendorName,
+      hasTotal: !!normalized.totalAmount,
+      hasCategory: !!normalized.categoryCode,
+      lineItemCount: normalized.lineItems.length,
     });
 
-    return data;
+    return normalized;
   } catch (err) {
     log.error("extraction failed", {
       model,

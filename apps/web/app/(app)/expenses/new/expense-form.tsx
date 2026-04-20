@@ -304,8 +304,14 @@ export function ExpenseForm({
             </div>
 
             {showNoDataNotice && (
-              <div className="flex items-start gap-3 rounded-lg bg-surface-container-high px-4 py-3">
-                <span className="material-symbols-outlined text-on-surface-variant text-[20px]">
+              <div
+                role="status"
+                className="flex items-start gap-3 rounded-lg bg-surface-container-high px-4 py-3"
+              >
+                <span
+                  aria-hidden="true"
+                  className="material-symbols-outlined text-on-surface-variant text-[20px]"
+                >
                   info
                 </span>
                 <div className="flex-1 space-y-1">
@@ -320,9 +326,13 @@ export function ExpenseForm({
                   variant="ghost"
                   size="sm"
                   type="button"
+                  aria-label={t("dismiss")}
                   onClick={() => setShowNoDataNotice(false)}
                 >
-                  <span className="material-symbols-outlined text-[16px]">
+                  <span
+                    aria-hidden="true"
+                    className="material-symbols-outlined text-[16px]"
+                  >
                     close
                   </span>
                 </Button>
