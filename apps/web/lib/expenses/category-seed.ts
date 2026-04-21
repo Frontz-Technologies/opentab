@@ -1,6 +1,6 @@
 import { db as defaultDb } from "@/lib/db";
 import { expenseCategories } from "@opentab/db/schema";
-import { eq, count } from "drizzle-orm";
+import { eq, count, sql } from "drizzle-orm";
 
 type Db = typeof defaultDb;
 
@@ -98,6 +98,25 @@ const GR_CATEGORIES: SeedCategoryData[] = [
     sortOrder: 15,
   },
   { groupCode: "other", code: "gr_other", name: "Λοιπά έξοδα", sortOrder: 16 },
+  { groupCode: "salaries", code: "gr_salaries", name: "Μισθοί", sortOrder: 17 },
+  {
+    groupCode: "employee_benefits",
+    code: "gr_employee_benefits",
+    name: "Παροχές εργαζομένων",
+    sortOrder: 18,
+  },
+  {
+    groupCode: "repairs_maintenance",
+    code: "gr_repairs",
+    name: "Επισκευή & συντήρηση",
+    sortOrder: 19,
+  },
+  {
+    groupCode: "purchases",
+    code: "gr_purchases",
+    name: "Αγορές & απόθεμα",
+    sortOrder: 20,
+  },
 ];
 
 const DE_CATEGORIES: SeedCategoryData[] = [
@@ -187,6 +206,30 @@ const DE_CATEGORIES: SeedCategoryData[] = [
     name: "Sonstige Ausgaben",
     sortOrder: 16,
   },
+  {
+    groupCode: "salaries",
+    code: "de_salaries",
+    name: "Gehälter",
+    sortOrder: 17,
+  },
+  {
+    groupCode: "employee_benefits",
+    code: "de_employee_benefits",
+    name: "Mitarbeiter-Leistungen",
+    sortOrder: 18,
+  },
+  {
+    groupCode: "repairs_maintenance",
+    code: "de_repairs",
+    name: "Reparatur & Wartung",
+    sortOrder: 19,
+  },
+  {
+    groupCode: "purchases",
+    code: "de_purchases",
+    name: "Einkäufe & Lager",
+    sortOrder: 20,
+  },
 ];
 
 const INTL_CATEGORIES: SeedCategoryData[] = [
@@ -271,6 +314,30 @@ const INTL_CATEGORIES: SeedCategoryData[] = [
     sortOrder: 15,
   },
   { groupCode: "other", code: "int_other", name: "Other", sortOrder: 16 },
+  {
+    groupCode: "salaries",
+    code: "int_salaries",
+    name: "Salaries",
+    sortOrder: 17,
+  },
+  {
+    groupCode: "employee_benefits",
+    code: "int_employee_benefits",
+    name: "Employee Benefits",
+    sortOrder: 18,
+  },
+  {
+    groupCode: "repairs_maintenance",
+    code: "int_repairs",
+    name: "Repairs & Maintenance",
+    sortOrder: 19,
+  },
+  {
+    groupCode: "purchases",
+    code: "int_purchases",
+    name: "Purchases & Inventory",
+    sortOrder: 20,
+  },
 ];
 
 const COUNTRY_SEED_MAP: Record<string, SeedCategoryData[]> = {
@@ -290,16 +357,31 @@ export async function seedExpenseCategories(
 
   if (result.value > 0) return;
 
-  // Ensure expense groups are seeded (system table, idempotent)
+  // Ensure expense groups are seeded (system table). Upsert so:
+  //   - Any new rows added to EXPENSE_GROUPS_SEED over time get inserted.
+  //   - Any row-level changes to type/name/etc. overwrite the existing
+  //     row on re-run.
+  // The prior "if groupCount === 0, insert" gate meant an environment
+  // that already had the first-wave 16 groups would never see the new
+  // groups or `type` values added in later waves — see #140 tester
+  // follow-up.
   const { expenseGroups, EXPENSE_GROUPS_SEED } =
     await import("@opentab/db/schema");
-  const [groupCount] = await db.select({ value: count() }).from(expenseGroups);
-  if (groupCount.value === 0) {
-    await db
-      .insert(expenseGroups)
-      .values(EXPENSE_GROUPS_SEED)
-      .onConflictDoNothing();
-  }
+  await db
+    .insert(expenseGroups)
+    .values(EXPENSE_GROUPS_SEED)
+    .onConflictDoUpdate({
+      target: expenseGroups.code,
+      set: {
+        nameEn: sql`excluded.name_en`,
+        nameEs: sql`excluded.name_es`,
+        nameEl: sql`excluded.name_el`,
+        nameDe: sql`excluded.name_de`,
+        sortOrder: sql`excluded.sort_order`,
+        type: sql`excluded.type`,
+        typeColor: sql`excluded.type_color`,
+      },
+    });
 
   const seed = COUNTRY_SEED_MAP[countryCode ?? ""] ?? INTL_CATEGORIES;
 
