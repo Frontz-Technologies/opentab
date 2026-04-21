@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { getSession } from "@/lib/session";
 import { PageHeader } from "@/components/layout/page-header";
 import { AccountForm } from "./account-form";
+import { DemoResetPanel } from "./demo-reset-panel";
 
 export default async function AccountSettingsPage() {
   const session = await getSession();
@@ -10,6 +11,10 @@ export default async function AccountSettingsPage() {
 
   const t = await getTranslations("settingsAccount");
   const tNav = await getTranslations("nav");
+  const showDemoReset =
+    session.org.isDemo &&
+    session.role === "owner" &&
+    process.env.DEMO_SAMPLE_DATA_ENABLED === "true";
 
   return (
     <>
@@ -27,6 +32,7 @@ export default async function AccountSettingsPage() {
             email: session.user.email,
           }}
         />
+        {showDemoReset && <DemoResetPanel />}
       </main>
     </>
   );

@@ -22,6 +22,7 @@ export type SessionContext = {
     region: string | null;
     phone: string | null;
     setupCompletedSteps: string[];
+    isDemo: boolean;
   };
   role: "owner" | "admin" | "member" | "accountant";
 };
@@ -72,6 +73,7 @@ export async function getSession(): Promise<SessionContext | null> {
       region: org.region ?? null,
       phone: org.phone ?? null,
       setupCompletedSteps: (org.setupCompletedSteps as string[]) || [],
+      isDemo: org.isDemo,
     },
     role: membership.role as SessionContext["role"],
   };
