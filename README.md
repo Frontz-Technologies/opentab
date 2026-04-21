@@ -34,7 +34,7 @@ Manage your clients and suppliers with automatic VAT validation (Greek ΑΑΔΕ 
 
 ### Built for You
 
-- Dark + light themes with a full design system (glass effects, emerald accents)
+- Dark + light themes with a full design system (glass effects and emerald accents)
 - Shipped in English, Greek, and Spanish
 - Responsive layout — sidebar on desktop, bottom nav on mobile
 - One-command Docker setup for self-hosting
@@ -142,10 +142,13 @@ opentab/
 If you'd rather explore the app before adding your own data, turn on demo mode:
 
 ```bash
+# macOS / Linux (bash/zsh)
 export DEMO_SAMPLE_DATA_ENABLED=true
 export NEXT_PUBLIC_DEMO_SAMPLE_DATA_ENABLED=true
 pnpm dev
 ```
+
+On Windows PowerShell, use `$env:DEMO_SAMPLE_DATA_ENABLED = "true"` (same for the `NEXT_PUBLIC_` one).
 
 The login page will show a **"Try the demo"** card. One click provisions a demo user (`demo@opentab.dev`) with a realistic fictional business — contacts, products, ~48 invoices across 8 months, ~50 expenses — and signs you in. A persistent banner labels the org as sample data; Settings → Account exposes a **Reset demo** button to wipe + re-populate.
 
