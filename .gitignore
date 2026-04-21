@@ -14,3 +14,4 @@ docs/superpowers/
 test-results/
 playwright-report/
 .test-user.json
+*.tsbuildinfo
