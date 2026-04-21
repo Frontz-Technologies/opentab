@@ -6,6 +6,7 @@ import {
   integer,
   jsonb,
   timestamp,
+  boolean,
 } from "drizzle-orm/pg-core";
 
 export const organisations = pgTable("organisation", {
@@ -31,6 +32,11 @@ export const organisations = pgTable("organisation", {
     .notNull()
     .$type<string[]>()
     .default([]),
+  // Flags an organisation as the canonical sample/demo workspace.
+  // Rows with isDemo=true show the persistent demo banner in the app
+  // shell and expose the "Reset demo" button in Settings. Set on the
+  // seed user's org when the deploy opts into DEMO_SAMPLE_DATA_ENABLED.
+  isDemo: boolean("is_demo").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

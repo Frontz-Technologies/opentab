@@ -7,6 +7,7 @@ import { AppSidebar } from "@/components/layout/app-sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { AiChatButton } from "@/components/ai/ai-chat-button";
 import { AiChatPanel } from "@/components/ai/ai-chat-panel";
+import { DemoBanner } from "@/components/demo/demo-banner";
 import { getSession } from "@/lib/session";
 import { getCountryProvider } from "@/lib/country";
 
@@ -46,6 +47,7 @@ export default async function AppLayout({
           integrationNav={integrationNav}
         />
         <SidebarInset className="min-h-screen pb-24 md:pb-0">
+          {session.org.isDemo && <DemoBanner />}
           {children}
         </SidebarInset>
         <AiChatButton />

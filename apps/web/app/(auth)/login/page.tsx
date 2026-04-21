@@ -8,14 +8,20 @@ import { signIn } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { getDemoCredentialsAction } from "./actions";
+
+const DEMO_ENABLED =
+  process.env.NEXT_PUBLIC_DEMO_SAMPLE_DATA_ENABLED === "true";
 
 export default function LoginPage() {
   const router = useRouter();
   const t = useTranslations("auth");
+  const tDemo = useTranslations("demo");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -33,6 +39,33 @@ export default function LoginPage() {
       setError(t("somethingWentWrong"));
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleTryDemo() {
+    setError("");
+    setDemoLoading(true);
+    try {
+      const result = await getDemoCredentialsAction();
+      if ("error" in result) {
+        setError(result.error);
+        return;
+      }
+      setEmail(result.email);
+      setPassword(result.password);
+      const signInResult = await signIn.email({
+        email: result.email,
+        password: result.password,
+      });
+      if (signInResult.error) {
+        setError(signInResult.error.message ?? t("invalidCredentials"));
+      } else {
+        router.push("/dashboard");
+      }
+    } catch {
+      setError(t("somethingWentWrong"));
+    } finally {
+      setDemoLoading(false);
     }
   }
 
@@ -58,6 +91,40 @@ export default function LoginPage() {
       {error && (
         <div className="p-4 rounded-xl bg-tertiary-container/20 text-on-tertiary-container text-sm mb-6">
           {error}
+        </div>
+      )}
+
+      {DEMO_ENABLED && (
+        <div
+          data-testid="login-demo-card"
+          className="mb-6 rounded-xl border border-primary/30 bg-primary-container/10 p-4"
+        >
+          <div className="flex items-start gap-3">
+            <span
+              aria-hidden="true"
+              className="material-symbols-outlined text-primary text-[22px] leading-none mt-0.5"
+            >
+              auto_awesome
+            </span>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-on-surface">
+                {tDemo("loginCardTitle")}
+              </p>
+              <p className="text-xs text-on-surface-variant mt-1">
+                {tDemo("loginCardBody")}
+              </p>
+              <Button
+                type="button"
+                onClick={handleTryDemo}
+                disabled={demoLoading || loading}
+                className="mt-3 h-9 px-4 text-sm"
+              >
+                {demoLoading
+                  ? tDemo("loginCardLoading")
+                  : tDemo("loginCardAction")}
+              </Button>
+            </div>
+          </div>
         </div>
       )}
 

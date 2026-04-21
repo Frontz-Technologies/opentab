@@ -770,5 +770,20 @@
       "deleteSuccess": "Credentials deleted",
       "deleteConfirm": "Delete {label} credentials? Pending transmissions will fail."
     }
+  },
+  "demo": {
+    "loginCardTitle": "Try OpenTab with sample data",
+    "loginCardBody": "Explore invoicing, expenses, and reports with a ready-made sample business. No signup required.",
+    "loginCardAction": "Try the demo",
+    "loginCardLoading": "Preparing demo…",
+    "bannerText": "You're exploring sample data. Numbers, clients, and invoices are fictional.",
+    "bannerAction": "Reset demo",
+    "resetPanelTitle": "Reset demo data",
+    "resetPanelBody": "Wipe the current demo workspace and re-populate it from the original sample narrative. Useful after edits have drifted the demo from its baseline.",
+    "resetPanelAction": "Reset demo",
+    "resetPanelConfirm": "Yes, reset",
+    "resetPanelCancel": "Cancel",
+    "resetPanelLoading": "Resetting…",
+    "resetError": "Reset failed. Try again."
   }
 }
