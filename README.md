@@ -24,7 +24,7 @@ See how your business is doing at a glance — revenue trends, expense breakdown
 
 Submit invoices directly to ΑΑΔΕ with automatic document type resolution, retry logic, and MARK number tracking. QR codes are embedded in your PDFs. Credentials are encrypted with AES-256-GCM.
 
-### AI Assistant (In Progress)
+### AI Assistant
 
 Ask questions about your finances in plain language. The chat panel uses function calling to query your real data — revenue summaries, outstanding invoices, expense breakdowns — and responds with accurate, contextual answers.
 
@@ -34,8 +34,8 @@ Manage your clients and suppliers with automatic VAT validation (Greek ΑΑΔΕ 
 
 ### Built for You
 
-- Dark-only design system with glassmorphism and emerald accents
-- Multi-language ready (English first, Greek and Spanish next)
+- Dark + light themes with a full design system (glass effects, emerald accents)
+- Shipped in English, Greek, and Spanish
 - Responsive layout — sidebar on desktop, bottom nav on mobile
 - One-command Docker setup for self-hosting
 - CI/CD pipeline with automated formatting, linting, testing, and builds
@@ -137,6 +137,20 @@ opentab/
 
    Open [http://localhost:3000](http://localhost:3000) to see the app.
 
+### Try the demo
+
+If you'd rather explore the app before adding your own data, turn on demo mode:
+
+```bash
+export DEMO_SAMPLE_DATA_ENABLED=true
+export NEXT_PUBLIC_DEMO_SAMPLE_DATA_ENABLED=true
+pnpm dev
+```
+
+The login page will show a **"Try the demo"** card. One click provisions a demo user (`demo@opentab.dev`) with a realistic fictional business — contacts, products, ~48 invoices across 8 months, ~50 expenses — and signs you in. A persistent banner labels the org as sample data; Settings → Account exposes a **Reset demo** button to wipe + re-populate.
+
+Leave these flags unset for any real-customer production deployment.
+
 ### Docker
 
 #### Development
@@ -183,16 +197,16 @@ pnpm e2e
 
 ## Roadmap
 
-| Phase | Description                                                | Status      |
-| ----- | ---------------------------------------------------------- | ----------- |
-| 1     | Foundation — Auth, dashboard, settings, design system      | Done        |
-| 2     | Contacts & Products — CRUD, VAT lookup, country support    | Done        |
-| 3     | Invoicing — Creation, PDF, AI emails, quotes, recurring    | Done        |
-| 4     | myDATA — Greek e-invoicing, transmission, MARK/QR          | Done        |
-| 5     | Expenses — AI extraction, categories, recurring, email     | Done        |
-| 6     | Reports — KPIs, charts, P&L, VAT, tax projection           | Done        |
-| 7     | AI Assistant — Chat panel, function calling, financial Q&A | In progress |
-| 8     | Polish — Multi-user, API docs, MCP server, i18n            | Specced     |
+| Phase | Description                                                | Status |
+| ----- | ---------------------------------------------------------- | ------ |
+| 1     | Foundation — Auth, dashboard, settings, design system      | Done   |
+| 2     | Contacts & Products — CRUD, VAT lookup, country support    | Done   |
+| 3     | Invoicing — Creation, PDF, AI emails, quotes, recurring    | Done   |
+| 4     | myDATA — Greek e-invoicing, transmission, MARK/QR          | Done   |
+| 5     | Expenses — AI extraction, categories, recurring, email     | Done   |
+| 6     | Reports — KPIs, charts, P&L, VAT, tax projection           | Done   |
+| 7     | AI Assistant — Chat panel, function calling, financial Q&A | Done   |
+| 8     | Country plugin API — pluggable per-country tax & filings   | Done   |
 
 ## Documentation
 

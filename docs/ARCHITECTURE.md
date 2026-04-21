@@ -211,6 +211,28 @@ Zod schemas that will be handed to the AI SDK's `generateObject({ schema })` cal
 
 ---
 
+## Demo / Sample Data
+
+Opt-in "try it with real numbers" experience gated by `DEMO_SAMPLE_DATA_ENABLED=true` (+ `NEXT_PUBLIC_DEMO_SAMPLE_DATA_ENABLED=true` for the client bundle). When enabled:
+
+- The login page renders a **Try the demo** card that calls a server action which idempotently provisions a canonical demo user (`demo@opentab.dev`) via Better Auth's `signUpEmail`, stamps the resulting org as `isDemo=true`, and runs the seed factory if the org has no business data yet.
+- A persistent amber banner labels every `(app)` route as sample data when `session.org.isDemo === true`.
+- Settings → Account gains a **Reset demo** panel (owner-only, server-side re-check of `org.isDemo`) that wipes + re-populates in one transaction.
+
+The factory layer lives in `apps/web/lib/demo/` and is composed of:
+
+- `rng.ts` — seeded mulberry32 PRNG so every populate is byte-identical for a given seed.
+- `data-pool.ts` — narrative data for "Δελφίνι Α.Ε.", a fictional Athens catering/events business (8 clients, 6 suppliers, 12 products).
+- `populate.ts` — `populateOrgDemo(db, orgId)` and `clearOrgData(db, orgId)` — order-aware inserts respecting FK/denormalised-snapshot invariants; uses the real `calculateLineTotal` helper so totals match the production code path.
+- `ensure.ts` — idempotent provisioning + reset.
+
+Prod-safety guards (two independent layers):
+
+1. Env flag must be `"true"` both server- and client-side.
+2. `resetDemoAction` re-checks `role === "owner"` and `org.isDemo === true` at call time.
+
+---
+
 ## OSS vs Cloud
 
 The codebase is identical between the open-source self-hosted version and any hosted cloud offering. Environment variables switch the external service providers:
@@ -368,10 +390,12 @@ Future / optional (#145). Phases 1-3 build a clean `CountryProvider` + `Integrat
 
 Expense categories use a universal-then-local architecture:
 
-1. **Expense groups** (`expense_groups` table) — 16 universal groups with string PKs (e.g. `office_supplies`, `travel`, `professional_services`). These are seeded once and shared across all organisations.
+1. **Expense groups** (`expense_groups` table) — 20 universal groups with string PKs (e.g. `office_supplies`, `travel`, `professional_services`, `purchases`, `salaries`). These are seeded once and shared across all organisations.
 2. **Expense categories** (`expense_categories` table) — per-organisation categories linked to a group. Country-specific seed data creates localised category names and descriptions.
 
 Each country provider implements `mapGroupToTaxCode(groupId)` to map universal groups to country-specific tax deduction codes (e.g. Greek E3 codes, German SKR03/04). This allows the reporting and integration layers to derive tax treatment from the category without country-specific branching.
+
+Each group also carries an accounting-classification `type` enum (`operating_expense` / `purchase` / `asset` / `other`) that drives P&L grouping and VAT-report splits. Every category under a group inherits its type; users don't pick a classification per-expense. The seed is upserted on every call so adding groups or changing types propagates to existing environments.
 
 ---
 
