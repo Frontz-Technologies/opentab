@@ -59,9 +59,11 @@ export {
 } from "./recurring-invoices";
 export {
   expenseGroups,
+  expenseGroupTypeEnum,
   EXPENSE_GROUPS_SEED,
   type ExpenseGroup,
   type NewExpenseGroup,
+  type ExpenseGroupType,
 } from "./expense-groups";
 export {
   expenseCategories,
