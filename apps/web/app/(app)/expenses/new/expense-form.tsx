@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useUnsavedChangesWarning } from "@/hooks/use-unsaved-changes-warning";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -198,13 +198,15 @@ export function ExpenseForm({
 
   // Auto-default the first line item's name from the selected category
   // when the user hasn't typed anything custom. Reduces the visible
-  // "Category: Rent / Item: <blank>" redundancy on the simple
-  // single-line case — user can still override. Only touches the FIRST
-  // item; multi-line expenses where the user wants distinct names are
-  // unaffected (subsequent items start empty as before).
-  useEffect(() => {
-    if (!categoryId) return;
-    const cat = categories.find((c) => c.id === categoryId);
+  // "Category: Rent / Item: <blank>" redundancy on the simple single-
+  // line case — user can still override. Only touches the FIRST item;
+  // multi-line expenses where distinct names matter are unaffected.
+  // Kept as an event-driven handler (not useEffect) per React's
+  // set-state-in-effect lint rule — this belongs in the onChange path.
+  function handleCategoryChange(newCategoryId: string) {
+    setCategoryId(newCategoryId);
+    if (!newCategoryId) return;
+    const cat = categories.find((c) => c.id === newCategoryId);
     if (!cat) return;
     setItems((prev) => {
       if (prev.length === 0) return prev;
@@ -212,7 +214,7 @@ export function ExpenseForm({
       if (first.name.trim()) return prev;
       return [{ ...first, name: cat.name }, ...rest];
     });
-  }, [categoryId, categories]);
+  }
 
   function handleSubmit() {
     if (items.length === 0) {
@@ -450,7 +452,7 @@ export function ExpenseForm({
             </label>
             <select
               value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
+              onChange={(e) => handleCategoryChange(e.target.value)}
               className="w-full rounded-lg bg-surface-container-low border border-on-surface/10 px-3 py-2 text-sm text-on-surface"
             >
               <option value="">{t("selectCategory")}</option>
