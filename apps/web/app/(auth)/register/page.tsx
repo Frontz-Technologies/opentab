@@ -8,6 +8,7 @@ import { signUp } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormError } from "@/components/auth/form-error";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -68,14 +69,7 @@ export default function RegisterPage() {
       </h1>
       <p className="text-on-surface-variant mb-8">{t("registerSubtitle")}</p>
 
-      {error && (
-        <div
-          role="alert"
-          className="p-4 rounded-xl bg-error/10 text-error text-sm mb-6"
-        >
-          {error}
-        </div>
-      )}
+      <FormError message={error} />
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-2">
@@ -165,7 +159,13 @@ export default function RegisterPage() {
 
         <Button
           type="submit"
-          disabled={loading}
+          disabled={
+            loading ||
+            !name.trim() ||
+            !email.trim() ||
+            !password.trim() ||
+            !confirmPassword.trim()
+          }
           className="w-full h-12 bg-primary text-on-primary font-bold text-base border-none hover:opacity-90"
         >
           {loading ? t("creatingAccount") : t("register")}

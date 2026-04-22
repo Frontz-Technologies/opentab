@@ -86,7 +86,7 @@
     "requestNewLink": "Solicitar un nuevo enlace de restablecimiento",
     "signUpFailed": "No se pudo crear la cuenta.",
     "passwordTooShort": "La contraseña debe tener al menos 8 caracteres.",
-    "somethingWentWrong": "Algo salió mal. Por favor, inténtelo de nuevo."
+    "somethingWentWrong": "Algo salió mal. Inténtelo de nuevo."
   },
   "dashboard": {
     "title": "Panel",

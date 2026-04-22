@@ -82,19 +82,25 @@ The emerald primary is the brand anchor across both themes. In light mode, the p
 
 **Dark mode:**
 
-| Token                   | Hex       | Usage                                  |
-| ----------------------- | --------- | -------------------------------------- |
-| `tertiary`              | `#FFB3AF` | Soft warnings, overdue indicators      |
-| `tertiary-container`    | `#FC7C78` | Error fills, destructive action states |
-| `on-tertiary-container` | `#711419` | Text on error fills                    |
+| Token                   | Hex       | Usage                                                                  |
+| ----------------------- | --------- | ---------------------------------------------------------------------- |
+| `tertiary`              | `#FFB3AF` | Soft warnings, overdue indicators                                      |
+| `tertiary-container`    | `#FC7C78` | Destructive action fills (Delete / Reset confirmations)                |
+| `on-tertiary-container` | `#711419` | Text on destructive action fills                                       |
+| `error`                 | `#FFB4AB` | Inline form-error feedback (banner text + tinted bg via `bg-error/10`) |
+| `error-container`       | `#93000A` | Solid error fills where needed                                         |
 
 **Light mode:**
 
-| Token                   | Hex       | Usage                                  |
-| ----------------------- | --------- | -------------------------------------- |
-| `tertiary`              | `#B3261E` | Soft warnings, overdue indicators      |
-| `tertiary-container`    | `#F9DEDC` | Error fills, destructive action states |
-| `on-tertiary-container` | `#8C1D18` | Text on error fills                    |
+| Token                   | Hex       | Usage                                                                  |
+| ----------------------- | --------- | ---------------------------------------------------------------------- |
+| `tertiary`              | `#B3261E` | Soft warnings, overdue indicators                                      |
+| `tertiary-container`    | `#F9DEDC` | Destructive action fills (Delete / Reset confirmations)                |
+| `on-tertiary-container` | `#8C1D18` | Text on destructive action fills                                       |
+| `error`                 | `#B3261E` | Inline form-error feedback (banner text + tinted bg via `bg-error/10`) |
+| `error-container`       | `#F9DEDC` | Solid error fills where needed                                         |
+
+**Inline form-error banners** (post-submit failures on `/login`, `/register`, `/reset-password`, etc.) use the `error` token pair: `p-4 rounded-xl bg-error/10 text-error text-sm mb-6` plus `role="alert"`. This is the M3 "error" role — reserve `tertiary-container` for destructive _action_ affordances (Reset-demo button, delete dialogs).
 
 ### Text
 

@@ -82,11 +82,11 @@
     "resetFailed": "Failed to reset password. The link may have expired.",
     "invalidLinkTitle": "Invalid link",
     "invalidLinkBody": "This password reset link is invalid or has expired.",
-    "invalidLinkInline": "Invalid or expired reset link. Please request a new one.",
+    "invalidLinkInline": "This reset link is invalid or expired. Request a new one.",
     "requestNewLink": "Request a new reset link",
     "signUpFailed": "Failed to create account.",
     "passwordTooShort": "Password must be at least 8 characters.",
-    "somethingWentWrong": "Something went wrong. Please try again."
+    "somethingWentWrong": "Something went wrong. Try again."
   },
   "dashboard": {
     "title": "Dashboard",
