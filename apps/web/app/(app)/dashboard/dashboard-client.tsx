@@ -14,12 +14,6 @@ import { getDashboardData } from "./actions";
 import { useTranslations } from "next-intl";
 import { formatCurrencyCompact } from "@/lib/utils";
 
-function formatEur(n: number): string {
-  // KPI cards: values >= 100K render compact ("€523.4K") to fit the
-  // hero number at mobile widths; smaller values keep full precision.
-  return formatCurrencyCompact(n, "EUR");
-}
-
 function mergeChartData(
   revenue: Array<{ bucket: string; total: number }>,
   expenses: Array<{ bucket: string; total: number }>,
@@ -107,7 +101,7 @@ export function DashboardClient({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <KpiCard
           label={t("revenue")}
-          value={formatEur(data.revenue.value)}
+          value={formatCurrencyCompact(data.revenue.value, "EUR")}
           icon="trending_up"
           changePercent={data.revenue.changePercent}
           secondary={data.revenue.secondary}
@@ -115,21 +109,21 @@ export function DashboardClient({
         />
         <KpiCard
           label={t("outstanding")}
-          value={formatEur(data.outstanding.value)}
+          value={formatCurrencyCompact(data.outstanding.value, "EUR")}
           icon="schedule"
           changePercent={data.outstanding.changePercent}
           secondary={data.outstanding.secondary}
         />
         <KpiCard
           label={t("expenses")}
-          value={formatEur(data.expenses.value)}
+          value={formatCurrencyCompact(data.expenses.value, "EUR")}
           icon="payments"
           changePercent={data.expenses.changePercent}
           secondary={data.expenses.secondary}
         />
         <KpiCard
           label={t("netProfit")}
-          value={formatEur(data.netProfit.value)}
+          value={formatCurrencyCompact(data.netProfit.value, "EUR")}
           icon="savings"
           changePercent={data.netProfit.changePercent}
           secondary={data.netProfit.secondary}
