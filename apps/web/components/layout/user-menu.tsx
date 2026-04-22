@@ -43,7 +43,7 @@ export function UserMenu({ name, email }: UserMenuProps) {
     <DropdownMenu>
       <DropdownMenuTrigger className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer">
         <Avatar>
-          <AvatarFallback className="bg-emerald-500/20 text-emerald-400 font-semibold text-xs">
+          <AvatarFallback className="bg-primary-container/20 text-primary font-semibold text-xs">
             {getInitials(name)}
           </AvatarFallback>
         </Avatar>

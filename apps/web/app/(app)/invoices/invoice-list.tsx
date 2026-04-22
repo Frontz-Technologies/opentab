@@ -22,9 +22,9 @@ interface InvoiceListProps {
 const statusColors: Record<number, string> = {
   [INVOICE_STATUS.DRAFT]:
     "bg-surface-container-highest text-on-surface-variant",
-  [INVOICE_STATUS.PUBLISHED]: "bg-blue-500/20 text-blue-400",
+  [INVOICE_STATUS.PUBLISHED]: "bg-warning/15 text-warning",
   [INVOICE_STATUS.SENT]: "bg-secondary-container text-secondary",
-  [INVOICE_STATUS.PARTIAL]: "bg-amber-500/20 text-amber-400",
+  [INVOICE_STATUS.PARTIAL]: "bg-warning/15 text-warning",
   [INVOICE_STATUS.PAID]: "bg-primary-container/20 text-primary",
   [INVOICE_STATUS.CANCELLED]: "bg-tertiary-container/20 text-tertiary",
 };
@@ -64,7 +64,7 @@ function MyDataStatusIcon({ status }: { status: number | null }) {
   if (status === COUNTRY_INTEGRATION_SUBMISSION_STATUS.CONFIRMED) {
     return (
       <span
-        className="material-symbols-outlined text-[16px] text-emerald-400"
+        className="material-symbols-outlined text-[16px] text-primary"
         title="myDATA confirmed"
       >
         check_circle
@@ -78,7 +78,7 @@ function MyDataStatusIcon({ status }: { status: number | null }) {
   ) {
     return (
       <span
-        className="material-symbols-outlined text-[16px] text-blue-400 animate-spin"
+        className="material-symbols-outlined text-[16px] text-on-surface-variant animate-spin"
         title="myDATA pending"
       >
         sync
@@ -88,7 +88,7 @@ function MyDataStatusIcon({ status }: { status: number | null }) {
   if (status === COUNTRY_INTEGRATION_SUBMISSION_STATUS.CANCELLED) {
     return (
       <span
-        className="material-symbols-outlined text-[16px] text-zinc-400"
+        className="material-symbols-outlined text-[16px] text-on-surface-variant"
         title="myDATA cancelled"
       >
         cancel
@@ -97,7 +97,7 @@ function MyDataStatusIcon({ status }: { status: number | null }) {
   }
   return (
     <span
-      className="material-symbols-outlined text-[16px] text-red-400"
+      className="material-symbols-outlined text-[16px] text-tertiary"
       title="myDATA failed"
     >
       error

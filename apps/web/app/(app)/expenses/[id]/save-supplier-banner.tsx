@@ -39,9 +39,9 @@ export function SaveSupplierBanner({
   }
 
   return (
-    <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 flex items-center justify-between">
+    <div className="bg-secondary-container/15 border border-secondary/20 rounded-xl p-4 flex items-center justify-between">
       <div className="flex items-center gap-3">
-        <span className="material-symbols-outlined text-blue-400 text-[20px]">
+        <span className="material-symbols-outlined text-secondary text-[20px]">
           person_add
         </span>
         <div>

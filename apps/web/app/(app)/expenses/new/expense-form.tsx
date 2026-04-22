@@ -365,7 +365,10 @@ export function ExpenseForm({
       </div>
 
       {error && (
-        <div className="bg-red-500/10 text-red-400 rounded-lg p-3 text-sm">
+        <div
+          role="alert"
+          className="bg-error/10 text-error rounded-lg p-3 text-sm"
+        >
           {error}
         </div>
       )}

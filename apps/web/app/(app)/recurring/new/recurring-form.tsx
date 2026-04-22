@@ -92,7 +92,10 @@ export function RecurringForm({
   return (
     <div className="space-y-6 max-w-4xl">
       {error && (
-        <div className="bg-red-500/10 text-red-400 rounded-lg p-3 text-sm">
+        <div
+          role="alert"
+          className="bg-error/10 text-error rounded-lg p-3 text-sm"
+        >
           {error}
         </div>
       )}

@@ -33,7 +33,7 @@ export function DemoResetPanel() {
   return (
     <div
       data-testid="demo-reset-panel"
-      className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-6 mt-8"
+      className="rounded-xl border border-warning/30 bg-warning/5 p-6 mt-8"
     >
       <h3 className="font-headline text-lg font-semibold text-on-surface mb-1">
         {t("resetPanelTitle")}

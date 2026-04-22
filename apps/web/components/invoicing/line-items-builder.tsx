@@ -269,7 +269,7 @@ export function LineItemsBuilder({
                 <button
                   type="button"
                   onClick={() => removeItem(index)}
-                  className="text-red-400/60 hover:text-red-400 text-xs leading-none"
+                  className="text-tertiary/60 hover:text-tertiary text-xs leading-none"
                 >
                   <span className="material-symbols-outlined text-[14px]">
                     close

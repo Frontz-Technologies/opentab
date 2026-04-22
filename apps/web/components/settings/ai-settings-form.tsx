@@ -36,7 +36,7 @@ function CapabilityBadge({
     <span
       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${
         supported
-          ? "bg-emerald-500/10 text-emerald-400"
+          ? "bg-primary-container/15 text-primary"
           : "bg-on-surface/5 text-on-surface/30"
       }`}
     >

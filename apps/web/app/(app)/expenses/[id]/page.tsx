@@ -248,8 +248,8 @@ export default async function ExpenseDetailPage({
                     att.aiStatus === "completed"
                       ? "bg-primary text-on-primary"
                       : att.aiStatus === "failed"
-                        ? "bg-red-500/20 text-red-400"
-                        : "bg-zinc-500/20 text-zinc-400"
+                        ? "bg-tertiary-container/20 text-tertiary"
+                        : "bg-surface-container-high text-on-surface-variant"
                   }
                   variant="outline"
                 >

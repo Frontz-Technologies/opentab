@@ -15,8 +15,9 @@ interface RecurringListProps {
 
 const statusColors: Record<number, string> = {
   [RECURRING_STATUS.ACTIVE]: "bg-primary text-on-primary",
-  [RECURRING_STATUS.PAUSED]: "bg-amber-500/20 text-amber-400",
-  [RECURRING_STATUS.COMPLETED]: "bg-zinc-500/20 text-zinc-400",
+  [RECURRING_STATUS.PAUSED]: "bg-warning/15 text-warning",
+  [RECURRING_STATUS.COMPLETED]:
+    "bg-surface-container-high text-on-surface-variant",
 };
 
 type StatusFilter = "all" | "active" | "paused";

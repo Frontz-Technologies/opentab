@@ -8,12 +8,15 @@ import { eq, and, asc } from "drizzle-orm";
 import { Badge } from "@/components/ui/badge";
 import { QuoteActions } from "./quote-actions";
 
+// Unified with the list-view map in ../quote-list.tsx — same states,
+// same tokens (semantic, not raw Tailwind), same chips across detail
+// and list surfaces.
 const statusColors: Record<number, string> = {
-  [QUOTE_STATUS.DRAFT]: "bg-zinc-500/20 text-zinc-400",
-  [QUOTE_STATUS.SENT]: "bg-blue-500/20 text-blue-400",
-  [QUOTE_STATUS.ACCEPTED]: "bg-primary text-on-primary",
-  [QUOTE_STATUS.REJECTED]: "bg-red-500/20 text-red-400",
-  [QUOTE_STATUS.CONVERTED]: "bg-purple-500/20 text-purple-400",
+  [QUOTE_STATUS.DRAFT]: "bg-surface-container-highest text-on-surface-variant",
+  [QUOTE_STATUS.SENT]: "bg-secondary-container text-secondary",
+  [QUOTE_STATUS.ACCEPTED]: "bg-primary-container/20 text-primary",
+  [QUOTE_STATUS.REJECTED]: "bg-tertiary-container/20 text-tertiary",
+  [QUOTE_STATUS.CONVERTED]: "bg-primary-container/20 text-primary",
 };
 
 export default async function QuoteDetailPage({
