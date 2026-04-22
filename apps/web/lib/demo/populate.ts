@@ -547,6 +547,15 @@ async function seedExpenses(
 
     number++;
   }
+
+  // Seed the next-number row for expenses so a user creating their
+  // first expense in the demo org continues from EXP-<EXPENSE_COUNT+1>
+  // instead of colliding with the seeded EXP-0001. Symmetric with the
+  // invoice-sequence seed inside seedInvoices.
+  await db
+    .insert(invoiceSequences)
+    .values({ orgId, type: "expense", nextNumber: number, prefix: "EXP-" })
+    .onConflictDoNothing();
 }
 
 function sumStr(values: string[]): string {

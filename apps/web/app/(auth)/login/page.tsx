@@ -102,12 +102,6 @@ export default function LoginPage() {
           className="mb-6 rounded-xl border border-primary/30 bg-primary-container/10 p-4"
         >
           <div className="flex items-start gap-3">
-            <span
-              aria-hidden="true"
-              className="material-symbols-outlined text-primary text-[22px] leading-none mt-0.5"
-            >
-              auto_awesome
-            </span>
             <div className="flex-1">
               <p className="text-sm font-medium text-on-surface">
                 {tDemo("loginCardTitle")}
