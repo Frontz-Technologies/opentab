@@ -2,13 +2,15 @@ import { eq, sql } from "drizzle-orm";
 import * as schema from "@opentab/db/schema";
 import type { db as prodDb } from "@/lib/db";
 import { calculateLineTotal } from "@/lib/invoicing/calculations";
+import { ensureCategoriesSeeded } from "@/lib/expenses/category-seed";
 import { createRng, type Rng } from "./rng";
 
 type Db = typeof prodDb;
 import {
-  CLIENTS_GR,
-  SUPPLIERS_GR,
-  PRODUCTS_GR,
+  DEMO_ORG,
+  CLIENTS,
+  SUPPLIERS,
+  PRODUCTS,
   REVENUE_CURVE,
   INVOICE_NARRATIVES,
   EXPENSE_MEMOS,
@@ -55,6 +57,11 @@ export async function populateOrgDemo(
   const rng = createRng(seed);
   const today = new Date();
 
+  // Fixes the silent-zero-expenses bug: expense categories are seeded
+  // lazily on /expenses/* route visits, so a freshly-provisioned demo org
+  // had none and seedExpenses hit its empty-array guard.
+  await ensureCategoriesSeeded(orgId, DEMO_ORG.countryCode, db);
+
   const insertedContacts = await seedContacts(db, orgId, rng);
   const insertedProducts = await seedProducts(db, orgId);
   const categoryRows = await db
@@ -78,17 +85,21 @@ export async function populateOrgDemo(
     today,
   );
 
-  return {
+  const result: PopulateResult = {
     contactCount:
       insertedContacts.clients.length + insertedContacts.suppliers.length,
     productCount: insertedProducts.length,
     invoiceCount: INVOICE_COUNT,
     expenseCount: EXPENSE_COUNT,
   };
+
+  await assertPopulateResult(db, orgId, result);
+
+  return result;
 }
 
 const INVOICE_COUNT = 48;
-const EXPENSE_COUNT = 50;
+const EXPENSE_COUNT = 70;
 
 interface InsertedContact {
   id: string;
@@ -98,6 +109,7 @@ interface InsertedContact {
   addressLine1: string | null;
   city: string | null;
   postalCode: string | null;
+  countryCode: string;
   paymentTerms: number;
 }
 
@@ -115,7 +127,7 @@ async function seedContacts(
   _rng: Rng,
 ): Promise<{ clients: InsertedContact[]; suppliers: InsertedContact[] }> {
   const clients: InsertedContact[] = [];
-  for (const c of CLIENTS_GR) {
+  for (const c of CLIENTS) {
     const [row] = await db
       .insert(contacts)
       .values(clientRow(orgId, c))
@@ -128,11 +140,12 @@ async function seedContacts(
       addressLine1: row.addressLine1,
       city: row.city,
       postalCode: row.postalCode,
+      countryCode: row.countryCode ?? c.countryCode,
       paymentTerms: c.paymentTerms,
     });
   }
   const suppliers: InsertedContact[] = [];
-  for (const s of SUPPLIERS_GR) {
+  for (const s of SUPPLIERS) {
     const [row] = await db
       .insert(contacts)
       .values(supplierRow(orgId, s))
@@ -145,6 +158,7 @@ async function seedContacts(
       addressLine1: null,
       city: null,
       postalCode: null,
+      countryCode: row.countryCode ?? s.countryCode,
       paymentTerms: 30,
     });
   }
@@ -165,7 +179,7 @@ function clientRow(orgId: string, c: ClientSeed) {
     phone: c.phone,
     vatNumber: c.vat,
     vatValidated: c.vat !== null,
-    countryCode: "GR",
+    countryCode: c.countryCode,
     addressLine1: c.addressLine1,
     city: c.city,
     postalCode: c.postalCode,
@@ -185,14 +199,14 @@ function supplierRow(orgId: string, s: SupplierSeed) {
     phone: s.phone,
     vatNumber: s.vat,
     vatValidated: s.vat !== null,
-    countryCode: "GR",
+    countryCode: s.countryCode,
     defaultCurrency: "EUR",
   };
 }
 
 async function seedProducts(db: Db, orgId: string): Promise<InsertedProduct[]> {
   const rows: InsertedProduct[] = [];
-  for (const p of PRODUCTS_GR) {
+  for (const p of PRODUCTS) {
     const [r] = await db
       .insert(products)
       .values(productRow(orgId, p))
@@ -233,11 +247,21 @@ async function seedInvoices(
 
   // Distribute INVOICE_COUNT across 8 months using REVENUE_CURVE
   // weights so newer months have more volume — gives the dashboard a
-  // believable upward hockey-stick.
+  // believable upward hockey-stick. Uses the largest-remainder method
+  // to guarantee the per-month counts sum to exactly INVOICE_COUNT
+  // (plain Math.round drifts by ±1, which the postcondition catches).
   const totalWeight = REVENUE_CURVE.reduce((a, b) => a + b, 0);
-  const perMonth = REVENUE_CURVE.map((w) =>
-    Math.round((w / totalWeight) * INVOICE_COUNT),
-  );
+  const raw = REVENUE_CURVE.map((w) => (w / totalWeight) * INVOICE_COUNT);
+  const perMonth = raw.map((n) => Math.floor(n));
+  const fracs = raw
+    .map((n, i) => ({ i, frac: n - Math.floor(n) }))
+    .sort((a, b) => b.frac - a.frac);
+  let remaining = INVOICE_COUNT - perMonth.reduce((a, b) => a + b, 0);
+  for (const { i } of fracs) {
+    if (remaining <= 0) break;
+    perMonth[i]++;
+    remaining--;
+  }
 
   let number = 1;
   const year = today.getFullYear();
@@ -267,9 +291,14 @@ async function seedInvoices(
 
       const lineCount = rng.int(1, 3);
       const chosen = rng.pickN(productRows, lineCount);
+      // GR-domestic invoice → use the product's VAT band (standard/reduced).
+      // Everything else (EU B2B cross-border or non-EU) → 0% manually.
+      // No reverse-charge schema flag per product decision.
+      const clientVatRate =
+        client.countryCode === "GR" ? null : ("0" as const);
       const itemsInput = chosen.map((p) => {
         const qty = rng.int(1, 60);
-        const taxRate = VAT_RATES[p.taxCategory] ?? "24";
+        const taxRate = clientVatRate ?? VAT_RATES[p.taxCategory] ?? "24";
         const calc = calculateLineTotal({
           quantity: String(qty),
           unitPrice: p.unitPrice,
@@ -416,7 +445,10 @@ async function seedExpenses(
     const category = rng.pick(categories);
     const qty = "1";
     const unitPrice = (rng.int(1500, 45000) / 100).toFixed(2);
-    const taxRate = "24";
+    // GR-domestic supplier → 24%. Everything else (EU cross-border AWS/Hetzner,
+    // non-EU US) → 0%. Suppliers that are null (e.g. payroll rows seeded
+    // without a counterpart) → 0% — payroll is out-of-scope for VAT.
+    const taxRate = supplier?.countryCode === "GR" ? "24" : "0";
     const calc = calculateLineTotal({
       quantity: qty,
       unitPrice,
@@ -466,6 +498,57 @@ function sumStr(values: string[]): string {
 
 function toDateStr(d: Date): string {
   return d.toISOString().slice(0, 10);
+}
+
+// Postcondition guardrail — after every seed* completes, re-query each
+// entity count filtered by orgId and compare to what populateOrgDemo
+// claims in its return value. Catches future silent-skip regressions
+// (the class of bug that let seedExpenses ship producing 0 rows).
+async function assertPopulateResult(
+  db: Db,
+  orgId: string,
+  expected: PopulateResult,
+): Promise<void> {
+  const [contactRow] = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(contacts)
+    .where(eq(contacts.orgId, orgId));
+  const [productRow] = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(products)
+    .where(eq(products.orgId, orgId));
+  const [invoiceRow] = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(invoices)
+    .where(eq(invoices.orgId, orgId));
+  const [expenseRow] = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(expenses)
+    .where(eq(expenses.orgId, orgId));
+
+  const diffs: string[] = [];
+  if (contactRow.n !== expected.contactCount)
+    diffs.push(
+      `contacts: expected=${expected.contactCount} actual=${contactRow.n}`,
+    );
+  if (productRow.n !== expected.productCount)
+    diffs.push(
+      `products: expected=${expected.productCount} actual=${productRow.n}`,
+    );
+  if (invoiceRow.n !== expected.invoiceCount)
+    diffs.push(
+      `invoices: expected=${expected.invoiceCount} actual=${invoiceRow.n}`,
+    );
+  if (expenseRow.n !== expected.expenseCount)
+    diffs.push(
+      `expenses: expected=${expected.expenseCount} actual=${expenseRow.n}`,
+    );
+
+  if (diffs.length > 0) {
+    throw new Error(
+      `populateOrgDemo postcondition failed for org ${orgId}: ${diffs.join("; ")}`,
+    );
+  }
 }
 
 export async function clearOrgData(
