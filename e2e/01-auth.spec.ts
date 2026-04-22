@@ -56,9 +56,11 @@ test.describe("Authentication", () => {
     await page.getByLabel("Password", { exact: true }).fill("wrongpassword");
     await page.getByRole("button", { name: "Sign in" }).click();
 
-    const alert = page.getByRole("alert");
+    // Filter by non-empty text to scope past Next.js's own route
+    // announcer (<div role="alert" id="__next-route-announcer__">),
+    // which also matches getByRole("alert") and trips strict mode.
+    const alert = page.getByRole("alert").filter({ hasText: /\S/ });
     await expect(alert).toBeVisible();
-    await expect(alert).not.toHaveText("");
   });
 
   test("register page renders correctly", async () => {
