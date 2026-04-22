@@ -42,6 +42,61 @@ const VAT_RATES: Record<string, string> = {
   reverse_charge: "0",
 };
 
+// Invoice-line quantity range per product unit. Uniform rng.int(1, 60) on
+// fixed-price items (e.g. "Tech due-diligence report", €4,500 flat) would
+// blow a single line up to €270K and wreck the dashboard P&L — so the
+// range is unit-aware.
+function pickInvoiceQty(unit: string, rng: Rng): number {
+  switch (unit) {
+    case "hour":
+      return rng.int(8, 80); // ~a week to a couple months of work
+    case "day":
+      return rng.int(1, 10); // up to two work weeks
+    case "unit":
+      return rng.int(1, 5); // 1–5 workstations per resale order
+    case "kg":
+      return rng.int(1, 20);
+    case "item":
+    case "service":
+    default:
+      return 1; // fixed-bundle or monthly retainer — one unit per line
+  }
+}
+
+// Expense-row amount range per expense-group code. Without this the
+// dashboard shows €600/month in expenses when the narrative claims €38K
+// (payroll alone is ~€6.6K/month in a real tech SME). Keyed on the
+// stable `groupCode` (not the country-prefixed `code`).
+const EXPENSE_AMOUNT_BY_GROUP: Record<string, [number, number]> = {
+  salaries: [2800, 3800], // monthly payroll per engineer
+  rent: [1800, 1800], // monthly office rent
+  servers: [600, 1500], // AWS / Hetzner / Vercel monthly
+  utilities: [200, 350], // DEI bill
+  telecom: [180, 280], // Cosmote Business monthly
+  hardware: [2400, 4800], // laptop / monitor
+  software: [50, 400], // GitHub / Linear / Figma / JetBrains
+  travel: [380, 1600], // flights + hotels
+  meals: [35, 140], // team lunch
+  professional_services: [800, 800], // accountant quarterly
+  car: [450, 450], // lease quarterly
+  bank_fees: [20, 80],
+  marketing: [500, 2500],
+  training: [400, 2400],
+  taxes_contributions: [500, 3000],
+  transport: [30, 120],
+  insurance: [150, 400],
+  employee_benefits: [100, 600],
+  repairs_maintenance: [150, 1500],
+  purchases: [200, 2000],
+  other: [100, 500],
+};
+
+function pickExpenseUnitPrice(groupCode: string, rng: Rng): string {
+  const [lo, hi] = EXPENSE_AMOUNT_BY_GROUP[groupCode] ?? [100, 500];
+  const cents = rng.int(lo * 100, hi * 100);
+  return (cents / 100).toFixed(2);
+}
+
 export interface PopulateResult {
   contactCount: number;
   productCount: number;
@@ -65,7 +120,11 @@ export async function populateOrgDemo(
   const insertedContacts = await seedContacts(db, orgId, rng);
   const insertedProducts = await seedProducts(db, orgId);
   const categoryRows = await db
-    .select({ id: expenseCategories.id, code: expenseCategories.code })
+    .select({
+      id: expenseCategories.id,
+      code: expenseCategories.code,
+      groupCode: expenseCategories.groupCode,
+    })
     .from(expenseCategories)
     .where(eq(expenseCategories.orgId, orgId));
   await seedInvoices(
@@ -296,7 +355,7 @@ async function seedInvoices(
       // No reverse-charge schema flag per product decision.
       const clientVatRate = client.countryCode === "GR" ? null : ("0" as const);
       const itemsInput = chosen.map((p) => {
-        const qty = rng.int(1, 60);
+        const qty = pickInvoiceQty(p.unit, rng);
         const taxRate = clientVatRate ?? VAT_RATES[p.taxCategory] ?? "24";
         const calc = calculateLineTotal({
           quantity: String(qty),
@@ -422,7 +481,7 @@ async function seedExpenses(
   db: Db,
   orgId: string,
   suppliers: InsertedContact[],
-  categories: { id: string; code: string }[],
+  categories: { id: string; code: string; groupCode: string }[],
   rng: Rng,
   today: Date,
 ): Promise<void> {
@@ -443,7 +502,7 @@ async function seedExpenses(
       suppliers.length > 0 && rng.chance(0.7) ? rng.pick(suppliers) : null;
     const category = rng.pick(categories);
     const qty = "1";
-    const unitPrice = (rng.int(1500, 45000) / 100).toFixed(2);
+    const unitPrice = pickExpenseUnitPrice(category.groupCode, rng);
     // GR-domestic supplier → 24%. Everything else (EU cross-border AWS/Hetzner,
     // non-EU US) → 0%. Suppliers that are null (e.g. payroll rows seeded
     // without a counterpart) → 0% — payroll is out-of-scope for VAT.
