@@ -46,28 +46,52 @@ export function RevenueByClientBar({ data }: { data: ClientData[] }) {
   const theme = useChartTheme();
   if (!data.length) return null;
   const height = Math.max(200, data.length * 40);
+  const sum = data.reduce((acc, d) => acc + d.total, 0);
+  // Chart + legend row below — mirrors the ExpenseCategoryDonut layout
+  // so the two dashboard cards line up visually rather than leaving
+  // empty space under this one.
   return (
-    <ResponsiveContainer width="100%" height={height}>
-      <BarChart data={data} layout="vertical" margin={{ left: 10 }}>
-        <XAxis
-          type="number"
-          tickFormatter={formatCurrency}
-          tick={{ fill: theme.tickText, fontSize: 12 }}
-          axisLine={false}
-          tickLine={false}
-        />
-        <YAxis
-          type="category"
-          dataKey="displayName"
-          width={120}
-          tickFormatter={(v: string) => truncate(v, 16)}
-          tick={{ fill: theme.tickText, fontSize: 12 }}
-          axisLine={false}
-          tickLine={false}
-        />
-        <Tooltip content={<CustomTooltip />} />
-        <Bar dataKey="total" fill={theme.primary} radius={[0, 4, 4, 0]} />
-      </BarChart>
-    </ResponsiveContainer>
+    <div>
+      <ResponsiveContainer width="100%" height={height}>
+        <BarChart data={data} layout="vertical" margin={{ left: 10 }}>
+          <XAxis
+            type="number"
+            tickFormatter={formatCurrency}
+            tick={{ fill: theme.tickText, fontSize: 12 }}
+            axisLine={false}
+            tickLine={false}
+          />
+          <YAxis
+            type="category"
+            dataKey="displayName"
+            width={120}
+            tickFormatter={(v: string) => truncate(v, 16)}
+            tick={{ fill: theme.tickText, fontSize: 12 }}
+            axisLine={false}
+            tickLine={false}
+          />
+          <Tooltip content={<CustomTooltip />} />
+          <Bar dataKey="total" fill={theme.primary} radius={[0, 4, 4, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+      <div className="flex flex-wrap gap-3 justify-center mt-2">
+        {[...data]
+          .sort((a, b) => b.total - a.total)
+          .map((d) => {
+            const pct = sum > 0 ? Math.round((d.total / sum) * 1000) / 10 : 0;
+            return (
+              <div key={d.displayName} className="flex items-center gap-1.5">
+                <span
+                  className="size-2.5 rounded-full"
+                  style={{ backgroundColor: theme.primary }}
+                />
+                <span className="text-xs text-on-surface-variant">
+                  {d.displayName} {formatCurrency(d.total)} ({pct}%)
+                </span>
+              </div>
+            );
+          })}
+      </div>
+    </div>
   );
 }
