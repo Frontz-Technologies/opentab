@@ -213,6 +213,12 @@ Before completing any task:
 - [ ] Dev server stopped after testing
 - [ ] No hardcoded English strings (use i18n)
 
+Before opening a PR on a user-visible feature:
+
+- [ ] Happy-path Playwright spec added in `e2e/` — don't defer to the tester agent
+- [ ] Feature verified via `docker compose -f docker/docker-compose.dev.yml up` or repo-root `pnpm dev` (both route through turbo). `pnpm --filter @opentab/web dev` bypasses turbo's strict env filter and can mask missing `turbo.json` `globalPassThroughEnv` entries
+- [ ] Seed / init / populate code throws loudly on unexpected empty dependencies — no silent `if (x.length === 0) return;`
+
 ---
 
 When in doubt, follow the nearest existing pattern.
