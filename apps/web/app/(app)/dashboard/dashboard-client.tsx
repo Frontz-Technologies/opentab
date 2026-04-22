@@ -12,9 +12,12 @@ import { RevenueByClientBar } from "@/components/reports/charts/revenue-by-clien
 import { InsightCardsRow } from "@/components/reports/insight-cards-row";
 import { getDashboardData } from "./actions";
 import { useTranslations } from "next-intl";
+import { formatCurrencyCompact } from "@/lib/utils";
 
 function formatEur(n: number): string {
-  return `\u20AC${n.toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  // KPI cards: values >= 100K render compact ("€523.4K") to fit the
+  // hero number at mobile widths; smaller values keep full precision.
+  return formatCurrencyCompact(n, "EUR");
 }
 
 function mergeChartData(

@@ -21,6 +21,31 @@ export function generateUniqueSlug(base: string): string {
   return `${slug}-${suffix}`;
 }
 
+// Formats a currency amount for at-a-glance display. Values ≥ 100,000
+// use compact notation ("€523.4K", "€1.2M"); smaller values render full
+// precision ("€4,250.00"). Use on dashboard KPI cards; do NOT use on
+// invoice / report / PDF surfaces where precision matters.
+export function formatCurrencyCompact(
+  amount: number,
+  currency = "EUR",
+): string {
+  const abs = Math.abs(amount);
+  if (abs >= 100_000) {
+    return new Intl.NumberFormat("en", {
+      style: "currency",
+      currency,
+      notation: "compact",
+      maximumFractionDigits: 1,
+    }).format(amount);
+  }
+  return new Intl.NumberFormat("en", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+}
+
 export function detectCountryFromTaxId(taxId: string): string | null {
   const cleaned = taxId.trim().replace(/\s/g, "");
   if (/^\d{9}$/.test(cleaned)) return "GR";
