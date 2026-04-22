@@ -29,12 +29,11 @@ async function assertNoHorizontalOverflow(
 }
 
 test.describe("Demo mode happy path", () => {
-  // Cold-compile on the first visit to /contacts / /products / /invoices /
-  // /expenses can each take 5–20 s on the Colima dev VM, and demo
-  // provisioning adds another ~7 s. The default 60 s is tight when all
-  // of that lands in a single test. See tester follow-up on PR #193
-  // after SHA 1e8cba1.
-  test.setTimeout(120_000);
+  // Cold-compile on the first visit to /dashboard, /contacts, /products,
+  // /invoices, /expenses each cost 5–20 s on the Colima dev VM; demo
+  // provisioning on a fresh DB adds another ~7 s. Bumped from 120 s to
+  // 240 s after SHA 46c3695 hit the previous ceiling on /expenses.
+  test.setTimeout(240_000);
 
   test("Try-Demo signs in and every list page is populated without overflow", async ({
     page,
@@ -46,7 +45,10 @@ test.describe("Demo mode happy path", () => {
     await page.getByTestId("login-demo-card").waitFor();
     await page.getByRole("button", { name: /Try the demo/i }).click();
 
-    await page.waitForURL("**/dashboard", { timeout: 30_000 });
+    // Generous budget — first-call populateOrgDemo takes up to ~10 s on
+    // a fresh DB, the sign-in round-trip takes ~2–5 s, and /dashboard's
+    // first compile is another ~10–15 s on cold dev.
+    await page.waitForURL("**/dashboard", { timeout: 60_000 });
     await expect(
       page.getByRole("heading", { name: "Dashboard" }),
     ).toBeVisible();
