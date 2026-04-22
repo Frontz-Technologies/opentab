@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/layout/page-header";
 import { getCountryProvider } from "@/lib/country";
+import { ReportsTabs } from "../reports-tabs";
 import { VatClient } from "./vat-client";
 
 export default async function VatReportPage() {
@@ -34,6 +35,7 @@ export default async function VatReportPage() {
         userEmail={session.user.email}
       />
       <main className="px-8 py-8 max-w-7xl mx-auto">
+        <ReportsTabs active="vat" provider={provider} />
         <VatClient defaultStart={startDate} defaultEnd={endDate} />
       </main>
     </>
