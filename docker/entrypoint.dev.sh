@@ -25,4 +25,14 @@ echo "Pushing database schema..."
 pnpm --filter @opentab/db db:push
 
 echo "Starting dev server..."
-exec pnpm dev
+# Bypass turbo and spawn next dev directly. Turbo 2.9.6's env passthrough
+# (`globalPassThroughEnv` / `tasks.dev.passThroughEnv` / `envMode: loose`)
+# strips server-only env vars at the turbo→pnpm-run-dev process boundary
+# for persistent tasks, breaking DEMO_SAMPLE_DATA_ENABLED in the docker
+# dev stack. NEXT_PUBLIC_* still propagates via Next.js framework
+# inference, so the "Try the demo" card renders but the server action
+# short-circuits with "Demo mode is not enabled on this deployment".
+# Running next dev directly via pnpm's workspace filter keeps the full
+# container env available to next-server. Nothing else in the monorepo
+# needs `turbo dev` — @opentab/web is the only package with a dev script.
+exec pnpm --filter @opentab/web dev
