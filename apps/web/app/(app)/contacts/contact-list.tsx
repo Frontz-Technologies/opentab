@@ -15,7 +15,7 @@ interface ContactListProps {
 const typeColors: Record<string, string> = {
   client: "bg-primary-container/20 text-primary",
   supplier: "bg-warning/15 text-warning",
-  both: "bg-secondary-container/30 text-secondary",
+  both: "bg-secondary-container/30 text-on-secondary-container",
 };
 
 export function ContactList({ contacts }: ContactListProps) {

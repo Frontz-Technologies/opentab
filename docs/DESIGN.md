@@ -112,16 +112,18 @@ The emerald primary is the brand anchor across both themes. In light mode, the p
 
 **Status chip canonical mapping** (invoices / quotes / recurring / contacts):
 
-| State                        | Token pair                                             |
-| ---------------------------- | ------------------------------------------------------ |
-| Draft / neutral / completed  | `bg-surface-container-highest text-on-surface-variant` |
-| Sent / "in flight"           | `bg-secondary-container text-secondary`                |
-| Partial / paused / published | `bg-warning/15 text-warning`                           |
-| Paid / accepted / active     | `bg-primary-container/20 text-primary`                 |
-| Rejected / cancelled         | `bg-tertiary-container/20 text-tertiary`               |
-| Overdue (row highlight)      | `bg-tertiary-container text-on-tertiary-container`     |
-| Contact → supplier           | `bg-warning/15 text-warning`                           |
-| Contact → both               | `bg-secondary-container/30 text-secondary`             |
+| State                        | Token pair                                              |
+| ---------------------------- | ------------------------------------------------------- |
+| Draft / neutral / completed  | `bg-surface-container-highest text-on-surface-variant`  |
+| Sent / "in flight"           | `bg-secondary-container text-on-secondary-container`    |
+| Partial / paused / published | `bg-warning/15 text-warning`                            |
+| Paid / accepted / active     | `bg-primary-container/20 text-primary`                  |
+| Rejected / cancelled         | `bg-tertiary-container/20 text-tertiary`                |
+| Overdue (row highlight)      | `bg-tertiary-container text-on-tertiary-container`      |
+| Contact → supplier           | `bg-warning/15 text-warning`                            |
+| Contact → both               | `bg-secondary-container/30 text-on-secondary-container` |
+
+**Why `text-on-secondary-container` not `text-secondary`:** shadcn's `.dark { --secondary }` override collapses `text-secondary` to the same hex as `--color-secondary-container` in dark mode (`#21523c`), which makes `bg-secondary-container + text-secondary` chips render invisible. The M3 `on-*` containers are specifically designed to sit on top of their container counterpart — use them.
 
 ### Text
 

@@ -1,10 +1,16 @@
 import type { InsightCard } from "@/lib/reports/insights/types";
 import Link from "next/link";
 
+// Semantic-token borders per insight type. "warning" here is the
+// card-surface-level "attention required" accent — maps to `tertiary`
+// (hard-danger) rather than the `warning` (soft-caution) token, since
+// the surface signals an actionable risk (overdue receivables, high
+// client concentration) rather than a neutral status. "info" uses
+// outline-variant for a subtle neutral accent that reads as "fyi".
 const borderByType: Record<InsightCard["type"], string> = {
-  success: "border-emerald-500/30",
-  info: "border-blue-500/30",
-  warning: "border-red-400/30",
+  success: "border-primary/30",
+  info: "border-outline-variant/40",
+  warning: "border-tertiary/30",
 };
 
 export function InsightCardsRow({ insights }: { insights: InsightCard[] }) {

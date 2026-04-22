@@ -161,7 +161,7 @@ export function RecurringList({ items }: RecurringListProps) {
                 </div>
                 <div className="flex items-center justify-between">
                   <Badge
-                    className="bg-secondary-container text-secondary"
+                    className="bg-secondary-container text-on-secondary-container"
                     variant="outline"
                   >
                     {frequencyLabels[r.frequency]}

@@ -67,7 +67,7 @@ export function CategoryList({ groups, categories }: CategoryListProps) {
                     </span>
                     {cat.isDefault && (
                       <Badge
-                        className="bg-secondary-container/30 text-secondary"
+                        className="bg-secondary-container/30 text-on-secondary-container"
                         variant="outline"
                       >
                         {t("default")}

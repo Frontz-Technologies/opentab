@@ -13,7 +13,7 @@ import { QuoteActions } from "./quote-actions";
 // and list surfaces.
 const statusColors: Record<number, string> = {
   [QUOTE_STATUS.DRAFT]: "bg-surface-container-highest text-on-surface-variant",
-  [QUOTE_STATUS.SENT]: "bg-secondary-container text-secondary",
+  [QUOTE_STATUS.SENT]: "bg-secondary-container text-on-secondary-container",
   [QUOTE_STATUS.ACCEPTED]: "bg-primary-container/20 text-primary",
   [QUOTE_STATUS.REJECTED]: "bg-tertiary-container/20 text-tertiary",
   [QUOTE_STATUS.CONVERTED]: "bg-primary-container/20 text-primary",

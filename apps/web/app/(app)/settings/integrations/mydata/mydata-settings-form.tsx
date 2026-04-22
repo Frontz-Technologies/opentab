@@ -138,7 +138,7 @@ export function MyDataSettingsForm({ credentials }: MyDataSettingsFormProps) {
             aria-invalid={fieldErrors.aadeUserId ? true : undefined}
           />
           {fieldErrors.aadeUserId && (
-            <p className="text-xs text-tertiary">
+            <p className="text-xs text-error">
               {fieldErrors.aadeUserId.join(". ")}
             </p>
           )}
@@ -159,7 +159,7 @@ export function MyDataSettingsForm({ credentials }: MyDataSettingsFormProps) {
             aria-invalid={fieldErrors.subscriptionKey ? true : undefined}
           />
           {fieldErrors.subscriptionKey && (
-            <p className="text-xs text-tertiary">
+            <p className="text-xs text-error">
               {fieldErrors.subscriptionKey.join(". ")}
             </p>
           )}

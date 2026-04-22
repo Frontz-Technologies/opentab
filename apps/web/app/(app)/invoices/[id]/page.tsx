@@ -23,7 +23,7 @@ const statusColors: Record<number, string> = {
   [INVOICE_STATUS.DRAFT]:
     "bg-surface-container-highest text-on-surface-variant",
   [INVOICE_STATUS.PUBLISHED]: "bg-warning/15 text-warning",
-  [INVOICE_STATUS.SENT]: "bg-secondary-container text-secondary",
+  [INVOICE_STATUS.SENT]: "bg-secondary-container text-on-secondary-container",
   [INVOICE_STATUS.PARTIAL]: "bg-warning/15 text-warning",
   [INVOICE_STATUS.PAID]: "bg-primary-container/20 text-primary",
   [INVOICE_STATUS.CANCELLED]: "bg-tertiary-container/20 text-tertiary",

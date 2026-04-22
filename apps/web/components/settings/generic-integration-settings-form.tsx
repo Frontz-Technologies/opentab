@@ -213,7 +213,7 @@ export function GenericIntegrationSettingsForm({
                 aria-invalid={fieldErrors[field.name] ? true : undefined}
               />
               {fieldErrors[field.name] && (
-                <p className="text-xs text-tertiary">
+                <p className="text-xs text-error">
                   {fieldErrors[field.name].join(". ")}
                 </p>
               )}
