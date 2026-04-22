@@ -15,3 +15,9 @@ test-results/
 playwright-report/
 .test-user.json
 *.tsbuildinfo
+
+# Process core dumps from segfaulted test runners / dev servers.
+# Matches the legacy `core` filename plus Linux's `core.<pid>` pattern.
+# If a directory called `core/` is ever needed, add `!core/` to override.
+core
+core.*
