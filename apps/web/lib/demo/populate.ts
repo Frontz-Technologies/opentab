@@ -294,8 +294,7 @@ async function seedInvoices(
       // GR-domestic invoice → use the product's VAT band (standard/reduced).
       // Everything else (EU B2B cross-border or non-EU) → 0% manually.
       // No reverse-charge schema flag per product decision.
-      const clientVatRate =
-        client.countryCode === "GR" ? null : ("0" as const);
+      const clientVatRate = client.countryCode === "GR" ? null : ("0" as const);
       const itemsInput = chosen.map((p) => {
         const qty = rng.int(1, 60);
         const taxRate = clientVatRate ?? VAT_RATES[p.taxCategory] ?? "24";

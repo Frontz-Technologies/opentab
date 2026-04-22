@@ -399,7 +399,8 @@ export const PRODUCTS: ProductSeed[] = [
   },
   {
     name: "Cloud architecture review — day",
-    description: "Full-day AWS / Hetzner architecture audit plus written report",
+    description:
+      "Full-day AWS / Hetzner architecture audit plus written report",
     unitPrice: "1200",
     unit: "day",
     taxCategory: "standard",
