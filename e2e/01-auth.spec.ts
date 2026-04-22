@@ -50,7 +50,9 @@ test.describe("Authentication", () => {
 
   test("login error banner has alert role and visible text", async () => {
     await page.goto("/login");
-    await page.getByRole("textbox", { name: "Email" }).fill("nobody@example.com");
+    await page
+      .getByRole("textbox", { name: "Email" })
+      .fill("nobody@example.com");
     await page.getByLabel("Password", { exact: true }).fill("wrongpassword");
     await page.getByRole("button", { name: "Sign in" }).click();
 
