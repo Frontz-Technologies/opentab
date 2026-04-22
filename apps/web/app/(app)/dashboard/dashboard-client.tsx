@@ -98,6 +98,15 @@ export function DashboardClient({
         <PeriodSelector selected={period} onChange={handlePeriodChange} />
       </div>
 
+      {/* Insights go above the KPIs — actionable call-outs (overdue,
+          aging, tax-reserve, high concentration) take priority over
+          steady-state gauges. Full-width, responsive auto-fit grid. */}
+      {insights.length > 0 && (
+        <div className="mb-8">
+          <InsightCardsRow insights={insights} />
+        </div>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <KpiCard
           label={t("revenue")}
@@ -172,8 +181,6 @@ export function DashboardClient({
           )}
         </div>
       </div>
-
-      <InsightCardsRow insights={insights} />
     </div>
   );
 }
