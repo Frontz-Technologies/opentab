@@ -1,10 +1,16 @@
 import { test, expect, type Page } from "@playwright/test";
 
+// minRows asserts the page is POPULATED, not that every seeded row is
+// rendered. /invoices and /expenses paginate at ~25 per page despite the
+// seed producing 48 / 70 rows respectively — keep the threshold below a
+// single page's worth of data so this test isn't coupled to pagination
+// internals. Exact seeded counts are asserted separately in
+// __tests__/demo-populate.test.ts via assertPopulateResult.
 const POPULATED_PAGES: { path: string; heading: string; minRows: number }[] = [
   { path: "/contacts", heading: "Contacts", minRows: 12 },
   { path: "/products", heading: "Products", minRows: 6 },
-  { path: "/invoices", heading: "Invoices", minRows: 30 },
-  { path: "/expenses", heading: "Expenses", minRows: 30 },
+  { path: "/invoices", heading: "Invoices", minRows: 20 },
+  { path: "/expenses", heading: "Expenses", minRows: 20 },
 ];
 
 async function assertNoHorizontalOverflow(
