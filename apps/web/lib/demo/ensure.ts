@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import * as schema from "@opentab/db/schema";
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth-server";
-import { DEMO_USER, DEMO_ORG_GR } from "./data-pool";
+import { DEMO_USER, DEMO_ORG } from "./data-pool";
 import { populateOrgDemo, clearOrgData } from "./populate";
 
 export function isDemoModeEnabled(): boolean {
@@ -56,16 +56,16 @@ export async function ensureDemoAccount(): Promise<{ orgId: string }> {
     .update(schema.organisations)
     .set({
       isDemo: true,
-      name: DEMO_ORG_GR.name,
-      taxId: DEMO_ORG_GR.taxId,
-      taxAuthority: DEMO_ORG_GR.taxAuthority,
-      countryCode: DEMO_ORG_GR.countryCode,
-      defaultCurrency: DEMO_ORG_GR.defaultCurrency,
-      addressLine1: DEMO_ORG_GR.addressLine1,
-      city: DEMO_ORG_GR.city,
-      postalCode: DEMO_ORG_GR.postalCode,
-      region: DEMO_ORG_GR.region,
-      phone: DEMO_ORG_GR.phone,
+      name: DEMO_ORG.name,
+      taxId: DEMO_ORG.taxId,
+      taxAuthority: DEMO_ORG.taxAuthority,
+      countryCode: DEMO_ORG.countryCode,
+      defaultCurrency: DEMO_ORG.defaultCurrency,
+      addressLine1: DEMO_ORG.addressLine1,
+      city: DEMO_ORG.city,
+      postalCode: DEMO_ORG.postalCode,
+      region: DEMO_ORG.region,
+      phone: DEMO_ORG.phone,
     })
     .where(eq(schema.organisations.id, orgId));
 

@@ -19,6 +19,7 @@ import {
 import { getCachedOrCompute } from "@/lib/reports/cache";
 import { generateInsights } from "@/lib/reports/insights";
 import type { InsightCard } from "@/lib/reports/insights/types";
+import { formatCurrencyCompact } from "@/lib/utils";
 
 function changePercent(
   current: number,
@@ -29,7 +30,9 @@ function changePercent(
 }
 
 function formatEur(n: number): string {
-  return `\u20AC${n.toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  // Inline banner uses. Same compact rule as KPI cards so a six-figure
+  // overdue total does not wrap the banner on mobile.
+  return formatCurrencyCompact(n, "EUR");
 }
 
 export async function getDashboardData(

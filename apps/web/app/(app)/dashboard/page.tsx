@@ -2,6 +2,7 @@ import { getSession } from "@/lib/session";
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/layout/page-header";
 import { QuickSetup } from "@/components/onboarding/quick-setup";
+import { KpiCard } from "@/components/reports/kpi-card";
 import { DashboardClient } from "./dashboard-client";
 import { getDashboardData, hasAnyData } from "./actions";
 import type { PeriodKey } from "@/lib/reports/types";
@@ -44,32 +45,23 @@ export default async function DashboardPage({
             <div className="lg:col-span-2 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[
-                  { label: t("revenue"), icon: "trending_up", hero: true },
-                  { label: t("outstanding"), icon: "schedule", hero: false },
-                  { label: t("expenses"), icon: "payments", hero: false },
+                  {
+                    label: t("revenue"),
+                    icon: "trending_up",
+                    variant: "hero" as const,
+                  },
+                  { label: t("outstanding"), icon: "schedule" },
+                  { label: t("expenses"), icon: "payments" },
                 ].map((kpi) => (
-                  <div
+                  <KpiCard
                     key={kpi.label}
-                    className="bg-surface-container-low rounded-2xl p-6"
-                  >
-                    <div className="flex items-center gap-2 mb-4">
-                      <span className="material-symbols-outlined text-on-surface-variant text-lg">
-                        {kpi.icon}
-                      </span>
-                      <p className="font-label text-xs uppercase tracking-widest text-on-surface-variant">
-                        {kpi.label}
-                      </p>
-                    </div>
-                    <p
-                      className={`font-headline font-bold text-on-surface leading-none tracking-tight ${
-                        kpi.hero
-                          ? "text-4xl sm:text-5xl"
-                          : "text-3xl sm:text-4xl"
-                      }`}
-                    >
-                      &euro;0.00
-                    </p>
-                  </div>
+                    label={kpi.label}
+                    value="€0.00"
+                    icon={kpi.icon}
+                    changePercent={null}
+                    secondary=""
+                    variant={kpi.variant}
+                  />
                 ))}
               </div>
               <div className="bg-surface-container-low rounded-2xl p-8 min-h-[300px] flex flex-col items-center justify-center">

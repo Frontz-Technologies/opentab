@@ -36,14 +36,30 @@ export default defineConfig({
       name: "chromium",
       use: { ...devices["Desktop Chrome"], channel: "chrome", headless: true },
     },
+    {
+      name: "mobile-chromium",
+      use: { ...devices["Pixel 5"], channel: "chrome", headless: true },
+    },
   ],
   webServer: process.env.CI
     ? undefined
     : {
+        // Run tests against a built + `next start` app, NOT `next dev`.
+        // Tester iteration at SHA 4985901 confirmed a 10× speedup on
+        // list-page navigations (demo-mode spec 120 s timeout → 9.4 s
+        // PASS) because `next start` serves pre-compiled routes instead
+        // of paying 5–20 s per-route cold compile on first visit. Build
+        // runs once (~1–2 min); subsequent test runs reuse the server
+        // via `reuseExistingServer`.
+        //
+        // NEXT_PUBLIC_* env vars are baked at build time, so they must
+        // be set on the build command too (and repeated for start — node
+        // env isn't shared across the `&&` boundary in POSIX sh).
         command:
-          'DATABASE_URL="postgresql://opentab:opentab_dev@localhost:5432/opentab_dev" BETTER_AUTH_SECRET="e2e-test-secret-at-least-32-chars!" NEXT_PUBLIC_APP_URL="http://localhost:3000" REDIS_URL="redis://localhost:6379" pnpm --filter @opentab/web dev',
+          'DATABASE_URL="postgresql://opentab:opentab_dev@localhost:5432/opentab_dev" BETTER_AUTH_SECRET="e2e-test-secret-at-least-32-chars!" NEXT_PUBLIC_APP_URL="http://localhost:3000" REDIS_URL="redis://localhost:6379" DEMO_SAMPLE_DATA_ENABLED=true NEXT_PUBLIC_DEMO_SAMPLE_DATA_ENABLED=true pnpm --filter @opentab/web build && DATABASE_URL="postgresql://opentab:opentab_dev@localhost:5432/opentab_dev" BETTER_AUTH_SECRET="e2e-test-secret-at-least-32-chars!" NEXT_PUBLIC_APP_URL="http://localhost:3000" REDIS_URL="redis://localhost:6379" DEMO_SAMPLE_DATA_ENABLED=true NEXT_PUBLIC_DEMO_SAMPLE_DATA_ENABLED=true pnpm --filter @opentab/web start',
         url: "http://localhost:3000",
         reuseExistingServer: !process.env.CI,
-        timeout: 30000,
+        // Accommodate first-time build: pnpm build + .next compile ≈ 1–2 min.
+        timeout: 300_000,
       },
 });

@@ -61,7 +61,12 @@ export default function LoginPage() {
       if (signInResult.error) {
         setError(signInResult.error.message ?? t("invalidCredentials"));
       } else {
-        router.push("/dashboard");
+        // router.replace (not push) so Next.js's auto-revalidation of
+        // the /login route triggered by the earlier getDemoCredentials
+        // server action doesn't race with the navigation and cancel it.
+        // Tester confirmed push races intermittently (1 of 3 runs made it
+        // to /dashboard, 2 got stuck on /login with session cookies set).
+        router.replace("/dashboard");
       }
     } catch {
       setError(t("somethingWentWrong"));
