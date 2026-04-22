@@ -89,7 +89,10 @@ export default function LoginPage() {
       <p className="text-on-surface-variant mb-8">{t("loginSubtitle")}</p>
 
       {error && (
-        <div className="p-4 rounded-xl bg-tertiary-container/20 text-on-tertiary-container text-sm mb-6">
+        <div
+          role="alert"
+          className="p-4 rounded-xl bg-error/10 text-error text-sm mb-6"
+        >
           {error}
         </div>
       )}
@@ -169,7 +172,7 @@ export default function LoginPage() {
 
         <Button
           type="submit"
-          disabled={loading}
+          disabled={loading || !email.trim() || !password.trim()}
           className="w-full h-12 bg-primary text-on-primary font-bold text-base border-none hover:opacity-90"
         >
           {loading ? t("signingIn") : t("login")}

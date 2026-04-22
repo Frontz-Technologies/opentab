@@ -30,6 +30,35 @@ test.describe("Authentication", () => {
     ).toBeVisible();
   });
 
+  test("sign-in button is disabled until both fields have content", async () => {
+    await page.goto("/login");
+    const submit = page.getByRole("button", { name: "Sign in" });
+    await expect(submit).toBeDisabled();
+
+    await page.getByRole("textbox", { name: "Email" }).fill("user@example.com");
+    await expect(submit).toBeDisabled();
+
+    await page.getByLabel("Password", { exact: true }).fill("hunter2");
+    await expect(submit).toBeEnabled();
+
+    await page.getByRole("textbox", { name: "Email" }).fill("");
+    await expect(submit).toBeDisabled();
+
+    await page.getByRole("textbox", { name: "Email" }).fill("   ");
+    await expect(submit).toBeDisabled();
+  });
+
+  test("login error banner has alert role and visible text", async () => {
+    await page.goto("/login");
+    await page.getByRole("textbox", { name: "Email" }).fill("nobody@example.com");
+    await page.getByLabel("Password", { exact: true }).fill("wrongpassword");
+    await page.getByRole("button", { name: "Sign in" }).click();
+
+    const alert = page.getByRole("alert");
+    await expect(alert).toBeVisible();
+    await expect(alert).not.toHaveText("");
+  });
+
   test("register page renders correctly", async () => {
     await page.goto("/register");
     await expect(

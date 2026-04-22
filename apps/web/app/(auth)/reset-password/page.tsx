@@ -106,7 +106,10 @@ function ResetPasswordForm() {
       <p className="text-on-surface-variant mb-8">{t("resetDescription")}</p>
 
       {error && (
-        <div className="p-4 rounded-xl bg-tertiary-container/20 text-on-tertiary-container text-sm mb-6">
+        <div
+          role="alert"
+          className="p-4 rounded-xl bg-error/10 text-error text-sm mb-6"
+        >
           {error}
         </div>
       )}
