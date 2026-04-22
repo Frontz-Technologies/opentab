@@ -218,6 +218,18 @@ describe("getInvoices", () => {
 
 Use Playwright MCP for visual verification of UI flows after implementation is complete. This is not a substitute for Vitest tests — it is a final verification layer.
 
+### Happy-Path e2e Per Feature PR
+
+Every user-visible feature ships with a Playwright spec that drives its primary flow in a real browser (`e2e/*.spec.ts`). Don't defer this to a follow-up or to the tester agent — "tester will add it" in a PR description almost always means it never lands, and features then ship untested end-to-end.
+
+### Verify Through the Prod Entry Chain
+
+Before opening a PR, run the feature through `docker compose -f docker/docker-compose.dev.yml up` or `pnpm dev` at the repo root — both route through turbo. The shortcut `pnpm --filter @opentab/web dev` bypasses turbo entirely. Turbo 2.x runs in strict env mode and only passes vars listed in `turbo.json`'s `globalPassThroughEnv` (plus the `NEXT_PUBLIC_*` variants Next.js framework inference auto-passes); a new server env var that isn't allowlisted will work under the shortcut and silently fail in docker/turbo.
+
+### No Silent Empty-State Early Returns
+
+In seeding, populate, or init code, never silently `return;` when a required dependency's data comes back empty. Throw with a message naming what's missing (e.g. `throw new Error("expense categories not seeded for org — call ensureCategoriesSeeded first")`). Silent skips turn dependency-ordering bugs into invisible data gaps that reach users. If empty is legitimately valid, leave a one-line comment saying so.
+
 ### What to Test
 
 - **Always:** database queries, server actions, utility functions, auth flows
