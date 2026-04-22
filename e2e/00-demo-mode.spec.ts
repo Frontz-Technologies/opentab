@@ -23,6 +23,13 @@ async function assertNoHorizontalOverflow(
 }
 
 test.describe("Demo mode happy path", () => {
+  // Cold-compile on the first visit to /contacts / /products / /invoices /
+  // /expenses can each take 5–20 s on the Colima dev VM, and demo
+  // provisioning adds another ~7 s. The default 60 s is tight when all
+  // of that lands in a single test. See tester follow-up on PR #193
+  // after SHA 1e8cba1.
+  test.setTimeout(120_000);
+
   test("Try-Demo signs in and every list page is populated without overflow", async ({
     page,
   }) => {
