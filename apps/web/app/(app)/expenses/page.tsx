@@ -50,21 +50,23 @@ export default async function ExpensesPage({
           <div className="flex gap-2">
             <Link
               href="/expenses/categories"
-              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-on-surface/10 text-on-surface/60 font-medium text-sm hover:bg-surface-container-low transition-colors"
+              aria-label={t("categories")}
+              className="inline-flex items-center gap-1.5 h-8 px-2 sm:px-3 rounded-lg border border-on-surface/10 text-on-surface/60 font-medium text-sm hover:bg-surface-container-low transition-colors"
             >
               <span className="material-symbols-outlined text-[18px] leading-none">
                 category
               </span>
-              {t("categories")}
+              <span className="hidden sm:inline">{t("categories")}</span>
             </Link>
             <Link
               href="/expenses/new"
-              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-primary text-on-primary font-medium text-sm hover:bg-primary/80 transition-colors"
+              aria-label={t("addExpense")}
+              className="inline-flex items-center gap-1.5 h-8 px-2 sm:px-3 rounded-lg bg-primary text-on-primary font-medium text-sm hover:bg-primary/80 transition-colors"
             >
               <span className="material-symbols-outlined text-[18px] leading-none">
                 add
               </span>
-              {t("addExpense")}
+              <span className="hidden sm:inline">{t("addExpense")}</span>
             </Link>
           </div>
         }
