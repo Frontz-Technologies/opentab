@@ -8,6 +8,7 @@ import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormError } from "@/components/auth/form-error";
 
 function ResetPasswordForm() {
   const router = useRouter();
@@ -105,11 +106,7 @@ function ResetPasswordForm() {
       </h1>
       <p className="text-on-surface-variant mb-8">{t("resetDescription")}</p>
 
-      {error && (
-        <div className="p-4 rounded-xl bg-tertiary-container/20 text-on-tertiary-container text-sm mb-6">
-          {error}
-        </div>
-      )}
+      <FormError message={error} />
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-2">
@@ -144,7 +141,7 @@ function ResetPasswordForm() {
 
         <Button
           type="submit"
-          disabled={loading}
+          disabled={loading || !password.trim() || !confirmPassword.trim()}
           className="w-full h-12 bg-primary text-on-primary font-bold text-base border-none hover:opacity-90"
         >
           {loading ? t("updating") : t("updatePassword")}

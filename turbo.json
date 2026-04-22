@@ -15,7 +15,9 @@
     "S3_SECRET_ACCESS_KEY",
     "S3_BUCKET",
     "S3_REGION",
-    "S3_FORCE_PATH_STYLE"
+    "S3_FORCE_PATH_STYLE",
+    "DEMO_SAMPLE_DATA_ENABLED",
+    "NEXT_PUBLIC_DEMO_SAMPLE_DATA_ENABLED"
   ],
   "tasks": {
     "dev": {

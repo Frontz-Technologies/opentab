@@ -8,6 +8,7 @@ import { signIn } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormError } from "@/components/auth/form-error";
 import { getDemoCredentialsAction } from "./actions";
 
 const DEMO_ENABLED =
@@ -88,11 +89,7 @@ export default function LoginPage() {
       </h1>
       <p className="text-on-surface-variant mb-8">{t("loginSubtitle")}</p>
 
-      {error && (
-        <div className="p-4 rounded-xl bg-tertiary-container/20 text-on-tertiary-container text-sm mb-6">
-          {error}
-        </div>
-      )}
+      <FormError message={error} />
 
       {DEMO_ENABLED && (
         <div
@@ -169,7 +166,7 @@ export default function LoginPage() {
 
         <Button
           type="submit"
-          disabled={loading}
+          disabled={loading || !email.trim() || !password.trim()}
           className="w-full h-12 bg-primary text-on-primary font-bold text-base border-none hover:opacity-90"
         >
           {loading ? t("signingIn") : t("login")}

@@ -16,4 +16,11 @@ export async function register() {
   if (!/^[0-9a-f]{64}$/i.test(key)) {
     throw new Error("ENCRYPTION_KEY must be a 32-byte hex string (64 chars)");
   }
+
+  if (process.env.DEMO_SAMPLE_DATA_ENABLED === "true") {
+    console.info(
+      '[demo] DEMO_SAMPLE_DATA_ENABLED=true — "Try the demo" card will ' +
+        "appear on /login and auto-provision demo@opentab.dev on first click",
+    );
+  }
 }
