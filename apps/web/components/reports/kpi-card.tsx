@@ -17,11 +17,11 @@ export function KpiCard({
 }: KpiCardProps) {
   const valueClass =
     variant === "hero"
-      ? "font-headline text-4xl sm:text-5xl font-bold text-on-surface leading-none tracking-tight"
-      : "font-headline text-3xl sm:text-4xl font-bold text-on-surface leading-none tracking-tight";
+      ? "font-headline text-3xl sm:text-4xl lg:text-5xl font-bold text-on-surface leading-none tracking-tight tabular-nums truncate"
+      : "font-headline text-2xl sm:text-3xl lg:text-4xl font-bold text-on-surface leading-none tracking-tight tabular-nums truncate";
 
   return (
-    <div className="bg-surface-container-low rounded-2xl p-6">
+    <div className="bg-surface-container-low rounded-2xl p-6 min-w-0">
       <div className="flex items-center gap-2 mb-4 min-w-0">
         <span className="material-symbols-outlined text-on-surface-variant text-lg shrink-0">
           {icon}
