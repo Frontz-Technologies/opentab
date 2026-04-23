@@ -18,11 +18,10 @@ export default async function VatReportPage() {
   const tNav = await getTranslations("nav");
 
   const now = new Date();
-  const q = Math.floor(now.getMonth() / 3);
-  const startDate = new Date(now.getFullYear(), q * 3, 1)
+  const startDate = new Date(now.getFullYear(), now.getMonth(), 1)
     .toISOString()
     .slice(0, 10);
-  const endDate = new Date(now.getFullYear(), q * 3 + 3, 0)
+  const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0)
     .toISOString()
     .slice(0, 10);
 

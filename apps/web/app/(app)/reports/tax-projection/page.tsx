@@ -4,8 +4,6 @@ import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/layout/page-header";
 import { getCountryProvider } from "@/lib/country";
 import { ReportsTabs } from "../reports-tabs";
-import { TaxProjectionClient } from "./tax-projection-client";
-import { getTaxProjectionData } from "../actions";
 
 export default async function TaxProjectionPage() {
   const session = (await getSession())!;
@@ -18,8 +16,6 @@ export default async function TaxProjectionPage() {
   const t = await getTranslations("taxProjection");
   const tNav = await getTranslations("nav");
 
-  const data = await getTaxProjectionData();
-
   return (
     <>
       <PageHeader
@@ -30,8 +26,17 @@ export default async function TaxProjectionPage() {
       />
       <main className="px-8 py-8 max-w-7xl mx-auto">
         <ReportsTabs active="taxProjection" provider={provider} />
-        <p className="text-on-surface-variant mb-8">{t("year")}</p>
-        <TaxProjectionClient initialData={data} />
+        <div className="bg-surface-container-low rounded-2xl p-12 flex flex-col items-center text-center">
+          <span className="material-symbols-outlined text-5xl text-on-surface-variant mb-4 block">
+            schedule
+          </span>
+          <h3 className="font-headline text-xl font-semibold text-on-surface mb-2">
+            {t("comingSoonTitle")}
+          </h3>
+          <p className="text-sm text-on-surface-variant max-w-md">
+            {t("comingSoonSubtext")}
+          </p>
+        </div>
       </main>
     </>
   );
