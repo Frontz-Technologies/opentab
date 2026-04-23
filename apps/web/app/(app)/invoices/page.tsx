@@ -4,7 +4,11 @@ import Link from "next/link";
 import { getSession } from "@/lib/session";
 import { PageHeader } from "@/components/layout/page-header";
 import { db } from "@/lib/db";
-import { invoices, countryIntegrationSubmissions } from "@opentab/db/schema";
+import {
+  invoices,
+  countryIntegrationSubmissions,
+  countryIntegrationCredentials,
+} from "@opentab/db/schema";
 import { eq, desc, count, and, inArray } from "drizzle-orm";
 import { getCountryProvider } from "@/lib/country";
 import { InvoiceList } from "./invoice-list";
@@ -45,8 +49,28 @@ export default async function InvoicesPage({
   const mydataIntegration = provider.integrations.find(
     (i) => i.kind === "mydata",
   );
+  // The myDATA column only makes sense when the org has actually
+  // connected its ΑΑΔΕ credentials — not just because the country
+  // provider declares the integration. Otherwise the column renders
+  // empty for every invoice and confuses the demo / pre-connect UX.
+  const mydataConnected = mydataIntegration
+    ? (
+        await db
+          .select({ id: countryIntegrationCredentials.id })
+          .from(countryIntegrationCredentials)
+          .where(
+            and(
+              eq(countryIntegrationCredentials.orgId, session.org.id),
+              eq(countryIntegrationCredentials.countryCode, provider.code),
+              eq(countryIntegrationCredentials.kind, "mydata"),
+              eq(countryIntegrationCredentials.isActive, true),
+            ),
+          )
+          .limit(1)
+      ).length > 0
+    : false;
   const mydataStatusByInvoice: Record<string, number | null> = {};
-  if (mydataIntegration && allInvoices.length > 0) {
+  if (mydataConnected && allInvoices.length > 0) {
     const submissions = await db
       .select({
         invoiceId: countryIntegrationSubmissions.invoiceId,
@@ -95,7 +119,7 @@ export default async function InvoicesPage({
       <div className="px-6 py-6">
         <InvoiceList
           invoices={allInvoices}
-          showMyData={!!mydataIntegration}
+          showMyData={mydataConnected}
           mydataStatusByInvoice={mydataStatusByInvoice}
         />
         <Pagination
