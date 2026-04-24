@@ -37,7 +37,7 @@ describe("revenueTrendInsight", () => {
       makeCtx({ revenue: { total: 8800, previousTotal: 10000 } }),
     );
     expect(card).not.toBeNull();
-    expect(card!.type).toBe("warning");
+    expect(card!.type).toBe("risk");
   });
 
   it("returns null when change < 10%", () => {
@@ -67,7 +67,7 @@ describe("overdueInvoicesInsight", () => {
       }),
     );
     expect(card).not.toBeNull();
-    expect(card!.type).toBe("warning");
+    expect(card!.type).toBe("risk");
     expect(card!.action?.href).toBe("/invoices?filter=overdue");
   });
 
@@ -173,7 +173,7 @@ describe("expenseSpikeInsight", () => {
       }),
     );
     expect(card).not.toBeNull();
-    expect(card!.type).toBe("warning");
+    expect(card!.type).toBe("risk");
     expect(card!.description).toContain("Software");
   });
 
@@ -230,12 +230,12 @@ describe("generateInsights", () => {
     });
     const insights = generateInsights(ctx);
     const types = insights.map((i) => i.type);
-    // All warnings come before info and success
+    // All risks come before info and success
     const firstInfo = types.indexOf("info");
-    const lastWarning = types.lastIndexOf("warning");
+    const lastRisk = types.lastIndexOf("risk");
     const firstSuccess = types.indexOf("success");
-    if (lastWarning >= 0 && firstInfo >= 0) {
-      expect(lastWarning).toBeLessThan(firstInfo);
+    if (lastRisk >= 0 && firstInfo >= 0) {
+      expect(lastRisk).toBeLessThan(firstInfo);
     }
     if (firstInfo >= 0 && firstSuccess >= 0) {
       expect(firstInfo).toBeLessThan(firstSuccess);

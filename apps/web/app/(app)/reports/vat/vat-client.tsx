@@ -193,8 +193,8 @@ export function VatClient({
           <div
             className={`rounded-2xl p-6 border text-center ${
               data.netPayable > 0
-                ? "bg-red-500/10 border-red-500/30"
-                : "bg-emerald-500/10 border-emerald-500/30"
+                ? "bg-tertiary-container/15 border-tertiary/30"
+                : "bg-primary-container/15 border-primary/30"
             }`}
           >
             <p className="text-xs text-on-surface-variant uppercase tracking-widest mb-2">

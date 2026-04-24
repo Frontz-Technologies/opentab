@@ -9,7 +9,7 @@ export function expenseSpikeInsight(ctx: InsightContext): InsightCard | null {
   if (!spike) return null;
   return {
     id: "expense-spike",
-    type: "warning",
+    type: "risk",
     icon: "trending_up",
     title: `Expense spike: ${spike.category}`,
     description: `${spike.category} is ${(spike.total / avg).toFixed(1)}x the average category spend.`,

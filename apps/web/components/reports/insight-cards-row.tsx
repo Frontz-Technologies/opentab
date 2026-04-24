@@ -1,10 +1,16 @@
 import type { InsightCard } from "@/lib/reports/insights/types";
 import Link from "next/link";
 
+// Semantic-token borders per insight type. `risk` maps to `tertiary`
+// (hard-danger) — the surface signals an actionable risk (overdue
+// receivables, high client concentration) rather than a soft caution,
+// so the name mirrors the visual role and keeps the `warning` token
+// reserved for chip-level "partial / paused" surfaces. `info` uses
+// outline-variant for a subtle neutral accent that reads as "fyi".
 const borderByType: Record<InsightCard["type"], string> = {
-  success: "border-emerald-500/30",
-  info: "border-blue-500/30",
-  warning: "border-red-400/30",
+  success: "border-primary/30",
+  info: "border-outline-variant/40",
+  risk: "border-tertiary/30",
 };
 
 export function InsightCardsRow({ insights }: { insights: InsightCard[] }) {

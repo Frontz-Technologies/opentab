@@ -104,8 +104,8 @@ export function MyDataSettingsForm({ credentials }: MyDataSettingsFormProps) {
               badgeState === "connected"
                 ? "bg-primary text-on-primary"
                 : badgeState === "failing"
-                  ? "bg-amber-500/20 text-amber-300"
-                  : "bg-red-500/20 text-red-400"
+                  ? "bg-warning/15 text-warning"
+                  : "bg-tertiary-container/20 text-tertiary"
             }
             variant="outline"
           >
@@ -138,7 +138,7 @@ export function MyDataSettingsForm({ credentials }: MyDataSettingsFormProps) {
             aria-invalid={fieldErrors.aadeUserId ? true : undefined}
           />
           {fieldErrors.aadeUserId && (
-            <p className="text-xs text-red-400">
+            <p className="text-xs text-error">
               {fieldErrors.aadeUserId.join(". ")}
             </p>
           )}
@@ -159,7 +159,7 @@ export function MyDataSettingsForm({ credentials }: MyDataSettingsFormProps) {
             aria-invalid={fieldErrors.subscriptionKey ? true : undefined}
           />
           {fieldErrors.subscriptionKey && (
-            <p className="text-xs text-red-400">
+            <p className="text-xs text-error">
               {fieldErrors.subscriptionKey.join(". ")}
             </p>
           )}
@@ -183,8 +183,8 @@ export function MyDataSettingsForm({ credentials }: MyDataSettingsFormProps) {
           <div
             className={`rounded-lg p-3 text-sm ${
               testResult.success
-                ? "bg-emerald-500/10 text-emerald-400"
-                : "bg-red-500/10 text-red-400"
+                ? "bg-primary-container/15 text-primary"
+                : "bg-error/10 text-error"
             }`}
           >
             {testResult.success
@@ -216,7 +216,7 @@ export function MyDataSettingsForm({ credentials }: MyDataSettingsFormProps) {
                 variant="outline"
                 onClick={handleDelete}
                 disabled={isPending}
-                className="text-red-400 hover:text-red-300"
+                className="text-tertiary hover:text-tertiary/80"
               >
                 {t("deleteCredentials")}
               </Button>

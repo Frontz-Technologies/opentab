@@ -16,14 +16,18 @@ import { InvoiceActions } from "./invoice-actions";
 import { MYDATA_DOCUMENT_TYPES } from "@/lib/country/providers/gr/integrations/mydata/document-types";
 import { getCountryProvider } from "@/lib/country";
 
+// Unified with the list-view map in ../invoice-list.tsx — same states,
+// same tokens (semantic, not raw Tailwind), same chips across detail
+// and list surfaces.
 const statusColors: Record<number, string> = {
   [INVOICE_STATUS.DRAFT]:
     "bg-surface-container-highest text-on-surface-variant",
-  [INVOICE_STATUS.PUBLISHED]: "bg-sky-500/20 text-sky-300",
-  [INVOICE_STATUS.SENT]: "bg-blue-500/20 text-blue-300",
-  [INVOICE_STATUS.PARTIAL]: "bg-amber-500/20 text-amber-200",
-  [INVOICE_STATUS.PAID]: "bg-emerald-500/25 text-emerald-200",
-  [INVOICE_STATUS.CANCELLED]: "bg-zinc-500/20 text-zinc-300",
+  [INVOICE_STATUS.PUBLISHED]:
+    "bg-secondary-container text-on-secondary-container",
+  [INVOICE_STATUS.SENT]: "bg-secondary-container text-on-secondary-container",
+  [INVOICE_STATUS.PARTIAL]: "bg-warning/15 text-warning",
+  [INVOICE_STATUS.PAID]: "bg-primary-container/20 text-primary",
+  [INVOICE_STATUS.CANCELLED]: "bg-tertiary-container/20 text-tertiary",
 };
 
 export default async function InvoiceDetailPage({
@@ -279,11 +283,11 @@ export default async function InvoiceDetailPage({
                         COUNTRY_INTEGRATION_SUBMISSION_STATUS.PENDING ||
                       mydataStatus ===
                         COUNTRY_INTEGRATION_SUBMISSION_STATUS.SUBMITTED
-                    ? "bg-blue-500/20 text-blue-400"
+                    ? "bg-warning/15 text-warning"
                     : mydataStatus ===
                         COUNTRY_INTEGRATION_SUBMISSION_STATUS.CANCELLED
-                      ? "bg-zinc-500/20 text-zinc-400"
-                      : "bg-red-500/20 text-red-400"
+                      ? "bg-surface-container-high text-on-surface-variant"
+                      : "bg-tertiary-container/20 text-tertiary"
               }
               variant="outline"
             >
@@ -300,7 +304,10 @@ export default async function InvoiceDetailPage({
 
           {mydataStatus === COUNTRY_INTEGRATION_SUBMISSION_STATUS.FAILED &&
             mydataError && (
-              <div className="rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-400 flex items-start gap-2">
+              <div
+                role="alert"
+                className="rounded-lg bg-error/10 px-3 py-2 text-xs text-error flex items-start gap-2"
+              >
                 <span className="material-symbols-outlined text-[16px] leading-none">
                   error
                 </span>

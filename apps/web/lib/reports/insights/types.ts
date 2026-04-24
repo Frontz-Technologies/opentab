@@ -6,7 +6,7 @@ import type {
 
 export interface InsightCard {
   id: string;
-  type: "info" | "warning" | "success";
+  type: "info" | "risk" | "success";
   icon: string;
   title: string;
   description: string;

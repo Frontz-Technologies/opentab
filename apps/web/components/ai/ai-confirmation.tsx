@@ -12,8 +12,8 @@ export function AiConfirmation({ confirmation }: AiConfirmationProps) {
   const confirmToolCall = useAiChatStore((state) => state.confirmToolCall);
 
   return (
-    <div className="rounded-2xl border border-amber-400/30 bg-amber-400/10 px-4 py-3">
-      <p className="text-xs font-medium uppercase tracking-[0.18em] text-amber-200/80">
+    <div className="rounded-2xl border border-warning/30 bg-warning/10 px-4 py-3">
+      <p className="text-xs font-medium uppercase tracking-[0.18em] text-warning">
         Confirmation required
       </p>
       <p className="mt-2 text-sm font-medium text-on-surface">

@@ -84,23 +84,49 @@ The emerald primary is the brand anchor across both themes. In light mode, the p
 
 | Token                   | Hex       | Usage                                                                  |
 | ----------------------- | --------- | ---------------------------------------------------------------------- |
-| `tertiary`              | `#FFB3AF` | Soft warnings, overdue indicators                                      |
+| `tertiary`              | `#FFB3AF` | Hard danger — overdue indicators, rejected                             |
 | `tertiary-container`    | `#FC7C78` | Destructive action fills (Delete / Reset confirmations)                |
 | `on-tertiary-container` | `#711419` | Text on destructive action fills                                       |
 | `error`                 | `#FFB4AB` | Inline form-error feedback (banner text + tinted bg via `bg-error/10`) |
 | `error-container`       | `#93000A` | Solid error fills where needed                                         |
+| `warning`               | `#FFCF74` | Soft caution — partial, paused, published, supplier chip, demo banner  |
+| `warning-container`     | `#4A3000` | Filled amber pill bg                                                   |
 
 **Light mode:**
 
 | Token                   | Hex       | Usage                                                                  |
 | ----------------------- | --------- | ---------------------------------------------------------------------- |
-| `tertiary`              | `#B3261E` | Soft warnings, overdue indicators                                      |
+| `tertiary`              | `#B3261E` | Hard danger — overdue indicators, rejected                             |
 | `tertiary-container`    | `#F9DEDC` | Destructive action fills (Delete / Reset confirmations)                |
 | `on-tertiary-container` | `#8C1D18` | Text on destructive action fills                                       |
 | `error`                 | `#B3261E` | Inline form-error feedback (banner text + tinted bg via `bg-error/10`) |
 | `error-container`       | `#F9DEDC` | Solid error fills where needed                                         |
+| `warning`               | `#8A5A00` | Soft caution — partial, paused, published, supplier chip, demo banner  |
+| `warning-container`     | `#FFE6B3` | Filled amber pill bg                                                   |
 
-**Inline form-error banners** (post-submit failures on `/login`, `/register`, `/reset-password`, etc.) use the `error` token pair: `p-4 rounded-xl bg-error/10 text-error text-sm mb-6` plus `role="alert"`. This is the M3 "error" role — reserve `tertiary-container` for destructive _action_ affordances (Reset-demo button, delete dialogs).
+**Three red-ish / amber roles — don't interchange:**
+
+- **`error`** → inline form-error banners only (`bg-error/10 text-error` + `role="alert"`).
+- **`tertiary`** → hard-danger states visible as chips or inline indicators (overdue invoices, rejected quotes, cancelled items). Also the destructive-action button fills (Reset, Delete) via `tertiary-container`.
+- **`warning`** → soft caution states that aren't failures but need attention (partial payment, paused recurring, published-but-not-settled, supplier/contact type chip, demo-mode banner). Never use raw Tailwind `amber-*` — always `warning` / `warning-container`.
+
+**Status chip canonical mapping** (invoices / quotes / recurring / contacts):
+
+| State                        | Token pair                                              |
+| ---------------------------- | ------------------------------------------------------- |
+| Draft / neutral / completed  | `bg-surface-container-highest text-on-surface-variant`  |
+| Published / sent / in flight | `bg-secondary-container text-on-secondary-container`    |
+| Partial / paused             | `bg-warning/15 text-warning`                            |
+| Paid / accepted / active     | `bg-primary-container/20 text-primary`                  |
+| Rejected / cancelled         | `bg-tertiary-container/20 text-tertiary`                |
+| Overdue (row highlight)      | `bg-tertiary-container text-on-tertiary-container`      |
+| Contact → supplier           | `bg-warning/15 text-warning`                            |
+| Contact → both               | `bg-secondary-container/30 text-on-secondary-container` |
+| myDATA pending / submitted   | `bg-warning/15 text-warning`                            |
+
+**Why myDATA pending / submitted is `warning`, not `secondary-container` ("Sent / in flight"):** the invoice is in flight toward the tax authority, but the lifecycle is not settled — the AADE hasn't yet returned a confirmation, and the user may still need to take action (retry, amend). `warning` reads as "action may be required", whereas `secondary-container` reads as "done, acknowledged". The chip returns to neutral/completed (`on-surface-variant`) once the mark is confirmed.
+
+**Why `text-on-secondary-container` not `text-secondary`:** shadcn's `.dark { --secondary }` override collapses `text-secondary` to the same hex as `--color-secondary-container` in dark mode (`#21523c`), which makes `bg-secondary-container + text-secondary` chips render invisible. The M3 `on-*` containers are specifically designed to sit on top of their container counterpart — use them.
 
 ### Text
 

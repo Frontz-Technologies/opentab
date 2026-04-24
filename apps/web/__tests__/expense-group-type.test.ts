@@ -1,9 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { EXPENSE_GROUPS_SEED } from "@opentab/db/schema";
-import {
-  GROUP_TYPE_COLORS,
-  GROUP_TYPE_MARKER,
-} from "../lib/expenses/group-type";
+import { GROUP_TYPE_MARKER } from "../lib/expenses/group-type";
 
 describe("expense-group type mapping (#140)", () => {
   it("every seeded group has a non-null type value", () => {
@@ -62,15 +59,14 @@ describe("expense-group type mapping (#140)", () => {
     expect(codes.length).toBe(uniq.size);
   });
 
-  it("colour + marker maps cover all 4 type values", () => {
-    const types: Array<keyof typeof GROUP_TYPE_COLORS> = [
+  it("marker map covers all 4 type values", () => {
+    const types: Array<keyof typeof GROUP_TYPE_MARKER> = [
       "operating_expense",
       "purchase",
       "asset",
       "other",
     ];
     for (const t of types) {
-      expect(GROUP_TYPE_COLORS[t]).toMatch(/^#[0-9a-f]{6}$/);
       expect(GROUP_TYPE_MARKER[t]).toBeTruthy();
     }
   });
