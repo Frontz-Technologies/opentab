@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/layout/page-header";
 import { getCountryProvider } from "@/lib/country";
+import { ReportsTabs } from "../reports-tabs";
 import { VatClient } from "./vat-client";
 
 export default async function VatReportPage() {
@@ -17,11 +18,10 @@ export default async function VatReportPage() {
   const tNav = await getTranslations("nav");
 
   const now = new Date();
-  const q = Math.floor(now.getMonth() / 3);
-  const startDate = new Date(now.getFullYear(), q * 3, 1)
+  const startDate = new Date(now.getFullYear(), now.getMonth(), 1)
     .toISOString()
     .slice(0, 10);
-  const endDate = new Date(now.getFullYear(), q * 3 + 3, 0)
+  const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0)
     .toISOString()
     .slice(0, 10);
 
@@ -34,6 +34,7 @@ export default async function VatReportPage() {
         userEmail={session.user.email}
       />
       <main className="px-8 py-8 max-w-7xl mx-auto">
+        <ReportsTabs active="vat" provider={provider} />
         <VatClient defaultStart={startDate} defaultEnd={endDate} />
       </main>
     </>

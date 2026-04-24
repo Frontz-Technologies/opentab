@@ -42,7 +42,7 @@ export interface ProductSeed {
 export const DEMO_ORG = {
   name: "Aegean Systems Ltd.",
   slug: "aegean-systems",
-  taxId: "800123456",
+  taxId: "EL800123456",
   taxAuthority: "Athens 1st FAE",
   countryCode: "GR",
   defaultCurrency: "EUR",

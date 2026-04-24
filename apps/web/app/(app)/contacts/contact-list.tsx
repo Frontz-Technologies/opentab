@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import type { Contact } from "@opentab/db/schema";
 import { Badge } from "@/components/ui/badge";
@@ -20,8 +21,26 @@ const typeColors: Record<string, string> = {
 
 export function ContactList({ contacts }: ContactListProps) {
   const t = useTranslations("contacts");
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
+
+  // When search / filter changes and we are past page 1, reset to
+  // page 1. Otherwise the current URL `?page=N` keeps the server slice
+  // anchored on the wrong window (e.g. filtering to "Suppliers" from
+  // page 2 shows an empty page because suppliers are on page 1). Does
+  // not fully fix server-side-filtering correctness — that's tracked
+  // separately — but it eliminates the confusing empty-page case.
+  const resetPageIfNeeded = () => {
+    const current = searchParams.get("page");
+    if (current && current !== "1") {
+      const next = new URLSearchParams(searchParams.toString());
+      next.delete("page");
+      const qs = next.toString();
+      router.replace(qs ? `/contacts?${qs}` : "/contacts", { scroll: false });
+    }
+  };
 
   const filtered = contacts.filter((c) => {
     const matchesSearch =
@@ -41,7 +60,10 @@ export function ContactList({ contacts }: ContactListProps) {
         <Input
           placeholder={t("searchPlaceholder")}
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            resetPageIfNeeded();
+          }}
           className="max-w-sm"
         />
         <AnimatedFilterBar
@@ -51,7 +73,10 @@ export function ContactList({ contacts }: ContactListProps) {
             { value: "supplier", label: t("filterSuppliers") },
           ]}
           value={typeFilter}
-          onValueChange={setTypeFilter}
+          onValueChange={(v) => {
+            setTypeFilter(v);
+            resetPageIfNeeded();
+          }}
         />
       </div>
 

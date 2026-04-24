@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import type { VatReportData } from "@/lib/reports/types";
 import { getVatReport } from "../actions";
 
+type Preset = "month" | "lastMonth" | "quarter" | "year";
+
 function formatEur(n: number): string {
-  return `\u20AC${n.toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `€${n.toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 export function VatClient({
@@ -21,19 +23,55 @@ export function VatClient({
   const [endDate, setEndDate] = useState(defaultEnd);
   const [data, setData] = useState<VatReportData | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [activePreset, setActivePreset] = useState<Preset | null>("month");
 
-  const loadReport = () => {
+  useEffect(() => {
     startTransition(async () => {
       const result = await getVatReport(startDate, endDate);
       setData(result);
     });
+  }, [startDate, endDate]);
+
+  const setPreset = (preset: Preset) => {
+    const now = new Date();
+    let s: Date;
+    let e: Date;
+    switch (preset) {
+      case "month":
+        s = new Date(now.getFullYear(), now.getMonth(), 1);
+        e = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        break;
+      case "lastMonth":
+        s = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        e = new Date(now.getFullYear(), now.getMonth(), 0);
+        break;
+      case "quarter": {
+        const q = Math.floor(now.getMonth() / 3);
+        s = new Date(now.getFullYear(), q * 3, 1);
+        e = new Date(now.getFullYear(), q * 3 + 3, 0);
+        break;
+      }
+      case "year":
+        s = new Date(now.getFullYear(), 0, 1);
+        e = new Date(now.getFullYear(), 11, 31);
+        break;
+    }
+    setActivePreset(preset);
+    setStartDate(s.toISOString().slice(0, 10));
+    setEndDate(e.toISOString().slice(0, 10));
   };
 
-  const setQuarter = (q: number) => {
-    const year = new Date().getFullYear();
-    setStartDate(new Date(year, q * 3, 1).toISOString().slice(0, 10));
-    setEndDate(new Date(year, q * 3 + 3, 0).toISOString().slice(0, 10));
+  const handleDateChange = (setter: (v: string) => void, value: string) => {
+    setActivePreset(null);
+    setter(value);
   };
+
+  const presets: { key: Preset; label: string }[] = [
+    { key: "month", label: t("periodMonth") },
+    { key: "lastMonth", label: t("periodLastMonth") },
+    { key: "quarter", label: t("periodQuarter") },
+    { key: "year", label: t("periodYear") },
+  ];
 
   return (
     <div>
@@ -41,38 +79,38 @@ export function VatClient({
         <input
           type="date"
           value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-          className="bg-surface-container rounded-lg px-3 py-2 text-sm text-on-surface border border-outline-variant/20"
+          onChange={(e) => handleDateChange(setStartDate, e.target.value)}
+          className="bg-surface-container-lowest rounded-lg px-3 py-2 text-sm text-on-surface"
         />
-        <span className="text-on-surface-variant">to</span>
+        <span className="text-on-surface-variant text-sm">{t("dateTo")}</span>
         <input
           type="date"
           value={endDate}
-          onChange={(e) => setEndDate(e.target.value)}
-          className="bg-surface-container rounded-lg px-3 py-2 text-sm text-on-surface border border-outline-variant/20"
+          onChange={(e) => handleDateChange(setEndDate, e.target.value)}
+          className="bg-surface-container-lowest rounded-lg px-3 py-2 text-sm text-on-surface"
         />
-        <button
-          onClick={loadReport}
-          disabled={isPending}
-          className="px-4 py-2 rounded-lg btn-gradient text-on-primary font-bold text-sm"
-        >
-          {t("title")}
-        </button>
-        <div className="flex gap-1">
-          {[0, 1, 2, 3].map((q) => (
-            <button
-              key={q}
-              onClick={() => setQuarter(q)}
-              className="px-3 py-1.5 rounded-lg text-xs text-on-surface-variant hover:bg-surface-container-low"
-            >
-              Q{q + 1}
-            </button>
-          ))}
+        <div className="flex gap-1 ml-auto">
+          {presets.map(({ key, label }) => {
+            const active = activePreset === key;
+            return (
+              <button
+                key={key}
+                onClick={() => setPreset(key)}
+                className={`px-3 py-1.5 rounded-full text-xs font-label uppercase tracking-wider transition-colors ${
+                  active
+                    ? "bg-primary-container/20 text-primary"
+                    : "text-on-surface-variant hover:bg-surface-container-high"
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {data && (
-        <div className={isPending ? "opacity-60" : ""}>
+        <div className={isPending ? "opacity-60 transition-opacity" : ""}>
           {/* Output VAT */}
           <div className="bg-surface-container-low rounded-2xl p-6 border border-outline-variant/10 mb-6">
             <h3 className="font-label text-sm text-on-surface-variant mb-4">

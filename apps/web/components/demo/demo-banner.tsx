@@ -12,12 +12,6 @@ export async function DemoBanner() {
       data-testid="demo-banner"
       className="sticky top-0 z-30 flex items-center justify-center gap-3 border-b border-warning/40 bg-warning/10 px-4 py-2 text-xs text-on-surface"
     >
-      <span
-        aria-hidden="true"
-        className="material-symbols-outlined text-warning text-[16px] leading-none"
-      >
-        auto_awesome
-      </span>
       <span>{t("bannerText")}</span>
       <Link
         href="/settings/account"

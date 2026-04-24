@@ -51,7 +51,7 @@ export function PnlClient({
   const [endDate, setEndDate] = useState(defaultEnd);
   const [data, setData] = useState<PnlReportData | null>(null);
   const [isPending, startTransition] = useTransition();
-  const [activePreset, setActivePreset] = useState<Preset | null>(null);
+  const [activePreset, setActivePreset] = useState<Preset | null>("month");
 
   useEffect(() => {
     startTransition(async () => {

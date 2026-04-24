@@ -16,11 +16,15 @@ const borderByType: Record<InsightCard["type"], string> = {
 export function InsightCardsRow({ insights }: { insights: InsightCard[] }) {
   if (!insights.length) return <></>;
   return (
-    <div className="flex overflow-x-auto gap-4 pb-2">
+    // Auto-fit grid: cards stretch to fill available width when few, wrap
+    // onto new rows when many. 240 px minimum keeps content legible.
+    // Placed above the KPI row on dashboard so all insights are visible
+    // without horizontal scrolling — replaces the prior overflow-x-auto.
+    <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-4">
       {insights.map((card) => (
         <div
           key={card.id}
-          className={`bg-surface-container-low/60 backdrop-blur-sm rounded-2xl p-4 min-w-[240px] border ${borderByType[card.type]}`}
+          className={`bg-surface-container-low/60 backdrop-blur-sm rounded-2xl p-4 border ${borderByType[card.type]}`}
         >
           <div className="flex items-center gap-2 mb-2">
             <span className="material-symbols-outlined text-lg text-on-surface-variant">
