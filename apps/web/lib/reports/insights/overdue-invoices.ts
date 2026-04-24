@@ -6,7 +6,7 @@ export function overdueInvoicesInsight(
   if (ctx.outstanding.overdueCount <= 0) return null;
   return {
     id: "overdue-invoices",
-    type: "warning",
+    type: "risk",
     icon: "warning",
     title: `${ctx.outstanding.overdueCount} overdue invoice${ctx.outstanding.overdueCount > 1 ? "s" : ""}`,
     description: `\u20AC${ctx.outstanding.overdueTotal.toLocaleString("en", { minimumFractionDigits: 2 })} is past due.`,

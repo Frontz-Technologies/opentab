@@ -11,7 +11,7 @@ export function cashFlowInsight(ctx: InsightContext): InsightCard | null {
   const up = change > 0;
   return {
     id: "cash-flow",
-    type: up ? "success" : "warning",
+    type: up ? "success" : "risk",
     icon: "account_balance",
     title: up ? "Cash flow improving" : "Cash flow declining",
     description: `Revenue ${up ? "increased" : "decreased"} by ${Math.abs(change).toFixed(1)}% vs previous period.`,

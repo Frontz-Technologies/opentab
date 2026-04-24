@@ -115,8 +115,8 @@ The emerald primary is the brand anchor across both themes. In light mode, the p
 | State                        | Token pair                                              |
 | ---------------------------- | ------------------------------------------------------- |
 | Draft / neutral / completed  | `bg-surface-container-highest text-on-surface-variant`  |
-| Sent / "in flight"           | `bg-secondary-container text-on-secondary-container`    |
-| Partial / paused / published | `bg-warning/15 text-warning`                            |
+| Published / sent / in flight | `bg-secondary-container text-on-secondary-container`    |
+| Partial / paused             | `bg-warning/15 text-warning`                            |
 | Paid / accepted / active     | `bg-primary-container/20 text-primary`                  |
 | Rejected / cancelled         | `bg-tertiary-container/20 text-tertiary`                |
 | Overdue (row highlight)      | `bg-tertiary-container text-on-tertiary-container`      |

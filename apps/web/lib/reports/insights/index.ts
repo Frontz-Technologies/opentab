@@ -22,7 +22,7 @@ const generators: Array<(ctx: InsightContext) => InsightCard | null> = [
 ];
 
 const typePriority: Record<InsightCard["type"], number> = {
-  warning: 0,
+  risk: 0,
   info: 1,
   success: 2,
 };

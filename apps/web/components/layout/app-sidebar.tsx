@@ -91,8 +91,8 @@ export function AppSidebar({ orgName, integrationNav }: AppSidebarProps) {
     >
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-3">
-          <div className="size-8 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center flex-shrink-0">
-            <span className="text-white font-bold text-sm">O</span>
+          <div className="size-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
+            <span className="text-on-primary font-bold text-sm">O</span>
           </div>
           {!isCollapsed && (
             <div className="flex flex-col min-w-0">
