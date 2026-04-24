@@ -59,12 +59,11 @@ export async function ReportsTabs({ active, provider }: ReportsTabsProps) {
             aria-current={isActive ? "page" : undefined}
             className={cn(
               "inline-flex items-center gap-1.5 h-8 px-4 rounded-full text-sm font-label transition-colors",
-              isActive && "bg-primary text-on-primary font-semibold shadow-sm",
+              isActive && "bg-primary-container/20 text-primary font-semibold",
               !isActive &&
                 !tab.locked &&
                 "text-on-surface hover:bg-surface-container-high",
-              tab.locked &&
-                "text-on-surface-variant/60 hover:text-on-surface-variant",
+              tab.locked && "text-outline hover:text-on-surface-variant",
             )}
           >
             {tab.label}
