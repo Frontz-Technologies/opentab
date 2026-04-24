@@ -122,6 +122,9 @@ The emerald primary is the brand anchor across both themes. In light mode, the p
 | Overdue (row highlight)      | `bg-tertiary-container text-on-tertiary-container`      |
 | Contact → supplier           | `bg-warning/15 text-warning`                            |
 | Contact → both               | `bg-secondary-container/30 text-on-secondary-container` |
+| myDATA pending / submitted   | `bg-warning/15 text-warning`                            |
+
+**Why myDATA pending / submitted is `warning`, not `secondary-container` ("Sent / in flight"):** the invoice is in flight toward the tax authority, but the lifecycle is not settled — the AADE hasn't yet returned a confirmation, and the user may still need to take action (retry, amend). `warning` reads as "action may be required", whereas `secondary-container` reads as "done, acknowledged". The chip returns to neutral/completed (`on-surface-variant`) once the mark is confirmed.
 
 **Why `text-on-secondary-container` not `text-secondary`:** shadcn's `.dark { --secondary }` override collapses `text-secondary` to the same hex as `--color-secondary-container` in dark mode (`#21523c`), which makes `bg-secondary-container + text-secondary` chips render invisible. The M3 `on-*` containers are specifically designed to sit on top of their container counterpart — use them.
 
