@@ -15,10 +15,6 @@ import {
 } from "@/lib/reports/queries";
 import { getCountryProvider } from "@/lib/country";
 import { pnlToCsv } from "@/lib/reports/export/csv";
-import type { OrgTaxSettings } from "@/lib/reports/tax/types";
-import { organisations } from "@opentab/db";
-import { eq } from "drizzle-orm";
-import { db } from "@/lib/db";
 
 const dateSchema = z.string().date();
 
@@ -145,38 +141,5 @@ export async function getVatReport(
     totalOutput,
     totalInput,
     netPayable: totalOutput - totalInput,
-  };
-}
-
-export async function getTaxProjectionData(): Promise<{
-  ytdRevenue: number;
-  ytdExpenses: number;
-  monthsElapsed: number;
-  taxSettings: OrgTaxSettings | null;
-}> {
-  const session = await getSession();
-  if (!session) throw new Error("Unauthorized");
-  const orgId = session.org.id;
-
-  const now = new Date();
-  const yearStart = new Date(now.getFullYear(), 0, 1);
-  const monthsElapsed = now.getMonth() + 1;
-
-  const [rev, exp] = await Promise.all([
-    getRevenue(orgId, yearStart, now),
-    getExpenseTotal(orgId, yearStart, now),
-  ]);
-
-  const [org] = await db
-    .select({ taxSettings: organisations.taxSettings })
-    .from(organisations)
-    .where(eq(organisations.id, orgId))
-    .limit(1);
-
-  return {
-    ytdRevenue: rev.total,
-    ytdExpenses: exp.total,
-    monthsElapsed,
-    taxSettings: (org?.taxSettings as OrgTaxSettings) ?? null,
   };
 }

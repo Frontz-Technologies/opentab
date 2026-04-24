@@ -3,7 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { useUnsavedChangesWarning } from "@/hooks/use-unsaved-changes-warning";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type {
   Contact,
   ExpenseCategory,
@@ -43,6 +43,7 @@ export function ExpenseForm({
   aiExtractionAvailable = false,
 }: ExpenseFormProps) {
   const t = useTranslations("expenses");
+  const locale = useLocale();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -182,6 +183,38 @@ export function ExpenseForm({
     group,
     items: categories.filter((c) => c.groupCode === group.code),
   }));
+
+  // Group names are stored per-locale on the expense_group table
+  // (nameEn notNull, nameEl/nameEs/nameDe nullable). Use the active
+  // locale's field, fall back to nameEn. Previously the optgroup
+  // label was hardcoded to nameEn which produced an English-over-
+  // localized duplication on the Greek/Spanish sessions.
+  function groupNameForLocale(g: ExpenseGroup): string {
+    if (locale === "el" && g.nameEl) return g.nameEl;
+    if (locale === "es" && g.nameEs) return g.nameEs;
+    if (locale === "de" && g.nameDe) return g.nameDe;
+    return g.nameEn;
+  }
+
+  // Auto-default the first line item's name from the selected category
+  // when the user hasn't typed anything custom. Reduces the visible
+  // "Category: Rent / Item: <blank>" redundancy on the simple single-
+  // line case — user can still override. Only touches the FIRST item;
+  // multi-line expenses where distinct names matter are unaffected.
+  // Kept as an event-driven handler (not useEffect) per React's
+  // set-state-in-effect lint rule — this belongs in the onChange path.
+  function handleCategoryChange(newCategoryId: string) {
+    setCategoryId(newCategoryId);
+    if (!newCategoryId) return;
+    const cat = categories.find((c) => c.id === newCategoryId);
+    if (!cat) return;
+    setItems((prev) => {
+      if (prev.length === 0) return prev;
+      const [first, ...rest] = prev;
+      if (first.name.trim()) return prev;
+      return [{ ...first, name: cat.name }, ...rest];
+    });
+  }
 
   function handleSubmit() {
     if (items.length === 0) {
@@ -419,7 +452,7 @@ export function ExpenseForm({
             </label>
             <select
               value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
+              onChange={(e) => handleCategoryChange(e.target.value)}
               className="w-full rounded-lg bg-surface-container-low border border-on-surface/10 px-3 py-2 text-sm text-on-surface"
             >
               <option value="">{t("selectCategory")}</option>
@@ -428,7 +461,7 @@ export function ExpenseForm({
                 .map((g) => (
                   <optgroup
                     key={g.group.code}
-                    label={`${GROUP_TYPE_MARKER[g.group.type]} ${g.group.nameEn}`}
+                    label={`${GROUP_TYPE_MARKER[g.group.type]} ${groupNameForLocale(g.group)}`}
                   >
                     {g.items.map((c) => (
                       <option key={c.id} value={c.id}>
