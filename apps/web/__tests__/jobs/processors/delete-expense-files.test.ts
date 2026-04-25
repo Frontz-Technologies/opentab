@@ -17,14 +17,50 @@ describe("delete-expense-files processor (#85)", () => {
     const result = await processDeleteExpenseFiles({
       orgId: "org-1",
       expenseId: "exp-1",
-      filePaths: ["a/b.pdf", "a/c.pdf", "a/d.pdf"],
+      filePaths: [
+        "org-1/expenses/b.pdf",
+        "org-1/expenses/c.pdf",
+        "org-1/expenses/d.pdf",
+      ],
     });
 
     expect(deleteTempFileMock).toHaveBeenCalledTimes(3);
-    expect(deleteTempFileMock).toHaveBeenNthCalledWith(1, "a/b.pdf");
-    expect(deleteTempFileMock).toHaveBeenNthCalledWith(2, "a/c.pdf");
-    expect(deleteTempFileMock).toHaveBeenNthCalledWith(3, "a/d.pdf");
+    expect(deleteTempFileMock).toHaveBeenNthCalledWith(
+      1,
+      "org-1/expenses/b.pdf",
+    );
+    expect(deleteTempFileMock).toHaveBeenNthCalledWith(
+      2,
+      "org-1/expenses/c.pdf",
+    );
+    expect(deleteTempFileMock).toHaveBeenNthCalledWith(
+      3,
+      "org-1/expenses/d.pdf",
+    );
     expect(result.deleted).toBe(3);
+  });
+
+  // Tester PR #216 Medium #1 regression — defence-in-depth. The
+  // processor must reject obviously-invalid payloads at the boundary
+  // so a poisoned Redis value can't trigger a path-traversal delete.
+  it("throws on missing orgId / expenseId / filePaths shape", async () => {
+    const { processDeleteExpenseFiles } =
+      await import("../../../lib/jobs/processors/delete-expense-files");
+    await expect(
+      processDeleteExpenseFiles({
+        orgId: "",
+        expenseId: "exp-1",
+        filePaths: [],
+      } as { orgId: string; expenseId: string; filePaths: string[] }),
+    ).rejects.toThrow();
+    await expect(
+      processDeleteExpenseFiles({
+        orgId: "org-1",
+        expenseId: "exp-1",
+        filePaths: ["../../etc/passwd"],
+      }),
+    ).rejects.toThrow();
+    expect(deleteTempFileMock).not.toHaveBeenCalled();
   });
 
   it("returns deleted=0 for an empty file list", async () => {

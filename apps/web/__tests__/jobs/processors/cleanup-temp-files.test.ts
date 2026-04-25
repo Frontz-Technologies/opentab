@@ -52,6 +52,48 @@ describe("cleanup-temp-files processor (#85)", () => {
     expect(result.deleted).toBe(0);
   });
 
+  // Tester PR #216 Medium #1 regression. A poisoned Redis value with
+  // ageHours <= 0 made `cutoff` a future timestamp → every file under
+  // every org's tmp/ became "older than cutoff" → mass-delete. The
+  // processor must reject non-positive (and absurdly large) values
+  // before touching the filesystem.
+  it("throws on ageHours <= 0 instead of mass-deleting fresh files", async () => {
+    const orgDir = join(uploadsDir, "org-1", "expenses", "tmp");
+    await mkdir(orgDir, { recursive: true });
+    const freshFile = join(orgDir, "fresh.bin");
+    await writeFile(freshFile, "fresh");
+
+    const { processCleanupTempFiles } =
+      await import("../../../lib/jobs/processors/cleanup-temp-files");
+
+    await expect(processCleanupTempFiles({ ageHours: 0 })).rejects.toThrow();
+    await expect(processCleanupTempFiles({ ageHours: -1 })).rejects.toThrow();
+
+    // file untouched after both throw
+    const remaining = await readdir(orgDir);
+    expect(remaining).toEqual(["fresh.bin"]);
+  });
+
+  it("throws on ageHours that is not a finite number", async () => {
+    const { processCleanupTempFiles } =
+      await import("../../../lib/jobs/processors/cleanup-temp-files");
+    await expect(
+      processCleanupTempFiles({ ageHours: NaN as unknown as number }),
+    ).rejects.toThrow();
+    await expect(
+      processCleanupTempFiles({
+        ageHours: "24" as unknown as number,
+      }),
+    ).rejects.toThrow();
+  });
+
+  it("throws on ageHours larger than 30 days (sanity cap)", async () => {
+    const { processCleanupTempFiles } =
+      await import("../../../lib/jobs/processors/cleanup-temp-files");
+    // 30 days * 24 = 720 — anything strictly greater is rejected.
+    await expect(processCleanupTempFiles({ ageHours: 721 })).rejects.toThrow();
+  });
+
   it("no-ops when S3_ENDPOINT is set (bucket lifecycle owns expiry)", async () => {
     process.env.S3_ENDPOINT = "https://s3.example.com";
     const orgDir = join(uploadsDir, "org-1", "expenses", "tmp");

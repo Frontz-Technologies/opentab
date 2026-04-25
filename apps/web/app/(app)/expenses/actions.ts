@@ -479,12 +479,29 @@ export async function deleteExpense(id: string) {
     .where(and(eq(expenses.id, id), eq(expenses.orgId, session.org.id)));
 
   if (attachments.length > 0) {
-    const { enqueue } = await import("@/lib/jobs/queues");
-    await enqueue("delete-expense-files", {
-      orgId: session.org.id,
-      expenseId: id,
-      filePaths: attachments.map((a) => a.filePath),
-    });
+    // Best-effort enqueue (tester PR #216 Medium #2). Redis being
+    // unreachable at delete time would otherwise throw a 500 to the
+    // user even though the expense row is already gone. Swallow,
+    // log, and continue — cleanup-temp-files (24h repeatable) is
+    // the safety net that sweeps up the orphaned files.
+    try {
+      const { enqueue } = await import("@/lib/jobs/queues");
+      await enqueue("delete-expense-files", {
+        orgId: session.org.id,
+        expenseId: id,
+        filePaths: attachments.map((a) => a.filePath),
+      });
+    } catch (err) {
+      log.warn(
+        "delete-expense-files enqueue failed; cleanup-temp-files will sweep",
+        {
+          orgId: session.org.id,
+          expenseId: id,
+          attachmentCount: attachments.length,
+          errorMessage: err instanceof Error ? err.message : String(err),
+        },
+      );
+    }
   }
 
   log.info("expense deleted", {
