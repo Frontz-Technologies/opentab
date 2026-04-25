@@ -28,7 +28,19 @@ const {
   expenseItems,
   expenseCategories,
   invoiceSequences,
+  activities,
+  users,
 } = schema;
+
+// Activity types used by the seed. Kept inline (not imported from
+// @/lib/entities/activity) to avoid coupling the demo seed to an
+// app-side module — populate.ts is intentionally db-only.
+const ACTIVITY = {
+  CREATED: "invoice.created",
+  SENT: "invoice.sent",
+  PAID: "invoice.paid",
+  CANCELLED: "invoice.cancelled",
+} as const;
 
 // VAT rate mapping for GR tax categories. Kept local to demo — the
 // real runtime derives this per country provider, but the demo only
@@ -304,6 +316,16 @@ async function seedInvoices(
 ): Promise<void> {
   if (clients.length === 0) return;
 
+  // Look up the demo org's owning user once so the seeded activities
+  // attribute to a real user rather than the system. Falls back to
+  // null (isSystem=true) if the demo user hasn't been provisioned yet
+  // — first-run ordering of seed vs user creation isn't guaranteed.
+  const [demoUser] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.email, "demo@opentab.dev"));
+  const seedUserId: string | null = demoUser?.id ?? null;
+
   // Distribute INVOICE_COUNT across 8 months using REVENUE_CURVE
   // weights so newer months have more volume — gives the dashboard a
   // believable upward hockey-stick. Uses the largest-remainder method
@@ -468,6 +490,64 @@ async function seedInvoices(
           lineTotal: it.lineTotal,
         })),
       );
+
+      // Activity backfill (#131): synthesize a plausible audit trail
+      // matching this invoice's terminal status. created → (sent) →
+      // (paid|cancelled). Timestamps are anchored to issueDate /
+      // paidAt so the CSV reads like a real timeline. status codes:
+      // 1=DRAFT, 2=SENT, 3=PARTIAL, 4=PAID, 5=CANCELLED.
+      const activityRows: Array<typeof activities.$inferInsert> = [];
+      const createdAt = new Date(issueDate.getTime() - 60_000); // ~1 min before issue
+      activityRows.push({
+        orgId,
+        entityType: "invoice",
+        entityId: inv.id,
+        userId: seedUserId,
+        type: ACTIVITY.CREATED,
+        payload: { status: 1, total, currency: "EUR" },
+        isSystem: seedUserId === null,
+        createdAt,
+      });
+      if (sentAt && status !== 1) {
+        activityRows.push({
+          orgId,
+          entityType: "invoice",
+          entityId: inv.id,
+          userId: seedUserId,
+          type: ACTIVITY.SENT,
+          payload: { from: 1, to: 2, recipientEmail: client.email },
+          isSystem: seedUserId === null,
+          createdAt: sentAt,
+        });
+      }
+      if (status === 4 && paidAt) {
+        activityRows.push({
+          orgId,
+          entityType: "invoice",
+          entityId: inv.id,
+          userId: seedUserId,
+          type: ACTIVITY.PAID,
+          payload: { from: 2, to: 4, amount: total, currency: "EUR" },
+          isSystem: seedUserId === null,
+          createdAt: paidAt,
+        });
+      }
+      if (status === 5) {
+        // Cancelled invoices flip from whatever they were before; the
+        // demo doesn't track that intermediate state, so anchor the
+        // cancel slightly after issueDate.
+        activityRows.push({
+          orgId,
+          entityType: "invoice",
+          entityId: inv.id,
+          userId: seedUserId,
+          type: ACTIVITY.CANCELLED,
+          payload: { from: sentAt ? 2 : 1, to: 5 },
+          isSystem: seedUserId === null,
+          createdAt: new Date(issueDate.getTime() + 24 * 60 * 60 * 1000),
+        });
+      }
+      await db.insert(activities).values(activityRows);
 
       // #132: only non-DRAFT seeded invoices consume a sequence
       // number — drafts hold the row but no number, matching the

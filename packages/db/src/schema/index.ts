@@ -113,3 +113,4 @@ export {
   type UserPreferences,
   type NewUserPreferences,
 } from "./user-preferences";
+export { activities, type Activity, type NewActivity } from "./activities";

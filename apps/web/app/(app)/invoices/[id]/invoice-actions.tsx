@@ -130,6 +130,18 @@ export function InvoiceActions({ invoice, mydataStatus }: InvoiceActionsProps) {
         </span>
         {t("downloadPdf")}
       </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() =>
+          window.open(`/api/invoices/${invoice.id}/activity.csv`, "_blank")
+        }
+      >
+        <span className="material-symbols-outlined text-[16px] mr-1">
+          history
+        </span>
+        {t("downloadActivityCsv")}
+      </Button>
       {mydataStatus !== null &&
         mydataStatus !== undefined &&
         mydataStatus !== COUNTRY_INTEGRATION_SUBMISSION_STATUS.CONFIRMED &&
