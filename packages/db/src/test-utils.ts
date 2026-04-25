@@ -158,7 +158,7 @@ async function pushSchema(pglite: PGlite) {
       "org_id" uuid NOT NULL REFERENCES "organisation"("id") ON DELETE CASCADE,
       "contact_id" uuid NOT NULL REFERENCES "contact"("id"),
       "status" integer NOT NULL DEFAULT 1,
-      "invoice_number" varchar(50) NOT NULL,
+      "invoice_number" varchar(50),
       "issue_date" date NOT NULL,
       "due_date" date,
       "currency_code" varchar(3) NOT NULL DEFAULT 'EUR',

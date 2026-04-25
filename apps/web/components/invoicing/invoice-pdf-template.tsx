@@ -64,9 +64,11 @@ export function renderInvoicePdfHtml({
     .mydata-stamp .mark-number { font-family: monospace; font-size: 14px; color: #1a1a2e; font-weight: 600; }
     .mydata-footer { margin-top: 30px; display: flex; justify-content: flex-end; align-items: flex-end; gap: 12px; }
     .mydata-footer .qr-label { font-size: 9px; color: #6b7280; display: block; text-align: center; margin-top: 4px; }
+    .draft-watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); font-size: 200px; font-weight: 800; color: rgba(16, 185, 129, 0.08); letter-spacing: 0.1em; pointer-events: none; user-select: none; z-index: 0; }
   </style>
 </head>
 <body>
+  ${invoice.invoiceNumber === null ? `<div class="draft-watermark">DRAFT</div>` : ""}
   <div class="header">
     <div class="header-left">
       <h1>${escapeHtml(org.name)}</h1>
@@ -77,7 +79,7 @@ export function renderInvoicePdfHtml({
     </div>
     <div class="header-right">
       <h2>INVOICE</h2>
-      <p style="font-family: monospace; font-size: 16px;">${escapeHtml(invoice.invoiceNumber)}</p>
+      <p style="font-family: monospace; font-size: 16px;">${invoice.invoiceNumber === null ? `Draft #${invoice.id.slice(0, 8)}` : escapeHtml(invoice.invoiceNumber)}</p>
     </div>
   </div>
 
