@@ -1,7 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { and, eq, inArray } from "drizzle-orm";
 import { getSession } from "@/lib/session";
+import { db } from "@/lib/db";
 import { contacts, expenses, invoices } from "@opentab/db/schema";
 import { recordActivity } from "@/lib/activities/record";
 import { ACTIVITY_TYPE, ENTITY_TYPE } from "@/lib/entities/activity";
@@ -9,6 +11,7 @@ import { createLogger } from "@/lib/logging/logger";
 import { getImporter } from "@/lib/import/importers";
 import { runImport } from "@/lib/import/core/runner";
 import { validateRows } from "@/lib/import/core/validator";
+import type { RowResult } from "@/lib/import/core/types";
 import type { PgTable } from "drizzle-orm/pg-core";
 
 const log = createLogger("import-actions");
@@ -106,10 +109,20 @@ export async function commitImport(args: CommitArgs) {
   const importer = getImporter(args.entityKey);
   const validated = validateRows(args.rows, args.mapping, importer, orgId);
 
+  // Invoice rows need a real contactId (notNull at DB level). Pre-
+  // resolve via a single batch lookup over distinct contactNames;
+  // rows whose contact isn't found get demoted to "blocked" so the
+  // batch insert doesn't trip the FK. Auto-create-missing-contact
+  // is the v1.1 follow-up.
+  const resolved =
+    args.entityKey === "invoices"
+      ? await resolveInvoiceContactIds(orgId, validated)
+      : validated;
+
   const result = await runImport({
     orgId,
     descriptor: importer,
-    rows: validated,
+    rows: resolved,
     skippedByUser: new Set(args.skippedByUser),
     table: TABLE_BY_ENTITY[args.entityKey],
     buildInsert: buildInsertForEntity(args.entityKey, orgId),
@@ -138,6 +151,56 @@ export async function commitImport(args: CommitArgs) {
 
   revalidatePath(`/${args.entityKey}`);
   return { success: true, ...result };
+}
+
+// Batch contact-name → id lookup for invoice imports. Walks the ok
+// rows once, builds a unique-name set, runs a single SELECT, then
+// either attaches __contactId to each row's data or demotes the row
+// to "blocked" with a clear "contact not found" message. Auto-create-
+// missing-contact behavior is the v1.1 follow-up — for v1 we require
+// the contact to already exist (matches the spec's PR-A scope).
+async function resolveInvoiceContactIds(
+  orgId: string,
+  rows: RowResult<Record<string, unknown>>[],
+): Promise<RowResult<Record<string, unknown>>[]> {
+  const distinctNames = new Set<string>();
+  for (const r of rows) {
+    if (r.kind === "blocked") continue;
+    const name = r.data.contactName as string | undefined;
+    if (name) distinctNames.add(name);
+  }
+  if (distinctNames.size === 0) return rows;
+
+  const found = await db
+    .select({ id: contacts.id, displayName: contacts.displayName })
+    .from(contacts)
+    .where(
+      and(
+        eq(contacts.orgId, orgId),
+        inArray(contacts.displayName, Array.from(distinctNames)),
+      ),
+    );
+  const nameToId = new Map(found.map((c) => [c.displayName, c.id]));
+
+  return rows.map((r) => {
+    if (r.kind === "blocked") return r;
+    const name = r.data.contactName as string | undefined;
+    const id = name ? nameToId.get(name) : undefined;
+    if (!id) {
+      return {
+        kind: "blocked",
+        rowNumber: r.rowNumber,
+        raw: { contactName: name ?? "" },
+        messages: [
+          `contactName: contact "${name ?? ""}" not found in this org. Create it via /import/contacts first, then re-run.`,
+        ],
+      };
+    }
+    return {
+      ...r,
+      data: { ...r.data, __contactId: id },
+    };
+  });
 }
 
 // Server-rendered sample CSV — header row only, derived from the
