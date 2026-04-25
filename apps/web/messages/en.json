@@ -274,6 +274,7 @@
   "contacts": {
     "title": "Contacts",
     "addContact": "Add Contact",
+    "import": "Import",
     "editContact": "Edit Contact",
     "noContacts": "No contacts yet",
     "noContactsDescription": "Add your first client or supplier to get started.",
@@ -361,6 +362,7 @@
   "invoices": {
     "title": "Invoices",
     "addInvoice": "New Invoice",
+    "import": "Import",
     "editInvoice": "Edit Invoice",
     "noInvoices": "No invoices yet",
     "noInvoicesDescription": "Create your first invoice to start getting paid.",
@@ -612,6 +614,7 @@
   "expenses": {
     "title": "Expenses",
     "addExpense": "New Expense",
+    "import": "Import",
     "uploadReceipt": "Upload Receipt",
     "uploading": "Uploading...",
     "uploadReceiptHint": "Upload a PDF or image to attach to this expense",
@@ -865,5 +868,25 @@
     "resetPanelCancel": "Cancel",
     "resetPanelLoading": "Resetting…",
     "resetError": "Reset failed. Try again."
+  },
+  "import": {
+    "heading": "Import {entity}",
+    "uploadHelp": "Drop a CSV file or click to choose. Required columns vary by entity — see the sample.",
+    "downloadSample": "Download sample CSV",
+    "parseError": "Could not parse CSV",
+    "mapHeading": "Map your columns to ours",
+    "yourColumn": "Your column",
+    "mapsTo": "Maps to",
+    "skip": "Skip",
+    "continueToPreview": "Continue",
+    "previewHeading": "Preview ({count} rows)",
+    "commit": "Import",
+    "done": "Done",
+    "created": "Created",
+    "skippedDup": "Skipped (duplicate)",
+    "skippedByUser": "Skipped (by user)",
+    "failed": "Failed",
+    "downloadErrorCsv": "Download error CSV",
+    "import": "Import"
   }
 }

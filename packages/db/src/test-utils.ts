@@ -133,9 +133,12 @@ async function pushSchema(pglite: PGlite) {
       "default_language" varchar(5),
       "default_payment_terms" integer,
       "notes" text,
+      "import_idempotency_key" varchar(64),
       "created_at" timestamp NOT NULL DEFAULT now(),
       "updated_at" timestamp NOT NULL DEFAULT now()
     )`,
+
+    `CREATE UNIQUE INDEX "contact_import_idempotency_idx" ON "contact" ("org_id", "import_idempotency_key") WHERE "import_idempotency_key" IS NOT NULL`,
 
     `CREATE TYPE tax_category AS ENUM ('standard', 'reduced', 'super_reduced', 'zero_rated', 'exempt', 'reverse_charge')`,
 
@@ -180,11 +183,13 @@ async function pushSchema(pglite: PGlite) {
       "paid_at" timestamp,
       "recurring_invoice_id" uuid,
       "quote_id" uuid,
+      "import_idempotency_key" varchar(64),
       "created_at" timestamp NOT NULL DEFAULT now(),
       "updated_at" timestamp NOT NULL DEFAULT now()
     )`,
 
     `CREATE UNIQUE INDEX "invoice_org_number_idx" ON "invoice" ("org_id", "invoice_number")`,
+    `CREATE UNIQUE INDEX "invoice_import_idempotency_idx" ON "invoice" ("org_id", "import_idempotency_key") WHERE "import_idempotency_key" IS NOT NULL`,
 
     `CREATE TABLE IF NOT EXISTS "invoice_item" (
       "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -424,10 +429,13 @@ async function pushSchema(pglite: PGlite) {
       "recurring_expense_id" uuid,
       "source" varchar(20) NOT NULL DEFAULT 'manual',
       "file_hash" varchar(64),
+      "import_idempotency_key" varchar(64),
       "created_at" timestamp NOT NULL DEFAULT now(),
       "updated_at" timestamp NOT NULL DEFAULT now(),
       UNIQUE("org_id", "expense_number")
     )`,
+
+    `CREATE UNIQUE INDEX "expense_import_idempotency_idx" ON "expense" ("org_id", "import_idempotency_key") WHERE "import_idempotency_key" IS NOT NULL`,
 
     `CREATE TABLE IF NOT EXISTS "expense_item" (
       "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),

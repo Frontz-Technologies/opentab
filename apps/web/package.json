@@ -27,6 +27,7 @@
     "bullmq": "^5.76.2",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
+    "csv-parse": "^6.2.1",
     "date-fns": "^4.1.0",
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.44.7",

@@ -59,6 +59,16 @@ export default async function ExpensesPage({
               <span className="hidden sm:inline">{t("categories")}</span>
             </Link>
             <Link
+              href="/import/expenses"
+              aria-label={t("import")}
+              className="inline-flex items-center gap-1.5 h-8 px-2 sm:px-3 rounded-lg border border-on-surface/20 text-on-surface font-medium text-sm hover:bg-surface-container-low transition-colors"
+            >
+              <span className="material-symbols-outlined text-[18px] leading-none">
+                upload
+              </span>
+              <span className="hidden sm:inline">{t("import")}</span>
+            </Link>
+            <Link
               href="/expenses/new"
               aria-label={t("addExpense")}
               className="inline-flex items-center gap-1.5 h-8 px-2 sm:px-3 rounded-lg bg-primary text-on-primary font-medium text-sm hover:bg-primary/80 transition-colors"

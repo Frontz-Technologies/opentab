@@ -274,6 +274,7 @@
   "contacts": {
     "title": "Επαφές",
     "addContact": "Προσθήκη Επαφής",
+    "import": "Εισαγωγή",
     "editContact": "Επεξεργασία Επαφής",
     "noContacts": "Δεν υπάρχουν επαφές",
     "noContactsDescription": "Προσθέστε τον πρώτο σας πελάτη ή προμηθευτή για να ξεκινήσετε.",
@@ -361,6 +362,7 @@
   "invoices": {
     "title": "Τιμολόγια",
     "addInvoice": "Νέο Τιμολόγιο",
+    "import": "Εισαγωγή",
     "editInvoice": "Επεξεργασία Τιμολογίου",
     "noInvoices": "Δεν υπάρχουν τιμολόγια",
     "noInvoicesDescription": "Δημιουργήστε το πρώτο σας τιμολόγιο για να αρχίσετε να πληρώνεστε.",
@@ -612,6 +614,7 @@
   "expenses": {
     "title": "Δαπάνες",
     "addExpense": "Νέα Δαπάνη",
+    "import": "Εισαγωγή",
     "uploadReceipt": "Μεταφόρτωση Απόδειξης",
     "uploading": "Μεταφόρτωση...",
     "uploadReceiptHint": "Ανεβάστε PDF ή εικόνα για επισύναψη στη δαπάνη",
@@ -865,5 +868,25 @@
     "resetPanelCancel": "Άκυρο",
     "resetPanelLoading": "Επαναφορά…",
     "resetError": "Η επαναφορά απέτυχε. Δοκίμασε ξανά."
+  },
+  "import": {
+    "heading": "Εισαγωγή {entity}",
+    "uploadHelp": "Σύρετε αρχείο CSV ή κάντε κλικ για επιλογή. Οι απαιτούμενες στήλες διαφέρουν ανά οντότητα — δείτε το δείγμα.",
+    "downloadSample": "Λήψη δείγματος CSV",
+    "parseError": "Δεν ήταν δυνατή η ανάλυση του CSV",
+    "mapHeading": "Αντιστοιχίστε τις στήλες σας με τις δικές μας",
+    "yourColumn": "Στήλη σας",
+    "mapsTo": "Αντιστοιχεί σε",
+    "skip": "Παράλειψη",
+    "continueToPreview": "Συνέχεια",
+    "previewHeading": "Προεπισκόπηση ({count} γραμμές)",
+    "commit": "Εισαγωγή",
+    "done": "Ολοκληρώθηκε",
+    "created": "Δημιουργήθηκαν",
+    "skippedDup": "Παράληψη (διπλότυπο)",
+    "skippedByUser": "Παράληψη (από χρήστη)",
+    "failed": "Απέτυχαν",
+    "downloadErrorCsv": "Λήψη CSV σφαλμάτων",
+    "import": "Εισαγωγή"
   }
 }

@@ -8,7 +8,9 @@ import {
   timestamp,
   pgEnum,
   index,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { organisations } from "./organisations";
 
 export const contactTypeEnum = pgEnum("contact_type", [
@@ -53,6 +55,9 @@ export const contacts = pgTable(
     defaultLanguage: varchar("default_language", { length: 5 }),
     defaultPaymentTerms: integer("default_payment_terms"),
     notes: text("notes"),
+    // Per-org dedup key for CSV imports (#215). Null for any contact
+    // not created via /import/contacts; partial unique index below.
+    importIdempotencyKey: varchar("import_idempotency_key", { length: 64 }),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
@@ -60,6 +65,9 @@ export const contacts = pgTable(
     index("contact_org_id_idx").on(table.orgId),
     index("contact_org_type_idx").on(table.orgId, table.type),
     index("contact_org_vat_idx").on(table.orgId, table.vatNumber),
+    uniqueIndex("contact_import_idempotency_idx")
+      .on(table.orgId, table.importIdempotencyKey)
+      .where(sql`${table.importIdempotencyKey} IS NOT NULL`),
   ],
 );
 

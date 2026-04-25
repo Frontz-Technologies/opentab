@@ -9,6 +9,7 @@ export type { Activity, NewActivity } from "@opentab/db/schema";
 export const ENTITY_TYPE = {
   INVOICE: "invoice",
   CREDIT_NOTE: "credit_note",
+  IMPORT: "import",
 } as const;
 
 export type EntityType = (typeof ENTITY_TYPE)[keyof typeof ENTITY_TYPE];
@@ -34,13 +35,18 @@ export const ACTIVITY_TYPE = {
   MYDATA_SUBMITTED: "mydata.submitted",
   MYDATA_CONFIRMED: "mydata.confirmed",
   MYDATA_FAILED: "mydata.failed",
+  IMPORT_RUN_COMPLETED: "import.run_completed",
 } as const;
 
 export type ActivityType = (typeof ACTIVITY_TYPE)[keyof typeof ACTIVITY_TYPE];
 
 export const createActivitySchema = z.object({
   orgId: z.string().uuid(),
-  entityType: z.enum([ENTITY_TYPE.INVOICE, ENTITY_TYPE.CREDIT_NOTE]),
+  entityType: z.enum([
+    ENTITY_TYPE.INVOICE,
+    ENTITY_TYPE.CREDIT_NOTE,
+    ENTITY_TYPE.IMPORT,
+  ]),
   entityId: z.string().uuid(),
   userId: z.string().nullable(),
   type: z.enum(
