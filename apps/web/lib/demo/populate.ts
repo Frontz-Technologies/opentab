@@ -453,13 +453,18 @@ async function seedInvoices(
       }
       const balance = (parseFloat(total) - parseFloat(amountPaid)).toFixed(2);
 
+      // #132: drafts (status=1) seed with no invoice number — they
+      // hold a slot in the table but don't reserve a number until
+      // they're published/sent. This mirrors what real users see now.
+      const seededNumber =
+        status === 1 ? null : `INV-${year}-${String(number).padStart(4, "0")}`;
       const [inv] = await db
         .insert(invoices)
         .values({
           orgId,
           contactId: client.id,
           status,
-          invoiceNumber: `INV-${year}-${String(number).padStart(4, "0")}`,
+          invoiceNumber: seededNumber,
           issueDate: toDateStr(issueDate),
           dueDate: toDateStr(dueDate),
           currencyCode: "EUR",
@@ -555,7 +560,10 @@ async function seedInvoices(
       }
       await db.insert(activities).values(activityRows);
 
-      number++;
+      // #132: only non-DRAFT seeded invoices consume a sequence
+      // number — drafts hold the row but no number, matching the
+      // real run-time behaviour after this issue.
+      if (status !== 1) number++;
     }
   }
 

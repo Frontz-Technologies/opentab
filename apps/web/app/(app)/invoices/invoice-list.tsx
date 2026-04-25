@@ -119,7 +119,8 @@ export function InvoiceList({
   const filtered = invoices.filter((inv) => {
     const matchesSearch =
       !search ||
-      inv.invoiceNumber.toLowerCase().includes(search.toLowerCase()) ||
+      (inv.invoiceNumber?.toLowerCase().includes(search.toLowerCase()) ??
+        false) ||
       inv.contactName.toLowerCase().includes(search.toLowerCase());
 
     let matchesStatus = true;
@@ -230,7 +231,7 @@ export function InvoiceList({
                           href={`/invoices/${invoice.id}`}
                           className="text-on-surface hover:text-primary transition-colors font-medium font-mono text-sm"
                         >
-                          {invoice.invoiceNumber}
+                          {invoice.invoiceNumber ?? t("numberPlaceholderDraft")}
                         </Link>
                       </td>
                       <td className="px-4 py-3 text-on-surface text-sm">
@@ -276,7 +277,7 @@ export function InvoiceList({
               >
                 <div className="flex items-start justify-between mb-1">
                   <span className="font-mono text-sm text-on-surface">
-                    {invoice.invoiceNumber}
+                    {invoice.invoiceNumber ?? t("numberPlaceholderDraft")}
                   </span>
                   <span className="font-label text-lg font-bold text-on-surface">
                     {invoice.currencyCode} {invoice.total}
