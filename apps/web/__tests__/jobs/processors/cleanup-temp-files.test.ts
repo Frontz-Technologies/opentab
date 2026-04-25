@@ -27,9 +27,8 @@ describe("cleanup-temp-files processor (#85)", () => {
     const old = new Date(Date.now() - 25 * 60 * 60 * 1000);
     await utimes(oldFile, old, old);
 
-    const { processCleanupTempFiles } = await import(
-      "../../../lib/jobs/processors/cleanup-temp-files"
-    );
+    const { processCleanupTempFiles } =
+      await import("../../../lib/jobs/processors/cleanup-temp-files");
     const result = await processCleanupTempFiles({ ageHours: 24 });
 
     expect(result.deleted).toBe(1);
@@ -39,18 +38,16 @@ describe("cleanup-temp-files processor (#85)", () => {
 
   it("returns deleted=0 on a missing uploads dir", async () => {
     process.env.UPLOADS_DIR = join(uploadsDir, "no-such-dir");
-    const { processCleanupTempFiles } = await import(
-      "../../../lib/jobs/processors/cleanup-temp-files"
-    );
+    const { processCleanupTempFiles } =
+      await import("../../../lib/jobs/processors/cleanup-temp-files");
     const result = await processCleanupTempFiles({ ageHours: 24 });
     expect(result.deleted).toBe(0);
   });
 
   it("returns deleted=0 on an org with no tmp/ subdirectory", async () => {
     await mkdir(join(uploadsDir, "org-1"), { recursive: true });
-    const { processCleanupTempFiles } = await import(
-      "../../../lib/jobs/processors/cleanup-temp-files"
-    );
+    const { processCleanupTempFiles } =
+      await import("../../../lib/jobs/processors/cleanup-temp-files");
     const result = await processCleanupTempFiles({ ageHours: 24 });
     expect(result.deleted).toBe(0);
   });
@@ -64,9 +61,8 @@ describe("cleanup-temp-files processor (#85)", () => {
     const old = new Date(Date.now() - 25 * 60 * 60 * 1000);
     await utimes(oldFile, old, old);
 
-    const { processCleanupTempFiles } = await import(
-      "../../../lib/jobs/processors/cleanup-temp-files"
-    );
+    const { processCleanupTempFiles } =
+      await import("../../../lib/jobs/processors/cleanup-temp-files");
     const result = await processCleanupTempFiles({ ageHours: 24 });
 
     expect(result.deleted).toBe(0);

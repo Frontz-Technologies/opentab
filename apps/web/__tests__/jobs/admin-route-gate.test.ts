@@ -17,8 +17,8 @@ vi.mock("@bull-board/api/bullMQAdapter", () => ({
 vi.mock("@bull-board/express", () => ({
   ExpressAdapter: vi.fn().mockImplementation(() => ({
     setBasePath: vi.fn(),
-    getRouter: vi.fn(() => (_req: unknown, _res: unknown, next: () => void) =>
-      next(),
+    getRouter: vi.fn(
+      () => (_req: unknown, _res: unknown, next: () => void) => next(),
     ),
   })),
 }));
@@ -38,9 +38,7 @@ describe("/admin/queues gate (#85)", () => {
       user: { id: "u" },
       role: "owner",
     });
-    const { GET } = await import(
-      "../../app/admin/queues/[[...path]]/route"
-    );
+    const { GET } = await import("../../app/admin/queues/[[...path]]/route");
     const res = await GET(new Request("http://localhost/admin/queues"));
     expect(res.status).toBe(404);
   });
@@ -52,9 +50,7 @@ describe("/admin/queues gate (#85)", () => {
       user: { id: "u" },
       role: "member",
     });
-    const { GET } = await import(
-      "../../app/admin/queues/[[...path]]/route"
-    );
+    const { GET } = await import("../../app/admin/queues/[[...path]]/route");
     const res = await GET(new Request("http://localhost/admin/queues"));
     expect(res.status).toBe(404);
   });
@@ -62,9 +58,7 @@ describe("/admin/queues gate (#85)", () => {
   it("404s when there is no session", async () => {
     process.env.ENABLE_QUEUE_DASHBOARD = "true";
     getSessionMock.mockResolvedValue(null);
-    const { GET } = await import(
-      "../../app/admin/queues/[[...path]]/route"
-    );
+    const { GET } = await import("../../app/admin/queues/[[...path]]/route");
     const res = await GET(new Request("http://localhost/admin/queues"));
     expect(res.status).toBe(404);
   });
@@ -76,9 +70,7 @@ describe("/admin/queues gate (#85)", () => {
       user: { id: "u" },
       role: "admin",
     });
-    const { GET } = await import(
-      "../../app/admin/queues/[[...path]]/route"
-    );
+    const { GET } = await import("../../app/admin/queues/[[...path]]/route");
     const res = await GET(new Request("http://localhost/admin/queues"));
     expect(res.status).toBe(404);
   });

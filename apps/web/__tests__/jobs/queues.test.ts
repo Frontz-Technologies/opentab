@@ -5,7 +5,9 @@ const { addMock, ConnectionMock, QueueMock } = vi.hoisted(() => ({
   ConnectionMock: vi.fn(),
   QueueMock: vi
     .fn()
-    .mockImplementation(() => ({ add: vi.fn().mockResolvedValue({ id: "job-1" }) })),
+    .mockImplementation(() => ({
+      add: vi.fn().mockResolvedValue({ id: "job-1" }),
+    })),
 }));
 
 vi.mock("ioredis", () => ({ default: ConnectionMock }));

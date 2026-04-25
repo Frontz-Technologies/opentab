@@ -11,9 +11,8 @@ beforeEach(() => deleteTempFileMock.mockClear());
 
 describe("delete-expense-files processor (#85)", () => {
   it("calls deleteTempFile once per file path in the payload", async () => {
-    const { processDeleteExpenseFiles } = await import(
-      "../../../lib/jobs/processors/delete-expense-files"
-    );
+    const { processDeleteExpenseFiles } =
+      await import("../../../lib/jobs/processors/delete-expense-files");
 
     const result = await processDeleteExpenseFiles({
       orgId: "org-1",
@@ -29,9 +28,8 @@ describe("delete-expense-files processor (#85)", () => {
   });
 
   it("returns deleted=0 for an empty file list", async () => {
-    const { processDeleteExpenseFiles } = await import(
-      "../../../lib/jobs/processors/delete-expense-files"
-    );
+    const { processDeleteExpenseFiles } =
+      await import("../../../lib/jobs/processors/delete-expense-files");
     const result = await processDeleteExpenseFiles({
       orgId: "org-1",
       expenseId: "exp-1",
