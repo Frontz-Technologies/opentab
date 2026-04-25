@@ -1,5 +1,6 @@
 "use server";
 
+import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
 import { and, eq, inArray } from "drizzle-orm";
 import { getSession } from "@/lib/session";
@@ -67,9 +68,11 @@ function buildInsertForEntity(entityKey: string, orgId: string) {
         total: row.total,
         contactName: row.supplierName ?? null,
         contactVatNumber: row.supplierVat ?? null,
-        expenseNumber:
-          row.expenseNumber ??
-          `IMPORT-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        // randomUUID() — collision-safe (~122 bits of entropy) so a
+        // 5000-row batch can't trip the unique (org_id, expense_number)
+        // index that the prior Date.now() + 5-char base36 default
+        // could (tester PR #218 Medium #2).
+        expenseNumber: row.expenseNumber ?? `IMPORT-${randomUUID()}`,
         source: "import",
         description: row.notes ?? null,
       });

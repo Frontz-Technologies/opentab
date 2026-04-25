@@ -100,9 +100,21 @@ export async function runImport<T extends Record<string, unknown>>(
   };
 }
 
+// CSV-injection guard (OWASP) — same shape as the lib/activities/csv.ts
+// fix from PR #211. Excel / Numbers / Sheets interpret a field whose
+// first character is one of `= + - @ \t \r` as a formula on import
+// (e.g. `=cmd|/c calc!A0`). Error CSV cells echo the user's own input
+// straight back, so a hostile or accidentally-malformed value would
+// otherwise execute on open. Prefix such fields with a single
+// apostrophe — the apostrophe is consumed by the spreadsheet parser
+// as a string-literal marker and doesn't appear in the rendered cell.
 function csvEscape(s: string): string {
-  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
-  return s;
+  let v = s;
+  if (v.length > 0 && /^[=+\-@\t\r]/.test(v)) {
+    v = "'" + v;
+  }
+  if (/[",\n\r]/.test(v)) return `"${v.replace(/"/g, '""')}"`;
+  return v;
 }
 
 function buildErrorCsv(
