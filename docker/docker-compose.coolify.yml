@@ -70,6 +70,45 @@ services:
     networks:
       - opentab-network
 
+  worker:
+    # Async job queue worker (#85). Same image as `app`, different
+    # CMD — runs apps/web/worker.ts via tsx. Shares uploads_data so
+    # the cleanup-temp-files job can prune the same directory tree
+    # the app writes to.
+    container_name: opentab-worker
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    command: ["pnpm", "--filter", "@opentab/web", "worker"]
+    restart: unless-stopped
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-opentab}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-opentab}
+      REDIS_URL: redis://redis:6379
+      S3_ENDPOINT: ${S3_ENDPOINT:-}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
+      S3_BUCKET: ${S3_BUCKET:-opentab-uploads}
+      S3_REGION: ${S3_REGION:-eu-west-1}
+      S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-false}
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 64M
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - opentab-network
+
   postgres:
     container_name: opentab-postgres
     image: postgres:16-alpine
