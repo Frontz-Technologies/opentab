@@ -465,24 +465,32 @@ export async function deleteExpense(id: string) {
 
   if (!expense) return { success: false, error: "Expense not found" };
 
-  // Delete attached files from storage before removing the DB record
+  // Collect file paths BEFORE the DB delete (the cascade will drop
+  // the attachment rows and we'd lose the paths). The actual file
+  // deletion is enqueued so the action returns fast — the worker
+  // owns the storage cleanup (#85).
   const attachments = await db
     .select({ filePath: expenseAttachments.filePath })
     .from(expenseAttachments)
     .where(eq(expenseAttachments.expenseId, id));
 
-  for (const att of attachments) {
-    await deleteTempFile(att.filePath);
-  }
-
   await db
     .delete(expenses)
     .where(and(eq(expenses.id, id), eq(expenses.orgId, session.org.id)));
 
+  if (attachments.length > 0) {
+    const { enqueue } = await import("@/lib/jobs/queues");
+    await enqueue("delete-expense-files", {
+      orgId: session.org.id,
+      expenseId: id,
+      filePaths: attachments.map((a) => a.filePath),
+    });
+  }
+
   log.info("expense deleted", {
     orgId: session.org.id,
     expenseId: id,
-    attachmentsDeleted: attachments.length,
+    attachmentsEnqueued: attachments.length,
   });
 
   revalidatePath("/expenses");
