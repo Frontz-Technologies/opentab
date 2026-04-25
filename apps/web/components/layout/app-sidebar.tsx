@@ -48,6 +48,7 @@ const navGroups: NavGroup[] = [
     labelKey: "sales",
     items: [
       { icon: "receipt_long", labelKey: "invoices", href: "/invoices" },
+      { icon: "undo", labelKey: "creditNotes", href: "/credit-notes" },
       { icon: "request_quote", labelKey: "quotes", href: "/quotes" },
     ],
   },
