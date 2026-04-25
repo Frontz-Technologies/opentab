@@ -60,9 +60,7 @@ export const contactRowSchema = z
       .or(z.literal(""))
       .transform((v) => v || undefined),
     type: z.enum(["client", "supplier", "both"]).optional().default("client"),
-    classification: z
-      .enum(["individual", "business", "government"])
-      .optional(),
+    classification: z.enum(["individual", "business", "government"]).optional(),
     defaultPaymentTerms: z.coerce.number().int().min(0).max(365).optional(),
   })
   .refine((d) => !!(d.company || (d.firstName && d.lastName)), {
@@ -107,7 +105,13 @@ export const contactsImporter: ImporterDescriptor<ContactRow> = {
     { name: "defaultPaymentTerms", required: false, type: "number" },
   ],
   aliases: {
-    company: ["company", "company name", "name", "business name", "client name"],
+    company: [
+      "company",
+      "company name",
+      "name",
+      "business name",
+      "client name",
+    ],
     firstName: ["first name", "first_name", "firstname", "given name"],
     lastName: ["last name", "last_name", "lastname", "surname", "family name"],
     email: ["email", "e-mail", "e mail", "correo", "email address"],
@@ -121,7 +125,8 @@ export const contactsImporter: ImporterDescriptor<ContactRow> = {
     classification: ["classification", "kind"],
     defaultPaymentTerms: ["payment terms", "payment_terms", "net days"],
   },
-  rowSchema: contactRowSchema as unknown as ImporterDescriptor<ContactRow>["rowSchema"],
+  rowSchema:
+    contactRowSchema as unknown as ImporterDescriptor<ContactRow>["rowSchema"],
   idempotencyKeyParts: (row, orgId) => [
     orgId,
     (row.vatNumber ?? row.email ?? row.displayName).toLowerCase(),

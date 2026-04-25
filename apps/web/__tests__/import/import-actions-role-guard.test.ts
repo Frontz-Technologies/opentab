@@ -20,7 +20,10 @@ vi.mock("@/lib/db", () => ({
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/activities/record", () => ({ recordActivity: vi.fn() }));
 
-import { commitImport, getSampleCsv } from "../../app/(app)/import/[entity]/actions";
+import {
+  commitImport,
+  getSampleCsv,
+} from "../../app/(app)/import/[entity]/actions";
 
 describe("commitImport / getSampleCsv role guard (#215)", () => {
   beforeEach(() => {

@@ -105,15 +105,26 @@ export default async function InvoicesPage({
         userName={session.user.name}
         userEmail={session.user.email}
         actions={
-          <Link
-            href="/invoices/new"
-            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-primary text-on-primary font-medium text-sm hover:bg-primary/80 transition-colors"
-          >
-            <span className="material-symbols-outlined text-[18px] leading-none">
-              add
-            </span>
-            {t("addInvoice")}
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/import/invoices"
+              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-on-surface/20 text-on-surface font-medium text-sm hover:bg-surface-container-low transition-colors"
+            >
+              <span className="material-symbols-outlined text-[18px] leading-none">
+                upload
+              </span>
+              {t("import")}
+            </Link>
+            <Link
+              href="/invoices/new"
+              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-primary text-on-primary font-medium text-sm hover:bg-primary/80 transition-colors"
+            >
+              <span className="material-symbols-outlined text-[18px] leading-none">
+                add
+              </span>
+              {t("addInvoice")}
+            </Link>
+          </div>
         }
       />
       <div className="px-6 py-6">

@@ -274,6 +274,7 @@
   "contacts": {
     "title": "Contactos",
     "addContact": "Agregar contacto",
+    "import": "Importar",
     "editContact": "Editar contacto",
     "noContacts": "Aún no hay contactos",
     "noContactsDescription": "Agregue su primer cliente o proveedor para comenzar.",
@@ -361,6 +362,7 @@
   "invoices": {
     "title": "Facturas",
     "addInvoice": "Nueva factura",
+    "import": "Importar",
     "editInvoice": "Editar factura",
     "noInvoices": "Aún no hay facturas",
     "noInvoicesDescription": "Cree su primera factura para comenzar a recibir pagos.",
@@ -612,6 +614,7 @@
   "expenses": {
     "title": "Gastos",
     "addExpense": "Nuevo gasto",
+    "import": "Importar",
     "uploadReceipt": "Subir recibo",
     "uploading": "Subiendo...",
     "uploadReceiptHint": "Suba un PDF o imagen para adjuntar al gasto",
@@ -865,5 +868,25 @@
     "resetPanelCancel": "Cancelar",
     "resetPanelLoading": "Reiniciando…",
     "resetError": "No se pudo reiniciar. Inténtalo de nuevo."
+  },
+  "import": {
+    "heading": "Importar {entity}",
+    "uploadHelp": "Arrastre un archivo CSV o haga clic para elegir. Las columnas requeridas varían por entidad — vea el ejemplo.",
+    "downloadSample": "Descargar CSV de ejemplo",
+    "parseError": "No se pudo analizar el CSV",
+    "mapHeading": "Asigne sus columnas a las nuestras",
+    "yourColumn": "Su columna",
+    "mapsTo": "Asigna a",
+    "skip": "Omitir",
+    "continueToPreview": "Continuar",
+    "previewHeading": "Vista previa ({count} filas)",
+    "commit": "Importar",
+    "done": "Hecho",
+    "created": "Creados",
+    "skippedDup": "Omitidos (duplicado)",
+    "skippedByUser": "Omitidos (por usuario)",
+    "failed": "Fallidos",
+    "downloadErrorCsv": "Descargar CSV de errores",
+    "import": "Importar"
   }
 }
