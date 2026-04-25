@@ -162,11 +162,7 @@ export async function submitCreditNoteThroughPlugins(
         orgId: orgCtx.id,
         countryCode: provider.code,
         kind: integration.kind,
-        // The submissions table is keyed on invoiceId today; we reuse it
-        // for credit notes by storing the credit-note id in the same
-        // column. The audit trail in the activity log distinguishes by
-        // entityType.
-        invoiceId: creditNoteId,
+        creditNoteId,
         status: COUNTRY_INTEGRATION_SUBMISSION_STATUS.PENDING,
       })
       .returning();

@@ -15,6 +15,7 @@ import {
 import { organisations } from "./organisations";
 import { invoices } from "./invoices";
 import { expenses } from "./expenses";
+import { creditNotes } from "./credit-notes";
 
 export const COUNTRY_INTEGRATION_SUBMISSION_STATUS = {
   PENDING: 1,
@@ -72,6 +73,9 @@ export const countryIntegrationSubmissions = pgTable(
     expenseId: uuid("expense_id").references(() => expenses.id, {
       onDelete: "cascade",
     }),
+    creditNoteId: uuid("credit_note_id").references(() => creditNotes.id, {
+      onDelete: "cascade",
+    }),
     status: integer("status")
       .notNull()
       .default(COUNTRY_INTEGRATION_SUBMISSION_STATUS.PENDING),
@@ -93,6 +97,9 @@ export const countryIntegrationSubmissions = pgTable(
       table.status,
     ),
     index("country_integration_submission_invoice_idx").on(table.invoiceId),
+    index("country_integration_submission_credit_note_idx").on(
+      table.creditNoteId,
+    ),
     index("country_integration_submission_kind_status_idx").on(
       table.kind,
       table.status,

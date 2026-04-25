@@ -512,6 +512,7 @@ async function pushSchema(pglite: PGlite) {
       "kind" varchar(50) NOT NULL,
       "invoice_id" uuid REFERENCES "invoice"("id") ON DELETE CASCADE,
       "expense_id" uuid REFERENCES "expense"("id") ON DELETE CASCADE,
+      "credit_note_id" uuid REFERENCES "credit_note"("id") ON DELETE CASCADE,
       "status" integer NOT NULL DEFAULT 1,
       "external_id" varchar(100),
       "qr_url" text,

@@ -81,51 +81,58 @@ export async function createCreditNote(formData: FormData) {
     return { success: false, error: { contactId: ["Contact not found"] } };
   }
 
-  const [creditNote] = await db
-    .insert(creditNotes)
-    .values({
-      orgId,
-      contactId: data.contactId,
-      invoiceId: data.invoiceId || null,
-      issueDate: data.issueDate,
-      currencyCode: data.currencyCode,
-      usesInclusiveTax: data.usesInclusiveTax,
-      subtotal: totals.subtotal,
-      taxAmount: totals.taxAmount,
-      total: totals.total,
-      contactName: data.contactName,
-      contactEmail: data.contactEmail || null,
-      contactVatNumber: data.contactVatNumber || null,
-      contactAddress: data.contactAddress || null,
-      reason: data.reason,
-      reasonNote: data.reasonNote || null,
-      notes: data.notes || null,
-      terms: data.terms || null,
-    })
-    .returning();
+  // Header + N item rows in a single transaction (PR #211 lesson) so a
+  // mid-loop failure (e.g. numeric overflow on an item) rolls back the
+  // header and the user is not left with a half-built credit note.
+  const creditNote = await db.transaction(async (tx) => {
+    const [cn] = await tx
+      .insert(creditNotes)
+      .values({
+        orgId,
+        contactId: data.contactId,
+        invoiceId: data.invoiceId || null,
+        issueDate: data.issueDate,
+        currencyCode: data.currencyCode,
+        usesInclusiveTax: data.usesInclusiveTax,
+        subtotal: totals.subtotal,
+        taxAmount: totals.taxAmount,
+        total: totals.total,
+        contactName: data.contactName,
+        contactEmail: data.contactEmail || null,
+        contactVatNumber: data.contactVatNumber || null,
+        contactAddress: data.contactAddress || null,
+        reason: data.reason,
+        reasonNote: data.reasonNote || null,
+        notes: data.notes || null,
+        terms: data.terms || null,
+      })
+      .returning();
 
-  for (const item of data.items) {
-    const lineTotals = calculateLineTotal({
-      quantity: item.quantity,
-      unitPrice: item.unitPrice,
-      taxRate: item.taxRate,
-      usesInclusiveTax: data.usesInclusiveTax,
-    });
-    await db.insert(creditNoteItems).values({
-      creditNoteId: creditNote.id,
-      productId: item.productId || null,
-      sortOrder: item.sortOrder,
-      name: item.name,
-      description: item.description || null,
-      quantity: item.quantity,
-      unitPrice: item.unitPrice,
-      unit: item.unit || null,
-      taxCategory: item.taxCategory,
-      taxRate: item.taxRate,
-      taxAmount: lineTotals.taxAmount,
-      lineTotal: lineTotals.lineTotal,
-    });
-  }
+    for (const item of data.items) {
+      const lineTotals = calculateLineTotal({
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        taxRate: item.taxRate,
+        usesInclusiveTax: data.usesInclusiveTax,
+      });
+      await tx.insert(creditNoteItems).values({
+        creditNoteId: cn.id,
+        productId: item.productId || null,
+        sortOrder: item.sortOrder,
+        name: item.name,
+        description: item.description || null,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        unit: item.unit || null,
+        taxCategory: item.taxCategory,
+        taxRate: item.taxRate,
+        taxAmount: lineTotals.taxAmount,
+        lineTotal: lineTotals.lineTotal,
+      });
+    }
+
+    return cn;
+  });
 
   await recordActivity({
     orgId,
@@ -208,52 +215,61 @@ export async function updateCreditNote(id: string, formData: FormData) {
     data.usesInclusiveTax,
   );
 
-  await db
-    .update(creditNotes)
-    .set({
-      contactId: data.contactId,
-      invoiceId: data.invoiceId || null,
-      issueDate: data.issueDate,
-      currencyCode: data.currencyCode,
-      usesInclusiveTax: data.usesInclusiveTax,
-      subtotal: totals.subtotal,
-      taxAmount: totals.taxAmount,
-      total: totals.total,
-      contactName: data.contactName,
-      contactEmail: data.contactEmail || null,
-      contactVatNumber: data.contactVatNumber || null,
-      contactAddress: data.contactAddress || null,
-      reason: data.reason,
-      reasonNote: data.reasonNote || null,
-      notes: data.notes || null,
-      terms: data.terms || null,
-      updatedAt: new Date(),
-    })
-    .where(eq(creditNotes.id, id));
+  // Wrap header update + delete-then-reinsert items in one transaction so a
+  // mid-loop failure cannot leave the credit note with the old items deleted
+  // and only a prefix of the new items inserted (PR #211 lesson, applied to
+  // the edit path which is more dangerous than create — the deletion comes
+  // BEFORE the inserts).
+  await db.transaction(async (tx) => {
+    await tx
+      .update(creditNotes)
+      .set({
+        contactId: data.contactId,
+        invoiceId: data.invoiceId || null,
+        issueDate: data.issueDate,
+        currencyCode: data.currencyCode,
+        usesInclusiveTax: data.usesInclusiveTax,
+        subtotal: totals.subtotal,
+        taxAmount: totals.taxAmount,
+        total: totals.total,
+        contactName: data.contactName,
+        contactEmail: data.contactEmail || null,
+        contactVatNumber: data.contactVatNumber || null,
+        contactAddress: data.contactAddress || null,
+        reason: data.reason,
+        reasonNote: data.reasonNote || null,
+        notes: data.notes || null,
+        terms: data.terms || null,
+        updatedAt: new Date(),
+      })
+      .where(eq(creditNotes.id, id));
 
-  await db.delete(creditNoteItems).where(eq(creditNoteItems.creditNoteId, id));
-  for (const item of data.items) {
-    const lineTotals = calculateLineTotal({
-      quantity: item.quantity,
-      unitPrice: item.unitPrice,
-      taxRate: item.taxRate,
-      usesInclusiveTax: data.usesInclusiveTax,
-    });
-    await db.insert(creditNoteItems).values({
-      creditNoteId: id,
-      productId: item.productId || null,
-      sortOrder: item.sortOrder,
-      name: item.name,
-      description: item.description || null,
-      quantity: item.quantity,
-      unitPrice: item.unitPrice,
-      unit: item.unit || null,
-      taxCategory: item.taxCategory,
-      taxRate: item.taxRate,
-      taxAmount: lineTotals.taxAmount,
-      lineTotal: lineTotals.lineTotal,
-    });
-  }
+    await tx
+      .delete(creditNoteItems)
+      .where(eq(creditNoteItems.creditNoteId, id));
+    for (const item of data.items) {
+      const lineTotals = calculateLineTotal({
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        taxRate: item.taxRate,
+        usesInclusiveTax: data.usesInclusiveTax,
+      });
+      await tx.insert(creditNoteItems).values({
+        creditNoteId: id,
+        productId: item.productId || null,
+        sortOrder: item.sortOrder,
+        name: item.name,
+        description: item.description || null,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        unit: item.unit || null,
+        taxCategory: item.taxCategory,
+        taxRate: item.taxRate,
+        taxAmount: lineTotals.taxAmount,
+        lineTotal: lineTotals.lineTotal,
+      });
+    }
+  });
 
   revalidatePath("/credit-notes");
   revalidatePath(`/credit-notes/${id}`);

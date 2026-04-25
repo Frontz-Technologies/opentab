@@ -26,22 +26,16 @@ export async function assignCreditNoteNumberIfMissing(
   orgId: string,
   dbInstance: DbOrTx = db,
 ): Promise<string> {
-  // Ensure a sequence row exists. Outside the transaction so a
-  // pre-existing sequence + new credit note path stays single-statement.
-  const [existingSeq] = await dbInstance
-    .select()
-    .from(invoiceSequences)
-    .where(
-      and(
-        eq(invoiceSequences.orgId, orgId),
-        eq(invoiceSequences.type, "credit_note"),
-      ),
-    );
-  if (!existingSeq) {
-    await dbInstance
-      .insert(invoiceSequences)
-      .values({ orgId, type: "credit_note", prefix: "CN-" });
-  }
+  // Ensure a sequence row exists. Single upsert against the unique
+  // (orgId, type) index — replaces the SELECT-then-INSERT pair that
+  // raced when two concurrent first-time publishes both took the
+  // INSERT branch (mirror of PR #213's fix on settings/numbering).
+  await dbInstance
+    .insert(invoiceSequences)
+    .values({ orgId, type: "credit_note", prefix: "CN-" })
+    .onConflictDoNothing({
+      target: [invoiceSequences.orgId, invoiceSequences.type],
+    });
 
   return await dbInstance.transaction(async (tx) => {
     const [row] = await tx

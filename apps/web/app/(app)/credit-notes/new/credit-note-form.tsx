@@ -124,10 +124,14 @@ export function CreditNoteForm({
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-label text-on-surface mb-1">
+          <label
+            htmlFor="cn-contactId"
+            className="block text-sm font-label text-on-surface mb-1"
+          >
             {t("client")}
           </label>
           <select
+            id="cn-contactId"
             className="bg-surface-container-lowest text-on-surface rounded-lg px-3 h-10 w-full"
             value={contactId}
             onChange={(e) => setContactId(e.target.value)}
@@ -141,10 +145,14 @@ export function CreditNoteForm({
           </select>
         </div>
         <div>
-          <label className="block text-sm font-label text-on-surface mb-1">
+          <label
+            htmlFor="cn-issueDate"
+            className="block text-sm font-label text-on-surface mb-1"
+          >
             {t("issueDate")}
           </label>
           <Input
+            id="cn-issueDate"
             type="date"
             value={issueDate}
             onChange={(e) => setIssueDate(e.target.value)}
@@ -154,10 +162,14 @@ export function CreditNoteForm({
       </div>
 
       <div>
-        <label className="block text-sm font-label text-on-surface mb-1">
+        <label
+          htmlFor="cn-reason"
+          className="block text-sm font-label text-on-surface mb-1"
+        >
           {t("reason")}
         </label>
         <select
+          id="cn-reason"
           className="bg-surface-container-lowest text-on-surface rounded-lg px-3 h-10 w-full"
           value={reason}
           onChange={(e) => setReason(e.target.value)}
@@ -174,10 +186,14 @@ export function CreditNoteForm({
       </div>
 
       <div>
-        <label className="block text-sm font-label text-on-surface mb-1">
+        <label
+          htmlFor="cn-reasonNote"
+          className="block text-sm font-label text-on-surface mb-1"
+        >
           {t("reasonNote")}
         </label>
         <Input
+          id="cn-reasonNote"
           value={reasonNote}
           onChange={(e) => setReasonNote(e.target.value)}
           placeholder={t("reasonNotePlaceholder")}
@@ -194,24 +210,32 @@ export function CreditNoteForm({
             className="grid grid-cols-[1fr_80px_120px_80px_auto] gap-2 items-center"
           >
             <Input
+              id={`cn-item-name-${idx}`}
+              aria-label={t("itemName")}
               placeholder={t("itemName")}
               value={item.name}
               onChange={(e) => updateItem(idx, { name: e.target.value })}
               required
             />
             <Input
+              id={`cn-item-qty-${idx}`}
+              aria-label={t("quantity")}
               type="number"
               step="0.01"
               value={item.quantity}
               onChange={(e) => updateItem(idx, { quantity: e.target.value })}
             />
             <Input
+              id={`cn-item-price-${idx}`}
+              aria-label={t("unitPrice")}
               type="number"
               step="0.01"
               value={item.unitPrice}
               onChange={(e) => updateItem(idx, { unitPrice: e.target.value })}
             />
             <Input
+              id={`cn-item-tax-${idx}`}
+              aria-label={t("taxRate")}
               type="number"
               step="0.01"
               value={item.taxRate}
@@ -223,6 +247,7 @@ export function CreditNoteForm({
                 variant="outline"
                 size="sm"
                 onClick={() => removeItem(idx)}
+                aria-label={t("removeItem")}
               >
                 ×
               </Button>
