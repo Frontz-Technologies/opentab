@@ -111,6 +111,7 @@ async function generateNextInvoiceNumber(orgId: string) {
       nextNumber: sequence.nextNumber,
       digitCount: sequence.digitCount,
       includeYear: sequence.includeYear,
+      pattern: sequence.pattern,
     });
 
     await tx
