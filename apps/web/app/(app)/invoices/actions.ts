@@ -66,13 +66,18 @@ export async function createInvoice(formData: FormData) {
   const publish = formData.get("publish") === "true";
   // If publish flag is set, immediately transition to PUBLISHED and
   // assign the invoice number (#132 — drafts hold no number).
+  // Wrapped in a transaction (tester finding on PR #212): if the
+  // number-assign throws, the status flip is rolled back so the
+  // invoice never appears as PUBLISHED with `invoice_number = null`.
   let assignedNumber: string | null = null;
   if (publish) {
-    await db
-      .update(invoices)
-      .set({ status: INVOICE_STATUS.PUBLISHED, updatedAt: new Date() })
-      .where(eq(invoices.id, invoice.id));
-    assignedNumber = await assignInvoiceNumberIfMissing(invoice.id, orgId);
+    assignedNumber = await db.transaction(async (tx) => {
+      await tx
+        .update(invoices)
+        .set({ status: INVOICE_STATUS.PUBLISHED, updatedAt: new Date() })
+        .where(eq(invoices.id, invoice.id));
+      return assignInvoiceNumberIfMissing(invoice.id, orgId, tx);
+    });
   }
 
   log.info("invoice created", {
@@ -252,19 +257,22 @@ export async function sendInvoice(id: string) {
     };
   }
 
-  await db
-    .update(invoices)
-    .set({
-      status: INVOICE_STATUS.SENT,
-      sentAt: new Date(),
-      updatedAt: new Date(),
-    })
-    .where(eq(invoices.id, id));
-
-  // #132: assign the invoice number atomically on the first publish/
-  // send transition. Idempotent — no-op if the number is already set
-  // (e.g. previously published before send).
-  await assignInvoiceNumberIfMissing(id, orgId);
+  // #132 + tester finding on PR #212: status flip + number assignment
+  // run in a single transaction. If the helper throws, the SENT
+  // transition is rolled back so the invoice never appears as SENT
+  // with `invoice_number = null`. Helper is idempotent — no-op if
+  // the number is already set (e.g. previously published before send).
+  await db.transaction(async (tx) => {
+    await tx
+      .update(invoices)
+      .set({
+        status: INVOICE_STATUS.SENT,
+        sentAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(invoices.id, id));
+    await assignInvoiceNumberIfMissing(id, orgId, tx);
+  });
 
   // Submit through the country plugin integrations (non-blocking)
   const submissionResults = await submitInvoiceThroughPlugins(id, {
@@ -321,16 +329,20 @@ export async function publishInvoice(id: string) {
     return { success: false, error: "Only draft invoices can be published" };
   }
 
-  await db
-    .update(invoices)
-    .set({
-      status: INVOICE_STATUS.PUBLISHED,
-      updatedAt: new Date(),
-    })
-    .where(eq(invoices.id, id));
-
-  // #132: assign the invoice number atomically on first publish.
-  await assignInvoiceNumberIfMissing(id, orgId);
+  // #132 + tester finding on PR #212: status flip + number assignment
+  // run in a single transaction. If the helper throws, the PUBLISHED
+  // transition is rolled back so the invoice never appears as
+  // PUBLISHED with `invoice_number = null`.
+  await db.transaction(async (tx) => {
+    await tx
+      .update(invoices)
+      .set({
+        status: INVOICE_STATUS.PUBLISHED,
+        updatedAt: new Date(),
+      })
+      .where(eq(invoices.id, id));
+    await assignInvoiceNumberIfMissing(id, orgId, tx);
+  });
 
   log.info("invoice published", { orgId, invoiceId: id });
 
