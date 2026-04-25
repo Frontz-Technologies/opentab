@@ -3,11 +3,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const { addMock, ConnectionMock, QueueMock } = vi.hoisted(() => ({
   addMock: vi.fn().mockResolvedValue({ id: "job-1" }),
   ConnectionMock: vi.fn(),
-  QueueMock: vi
-    .fn()
-    .mockImplementation(() => ({
-      add: vi.fn().mockResolvedValue({ id: "job-1" }),
-    })),
+  QueueMock: vi.fn().mockImplementation(() => ({
+    add: vi.fn().mockResolvedValue({ id: "job-1" }),
+  })),
 }));
 
 vi.mock("ioredis", () => ({ default: ConnectionMock }));
