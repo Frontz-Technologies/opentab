@@ -2,6 +2,10 @@ import { and, eq } from "drizzle-orm";
 import { invoices, invoiceSequences } from "@opentab/db/schema";
 import { db } from "@/lib/db";
 
+type Database = typeof db;
+type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
+type DbOrTx = Database | Transaction;
+
 export interface NumberFormatOptions {
   prefix: string;
   nextNumber: number;
@@ -38,7 +42,7 @@ export function formatInvoiceNumber(opts: NumberFormatOptions): string {
 export async function assignInvoiceNumberIfMissing(
   invoiceId: string,
   orgId: string,
-  dbInstance: typeof db = db,
+  dbInstance: DbOrTx = db,
 ): Promise<string> {
   // Ensure a sequence row exists. Outside the transaction so a
   // pre-existing sequence + new invoice path stays single-statement.
