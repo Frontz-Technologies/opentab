@@ -4,11 +4,11 @@ import { activities } from "@opentab/db/schema";
 export { activities };
 export type { Activity, NewActivity } from "@opentab/db/schema";
 
-// Polymorphic entity tag. Today only "invoice" is written; the rest
-// reserve names for the audits that will land in their own issues
-// (#131 spec — non-goals section).
+// Polymorphic entity tag. Invoice + credit_note are written today;
+// reserved names for future entities (#131 spec — non-goals section).
 export const ENTITY_TYPE = {
   INVOICE: "invoice",
+  CREDIT_NOTE: "credit_note",
 } as const;
 
 export type EntityType = (typeof ENTITY_TYPE)[keyof typeof ENTITY_TYPE];
@@ -26,6 +26,11 @@ export const ACTIVITY_TYPE = {
   INVOICE_PAID: "invoice.paid",
   INVOICE_CANCELLED: "invoice.cancelled",
   INVOICE_DELETED: "invoice.deleted",
+  CREDIT_NOTE_CREATED: "credit_note.created",
+  CREDIT_NOTE_PUBLISHED: "credit_note.published",
+  CREDIT_NOTE_SENT: "credit_note.sent",
+  CREDIT_NOTE_CANCELLED: "credit_note.cancelled",
+  CREDIT_NOTE_DELETED: "credit_note.deleted",
   MYDATA_SUBMITTED: "mydata.submitted",
   MYDATA_CONFIRMED: "mydata.confirmed",
   MYDATA_FAILED: "mydata.failed",
@@ -35,7 +40,7 @@ export type ActivityType = (typeof ACTIVITY_TYPE)[keyof typeof ACTIVITY_TYPE];
 
 export const createActivitySchema = z.object({
   orgId: z.string().uuid(),
-  entityType: z.enum([ENTITY_TYPE.INVOICE]),
+  entityType: z.enum([ENTITY_TYPE.INVOICE, ENTITY_TYPE.CREDIT_NOTE]),
   entityId: z.string().uuid(),
   userId: z.string().nullable(),
   type: z.enum(

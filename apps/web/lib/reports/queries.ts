@@ -7,20 +7,56 @@ import type {
   VatLineRow,
 } from "./types";
 
+type DbInstance = Pick<typeof db, "execute">;
+
+// drizzle's `db.execute()` returns `RowList[]` for postgres-js but
+// `{ rows: RowList[] }` for PGlite. Normalise so test + prod agree.
+function rowsOf(result: unknown): Record<string, unknown>[] {
+  if (Array.isArray(result)) return result as Record<string, unknown>[];
+  if (
+    result &&
+    typeof result === "object" &&
+    Array.isArray((result as { rows?: unknown }).rows)
+  ) {
+    return (result as { rows: Record<string, unknown>[] }).rows;
+  }
+  return [];
+}
+
+// Revenue is computed as: SUM(invoice.total) − SUM(credit_note.total)
+// for the same period. Invoices count when status IN (SENT=2, PARTIAL=3,
+// PAID=4); credit notes count when status IN (PUBLISHED=2, SENT=3) —
+// CANCELLED is excluded on both sides.
 export async function getRevenue(
   orgId: string,
   start: Date,
   end: Date,
+  dbInstance: DbInstance = db,
 ): Promise<{ total: number; count: number }> {
-  const result = await db.execute(sql`
-    SELECT COALESCE(SUM(total::numeric), 0) AS total, COUNT(*)::int AS count
-    FROM invoice
-    WHERE org_id = ${orgId}
-      AND status IN (2, 3, 4)
-      AND issue_date BETWEEN ${start.toISOString().slice(0, 10)} AND ${end.toISOString().slice(0, 10)}
-  `);
-  const row = (result as unknown as Record<string, unknown>[])[0];
-  return { total: Number(row.total), count: Number(row.count) };
+  const startDate = start.toISOString().slice(0, 10);
+  const endDate = end.toISOString().slice(0, 10);
+  const [invResult, cnResult] = await Promise.all([
+    dbInstance.execute(sql`
+      SELECT COALESCE(SUM(total::numeric), 0) AS total, COUNT(*)::int AS count
+      FROM invoice
+      WHERE org_id = ${orgId}
+        AND status IN (2, 3, 4)
+        AND issue_date BETWEEN ${startDate} AND ${endDate}
+    `),
+    dbInstance.execute(sql`
+      SELECT COALESCE(SUM(total::numeric), 0) AS credits
+      FROM credit_note
+      WHERE org_id = ${orgId}
+        AND status IN (2, 3)
+        AND issue_date BETWEEN ${startDate} AND ${endDate}
+    `),
+  ]);
+  const invRow = rowsOf(invResult)[0] ?? { total: 0, count: 0 };
+  const cnRow = rowsOf(cnResult)[0] ?? { credits: 0 };
+  return {
+    total: Number(invRow.total) - Number(cnRow.credits),
+    count: Number(invRow.count),
+  };
 }
 
 export async function getRevenueByClient(
@@ -28,15 +64,32 @@ export async function getRevenueByClient(
   start: Date,
   end: Date,
 ): Promise<RevenueByCientRow[]> {
+  const startDate = start.toISOString().slice(0, 10);
+  const endDate = end.toISOString().slice(0, 10);
   const result = await db.execute(sql`
-    SELECT contact_id, contact_name AS display_name,
-      COALESCE(SUM(total::numeric), 0) AS total, COUNT(*)::int AS invoice_count
-    FROM invoice
-    WHERE org_id = ${orgId}
-      AND status IN (2, 3, 4)
-      AND issue_date BETWEEN ${start.toISOString().slice(0, 10)} AND ${end.toISOString().slice(0, 10)}
-    GROUP BY contact_id, contact_name
-    ORDER BY SUM(total::numeric) DESC
+    WITH inv AS (
+      SELECT contact_id, contact_name,
+        SUM(total::numeric) AS total, COUNT(*)::int AS invoice_count
+      FROM invoice
+      WHERE org_id = ${orgId}
+        AND status IN (2, 3, 4)
+        AND issue_date BETWEEN ${startDate} AND ${endDate}
+      GROUP BY contact_id, contact_name
+    ),
+    cn AS (
+      SELECT contact_id, SUM(total::numeric) AS credits
+      FROM credit_note
+      WHERE org_id = ${orgId}
+        AND status IN (2, 3)
+        AND issue_date BETWEEN ${startDate} AND ${endDate}
+      GROUP BY contact_id
+    )
+    SELECT inv.contact_id, inv.contact_name AS display_name,
+      (inv.total - COALESCE(cn.credits, 0)) AS total,
+      inv.invoice_count
+    FROM inv
+    LEFT JOIN cn ON cn.contact_id = inv.contact_id
+    ORDER BY (inv.total - COALESCE(cn.credits, 0)) DESC
     LIMIT 10
   `);
   const rows = result as unknown as Record<string, unknown>[];
@@ -57,14 +110,31 @@ export async function getRevenueByPeriod(
   end: Date,
   bucket: "day" | "week" | "month",
 ): Promise<TimeBucketRow[]> {
+  const startDate = start.toISOString().slice(0, 10);
+  const endDate = end.toISOString().slice(0, 10);
   const result = await db.execute(sql`
-    SELECT date_trunc(${bucket}, issue_date::timestamp) AS bucket,
-      COALESCE(SUM(total::numeric), 0) AS total
-    FROM invoice
-    WHERE org_id = ${orgId}
-      AND status IN (2, 3, 4)
-      AND issue_date BETWEEN ${start.toISOString().slice(0, 10)} AND ${end.toISOString().slice(0, 10)}
-    GROUP BY bucket
+    WITH inv AS (
+      SELECT date_trunc(${bucket}, issue_date::timestamp) AS bucket,
+        SUM(total::numeric) AS total
+      FROM invoice
+      WHERE org_id = ${orgId}
+        AND status IN (2, 3, 4)
+        AND issue_date BETWEEN ${startDate} AND ${endDate}
+      GROUP BY bucket
+    ),
+    cn AS (
+      SELECT date_trunc(${bucket}, issue_date::timestamp) AS bucket,
+        SUM(total::numeric) AS credits
+      FROM credit_note
+      WHERE org_id = ${orgId}
+        AND status IN (2, 3)
+        AND issue_date BETWEEN ${startDate} AND ${endDate}
+      GROUP BY bucket
+    )
+    SELECT COALESCE(inv.bucket, cn.bucket) AS bucket,
+      (COALESCE(inv.total, 0) - COALESCE(cn.credits, 0)) AS total
+    FROM inv
+    FULL OUTER JOIN cn ON inv.bucket = cn.bucket
     ORDER BY bucket
   `);
   const rows = result as unknown as Record<string, unknown>[];

@@ -114,3 +114,13 @@ export {
   type NewUserPreferences,
 } from "./user-preferences";
 export { activities, type Activity, type NewActivity } from "./activities";
+export {
+  creditNotes,
+  creditNoteItems,
+  CREDIT_NOTE_STATUS,
+  CREDIT_NOTE_REASON,
+  type CreditNote,
+  type NewCreditNote,
+  type CreditNoteItem,
+  type NewCreditNoteItem,
+} from "./credit-notes";

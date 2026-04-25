@@ -142,6 +142,23 @@ export function InvoiceActions({ invoice, mydataStatus }: InvoiceActionsProps) {
         </span>
         {t("downloadActivityCsv")}
       </Button>
+      {(invoice.status === INVOICE_STATUS.SENT ||
+        invoice.status === INVOICE_STATUS.PARTIAL ||
+        invoice.status === INVOICE_STATUS.PAID ||
+        invoice.status === INVOICE_STATUS.CANCELLED) && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() =>
+            router.push(`/credit-notes/new?invoiceId=${invoice.id}`)
+          }
+        >
+          <span className="material-symbols-outlined text-[16px] mr-1">
+            undo
+          </span>
+          {t("issueCreditNote")}
+        </Button>
+      )}
       {mydataStatus !== null &&
         mydataStatus !== undefined &&
         mydataStatus !== COUNTRY_INTEGRATION_SUBMISSION_STATUS.CONFIRMED &&

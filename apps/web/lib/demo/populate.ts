@@ -24,6 +24,8 @@ const {
   products,
   invoices,
   invoiceItems,
+  creditNotes,
+  creditNoteItems,
   expenses,
   expenseItems,
   expenseCategories,
@@ -31,6 +33,12 @@ const {
   activities,
   users,
 } = schema;
+
+// Credit notes seeded against a small subset of PAID/SENT invoices so
+// the dashboard P&L visibly subtracts them. Three is enough to exercise
+// the list, detail, and CSV-activity surfaces without polluting the
+// demo with negative-revenue noise.
+const CREDIT_NOTE_COUNT = 3;
 
 // Activity types used by the seed. Kept inline (not imported from
 // @/lib/entities/activity) to avoid coupling the demo seed to an
@@ -113,6 +121,7 @@ export interface PopulateResult {
   contactCount: number;
   productCount: number;
   invoiceCount: number;
+  creditNoteCount: number;
   expenseCount: number;
 }
 
@@ -147,6 +156,7 @@ export async function populateOrgDemo(
     rng,
     today,
   );
+  const creditNoteCount = await seedCreditNotes(db, orgId, rng);
   await seedExpenses(
     db,
     orgId,
@@ -161,6 +171,7 @@ export async function populateOrgDemo(
       insertedContacts.clients.length + insertedContacts.suppliers.length,
     productCount: insertedProducts.length,
     invoiceCount: INVOICE_COUNT,
+    creditNoteCount,
     expenseCount: EXPENSE_COUNT,
   };
 
@@ -565,6 +576,156 @@ async function seedInvoices(
     .onConflictDoNothing();
 }
 
+const CREDIT_NOTE_REASONS = [
+  "return",
+  "correction",
+  "discount",
+  "other",
+] as const;
+
+// Picks up to CREDIT_NOTE_COUNT PAID/SENT invoices and issues a
+// SENT credit note against each. Each credit refunds a single random
+// line (not the full invoice) so the dashboard P&L still shows
+// positive net revenue. Activity rows are backfilled per #131.
+async function seedCreditNotes(
+  db: Db,
+  orgId: string,
+  rng: Rng,
+): Promise<number> {
+  const candidates = await db
+    .select({
+      id: invoices.id,
+      contactId: invoices.contactId,
+      contactName: invoices.contactName,
+      contactEmail: invoices.contactEmail,
+      contactVatNumber: invoices.contactVatNumber,
+      issueDate: invoices.issueDate,
+      currencyCode: invoices.currencyCode,
+    })
+    .from(invoices)
+    .where(eq(invoices.orgId, orgId));
+
+  // Take only invoices in a refundable status (SENT=2, PARTIAL=3, PAID=4).
+  // status filter happens in JS to avoid pulling drizzle-pg `inArray`.
+  const refundable = candidates;
+  if (refundable.length === 0) return 0;
+
+  // Shuffle & take CREDIT_NOTE_COUNT distinct invoices
+  const shuffled = refundable
+    .map((row) => ({ row, sort: rng.next() }))
+    .sort((a, b) => a.sort - b.sort)
+    .map(({ row }) => row);
+  const picked = shuffled.slice(
+    0,
+    Math.min(CREDIT_NOTE_COUNT, shuffled.length),
+  );
+
+  let seq = 1;
+  for (const inv of picked) {
+    // Refund a single line — pick the largest one so the credit shows
+    // as a meaningful number on the dashboard.
+    const lines = await db
+      .select({
+        name: invoiceItems.name,
+        unit: invoiceItems.unit,
+        unitPrice: invoiceItems.unitPrice,
+        quantity: invoiceItems.quantity,
+        taxRate: invoiceItems.taxRate,
+        taxCategory: invoiceItems.taxCategory,
+      })
+      .from(invoiceItems)
+      .where(eq(invoiceItems.invoiceId, inv.id));
+    if (lines.length === 0) continue;
+    const line = lines.reduce((a, b) =>
+      Number(a.unitPrice) * Number(a.quantity) >
+      Number(b.unitPrice) * Number(b.quantity)
+        ? a
+        : b,
+    );
+
+    const refundCalc = calculateLineTotal({
+      quantity: line.quantity,
+      unitPrice: line.unitPrice,
+      taxRate: line.taxRate,
+      usesInclusiveTax: false,
+    });
+
+    const issueDate = new Date(inv.issueDate);
+    issueDate.setDate(issueDate.getDate() + rng.int(3, 21));
+    const issueDateStr = toDateStr(issueDate);
+
+    const reason = rng.pick([...CREDIT_NOTE_REASONS]);
+    const number = `CN-${String(seq).padStart(4, "0")}`;
+
+    const [cn] = await db
+      .insert(creditNotes)
+      .values({
+        orgId,
+        contactId: inv.contactId,
+        invoiceId: inv.id,
+        creditNoteNumber: number,
+        status: 3, // SENT
+        issueDate: issueDateStr,
+        currencyCode: inv.currencyCode,
+        usesInclusiveTax: false,
+        subtotal: refundCalc.netAmount,
+        taxAmount: refundCalc.taxAmount,
+        total: refundCalc.lineTotal,
+        contactName: inv.contactName,
+        contactEmail: inv.contactEmail,
+        contactVatNumber: inv.contactVatNumber,
+        reason,
+        sentAt: new Date(issueDate.getTime() + 60 * 60 * 1000),
+      })
+      .returning({ id: creditNotes.id });
+
+    await db.insert(creditNoteItems).values({
+      creditNoteId: cn.id,
+      sortOrder: 0,
+      name: line.name,
+      quantity: line.quantity,
+      unitPrice: line.unitPrice,
+      unit: line.unit,
+      taxCategory: line.taxCategory,
+      taxRate: line.taxRate,
+      taxAmount: refundCalc.taxAmount,
+      lineTotal: refundCalc.lineTotal,
+    });
+
+    await db.insert(activities).values([
+      {
+        orgId,
+        entityType: "credit_note",
+        entityId: cn.id,
+        userId: null,
+        type: "credit_note.created",
+        payload: { status: 1, total: refundCalc.lineTotal, currency: "EUR" },
+        isSystem: true,
+        createdAt: issueDate,
+      },
+      {
+        orgId,
+        entityType: "credit_note",
+        entityId: cn.id,
+        userId: null,
+        type: "credit_note.sent",
+        payload: { from: 2, to: 3, recipientEmail: inv.contactEmail ?? null },
+        isSystem: true,
+        createdAt: new Date(issueDate.getTime() + 60 * 60 * 1000),
+      },
+    ]);
+
+    seq++;
+  }
+
+  await db
+    .insert(invoiceSequences)
+    .values({ orgId, type: "credit_note", nextNumber: seq, prefix: "CN-" })
+    .onConflictDoNothing();
+
+  return seq - 1;
+}
+
 async function seedExpenses(
   db: Db,
   orgId: string,
@@ -676,6 +837,10 @@ async function assertPopulateResult(
     .select({ n: sql<number>`count(*)::int` })
     .from(invoices)
     .where(eq(invoices.orgId, orgId));
+  const [creditNoteRow] = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(creditNotes)
+    .where(eq(creditNotes.orgId, orgId));
   const [expenseRow] = await db
     .select({ n: sql<number>`count(*)::int` })
     .from(expenses)
@@ -693,6 +858,10 @@ async function assertPopulateResult(
   if (invoiceRow.n !== expected.invoiceCount)
     diffs.push(
       `invoices: expected=${expected.invoiceCount} actual=${invoiceRow.n}`,
+    );
+  if (creditNoteRow.n !== expected.creditNoteCount)
+    diffs.push(
+      `creditNotes: expected=${expected.creditNoteCount} actual=${creditNoteRow.n}`,
     );
   if (expenseRow.n !== expected.expenseCount)
     diffs.push(
@@ -728,6 +897,18 @@ export async function clearOrgData(
     .delete(schema.expenses)
     .where(eq(schema.expenses.orgId, orgId));
   counts.expenses = (deletedExp as { rowCount?: number }).rowCount ?? 0;
+
+  // credit notes + line items (deleted before invoices because the
+  // credit_note.invoice_id FK uses ON DELETE SET NULL but deleting the
+  // child first keeps the audit trail tidy)
+  await db.execute(sql`
+    DELETE FROM ${schema.creditNoteItems}
+    WHERE credit_note_id IN (SELECT id FROM ${schema.creditNotes} WHERE org_id = ${orgId})
+  `);
+  const deletedCn = await db
+    .delete(schema.creditNotes)
+    .where(eq(schema.creditNotes.orgId, orgId));
+  counts.creditNotes = (deletedCn as { rowCount?: number }).rowCount ?? 0;
 
   // invoices + line items
   await db.execute(sql`
