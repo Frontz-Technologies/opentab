@@ -85,7 +85,10 @@ function buildInvoiceSummary(invoice: MyDataInvoice): string {
 function buildCorrelatedInvoices(invoice: MyDataInvoice): string {
   if (!invoice.correlatedInvoices?.length) return "";
   return invoice.correlatedInvoices
-    .map((mark) => `\n      <correlatedInvoices>${escapeXml(mark)}</correlatedInvoices>`)
+    .map(
+      (mark) =>
+        `\n      <correlatedInvoices>${escapeXml(mark)}</correlatedInvoices>`,
+    )
     .join("");
 }
 

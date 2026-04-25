@@ -10,10 +10,7 @@ import {
 import { and, asc, eq } from "drizzle-orm";
 import { getCountryProvider } from "@/lib/country";
 import type { IntegrationCreditNoteInput } from "@/lib/country/types";
-import {
-  ACTIVITY_TYPE,
-  ENTITY_TYPE,
-} from "@/lib/entities/activity";
+import { ACTIVITY_TYPE, ENTITY_TYPE } from "@/lib/entities/activity";
 import { recordActivity } from "@/lib/activities/record";
 import { createLogger } from "@/lib/logging/logger";
 

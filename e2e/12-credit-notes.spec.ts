@@ -53,7 +53,8 @@ test.describe("Credit notes happy path (#133)", () => {
     await page.getByText("Credit Note Client").first().click();
     await page.waitForURL(/\/invoices\/[a-z0-9-]+/i, { timeout: 10000 });
     const match = page.url().match(/\/invoices\/([a-z0-9-]+)/i);
-    if (!match) throw new Error(`could not extract invoice id from ${page.url()}`);
+    if (!match)
+      throw new Error(`could not extract invoice id from ${page.url()}`);
     invoiceId = match[1];
 
     // Move the invoice to SENT so the "Issue Credit Note" button shows.
