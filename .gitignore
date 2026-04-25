@@ -18,6 +18,9 @@ playwright-report/
 
 # Process core dumps from segfaulted test runners / dev servers.
 # Matches the legacy `core` filename plus Linux's `core.<pid>` pattern.
-# If a directory called `core/` is ever needed, add `!core/` to override.
 core
 core.*
+# The CSV import engine (#215) lives at apps/web/lib/import/core/ —
+# keep tracked. Negation must come AFTER the broad rules above.
+!apps/web/lib/import/core/
+!apps/web/lib/import/core/**
