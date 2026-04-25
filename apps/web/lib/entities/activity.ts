@@ -41,5 +41,5 @@ export const createActivitySchema = z.object({
   type: z.enum(
     Object.values(ACTIVITY_TYPE) as [ActivityType, ...ActivityType[]],
   ),
-  payload: z.record(z.unknown()).optional(),
+  payload: z.record(z.string(), z.unknown()).optional(),
 });
