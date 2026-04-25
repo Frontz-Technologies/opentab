@@ -31,10 +31,13 @@ export function renderInvoiceNumberPattern(opts: RenderPatternOptions): string {
     const width = parseInt(n, 10);
     return String(opts.nextNumber).padStart(width, "0");
   });
-  out = out.replace(/\{counter\}/g, String(opts.nextNumber));
-  out = out.replace(/\{prefix\}/g, opts.prefix);
-  out = out.replace(/\{year\}/g, year);
-  out = out.replace(/\{month\}/g, month);
+  out = out.replace(/\{counter\}/g, () => String(opts.nextNumber));
+  // Function callbacks for the next three so user-supplied prefix or
+  // future placeholder values can't be interpreted as $&, $1, $$ regex
+  // backreferences inside String.prototype.replace.
+  out = out.replace(/\{prefix\}/g, () => opts.prefix);
+  out = out.replace(/\{year\}/g, () => year);
+  out = out.replace(/\{month\}/g, () => month);
   return out;
 }
 

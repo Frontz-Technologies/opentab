@@ -191,15 +191,15 @@
     "digitCountHelp": "Cuántos dígitos tendrá el contador con ceros a la izquierda (p. ej. 4 → 0042).",
     "includeYear": "Incluir el año natural",
     "pattern": "Patrón personalizado",
-    "patternHelp": "Use {prefix} {year} {month} {counter} o {counter:N} (con ceros a la izquierda). El resto del texto se mantiene literal.",
-    "patternPlaceholder": "p. ej. {prefix}{year}-{counter:4}",
+    "patternHelp": "Use '{prefix}' '{year}' '{month}' '{counter}' o '{counter:N}' (con ceros a la izquierda). El resto del texto se mantiene literal.",
+    "patternPlaceholder": "p. ej. '{prefix}''{year}'-'{counter:4}'",
     "nextNumber": "Siguiente número",
     "preview": "La siguiente factura será:",
     "save": "Guardar ajustes de numeración",
     "saved": "Ajustes de numeración guardados.",
     "useSimpleMode": "Usar modo sencillo",
     "validationFailed": "Validación del patrón fallida.",
-    "patternMustHaveCounter": "El patrón debe incluir {counter} o {counter:N}."
+    "patternMustHaveCounter": "El patrón debe incluir '{counter}' o '{counter:N}'."
   },
   "settingsGeneral": {
     "title": "General",

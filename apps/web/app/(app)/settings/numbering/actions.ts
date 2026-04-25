@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, eq } from "drizzle-orm";
 import { getSession } from "@/lib/session";
 import { db } from "@/lib/db";
 import {
@@ -15,6 +14,15 @@ const log = createLogger("invoice-numbering");
 export async function updateInvoiceNumbering(formData: FormData) {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
+
+  // Mirrors the owner|admin gate every other Organisation-section
+  // action enforces (settings/organisation, settings/integrations/*).
+  // Invoice numbering changes the org-wide prefix/pattern that drives
+  // every future invoice number — finance/audit-trail concern, not
+  // cosmetic — so member/accountant must not be able to call this.
+  if (session.role !== "owner" && session.role !== "admin") {
+    throw new Error("Forbidden");
+  }
 
   const orgId = session.org.id;
 
@@ -33,31 +41,13 @@ export async function updateInvoiceNumbering(formData: FormData) {
     return { success: false, error: parsed.error.flatten().fieldErrors };
   }
 
-  // Ensure a sequence row exists for "invoice" — first-time
-  // configuration on a fresh org has no row yet.
-  const [existing] = await db
-    .select()
-    .from(invoiceSequences)
-    .where(
-      and(
-        eq(invoiceSequences.orgId, orgId),
-        eq(invoiceSequences.type, "invoice"),
-      ),
-    );
-
   const data = parsed.data;
-  if (existing) {
-    await db
-      .update(invoiceSequences)
-      .set({
-        prefix: data.prefix,
-        digitCount: data.digitCount,
-        includeYear: data.includeYear,
-        pattern: data.pattern,
-      })
-      .where(eq(invoiceSequences.id, existing.id));
-  } else {
-    await db.insert(invoiceSequences).values({
+  // Single upsert against the unique (orgId, type) index — replaces the
+  // SELECT-then-INSERT-or-UPDATE pattern that lost a race when two
+  // first-time saves on a fresh org both took the INSERT branch.
+  await db
+    .insert(invoiceSequences)
+    .values({
       orgId,
       type: "invoice",
       prefix: data.prefix,
@@ -65,8 +55,16 @@ export async function updateInvoiceNumbering(formData: FormData) {
       includeYear: data.includeYear,
       pattern: data.pattern,
       // nextNumber defaults to 1 in the schema.
+    })
+    .onConflictDoUpdate({
+      target: [invoiceSequences.orgId, invoiceSequences.type],
+      set: {
+        prefix: data.prefix,
+        digitCount: data.digitCount,
+        includeYear: data.includeYear,
+        pattern: data.pattern,
+      },
     });
-  }
 
   log.info("invoice numbering updated", {
     orgId,

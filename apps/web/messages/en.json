@@ -191,15 +191,15 @@
     "digitCountHelp": "How many digits to zero-pad the counter to (e.g. 4 → 0042).",
     "includeYear": "Include the calendar year",
     "pattern": "Custom pattern",
-    "patternHelp": "Use {prefix} {year} {month} {counter} or {counter:N} (zero-padded). Other text stays literal.",
-    "patternPlaceholder": "e.g. {prefix}{year}-{counter:4}",
+    "patternHelp": "Use '{prefix}' '{year}' '{month}' '{counter}' or '{counter:N}' (zero-padded). Other text stays literal.",
+    "patternPlaceholder": "e.g. '{prefix}''{year}'-'{counter:4}'",
     "nextNumber": "Next number",
     "preview": "Next invoice will be:",
     "save": "Save numbering settings",
     "saved": "Numbering settings saved.",
     "useSimpleMode": "Use simple mode",
     "validationFailed": "Pattern validation failed.",
-    "patternMustHaveCounter": "Pattern must include {counter} or {counter:N}."
+    "patternMustHaveCounter": "Pattern must include '{counter}' or '{counter:N}'."
   },
   "settingsGeneral": {
     "title": "General",

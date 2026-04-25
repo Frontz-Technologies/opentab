@@ -191,15 +191,15 @@
     "digitCountHelp": "Πόσα ψηφία θα έχει ο μετρητής με μηδενικά μπροστά (π.χ. 4 → 0042).",
     "includeYear": "Συμπερίληψη ημερολογιακού έτους",
     "pattern": "Προσαρμοσμένο πρότυπο",
-    "patternHelp": "Χρησιμοποιήστε {prefix} {year} {month} {counter} ή {counter:N} (συμπληρωμένο με μηδενικά). Το υπόλοιπο κείμενο μένει ως έχει.",
-    "patternPlaceholder": "π.χ. {prefix}{year}-{counter:4}",
+    "patternHelp": "Χρησιμοποιήστε '{prefix}' '{year}' '{month}' '{counter}' ή '{counter:N}' (συμπληρωμένο με μηδενικά). Το υπόλοιπο κείμενο μένει ως έχει.",
+    "patternPlaceholder": "π.χ. '{prefix}''{year}'-'{counter:4}'",
     "nextNumber": "Επόμενος αριθμός",
     "preview": "Το επόμενο τιμολόγιο θα είναι:",
     "save": "Αποθήκευση ρυθμίσεων αρίθμησης",
     "saved": "Οι ρυθμίσεις αρίθμησης αποθηκεύτηκαν.",
     "useSimpleMode": "Χρήση απλής λειτουργίας",
     "validationFailed": "Η επικύρωση του προτύπου απέτυχε.",
-    "patternMustHaveCounter": "Το πρότυπο πρέπει να περιέχει {counter} ή {counter:N}."
+    "patternMustHaveCounter": "Το πρότυπο πρέπει να περιέχει '{counter}' ή '{counter:N}'."
   },
   "settingsGeneral": {
     "title": "Γενικά",

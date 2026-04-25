@@ -10,6 +10,12 @@ import { NumberingForm } from "./numbering-form";
 export default async function NumberingSettingsPage() {
   const session = await getSession();
   if (!session) redirect("/login");
+  // Read-side disclosure parity with settings/integrations/* pages —
+  // the form reveals the configured pattern, which non-admins do not
+  // need (and cannot change anyway after the action gate).
+  if (session.role !== "owner" && session.role !== "admin") {
+    redirect("/dashboard");
+  }
 
   const t = await getTranslations("settingsNumbering");
   const tNav = await getTranslations("settingsNav");

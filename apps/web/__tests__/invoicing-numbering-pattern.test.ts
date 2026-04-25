@@ -79,6 +79,28 @@ describe("renderInvoiceNumberPattern (#138)", () => {
     ).toBe("0042-42");
   });
 
+  // Regression for tester Medium #2 on PR #213. String.prototype.replace
+  // treats $&, $1, $$, $<…> in the *string* second argument as regex
+  // backreferences, which would corrupt the rendered number when a
+  // user enters those characters as a prefix. We pass a function
+  // callback now, so they round-trip literally.
+  it("treats regex-special characters in the prefix as literals", () => {
+    expect(
+      renderInvoiceNumberPattern({
+        pattern: "{prefix}{counter}",
+        prefix: "$&-",
+        nextNumber: 7,
+      }),
+    ).toBe("$&-7");
+    expect(
+      renderInvoiceNumberPattern({
+        pattern: "{prefix}{counter}",
+        prefix: "$1$$",
+        nextNumber: 7,
+      }),
+    ).toBe("$1$$7");
+  });
+
   it("defaults year/month to the current date when not supplied", () => {
     const now = new Date();
     const expectedYear = now.getFullYear().toString();
