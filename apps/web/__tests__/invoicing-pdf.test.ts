@@ -86,8 +86,27 @@ describe("generatePdfFromHtml — Gotenberg wrapper resilience (#155)", () => {
     expect(buf.length).toBe(PDF_BYTES.length);
   });
 
-  it("throws after 3 consecutive transient failures and reports the attempt count", async () => {
+  it("throws after 3 consecutive transient HTTP failures and reports the attempt count", async () => {
     const fetchMock = vi.fn(async () => errorResponse(502, "bad gateway"));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(generatePdfFromHtml("<html></html>")).rejects.toThrow(
+      /3 attempts/,
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
+
+  it("throws after 3 consecutive transient NETWORK failures with the same /3 attempts/ shape (#155 tester follow-up)", async () => {
+    // Mirror of the HTTP-502 case for the network-error path. Earlier
+    // the catch branch fell through to `throw err` on attempt 3,
+    // propagating the raw underlying TypeError verbatim and skipping
+    // the synthesised "after 3 attempts" message — the post-loop throw
+    // was unreachable for this class. Tester FIX #155: break out of
+    // the loop on transient-exhaustion so both paths produce a
+    // matching error shape.
+    const fetchMock = vi.fn(async () => {
+      throw networkError("ECONNREFUSED");
+    });
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(generatePdfFromHtml("<html></html>")).rejects.toThrow(

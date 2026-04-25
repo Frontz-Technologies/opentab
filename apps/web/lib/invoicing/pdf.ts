@@ -69,7 +69,12 @@ export async function generatePdfFromHtml(html: string): Promise<Buffer> {
   let lastStatus: number | undefined;
 
   const gotenbergUrl = process.env.GOTENBERG_URL ?? "http://gotenberg:3000";
-  const timeoutMs = Number(process.env.GOTENBERG_TIMEOUT_MS ?? 30000);
+  // NaN/<=0 from a malformed env value would break AbortSignal.timeout
+  // at fetch-call time with a TypeError instead of a clean timeout.
+  // Coerce to the 30 s default so operator misconfig is non-fatal.
+  const parsedTimeout = Number(process.env.GOTENBERG_TIMEOUT_MS);
+  const timeoutMs =
+    Number.isFinite(parsedTimeout) && parsedTimeout > 0 ? parsedTimeout : 30000;
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     try {
@@ -111,18 +116,26 @@ export async function generatePdfFromHtml(html: string): Promise<Buffer> {
       return Buffer.from(arrayBuffer);
     } catch (err) {
       lastError = err;
-      if (isTransientError(err) && attempt < MAX_ATTEMPTS) {
-        const errorName = err instanceof Error ? err.name : "Unknown";
-        const code = getCauseCode(err);
-        log.warn("gotenberg call retried", {
-          attempt,
-          errorName,
-          code,
-          reason: "transient-error",
-        });
-        await sleep(backoffWithJitter(attempt));
-        continue;
+      if (isTransientError(err)) {
+        if (attempt < MAX_ATTEMPTS) {
+          const errorName = err instanceof Error ? err.name : "Unknown";
+          const code = getCauseCode(err);
+          log.warn("gotenberg call retried", {
+            attempt,
+            errorName,
+            code,
+            reason: "transient-error",
+          });
+          await sleep(backoffWithJitter(attempt));
+          continue;
+        }
+        // Transient class but we're out of attempts. Break to let the
+        // post-loop synthesised throw run — keeps the exhaustion error
+        // shape symmetric with the transient-status path (both produce
+        // "after N attempts" text observability hooks can match on).
+        break;
       }
+      // Non-transient — surface verbatim, no retry.
       throw err;
     }
   }

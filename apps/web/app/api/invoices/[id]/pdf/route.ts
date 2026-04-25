@@ -48,6 +48,11 @@ export async function GET(
     ]);
 
     if (!invoice) {
+      log.warn("invoice not found", {
+        requestId,
+        invoiceId: id,
+        orgId: session.org.id,
+      });
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
