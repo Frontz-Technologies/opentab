@@ -37,6 +37,12 @@ COPY --from=builder /app/apps/web/package.json ./apps/web/
 COPY --from=builder /app/apps/web/.next ./apps/web/.next
 COPY --from=builder /app/apps/web/public ./apps/web/public
 COPY --from=builder /app/packages/db ./packages/db
+# Worker entrypoint + its dependencies (#85). Run via `pnpm worker`
+# (tsx) in the worker container — same image, different CMD set in
+# docker-compose.coolify.yml.
+COPY --from=builder /app/apps/web/worker.ts ./apps/web/worker.ts
+COPY --from=builder /app/apps/web/tsconfig.json ./apps/web/tsconfig.json
+COPY --from=builder /app/apps/web/lib ./apps/web/lib
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/apps/web/node_modules ./apps/web/node_modules
 COPY docker/entrypoint.sh ./entrypoint.sh

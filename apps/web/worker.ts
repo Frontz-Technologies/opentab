@@ -1,0 +1,93 @@
+// Worker entrypoint — run as a separate Node process via
+// `pnpm --filter @opentab/web worker` (dev) or in the docker-compose
+// worker service (prod). Connects to Redis, registers the repeatable
+// cleanup job idempotently, and processes both queues.
+
+import { config } from "dotenv";
+config({ path: ".env.local" });
+config(); // .env
+
+import { Worker, Queue } from "bullmq";
+import { QUEUE } from "./lib/jobs/types";
+import { getRedisConnection, getRegisteredQueues } from "./lib/jobs/queues";
+import { processCleanupTempFiles } from "./lib/jobs/processors/cleanup-temp-files";
+import { processDeleteExpenseFiles } from "./lib/jobs/processors/delete-expense-files";
+import { createLogger } from "./lib/logging/logger";
+
+const log = createLogger("worker");
+
+async function registerRepeatables() {
+  // Touch the queue so we can schedule the repeatable on it. The
+  // deterministic jobId means re-registering on each worker boot is
+  // a no-op in BullMQ — the existing repeatable is reused.
+  const cleanup = new Queue(QUEUE.CLEANUP_TEMP_FILES, {
+    connection: getRedisConnection(),
+  });
+  await cleanup.add(
+    QUEUE.CLEANUP_TEMP_FILES,
+    { ageHours: 24 },
+    {
+      repeat: { every: 24 * 60 * 60 * 1000 }, // 24h
+      jobId: "cleanup-temp-files-daily",
+    },
+  );
+  log.info("registered repeatable cleanup-temp-files (every 24h)");
+}
+
+async function main() {
+  log.info("worker starting", {
+    redisUrl: process.env.REDIS_URL ? "set" : "MISSING",
+  });
+
+  await registerRepeatables();
+
+  const workers: Worker[] = [
+    new Worker(
+      QUEUE.CLEANUP_TEMP_FILES,
+      async (job) => processCleanupTempFiles(job.data),
+      { connection: getRedisConnection() },
+    ),
+    new Worker(
+      QUEUE.DELETE_EXPENSE_FILES,
+      async (job) => processDeleteExpenseFiles(job.data),
+      { connection: getRedisConnection() },
+    ),
+  ];
+
+  for (const w of workers) {
+    w.on("completed", (job) => {
+      log.info("job completed", {
+        queue: w.name,
+        jobId: job.id,
+        attempts: job.attemptsMade,
+        durationMs: job.processedOn ? Date.now() - job.processedOn : 0,
+      });
+    });
+    w.on("failed", (job, err) => {
+      log.error("job failed", {
+        queue: w.name,
+        jobId: job?.id,
+        attempts: job?.attemptsMade,
+        errorMessage: err.message,
+      });
+    });
+  }
+
+  log.info("worker ready", { queues: workers.map((w) => w.name) });
+
+  const shutdown = async () => {
+    log.info("worker shutting down");
+    for (const w of workers) await w.close();
+    for (const q of getRegisteredQueues()) await q.close();
+    process.exit(0);
+  };
+  process.on("SIGTERM", shutdown);
+  process.on("SIGINT", shutdown);
+}
+
+main().catch((err) => {
+  log.error("worker fatal", {
+    errorMessage: err instanceof Error ? err.message : String(err),
+  });
+  process.exit(1);
+});

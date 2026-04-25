@@ -40,6 +40,31 @@ services:
     networks:
       - opentab-dev-network
 
+  worker:
+    # Async job queue worker (#85). Same dev image as `app`, runs
+    # `pnpm worker` (tsx) with hot-reload via the volume mounts.
+    container_name: opentab-dev-worker
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dev
+    command: ["pnpm", "--filter", "@opentab/web", "worker"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file: .env
+    volumes:
+      - ../apps:/app/apps
+      - ../packages:/app/packages
+      - /app/node_modules
+      - /app/apps/web/node_modules
+      - /app/packages/db/node_modules
+      - /app/apps/web/.env
+      - /app/apps/web/.env.local
+    networks:
+      - opentab-dev-network
+
   postgres:
     container_name: opentab-dev-postgres
     image: postgres:16-alpine

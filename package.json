@@ -2,7 +2,7 @@
   "name": "opentab",
   "private": true,
   "scripts": {
-    "dev": "turbo dev",
+    "dev": "turbo run dev worker --parallel",
     "build": "turbo build",
     "test": "turbo test",
     "lint": "turbo lint",
