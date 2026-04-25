@@ -592,21 +592,26 @@ export async function deleteInvoice(id: string) {
     return { success: false, error: "Only draft invoices can be deleted" };
   }
 
-  // App-layer cascade: activities have no FK on entityId (polymorphic
-  // table). Drop this invoice's audit rows before we drop the invoice
-  // so we never leave orphan rows in the activity log.
-  await db
-    .delete(activities)
-    .where(
-      and(
-        eq(activities.entityType, ENTITY_TYPE.INVOICE),
-        eq(activities.entityId, id),
-      ),
-    );
-
-  await db
-    .delete(invoices)
-    .where(and(eq(invoices.id, id), eq(invoices.orgId, session.org.id)));
+  // App-layer cascade in a single transaction (tester finding on
+  // PR #211): without the transaction, an invoice-delete failure
+  // after a successful activities-delete leaves the invoice live but
+  // its audit history gone. The transaction either commits both or
+  // rolls back both. The tombstone `recordActivity` call below stays
+  // best-effort outside the transaction — it shouldn't gate the
+  // user's delete on the audit table being healthy.
+  await db.transaction(async (tx) => {
+    await tx
+      .delete(activities)
+      .where(
+        and(
+          eq(activities.entityType, ENTITY_TYPE.INVOICE),
+          eq(activities.entityId, id),
+        ),
+      );
+    await tx
+      .delete(invoices)
+      .where(and(eq(invoices.id, id), eq(invoices.orgId, session.org.id)));
+  });
 
   log.info("invoice deleted", { orgId, invoiceId: id });
 

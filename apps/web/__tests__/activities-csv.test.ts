@@ -82,6 +82,54 @@ describe("activitiesToCsv (#131) — RFC-4180 serializer", () => {
     expect(line).toBe("2026-04-25T13:00:00.000Z,x@y.io,user,invoice.deleted,");
   });
 
+  it("guards against CSV-injection on actor_email starting with a formula trigger", async () => {
+    // Tester finding on PR #211: actor_email with leading `=` `+`
+    // `-` `@` `\t` `\r` is interpreted as a formula by Excel /
+    // Numbers / Sheets. Prefix with `'` per OWASP.
+    const csv = activitiesToCsv([
+      {
+        createdAt: new Date("2026-04-25T13:00:00Z"),
+        actorEmail: "=cmd|/c calc!A0",
+        type: "invoice.created",
+        payload: null,
+      },
+      {
+        createdAt: new Date("2026-04-25T13:01:00Z"),
+        actorEmail: "+15551234567@example.com",
+        type: "invoice.sent",
+        payload: null,
+      },
+      {
+        createdAt: new Date("2026-04-25T13:02:00Z"),
+        actorEmail: "@notreal",
+        type: "invoice.paid",
+        payload: null,
+      },
+    ]);
+    const lines = csv.split("\r\n");
+    // The leading apostrophe must be present. Each field also gets
+    // quoted because the apostrophe-prefixed value contains a `=` /
+    // `+` / `@` followed by other content with `,` so quoting kicks
+    // in as well — but the assertion is on the apostrophe.
+    expect(lines[1]).toContain("'=cmd");
+    expect(lines[2]).toContain("'+15551234567");
+    expect(lines[3]).toContain("'@notreal");
+  });
+
+  it("does not prefix safe emails with an apostrophe", () => {
+    const csv = activitiesToCsv([
+      {
+        createdAt: new Date("2026-04-25T13:00:00Z"),
+        actorEmail: "owner@acme.io",
+        type: "invoice.created",
+        payload: null,
+      },
+    ]);
+    const line = csv.split("\r\n")[1];
+    expect(line).not.toContain("'owner");
+    expect(line).toContain("owner@acme.io");
+  });
+
   it("does not re-sort the rows (caller controls order)", () => {
     const rows: CsvActivityRow[] = [
       {
