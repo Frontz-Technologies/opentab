@@ -34,7 +34,13 @@ export const invoices = pgTable(
       .notNull()
       .references(() => contacts.id),
     status: integer("status").notNull().default(INVOICE_STATUS.DRAFT),
-    invoiceNumber: varchar("invoice_number", { length: 50 }).notNull(),
+    // Nullable since #132: drafts no longer reserve a number. The
+    // number is assigned atomically on the first publish/send via
+    // assignInvoiceNumberIfMissing(). The unique index on
+    // (org_id, invoice_number) still enforces sequence uniqueness
+    // once a number is set; Postgres allows multiple NULLs in a
+    // standard UNIQUE INDEX.
+    invoiceNumber: varchar("invoice_number", { length: 50 }),
     issueDate: date("issue_date").notNull(),
     dueDate: date("due_date"),
     currencyCode: varchar("currency_code", { length: 3 })

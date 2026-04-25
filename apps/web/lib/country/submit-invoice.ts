@@ -52,6 +52,17 @@ function buildInput(
   items: (typeof invoiceItems.$inferSelect)[],
   credentials: unknown,
 ): IntegrationInvoiceInput {
+  // #132: invoice_number is nullable on drafts. submit-invoice
+  // only runs from sendInvoice / scheduler paths AFTER
+  // assignInvoiceNumberIfMissing has assigned a number, so this
+  // should never fire — guard defensively rather than crash on a
+  // hypothetical mis-ordering.
+  if (invoice.invoiceNumber === null) {
+    throw new Error(
+      `submit-invoice: invoice ${invoice.id} has no number — cannot submit to plugins`,
+    );
+  }
+
   return {
     orgId: orgCtx.id,
     orgTaxId: orgCtx.taxId,

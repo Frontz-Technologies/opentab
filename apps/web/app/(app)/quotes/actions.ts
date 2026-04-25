@@ -358,14 +358,14 @@ export async function convertToInvoice(id: string) {
     .from(quoteItems)
     .where(eq(quoteItems.quoteId, id));
 
-  const invoiceNumber = await generateNextNumber(session.org.id, "invoice");
-
+  // #132: quote → invoice conversion creates a DRAFT invoice — no
+  // number is allocated until the user publishes/sends it.
   const [invoice] = await db
     .insert(invoices)
     .values({
       orgId: session.org.id,
       contactId: quote.contactId,
-      invoiceNumber,
+      invoiceNumber: null,
       issueDate: new Date().toISOString().split("T")[0],
       currencyCode: quote.currencyCode,
       exchangeRate: quote.exchangeRate,

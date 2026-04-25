@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/session";
-import { invoiceSequences } from "@opentab/db/schema";
 import {
   invoices,
   invoiceItems,
@@ -16,74 +15,15 @@ import {
 } from "@/lib/country/submit-invoice";
 import { eq, and } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { formatInvoiceNumber } from "@/lib/invoicing/numbering";
 import {
   calculateLineTotal,
   calculateInvoiceTotals,
 } from "@/lib/invoicing/calculations";
 import { createDraftInvoice } from "@/lib/invoicing/draft-invoices";
+import { assignInvoiceNumberIfMissing } from "@/lib/invoicing/numbering";
 import { createLogger } from "@/lib/logging/logger";
 
 const log = createLogger("invoices");
-
-async function getOrCreateSequence(orgId: string, type: string) {
-  const [existing] = await db
-    .select()
-    .from(invoiceSequences)
-    .where(
-      and(eq(invoiceSequences.orgId, orgId), eq(invoiceSequences.type, type)),
-    );
-
-  if (existing) return existing;
-
-  const defaults: Record<string, string> = {
-    invoice: "INV-",
-    quote: "QTE-",
-  };
-
-  const [seq] = await db
-    .insert(invoiceSequences)
-    .values({
-      orgId,
-      type,
-      prefix: defaults[type] ?? "INV-",
-    })
-    .returning();
-
-  return seq;
-}
-
-async function generateNextNumber(
-  orgId: string,
-  type: string,
-): Promise<string> {
-  // Ensure sequence exists before entering the locking transaction
-  await getOrCreateSequence(orgId, type);
-
-  return await db.transaction(async (tx) => {
-    const [seq] = await tx
-      .select()
-      .from(invoiceSequences)
-      .where(
-        and(eq(invoiceSequences.orgId, orgId), eq(invoiceSequences.type, type)),
-      )
-      .for("update");
-
-    const number = formatInvoiceNumber({
-      prefix: seq.prefix,
-      nextNumber: seq.nextNumber,
-      digitCount: seq.digitCount,
-      includeYear: seq.includeYear,
-    });
-
-    await tx
-      .update(invoiceSequences)
-      .set({ nextNumber: seq.nextNumber + 1 })
-      .where(eq(invoiceSequences.id, seq.id));
-
-    return number;
-  });
-}
 
 export async function createInvoice(formData: FormData) {
   const session = await getSession();
@@ -124,12 +64,15 @@ export async function createInvoice(formData: FormData) {
   const { invoice } = await createDraftInvoice(session.org.id, parsed.data);
 
   const publish = formData.get("publish") === "true";
-  // If publish flag is set, immediately transition to PUBLISHED
+  // If publish flag is set, immediately transition to PUBLISHED and
+  // assign the invoice number (#132 — drafts hold no number).
+  let assignedNumber: string | null = null;
   if (publish) {
     await db
       .update(invoices)
       .set({ status: INVOICE_STATUS.PUBLISHED, updatedAt: new Date() })
       .where(eq(invoices.id, invoice.id));
+    assignedNumber = await assignInvoiceNumberIfMissing(invoice.id, orgId);
   }
 
   log.info("invoice created", {
@@ -140,7 +83,13 @@ export async function createInvoice(formData: FormData) {
   });
 
   revalidatePath("/invoices");
-  return { success: true, invoice };
+  return {
+    success: true,
+    invoice: {
+      ...invoice,
+      invoiceNumber: assignedNumber ?? invoice.invoiceNumber,
+    },
+  };
 }
 
 export async function updateInvoice(id: string, formData: FormData) {
@@ -312,6 +261,11 @@ export async function sendInvoice(id: string) {
     })
     .where(eq(invoices.id, id));
 
+  // #132: assign the invoice number atomically on the first publish/
+  // send transition. Idempotent — no-op if the number is already set
+  // (e.g. previously published before send).
+  await assignInvoiceNumberIfMissing(id, orgId);
+
   // Submit through the country plugin integrations (non-blocking)
   const submissionResults = await submitInvoiceThroughPlugins(id, {
     id: session.org.id,
@@ -374,6 +328,9 @@ export async function publishInvoice(id: string) {
       updatedAt: new Date(),
     })
     .where(eq(invoices.id, id));
+
+  // #132: assign the invoice number atomically on first publish.
+  await assignInvoiceNumberIfMissing(id, orgId);
 
   log.info("invoice published", { orgId, invoiceId: id });
 

@@ -78,6 +78,12 @@ export async function GET(
         .orderBy(desc(countryIntegrationSubmissions.createdAt))
         .limit(1);
       if (!confirmedSub) continue;
+      // Drafts (#132) have no invoice_number. A confirmed mydata
+      // submission can only exist for invoices that have already
+      // been published/sent (which assigns a number), so this guard
+      // is defensive — if it ever trips, skip the footer block
+      // rather than crash.
+      if (invoice.invoiceNumber === null) continue;
       const block = await integration.renderOnPdf({
         invoice: { invoiceNumber: invoice.invoiceNumber },
         submission: {
@@ -110,7 +116,7 @@ export async function GET(
     return new NextResponse(new Uint8Array(pdf), {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="${invoice.invoiceNumber}.pdf"`,
+        "Content-Disposition": `attachment; filename="${invoice.invoiceNumber ?? `draft-${invoice.id.slice(0, 8)}`}.pdf"`,
       },
     });
   } catch (err) {

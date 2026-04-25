@@ -1,13 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
-import {
-  contacts,
-  invoices,
-  invoiceItems,
-  invoiceSequences,
-} from "@opentab/db/schema";
+import { contacts, invoices, invoiceItems } from "@opentab/db/schema";
 import { db } from "@/lib/db";
-import { formatInvoiceNumber } from "@/lib/invoicing/numbering";
 import {
   calculateInvoiceTotals,
   calculateLineTotal,
@@ -67,61 +61,6 @@ function formatContactAddress(contact: {
     .join(", ");
 }
 
-async function getOrCreateSequence(orgId: string, type: string) {
-  const [existing] = await db
-    .select()
-    .from(invoiceSequences)
-    .where(
-      and(eq(invoiceSequences.orgId, orgId), eq(invoiceSequences.type, type)),
-    );
-
-  if (existing) {
-    return existing;
-  }
-
-  const [created] = await db
-    .insert(invoiceSequences)
-    .values({
-      orgId,
-      type,
-      prefix: type === "quote" ? "QTE-" : "INV-",
-    })
-    .returning();
-
-  return created;
-}
-
-async function generateNextInvoiceNumber(orgId: string) {
-  await getOrCreateSequence(orgId, "invoice");
-
-  return db.transaction(async (tx) => {
-    const [sequence] = await tx
-      .select()
-      .from(invoiceSequences)
-      .where(
-        and(
-          eq(invoiceSequences.orgId, orgId),
-          eq(invoiceSequences.type, "invoice"),
-        ),
-      )
-      .for("update");
-
-    const invoiceNumber = formatInvoiceNumber({
-      prefix: sequence.prefix,
-      nextNumber: sequence.nextNumber,
-      digitCount: sequence.digitCount,
-      includeYear: sequence.includeYear,
-    });
-
-    await tx
-      .update(invoiceSequences)
-      .set({ nextNumber: sequence.nextNumber + 1 })
-      .where(eq(invoiceSequences.id, sequence.id));
-
-    return invoiceNumber;
-  });
-}
-
 export async function createDraftInvoice(
   orgId: string,
   input: CreateDraftInvoiceInput,
@@ -152,13 +91,14 @@ export async function createDraftInvoice(
     data.usesInclusiveTax,
   );
 
-  const invoiceNumber = await generateNextInvoiceNumber(orgId);
+  // #132: drafts no longer reserve an invoice number. The number is
+  // assigned on the first publish/send via assignInvoiceNumberIfMissing.
   const [invoice] = await db
     .insert(invoices)
     .values({
       orgId,
       contactId: contact.id,
-      invoiceNumber,
+      invoiceNumber: null,
       issueDate: data.issueDate,
       dueDate: dueDate || null,
       currencyCode: data.currencyCode || contact.defaultCurrency || "EUR",

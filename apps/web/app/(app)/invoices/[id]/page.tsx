@@ -104,7 +104,7 @@ export default async function InvoiceDetailPage({
             <span className="material-symbols-outlined">arrow_back</span>
           </Link>
           <h1 className="font-headline text-2xl font-bold text-on-surface">
-            {invoice.invoiceNumber}
+            {invoice.invoiceNumber ?? t("draftHeading")}
           </h1>
           <Badge
             className={statusColors[invoice.status] ?? ""}
