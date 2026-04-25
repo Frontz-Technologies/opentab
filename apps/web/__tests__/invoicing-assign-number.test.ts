@@ -8,7 +8,7 @@ import {
   invoiceSequences,
   INVOICE_STATUS,
 } from "@opentab/db/schema";
-import { assignInvoiceNumberIfMissing } from "../lib/invoicing/numbering";
+import { assignInvoiceNumberIfMissing } from "../lib/invoicing/assign-invoice-number";
 
 describe("assignInvoiceNumberIfMissing (#132) — defer-to-publish numbering", () => {
   let db: Awaited<ReturnType<typeof createTestDb>>["db"];

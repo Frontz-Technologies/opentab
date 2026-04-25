@@ -211,6 +211,7 @@ async function pushSchema(pglite: PGlite) {
       "next_number" integer NOT NULL DEFAULT 1,
       "digit_count" integer NOT NULL DEFAULT 4,
       "include_year" boolean NOT NULL DEFAULT false,
+      "pattern" text,
       "created_at" timestamp NOT NULL DEFAULT now()
     )`,
 

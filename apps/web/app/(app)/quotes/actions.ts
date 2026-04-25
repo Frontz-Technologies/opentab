@@ -94,6 +94,7 @@ async function generateNextNumber(
       nextNumber: seq.nextNumber,
       digitCount: seq.digitCount,
       includeYear: seq.includeYear,
+      pattern: seq.pattern,
     });
 
     await tx

@@ -20,7 +20,7 @@ import {
   calculateInvoiceTotals,
 } from "@/lib/invoicing/calculations";
 import { createDraftInvoice } from "@/lib/invoicing/draft-invoices";
-import { assignInvoiceNumberIfMissing } from "@/lib/invoicing/numbering";
+import { assignInvoiceNumberIfMissing } from "@/lib/invoicing/assign-invoice-number";
 import { createLogger } from "@/lib/logging/logger";
 import { recordActivity } from "@/lib/activities/record";
 import {
