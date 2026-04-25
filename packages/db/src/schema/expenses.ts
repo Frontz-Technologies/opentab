@@ -11,6 +11,7 @@ import {
   index,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { organisations } from "./organisations";
 import { contacts } from "./contacts";
 import { expenseCategories } from "./expense-categories";
@@ -58,6 +59,9 @@ export const expenses = pgTable(
     recurringExpenseId: uuid("recurring_expense_id"),
     source: varchar("source", { length: 20 }).notNull().default("manual"),
     fileHash: varchar("file_hash", { length: 64 }),
+    // Per-org dedup key for CSV imports (#215). Null for any expense
+    // not created via /import/expenses; partial unique index below.
+    importIdempotencyKey: varchar("import_idempotency_key", { length: 64 }),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
@@ -68,6 +72,9 @@ export const expenses = pgTable(
     index("expense_org_date_idx").on(table.orgId, table.expenseDate),
     index("expense_org_hash_idx").on(table.orgId, table.fileHash),
     uniqueIndex("expense_org_number_idx").on(table.orgId, table.expenseNumber),
+    uniqueIndex("expense_import_idempotency_idx")
+      .on(table.orgId, table.importIdempotencyKey)
+      .where(sql`${table.importIdempotencyKey} IS NOT NULL`),
   ],
 );
 

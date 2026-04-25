@@ -11,6 +11,7 @@ import {
   index,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { organisations } from "./organisations";
 import { contacts } from "./contacts";
 
@@ -76,6 +77,9 @@ export const invoices = pgTable(
     paidAt: timestamp("paid_at"),
     recurringInvoiceId: uuid("recurring_invoice_id"),
     quoteId: uuid("quote_id"),
+    // Per-org dedup key for CSV imports (#215). Null for any invoice
+    // not created via /import/invoices; partial unique index below.
+    importIdempotencyKey: varchar("import_idempotency_key", { length: 64 }),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
@@ -84,6 +88,9 @@ export const invoices = pgTable(
     index("invoice_org_status_idx").on(table.orgId, table.status),
     index("invoice_org_contact_idx").on(table.orgId, table.contactId),
     uniqueIndex("invoice_org_number_idx").on(table.orgId, table.invoiceNumber),
+    uniqueIndex("invoice_import_idempotency_idx")
+      .on(table.orgId, table.importIdempotencyKey)
+      .where(sql`${table.importIdempotencyKey} IS NOT NULL`),
   ],
 );
 
