@@ -82,6 +82,13 @@ function buildInvoiceSummary(invoice: MyDataInvoice): string {
     </invoiceSummary>`;
 }
 
+function buildCorrelatedInvoices(invoice: MyDataInvoice): string {
+  if (!invoice.correlatedInvoices?.length) return "";
+  return invoice.correlatedInvoices
+    .map((mark) => `\n      <correlatedInvoices>${escapeXml(mark)}</correlatedInvoices>`)
+    .join("");
+}
+
 function buildInvoice(invoice: MyDataInvoice): string {
   return `
   <invoice>
@@ -95,7 +102,7 @@ function buildInvoice(invoice: MyDataInvoice): string {
       <aa>${escapeXml(invoice.invoiceHeader.aa)}</aa>
       <issueDate>${escapeXml(invoice.invoiceHeader.issueDate)}</issueDate>
       <invoiceType>${escapeXml(invoice.invoiceHeader.invoiceType)}</invoiceType>
-      <currency>${escapeXml(invoice.invoiceHeader.currency)}</currency>
+      <currency>${escapeXml(invoice.invoiceHeader.currency)}</currency>${buildCorrelatedInvoices(invoice)}
     </invoiceHeader>${buildPaymentMethods(invoice)}${buildInvoiceDetails(invoice)}${buildInvoiceSummary(invoice)}
   </invoice>`;
 }

@@ -23,6 +23,7 @@ import {
 } from "@/lib/invoicing/calculations";
 import { assignCreditNoteNumberIfMissing } from "@/lib/invoicing/credit-note-numbering";
 import { recordActivity } from "@/lib/activities/record";
+import { submitCreditNoteThroughPlugins } from "@/lib/country/submit-credit-note";
 import { createLogger } from "@/lib/logging/logger";
 
 const log = createLogger("credit-notes");
@@ -349,8 +350,15 @@ export async function sendCreditNote(id: string) {
     },
   });
 
-  // Country plugin submission (myDATA 5.1 for GR) is wired in Task 12 —
-  // intentionally empty for now so the action is functional standalone.
+  await submitCreditNoteThroughPlugins(
+    id,
+    {
+      id: orgId,
+      taxId: session.org.taxId ?? null,
+      countryCode: session.org.countryCode ?? null,
+    },
+    session.user.id,
+  );
 
   revalidatePath("/credit-notes");
   revalidatePath(`/credit-notes/${id}`);

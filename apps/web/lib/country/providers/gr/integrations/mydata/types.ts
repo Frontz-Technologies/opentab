@@ -62,6 +62,8 @@ export interface MyDataInvoice {
   paymentMethods: MyDataPaymentMethodDetail[];
   invoiceDetails: MyDataInvoiceDetail[];
   invoiceSummary: MyDataInvoiceSummary;
+  /** Parent MARK numbers referenced by 5.1 (Associated Credit Invoice). */
+  correlatedInvoices?: string[];
 }
 
 export interface MyDataError {

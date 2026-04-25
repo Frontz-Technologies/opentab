@@ -3,6 +3,10 @@ import { creditNotes, invoiceSequences } from "@opentab/db/schema";
 import { db } from "@/lib/db";
 import { formatInvoiceNumber } from "@/lib/invoicing/numbering";
 
+type Database = typeof db;
+type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
+type DbOrTx = Database | Transaction;
+
 // Idempotent credit-note number reservation (#133). Mirrors the
 // invoice helper from #132 — same FOR UPDATE semantics, different
 // table + sequence row keyed on type='credit_note'.
@@ -20,7 +24,7 @@ import { formatInvoiceNumber } from "@/lib/invoicing/numbering";
 export async function assignCreditNoteNumberIfMissing(
   creditNoteId: string,
   orgId: string,
-  dbInstance: typeof db = db,
+  dbInstance: DbOrTx = db,
 ): Promise<string> {
   // Ensure a sequence row exists. Outside the transaction so a
   // pre-existing sequence + new credit note path stays single-statement.
@@ -43,7 +47,9 @@ export async function assignCreditNoteNumberIfMissing(
     const [row] = await tx
       .select({ creditNoteNumber: creditNotes.creditNoteNumber })
       .from(creditNotes)
-      .where(and(eq(creditNotes.id, creditNoteId), eq(creditNotes.orgId, orgId)))
+      .where(
+        and(eq(creditNotes.id, creditNoteId), eq(creditNotes.orgId, orgId)),
+      )
       .for("update");
 
     if (!row) {

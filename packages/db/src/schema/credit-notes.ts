@@ -36,7 +36,9 @@ export const creditNotes = pgTable(
     orgId: uuid("org_id")
       .notNull()
       .references(() => organisations.id, { onDelete: "cascade" }),
-    contactId: uuid("contact_id").notNull().references(() => contacts.id),
+    contactId: uuid("contact_id")
+      .notNull()
+      .references(() => contacts.id),
     // Nullable per #132 + #138: drafts hold no number; assigned on publish/send.
     creditNoteNumber: varchar("credit_note_number", { length: 50 }),
     // Original invoice this credits against. Nullable — standalone credits exist.
