@@ -35,6 +35,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      gotenberg:
+        condition: service_started
     env_file: .env
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-opentab}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-opentab}
@@ -114,6 +116,16 @@ services:
     restart: unless-stopped
     expose:
       - "3000"
+    # gotenberg/gotenberg:8 is distroless — no shell, no curl/wget — so we
+    # cannot declare a Docker HEALTHCHECK against /health here. Cold-start
+    # and worker-churn windows are absorbed by the retry/timeout logic in
+    # apps/web/lib/invoicing/pdf.ts (#155).
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+        reservations:
+          memory: 256M
     networks:
       - opentab-network
 
