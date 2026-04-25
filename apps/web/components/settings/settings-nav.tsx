@@ -27,6 +27,12 @@ const sections: NavSection[] = [
         subtitleKey: "organisationSubtitle",
         href: "/settings/organisation",
       },
+      {
+        icon: "tag",
+        labelKey: "numbering",
+        subtitleKey: "numberingSubtitle",
+        href: "/settings/numbering",
+      },
     ],
   },
   {
