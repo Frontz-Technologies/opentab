@@ -10,6 +10,8 @@ import { and, asc, desc, eq } from "drizzle-orm";
 import { getCountryProvider } from "@/lib/country";
 import type { Integration, IntegrationInvoiceInput } from "@/lib/country/types";
 import { createLogger } from "@/lib/logging/logger";
+import { recordActivity } from "@/lib/activities/record";
+import { ACTIVITY_TYPE, ENTITY_TYPE } from "@/lib/entities/activity";
 
 const log = createLogger("country-submit");
 
@@ -80,6 +82,7 @@ function buildInput(
 export async function submitInvoiceThroughPlugins(
   invoiceId: string,
   orgCtx: OrgContext,
+  userId: string | null = null,
 ): Promise<SubmitInvoiceResult[]> {
   const provider = getCountryProvider(orgCtx.countryCode);
   if (provider.integrations.length === 0) return [];
@@ -182,6 +185,20 @@ export async function submitInvoiceThroughPlugins(
       })
       .returning();
 
+    // Audit log (#131): only myDATA in v1; future country plugins
+    // get their own activity types when they land. The kind check
+    // keeps ACTIVITY_TYPE a closed union.
+    if (integration.kind === "mydata") {
+      await recordActivity({
+        orgId: orgCtx.id,
+        entityType: ENTITY_TYPE.INVOICE,
+        entityId: invoiceId,
+        userId,
+        type: ACTIVITY_TYPE.MYDATA_SUBMITTED,
+        payload: { kind: integration.kind, submissionId: submission.id },
+      });
+    }
+
     const done = log.time("submit");
     let result;
     try {
@@ -205,6 +222,20 @@ export async function submitInvoiceThroughPlugins(
           updatedAt: new Date(),
         })
         .where(eq(countryIntegrationSubmissions.id, submission.id));
+      if (integration.kind === "mydata") {
+        await recordActivity({
+          orgId: orgCtx.id,
+          entityType: ENTITY_TYPE.INVOICE,
+          entityId: invoiceId,
+          userId,
+          type: ACTIVITY_TYPE.MYDATA_FAILED,
+          payload: {
+            kind: integration.kind,
+            submissionId: submission.id,
+            errorMessage,
+          },
+        });
+      }
       results.push({
         kind: integration.kind,
         ok: false,
@@ -242,6 +273,20 @@ export async function submitInvoiceThroughPlugins(
           .set({ lastValidatedAt: new Date(), updatedAt: new Date() })
           .where(eq(countryIntegrationCredentials.id, credId));
       }
+      if (integration.kind === "mydata") {
+        await recordActivity({
+          orgId: orgCtx.id,
+          entityType: ENTITY_TYPE.INVOICE,
+          entityId: invoiceId,
+          userId,
+          type: ACTIVITY_TYPE.MYDATA_CONFIRMED,
+          payload: {
+            kind: integration.kind,
+            submissionId: submission.id,
+            externalId: result.externalId,
+          },
+        });
+      }
     } else {
       await db
         .update(countryIntegrationSubmissions)
@@ -255,6 +300,21 @@ export async function submitInvoiceThroughPlugins(
           updatedAt: new Date(),
         })
         .where(eq(countryIntegrationSubmissions.id, submission.id));
+      if (integration.kind === "mydata") {
+        await recordActivity({
+          orgId: orgCtx.id,
+          entityType: ENTITY_TYPE.INVOICE,
+          entityId: invoiceId,
+          userId,
+          type: ACTIVITY_TYPE.MYDATA_FAILED,
+          payload: {
+            kind: integration.kind,
+            submissionId: submission.id,
+            errorCode: result.errorCode,
+            errorMessage: result.errorMessage,
+          },
+        });
+      }
     }
 
     results.push({

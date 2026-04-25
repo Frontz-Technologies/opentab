@@ -23,6 +23,12 @@ import {
 } from "@/lib/invoicing/calculations";
 import { createDraftInvoice } from "@/lib/invoicing/draft-invoices";
 import { createLogger } from "@/lib/logging/logger";
+import { recordActivity } from "@/lib/activities/record";
+import {
+  ACTIVITY_TYPE,
+  ENTITY_TYPE,
+  activities,
+} from "@/lib/entities/activity";
 
 const log = createLogger("invoices");
 
@@ -138,6 +144,29 @@ export async function createInvoice(formData: FormData) {
     published: publish,
     itemCount: parsed.data.items.length,
   });
+
+  await recordActivity({
+    orgId,
+    entityType: ENTITY_TYPE.INVOICE,
+    entityId: invoice.id,
+    userId: session.user.id,
+    type: ACTIVITY_TYPE.INVOICE_CREATED,
+    payload: {
+      status: publish ? INVOICE_STATUS.PUBLISHED : INVOICE_STATUS.DRAFT,
+      total: invoice.total,
+      currency: invoice.currencyCode,
+    },
+  });
+  if (publish) {
+    await recordActivity({
+      orgId,
+      entityType: ENTITY_TYPE.INVOICE,
+      entityId: invoice.id,
+      userId: session.user.id,
+      type: ACTIVITY_TYPE.INVOICE_PUBLISHED,
+      payload: { from: INVOICE_STATUS.DRAFT, to: INVOICE_STATUS.PUBLISHED },
+    });
+  }
 
   revalidatePath("/invoices");
   return { success: true, invoice };
@@ -267,6 +296,15 @@ export async function updateInvoice(id: string, formData: FormData) {
     itemCount: data.items.length,
   });
 
+  await recordActivity({
+    orgId,
+    entityType: ENTITY_TYPE.INVOICE,
+    entityId: id,
+    userId: session.user.id,
+    type: ACTIVITY_TYPE.INVOICE_UPDATED,
+    payload: { itemCount: data.items.length, total: totals.total },
+  });
+
   revalidatePath("/invoices");
   revalidatePath(`/invoices/${id}`);
   return { success: true };
@@ -313,11 +351,15 @@ export async function sendInvoice(id: string) {
     .where(eq(invoices.id, id));
 
   // Submit through the country plugin integrations (non-blocking)
-  const submissionResults = await submitInvoiceThroughPlugins(id, {
-    id: session.org.id,
-    taxId: session.org.taxId,
-    countryCode: session.org.countryCode,
-  });
+  const submissionResults = await submitInvoiceThroughPlugins(
+    id,
+    {
+      id: session.org.id,
+      taxId: session.org.taxId,
+      countryCode: session.org.countryCode,
+    },
+    session.user.id,
+  );
   for (const r of submissionResults) {
     if (!r.ok) {
       log.error("integration submission failed", {
@@ -337,6 +379,19 @@ export async function sendInvoice(id: string) {
   }
 
   log.info("invoice sent", { orgId, invoiceId: id });
+
+  await recordActivity({
+    orgId,
+    entityType: ENTITY_TYPE.INVOICE,
+    entityId: id,
+    userId: session.user.id,
+    type: ACTIVITY_TYPE.INVOICE_SENT,
+    payload: {
+      from: invoice.status,
+      to: INVOICE_STATUS.SENT,
+      recipientEmail: invoice.contactEmail ?? null,
+    },
+  });
 
   revalidatePath("/invoices");
   revalidatePath(`/invoices/${id}`);
@@ -376,6 +431,15 @@ export async function publishInvoice(id: string) {
     .where(eq(invoices.id, id));
 
   log.info("invoice published", { orgId, invoiceId: id });
+
+  await recordActivity({
+    orgId,
+    entityType: ENTITY_TYPE.INVOICE,
+    entityId: id,
+    userId: session.user.id,
+    type: ACTIVITY_TYPE.INVOICE_PUBLISHED,
+    payload: { from: INVOICE_STATUS.DRAFT, to: INVOICE_STATUS.PUBLISHED },
+  });
 
   revalidatePath("/invoices");
   revalidatePath(`/invoices/${id}`);
@@ -424,6 +488,20 @@ export async function markAsPaid(id: string) {
     .where(eq(invoices.id, id));
 
   log.info("invoice marked as paid", { orgId, invoiceId: id });
+
+  await recordActivity({
+    orgId,
+    entityType: ENTITY_TYPE.INVOICE,
+    entityId: id,
+    userId: session.user.id,
+    type: ACTIVITY_TYPE.INVOICE_PAID,
+    payload: {
+      from: invoice.status,
+      to: INVOICE_STATUS.PAID,
+      amount: invoice.total,
+      currency: invoice.currencyCode,
+    },
+  });
 
   revalidatePath("/invoices");
   revalidatePath(`/invoices/${id}`);
@@ -476,6 +554,15 @@ export async function cancelInvoice(id: string) {
 
   log.info("invoice cancelled", { orgId, invoiceId: id });
 
+  await recordActivity({
+    orgId,
+    entityType: ENTITY_TYPE.INVOICE,
+    entityId: id,
+    userId: session.user.id,
+    type: ACTIVITY_TYPE.INVOICE_CANCELLED,
+    payload: { from: invoice.status, to: INVOICE_STATUS.CANCELLED },
+  });
+
   revalidatePath("/invoices");
   revalidatePath(`/invoices/${id}`);
   return { success: true };
@@ -505,11 +592,37 @@ export async function deleteInvoice(id: string) {
     return { success: false, error: "Only draft invoices can be deleted" };
   }
 
+  // App-layer cascade: activities have no FK on entityId (polymorphic
+  // table). Drop this invoice's audit rows before we drop the invoice
+  // so we never leave orphan rows in the activity log.
+  await db
+    .delete(activities)
+    .where(
+      and(
+        eq(activities.entityType, ENTITY_TYPE.INVOICE),
+        eq(activities.entityId, id),
+      ),
+    );
+
   await db
     .delete(invoices)
     .where(and(eq(invoices.id, id), eq(invoices.orgId, session.org.id)));
 
   log.info("invoice deleted", { orgId, invoiceId: id });
+
+  // Note: we record the deletion AFTER the row is gone. The activity
+  // is still meaningful — it tells the audit reader "the invoice was
+  // deleted", with the snapshotted status in the payload — but it
+  // will become orphaned the next time someone deletes activities for
+  // this invoiceId. That's acceptable for a deleted draft.
+  await recordActivity({
+    orgId,
+    entityType: ENTITY_TYPE.INVOICE,
+    entityId: id,
+    userId: session.user.id,
+    type: ACTIVITY_TYPE.INVOICE_DELETED,
+    payload: { status: invoice.status },
+  });
 
   revalidatePath("/invoices");
   return { success: true };

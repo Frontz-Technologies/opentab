@@ -389,6 +389,7 @@
     "markAsPaid": "Marcar como pagada",
     "cancel": "Cancelar factura",
     "downloadPdf": "Descargar PDF",
+    "downloadActivityCsv": "Descargar actividad (CSV)",
     "delete": "Eliminar",
     "deleteConfirm": "¿Está seguro de que desea eliminar esta factura?",
     "sendConfirm": "¿Enviar esta factura al cliente?",

@@ -1,0 +1,45 @@
+import { z } from "zod";
+import { activities } from "@opentab/db/schema";
+
+export { activities };
+export type { Activity, NewActivity } from "@opentab/db/schema";
+
+// Polymorphic entity tag. Today only "invoice" is written; the rest
+// reserve names for the audits that will land in their own issues
+// (#131 spec — non-goals section).
+export const ENTITY_TYPE = {
+  INVOICE: "invoice",
+} as const;
+
+export type EntityType = (typeof ENTITY_TYPE)[keyof typeof ENTITY_TYPE];
+
+// Closed string union of every audit event v1 emits. Keep strict so a
+// typo at a writer call site is a compile error rather than an empty
+// row in the CSV. Naming convention: `<entity>.<verb>` (invoice.*) or
+// `<plugin>.<verb>` (mydata.*) — the entity prefix lets us filter the
+// CSV at a glance even when the table widens to other entities.
+export const ACTIVITY_TYPE = {
+  INVOICE_CREATED: "invoice.created",
+  INVOICE_UPDATED: "invoice.updated",
+  INVOICE_PUBLISHED: "invoice.published",
+  INVOICE_SENT: "invoice.sent",
+  INVOICE_PAID: "invoice.paid",
+  INVOICE_CANCELLED: "invoice.cancelled",
+  INVOICE_DELETED: "invoice.deleted",
+  MYDATA_SUBMITTED: "mydata.submitted",
+  MYDATA_CONFIRMED: "mydata.confirmed",
+  MYDATA_FAILED: "mydata.failed",
+} as const;
+
+export type ActivityType = (typeof ACTIVITY_TYPE)[keyof typeof ACTIVITY_TYPE];
+
+export const createActivitySchema = z.object({
+  orgId: z.string().uuid(),
+  entityType: z.enum([ENTITY_TYPE.INVOICE]),
+  entityId: z.string().uuid(),
+  userId: z.string().nullable(),
+  type: z.enum(
+    Object.values(ACTIVITY_TYPE) as [ActivityType, ...ActivityType[]],
+  ),
+  payload: z.record(z.unknown()).optional(),
+});
