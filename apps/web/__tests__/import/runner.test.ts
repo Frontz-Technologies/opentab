@@ -161,4 +161,34 @@ describe("runImport (#215)", () => {
     expect(result.errorCsv).toContain("5");
     expect(result.errorCsv).toContain("displayName: required");
   });
+
+  // Tester PR #218 Medium #1 regression. The error CSV echoes the
+  // user's own input back to them; cell values starting with =/+/-/@/
+  // \t/\r need an apostrophe prefix or Excel/Sheets/Numbers will
+  // execute them as formulas on open. Same OWASP guard pattern as
+  // PR #211's fix to lib/activities/csv.ts.
+  it("guards error-CSV cells against CSV-injection (apostrophe prefix on =, +, -, @, \\t, \\r)", async () => {
+    const result = await runImport({
+      orgId,
+      descriptor,
+      rows: [
+        {
+          kind: "blocked",
+          rowNumber: 7,
+          raw: { displayName: "=cmd|/c calc!A0", email: "+1555..." },
+          messages: ["displayName: invalid"],
+        },
+      ],
+      skippedByUser: new Set(),
+      table: contacts,
+      buildInsert: (row) => ({ orgId, displayName: row.displayName }),
+      dbInstance: db,
+    });
+    expect(result.errorCsv).not.toBeNull();
+    // Both cells must carry the apostrophe prefix. Neither contains a
+    // CSV-special char (`,`, `"`, `\n`, `\r`) so they're not quoted —
+    // bare prefix is the rendered form.
+    expect(result.errorCsv).toContain("'=cmd|/c calc!A0");
+    expect(result.errorCsv).toContain("'+1555...");
+  });
 });
