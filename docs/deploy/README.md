@@ -235,7 +235,22 @@ The script will:
 
 ## Phase 12 — Smoke Test (Day 2, ~10 min)
 
-Run through the spec's acceptance-criteria checklist (in `docs/deploy/cloud-beta-spec.md` § Acceptance criteria) — 14 items, ~30s each.
+Walk through this checklist (~30s each):
+
+- [ ] `https://app.opentab.tech` resolves with valid SSL
+- [ ] `https://app.opentab.tech/api/healthz` returns `{"status":"ok","db":"ok","redis":"ok"}`
+- [ ] Logged-in user can create a contact, create an invoice, send the invoice — PDF email lands in inbox within 30s
+- [ ] Receipt photo upload → AI extraction returns parsed expense in <10s (when `OPENROUTER_API_KEY` is set)
+- [ ] AI chat FAB is hidden, `/api/ai/chat` returns 404
+- [ ] `/register` returns 404 (public registration disabled)
+- [ ] `/forgot-password` → email lands within 30s, reset link works
+- [ ] `create-beta-user.ts` script via Coolify Terminal: new user gets set-password email
+- [ ] Manually-triggered error appears in GlitchTip within 30s with full stack trace
+- [ ] Pino log line in app appears in BetterStack web UI within 30s
+- [ ] BetterStack Uptime monitor for `/healthz` is green
+- [ ] First nightly backup runs (after 03:00 Athens), file appears in `opentab-backups/db/<date>.dump.age` in hel1 bucket
+- [ ] `/legal` page accessible, GR/EN/ES toggle works, all 4 sections present
+- [ ] This walkthrough reads end-to-end without surprises (file an issue if a step is unclear)
 
 ## Routine maintenance
 
@@ -308,6 +323,18 @@ If this fails, **fix it before you have a real incident**.
 
 - It needs ~30s after first start. Check `docker logs opentab-glitchtip-1`
 
-## Migration triggers
+## Migration triggers — when to upgrade what
 
-When to upgrade things — see `docs/deploy/cloud-beta-spec.md` § Migration triggers.
+Tier 2 (this setup, ~€12/mo) → Tier 1 (V1 production, ~€87/mo):
+
+| Trigger                    | Migrate from                      | Migrate to                    | Cost delta        |
+| -------------------------- | --------------------------------- | ----------------------------- | ----------------- |
+| First non-friend signup    | hand-written `/legal` page        | iubenda Ultimate              | +€8/mo            |
+| Adding paid plan / billing | hand-written `/legal`             | iubenda + lawyer review       | +€8/mo + one-time |
+| GlitchTip MCP friction     | self-hosted GlitchTip             | self-hosted Sentry on +1 CX32 | +€7/mo            |
+| DB > 500 MB                | self-hosted Postgres in container | Neon Launch Frankfurt         | +€18/mo           |
+| Daily emails > 9000        | Brevo Free                        | Brevo Business 20k            | +€25/mo           |
+| 8GB RAM saturated          | CX32                              | CX42                          | +€8/mo            |
+| Need separate worker box   | shared box                        | +1 CX22 worker box            | +€6/mo            |
+
+All swaps are env-var changes — no code redeploy needed for DB/Redis/email/storage migrations.
