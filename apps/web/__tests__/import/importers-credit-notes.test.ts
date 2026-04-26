@@ -42,12 +42,24 @@ describe("credit-notes importer descriptor (#215 PR-B)", () => {
     expect(r.success).toBe(false);
   });
 
-  it("idempotency key is org + creditNoteNumber", () => {
+  it("idempotency key includes 'num' tag + creditNoteNumber when number present", () => {
     const k = creditNotesImporter.idempotencyKeyParts(
       { creditNoteNumber: "CN-0001" } as never,
       "org-1",
     );
-    expect(k).toEqual(["org-1", "cn-0001"]);
+    expect(k).toEqual(["org-1", "num", "cn-0001"]);
+  });
+
+  it("idempotency key falls back to contact+date+total fingerprint when number is empty (v1.1, #220)", () => {
+    const k = creditNotesImporter.idempotencyKeyParts(
+      {
+        contactName: "Acme Co",
+        issueDate: "2026-04-26",
+        total: "100.00",
+      } as never,
+      "org-1",
+    );
+    expect(k).toEqual(["org-1", "nonum", "acme co", "2026-04-26", "100.00"]);
   });
 
   it("alias table accepts common header variants for parent invoice link", () => {

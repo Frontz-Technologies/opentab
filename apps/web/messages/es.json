@@ -888,6 +888,7 @@
     "skippedByUser": "Omitidos (por usuario)",
     "failed": "Fallidos",
     "downloadErrorCsv": "Descargar CSV de errores",
-    "import": "Importar"
+    "import": "Importar",
+    "autoCreateContactToggle": "Crear contactos faltantes automáticamente (recomendado para migraciones)"
   }
 }

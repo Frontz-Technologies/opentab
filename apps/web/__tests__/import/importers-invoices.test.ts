@@ -26,12 +26,24 @@ describe("invoices importer descriptor (#215)", () => {
     expect(r.success).toBe(true);
   });
 
-  it("idempotency key is org + invoiceNumber", () => {
+  it("idempotency key includes 'num' tag + invoiceNumber when number present", () => {
     const k = invoicesImporter.idempotencyKeyParts(
       { invoiceNumber: "INV-0001" } as never,
       "org-1",
     );
-    expect(k).toEqual(["org-1", "inv-0001"]);
+    expect(k).toEqual(["org-1", "num", "inv-0001"]);
+  });
+
+  it("idempotency key falls back to contact+date+total fingerprint when number is empty (v1.1, #220)", () => {
+    const k = invoicesImporter.idempotencyKeyParts(
+      {
+        contactName: "Acme Co",
+        issueDate: "2026-04-26",
+        total: "100.00",
+      } as never,
+      "org-1",
+    );
+    expect(k).toEqual(["org-1", "nonum", "acme co", "2026-04-26", "100.00"]);
   });
 });
 
