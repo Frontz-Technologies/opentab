@@ -245,6 +245,7 @@ async function pushSchema(pglite: PGlite) {
       "notes" text,
       "terms" text,
       "sent_at" timestamp,
+      "import_idempotency_key" varchar(64),
       "created_at" timestamp NOT NULL DEFAULT now(),
       "updated_at" timestamp NOT NULL DEFAULT now()
     )`,
@@ -252,6 +253,7 @@ async function pushSchema(pglite: PGlite) {
     `CREATE INDEX "credit_note_org_status_idx" ON "credit_note" ("org_id", "status")`,
     `CREATE INDEX "credit_note_invoice_id_idx" ON "credit_note" ("invoice_id")`,
     `CREATE UNIQUE INDEX "credit_note_org_number_idx" ON "credit_note" ("org_id", "credit_note_number")`,
+    `CREATE UNIQUE INDEX "credit_note_import_idempotency_idx" ON "credit_note" ("org_id", "import_idempotency_key") WHERE "import_idempotency_key" IS NOT NULL`,
 
     `CREATE TABLE IF NOT EXISTS "credit_note_item" (
       "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),

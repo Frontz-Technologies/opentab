@@ -5,13 +5,23 @@ import { revalidatePath } from "next/cache";
 import { and, eq, inArray } from "drizzle-orm";
 import { getSession } from "@/lib/session";
 import { db } from "@/lib/db";
-import { contacts, expenses, invoices } from "@opentab/db/schema";
+import {
+  contacts,
+  expenses,
+  invoices,
+  invoiceItems,
+  creditNotes,
+  creditNoteItems,
+} from "@opentab/db/schema";
 import { recordActivity } from "@/lib/activities/record";
 import { ACTIVITY_TYPE, ENTITY_TYPE } from "@/lib/entities/activity";
 import { createLogger } from "@/lib/logging/logger";
 import { getImporter } from "@/lib/import/importers";
 import { runImport } from "@/lib/import/core/runner";
 import { validateRows } from "@/lib/import/core/validator";
+import { groupRowsByInvoice } from "@/lib/import/importers/invoices";
+import { groupRowsByCreditNote } from "@/lib/import/importers/credit-notes";
+import { calculateLineTotal } from "@/lib/invoicing/calculations";
 import type { RowResult } from "@/lib/import/core/types";
 import type { PgTable } from "drizzle-orm/pg-core";
 
@@ -35,6 +45,7 @@ const TABLE_BY_ENTITY: Record<string, PgTable> = {
   contacts,
   expenses,
   invoices,
+  "credit-notes": creditNotes,
 };
 
 function buildInsertForEntity(entityKey: string, orgId: string) {
@@ -79,13 +90,11 @@ function buildInsertForEntity(entityKey: string, orgId: string) {
     case "invoices":
       return (row: Record<string, unknown>) => ({
         orgId,
-        // contactId is auto-resolved in v1.1 (auto-create-missing-refs).
-        // For now, the import requires the contact already to exist;
-        // descriptor's contactName drives buildInsert by lookup but
-        // we don't have that wiring yet — emit null to satisfy the
-        // notNull contactId constraint by falling back to a stub
-        // resolution path. v1.1 task implements proper lookup.
-        contactId: row.__contactId ?? null,
+        // contactId resolved by resolveInvoiceContactIds before this
+        // call. Rows whose contact wasn't found were demoted to
+        // "blocked" upstream so this never sees a missing __contactId.
+        // Auto-create-missing-contact lands in v1.1.
+        contactId: row.__contactId,
         status: 2, // SENT — published+sent for imports
         invoiceNumber: row.invoiceNumber,
         issueDate: row.issueDate,
@@ -97,6 +106,23 @@ function buildInsertForEntity(entityKey: string, orgId: string) {
         balance: row.total,
         contactName: row.contactName,
         contactVatNumber: row.contactVatNumber ?? null,
+      });
+    case "credit-notes":
+      return (row: Record<string, unknown>) => ({
+        orgId,
+        contactId: row.__contactId,
+        invoiceId: row.__parentInvoiceId ?? null,
+        status: 3, // SENT — credit notes imported as already-issued
+        creditNoteNumber: row.creditNoteNumber,
+        issueDate: row.issueDate,
+        currencyCode: row.currencyCode ?? "EUR",
+        subtotal: row.total,
+        taxAmount: "0.00",
+        total: row.total,
+        contactName: row.contactName,
+        contactVatNumber: row.contactVatNumber ?? null,
+        reason: row.reason,
+        reasonNote: row.reasonNote ?? null,
       });
     default:
       throw new Error(`unknown entity: ${entityKey}`);
@@ -112,15 +138,19 @@ export async function commitImport(args: CommitArgs) {
   const importer = getImporter(args.entityKey);
   const validated = validateRows(args.rows, args.mapping, importer, orgId);
 
-  // Invoice rows need a real contactId (notNull at DB level). Pre-
-  // resolve via a single batch lookup over distinct contactNames;
-  // rows whose contact isn't found get demoted to "blocked" so the
-  // batch insert doesn't trip the FK. Auto-create-missing-contact
-  // is the v1.1 follow-up.
-  const resolved =
-    args.entityKey === "invoices"
-      ? await resolveInvoiceContactIds(orgId, validated)
-      : validated;
+  // Invoice + credit-note rows need a real contactId (notNull at DB
+  // level). Pre-resolve via a single batch lookup over distinct
+  // contactNames; rows whose contact isn't found get demoted to
+  // "blocked" so the batch insert doesn't trip the FK. For credit
+  // notes we ALSO opportunistically link parent invoices by number
+  // (link-only, never auto-create the parent — see spec #215).
+  let resolved = validated;
+  if (args.entityKey === "invoices" || args.entityKey === "credit-notes") {
+    resolved = await resolveInvoiceContactIds(orgId, resolved);
+  }
+  if (args.entityKey === "credit-notes") {
+    resolved = await linkParentInvoiceIds(orgId, resolved);
+  }
 
   const result = await runImport({
     orgId,
@@ -130,6 +160,15 @@ export async function commitImport(args: CommitArgs) {
     table: TABLE_BY_ENTITY[args.entityKey],
     buildInsert: buildInsertForEntity(args.entityKey, orgId),
   });
+
+  // Line-item insertion for invoices + credit notes (tester PR #219
+  // High). The runner handles only the header rows; without this
+  // post-pass, multi-row CSVs would land header-only because the
+  // ON-CONFLICT-DO-NOTHING dedup on the header's idempotency key
+  // swallows the second row before it can become a line item.
+  if (args.entityKey === "invoices" || args.entityKey === "credit-notes") {
+    await insertLineItemsForHeaderImport(args.entityKey, orgId, resolved);
+  }
 
   await recordActivity({
     orgId,
@@ -204,6 +243,191 @@ async function resolveInvoiceContactIds(
       data: { ...r.data, __contactId: id },
     };
   });
+}
+
+// Opportunistic parent-invoice link by invoiceNumber. Per the spec
+// #215, credit-note imports never AUTO-CREATE the parent — they
+// just link if found. Rows whose `parentInvoiceNumber` is set but
+// can't be resolved are kept (with __parentInvoiceId = undefined,
+// so the column lands as NULL — standalone credit note).
+async function linkParentInvoiceIds(
+  orgId: string,
+  rows: RowResult<Record<string, unknown>>[],
+): Promise<RowResult<Record<string, unknown>>[]> {
+  const distinctNumbers = new Set<string>();
+  for (const r of rows) {
+    if (r.kind === "blocked") continue;
+    const num = r.data.parentInvoiceNumber as string | undefined;
+    if (num) distinctNumbers.add(num);
+  }
+  if (distinctNumbers.size === 0) return rows;
+
+  const found = await db
+    .select({ id: invoices.id, invoiceNumber: invoices.invoiceNumber })
+    .from(invoices)
+    .where(
+      and(
+        eq(invoices.orgId, orgId),
+        inArray(invoices.invoiceNumber, Array.from(distinctNumbers)),
+      ),
+    );
+  const numToId = new Map(
+    found
+      .filter((i): i is { id: string; invoiceNumber: string } =>
+        Boolean(i.invoiceNumber),
+      )
+      .map((i) => [i.invoiceNumber, i.id]),
+  );
+
+  return rows.map((r) => {
+    if (r.kind === "blocked") return r;
+    const num = r.data.parentInvoiceNumber as string | undefined;
+    const id = num ? numToId.get(num) : undefined;
+    return {
+      ...r,
+      data: { ...r.data, __parentInvoiceId: id },
+    };
+  });
+}
+
+// Inserts the line-item rows for invoice + credit-note imports.
+// Called AFTER the header runImport step. Steps:
+//   1. Group source rows by their natural key (invoiceNumber or
+//      creditNoteNumber) — uses the descriptor-side helpers.
+//   2. SELECT the header rows that landed (filtered by org + the
+//      idempotency keys we sent in this run) so we can map
+//      number → header id.
+//   3. Bulk-INSERT one items row per source row, with line totals
+//      computed via calculateLineTotal().
+// On a re-import where every header row is a duplicate, every group
+// finds no header id and the items insert is a no-op — same as the
+// runner's ON-CONFLICT-DO-NOTHING contract for header rows.
+async function insertLineItemsForHeaderImport(
+  entityKey: "invoices" | "credit-notes",
+  orgId: string,
+  rows: RowResult<Record<string, unknown>>[],
+): Promise<void> {
+  const okRows = rows
+    .filter(
+      (
+        r,
+      ): r is
+        | Extract<typeof r, { kind: "ok" }>
+        | Extract<typeof r, { kind: "warning" }> =>
+        r.kind === "ok" || r.kind === "warning",
+    )
+    .map((r) => r.data);
+
+  if (okRows.length === 0) return;
+
+  if (entityKey === "invoices") {
+    const grouped = groupRowsByInvoice(
+      okRows as unknown as Parameters<typeof groupRowsByInvoice>[0],
+    );
+    const numbers = grouped.map((g) => g.header.invoiceNumber);
+    const headerRows = await db
+      .select({ id: invoices.id, invoiceNumber: invoices.invoiceNumber })
+      .from(invoices)
+      .where(
+        and(
+          eq(invoices.orgId, orgId),
+          inArray(invoices.invoiceNumber, numbers),
+        ),
+      );
+    const numToId = new Map(
+      headerRows
+        .filter((h): h is { id: string; invoiceNumber: string } =>
+          Boolean(h.invoiceNumber),
+        )
+        .map((h) => [h.invoiceNumber, h.id]),
+    );
+
+    const itemRows: (typeof invoiceItems.$inferInsert)[] = [];
+    for (const g of grouped) {
+      const invoiceId = numToId.get(g.header.invoiceNumber);
+      if (!invoiceId) continue; // header was a duplicate / not landed
+      let sortOrder = 0;
+      for (const line of g.lines) {
+        const totals = calculateLineTotal({
+          quantity: line.quantity,
+          unitPrice: line.unitPrice,
+          taxRate: line.taxRate,
+          usesInclusiveTax: false,
+        });
+        itemRows.push({
+          invoiceId,
+          sortOrder: sortOrder++,
+          name: line.itemName,
+          quantity: line.quantity,
+          unitPrice: line.unitPrice,
+          unit: line.unit ?? null,
+          taxCategory: "standard",
+          taxRate: line.taxRate,
+          taxAmount: totals.taxAmount,
+          lineTotal: totals.lineTotal,
+        });
+      }
+    }
+    if (itemRows.length > 0) {
+      await db.insert(invoiceItems).values(itemRows);
+    }
+    return;
+  }
+
+  // entityKey === "credit-notes"
+  const grouped = groupRowsByCreditNote(
+    okRows as unknown as Parameters<typeof groupRowsByCreditNote>[0],
+  );
+  const numbers = grouped.map((g) => g.header.creditNoteNumber);
+  const headerRows = await db
+    .select({
+      id: creditNotes.id,
+      creditNoteNumber: creditNotes.creditNoteNumber,
+    })
+    .from(creditNotes)
+    .where(
+      and(
+        eq(creditNotes.orgId, orgId),
+        inArray(creditNotes.creditNoteNumber, numbers),
+      ),
+    );
+  const numToId = new Map(
+    headerRows
+      .filter((h): h is { id: string; creditNoteNumber: string } =>
+        Boolean(h.creditNoteNumber),
+      )
+      .map((h) => [h.creditNoteNumber, h.id]),
+  );
+
+  const itemRows: (typeof creditNoteItems.$inferInsert)[] = [];
+  for (const g of grouped) {
+    const creditNoteId = numToId.get(g.header.creditNoteNumber);
+    if (!creditNoteId) continue;
+    let sortOrder = 0;
+    for (const line of g.lines) {
+      const totals = calculateLineTotal({
+        quantity: line.quantity,
+        unitPrice: line.unitPrice,
+        taxRate: line.taxRate,
+        usesInclusiveTax: false,
+      });
+      itemRows.push({
+        creditNoteId,
+        sortOrder: sortOrder++,
+        name: line.itemName,
+        quantity: line.quantity,
+        unitPrice: line.unitPrice,
+        unit: line.unit ?? null,
+        taxCategory: "standard",
+        taxRate: line.taxRate,
+        taxAmount: totals.taxAmount,
+        lineTotal: totals.lineTotal,
+      });
+    }
+  }
+  if (itemRows.length > 0) {
+    await db.insert(creditNoteItems).values(itemRows);
+  }
 }
 
 // Server-rendered sample CSV — header row only, derived from the

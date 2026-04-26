@@ -11,6 +11,7 @@ import {
   index,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { organisations } from "./organisations";
 import { contacts } from "./contacts";
 import { invoices } from "./invoices";
@@ -72,6 +73,10 @@ export const creditNotes = pgTable(
     notes: text("notes"),
     terms: text("terms"),
     sentAt: timestamp("sent_at"),
+    // Per-org dedup key for CSV imports (#215). Null for any credit
+    // note not created via /import/credit-notes; partial unique
+    // index below.
+    importIdempotencyKey: varchar("import_idempotency_key", { length: 64 }),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
@@ -80,6 +85,9 @@ export const creditNotes = pgTable(
     index("credit_note_org_status_idx").on(t.orgId, t.status),
     index("credit_note_invoice_id_idx").on(t.invoiceId),
     uniqueIndex("credit_note_org_number_idx").on(t.orgId, t.creditNoteNumber),
+    uniqueIndex("credit_note_import_idempotency_idx")
+      .on(t.orgId, t.importIdempotencyKey)
+      .where(sql`${t.importIdempotencyKey} IS NOT NULL`),
   ],
 );
 
