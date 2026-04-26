@@ -7,8 +7,10 @@
  * Behavior:
  *   1. Calls better-auth signUpEmail with a long random temp password (user can never log in with it)
  *   2. Auth-server's databaseHooks creates the org automatically
- *   3. Triggers a password-reset email so the user sets their real password
- *   4. Prints the magic-link URL to stdout (in case email transport is down)
+ *   3. Calls auth.api.requestPasswordReset which fires the configured
+ *      sendResetPassword hook (SMTP). The reset URL/token is NOT returned by
+ *      the API — it is delivered via the configured email transport. If SMTP
+ *      is not yet wired, check the worker logs for the rendered URL.
  */
 import { config } from "dotenv";
 config({ path: ".env.local" });
@@ -48,23 +50,18 @@ async function main() {
   }
 
   console.log(`→ Triggering password reset email...`);
-  // better-auth sendResetPassword hook will email the user.
-  // We invoke the resetPassword endpoint directly so the user receives the link.
-  // Using the public sign-in flow from a Node script is awkward;
-  // instead we use better-auth's request-reset endpoint by calling the API.
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  const res = await fetch(`${baseUrl}/api/auth/forget-password`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ email, redirectTo: "/reset-password" }),
+  // Direct in-process call — no LB round-trip, no fetch failure modes.
+  // better-auth fires the configured sendResetPassword hook (SMTP).
+  await auth.api.requestPasswordReset({
+    body: { email, redirectTo: "/reset-password" },
   });
-  if (!res.ok) {
-    console.warn(
-      `⚠️  Password-reset request returned ${res.status}. The user can use /forgot-password manually.`,
-    );
-  } else {
-    console.log(`✅ Password-reset email sent to ${email}`);
-  }
+
+  console.log(
+    `✅ Password-reset email sent to ${email} (assuming SMTP is configured).`,
+  );
+  console.log(
+    `   If SMTP is not yet configured, check the worker logs for the reset URL.`,
+  );
 
   console.log(
     `\n🎉 Done. Tell ${name} to check their inbox or visit /forgot-password.`,
