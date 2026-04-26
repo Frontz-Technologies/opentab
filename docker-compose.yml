@@ -50,7 +50,7 @@ services:
         condition: service_healthy
       gotenberg:
         condition: service_started
-      db-migrate:
+      db-sync:
         condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:3000/api/healthz"]
@@ -101,18 +101,21 @@ services:
         condition: service_healthy
       web:
         condition: service_healthy
-      db-migrate:
+      db-sync:
         condition: service_completed_successfully
 
-  db-migrate:
-    # One-shot init that applies pending Drizzle migrations before web/worker
-    # start. drizzle-kit migrate is idempotent — re-runs with no pending
-    # migrations are a no-op, so this fires safely on every `compose up`.
+  db-sync:
+    # One-shot init that syncs the live DB schema with the Drizzle schema-
+    # as-code via `db:push` before web/worker start. Push is the v1 strategy
+    # (no migration history): on every `compose up` it diffs schema vs. DB
+    # and emits the necessary CREATE/ALTER statements. Without `--force`
+    # it refuses any destructive operation (column drops, type changes that
+    # lose data) and exits non-zero, gating the deploy.
     image: ${OPENTAB_IMAGE:-ghcr.io/frontz-technologies/opentab:latest}
     pull_policy: always
     restart: "no"
     working_dir: /app/packages/db
-    command: ["pnpm", "db:migrate"]
+    command: ["pnpm", "db:push"]
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-opentab}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-opentab}
     depends_on:

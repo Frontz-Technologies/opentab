@@ -171,7 +171,7 @@ Tests use `@electric-sql/pglite` — an in-process WebAssembly PostgreSQL build.
 
 - No external database needed for tests
 - Tests run in CI without Docker
-- Schema is applied fresh per test suite via Drizzle migrations
+- Schema is applied fresh per test suite via the hardcoded DDL in `packages/db/src/test-utils.ts` (the same Drizzle schema is also synced to the live DB via `db:push` at deploy time)
 - `packages/db/src/test-utils.ts` exports helpers for setting up and tearing down PGlite instances
 
 ---
