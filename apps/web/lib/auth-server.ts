@@ -13,6 +13,24 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
+    sendResetPassword: async ({ user, url }) => {
+      const { sendEmail } = await import("./email/transport");
+      await sendEmail({
+        to: user.email,
+        subject: "Reset your OpenTab password",
+        text: `Hello ${user.name ?? ""},
+
+You requested a password reset for your OpenTab account.
+
+Click the link below to set a new password (valid for 1 hour):
+
+${url}
+
+If you didn't request this, you can safely ignore this email.
+
+— OpenTab`,
+      });
+    },
   },
   session: {
     expiresIn: 60 * 60 * 24 * 30,
