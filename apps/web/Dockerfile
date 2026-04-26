@@ -18,6 +18,12 @@ COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 COPY --from=deps /app/packages ./packages
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
+# NEXT_PUBLIC_* vars are baked into the client bundle by `next build`. The
+# auth client falls back to localhost:3000 if NEXT_PUBLIC_APP_URL is unset
+# at build time, which then tries to make CORS calls to localhost from the
+# deployed origin. The CI workflow passes this via --build-arg.
+ARG NEXT_PUBLIC_APP_URL
+ENV NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
 RUN pnpm --filter @opentab/web build
 
 # --- Runner stage ---
