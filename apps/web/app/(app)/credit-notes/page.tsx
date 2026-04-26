@@ -42,13 +42,24 @@ export default async function CreditNotesPage() {
         <h1 className="font-headline text-2xl font-bold text-on-surface">
           {t("title")}
         </h1>
-        <Link
-          href="/credit-notes/new"
-          className="inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-5 font-label text-sm font-medium text-on-primary transition-colors hover:bg-primary/90"
-        >
-          <span className="material-symbols-outlined text-[18px]">add</span>
-          {t("addCreditNote")}
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/import/credit-notes"
+            className="inline-flex h-10 items-center gap-2 rounded-lg border border-on-surface/20 px-5 font-label text-sm font-medium text-on-surface transition-colors hover:bg-surface-container-low"
+          >
+            <span className="material-symbols-outlined text-[18px]">
+              upload
+            </span>
+            {t("import")}
+          </Link>
+          <Link
+            href="/credit-notes/new"
+            className="inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-5 font-label text-sm font-medium text-on-primary transition-colors hover:bg-primary/90"
+          >
+            <span className="material-symbols-outlined text-[18px]">add</span>
+            {t("addCreditNote")}
+          </Link>
+        </div>
       </div>
 
       {rows.length === 0 ? (

@@ -458,6 +458,7 @@
   "creditNotes": {
     "title": "Credit Notes",
     "addCreditNote": "New Credit Note",
+    "import": "Import",
     "noCreditNotes": "No credit notes yet",
     "placeholderDraft": "Draft",
     "draftHeading": "Draft Credit Note",
