@@ -1,1 +1,0 @@
-ALTER TABLE "ai_settings" ADD COLUMN "receipt_extraction_enabled" boolean DEFAULT true NOT NULL;

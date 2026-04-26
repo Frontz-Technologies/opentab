@@ -99,17 +99,16 @@ e2e/                    # Playwright end-to-end tests
 
 ## Commands
 
-| Task             | Command                                              |
-| ---------------- | ---------------------------------------------------- |
-| Start everything | `docker compose -f docker/docker-compose.dev.yml up` |
-| Dev server only  | `pnpm dev` (requires DB running separately)          |
-| Build            | `pnpm build`                                         |
-| Unit tests       | `pnpm test`                                          |
-| E2E tests        | `pnpm e2e` (requires DB + server running)            |
-| Format           | `pnpm format`                                        |
-| Lint             | `pnpm lint`                                          |
-| DB schema push   | `pnpm db:push`                                       |
-| DB migrations    | `pnpm db:generate`                                   |
+| Task             | Command                                                                                                                                                      |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Start everything | `docker compose -f docker/docker-compose.dev.yml up`                                                                                                         |
+| Dev server only  | `pnpm dev` (requires DB running separately)                                                                                                                  |
+| Build            | `pnpm build`                                                                                                                                                 |
+| Unit tests       | `pnpm test`                                                                                                                                                  |
+| E2E tests        | `pnpm e2e` (requires DB + server running)                                                                                                                    |
+| Format           | `pnpm format`                                                                                                                                                |
+| Lint             | `pnpm lint`                                                                                                                                                  |
+| DB schema sync   | `pnpm db:push` — diffs the Drizzle schema vs. the live DB and applies the necessary CREATE/ALTER. No migration files; schema-as-code is the source of truth. |
 
 ---
 

@@ -167,7 +167,8 @@ Breaking changes: append `!` after the type and explain in the body:
 feat!: change org membership to support multiple roles
 
 BREAKING CHANGE: org_memberships.role is now an enum.
-Run migration db:migrate before deploying.
+The compose db-sync service runs `pnpm db:push` automatically on
+deploy — no manual migration step.
 ```
 
 ---

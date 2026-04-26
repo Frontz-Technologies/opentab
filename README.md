@@ -65,7 +65,7 @@ opentab/
 │   ├── components/        # UI components (invoicing, layout, onboarding)
 │   ├── lib/               # Business logic (country, invoicing, mydata)
 │   └── messages/          # i18n translation files
-├── packages/db/           # Drizzle ORM schema + migrations
+├── packages/db/           # Drizzle ORM schema (synced via db:push)
 ├── e2e/                   # Playwright end-to-end tests
 ├── docker/                # Docker Compose (dev + production)
 └── docs/                  # Design system, architecture, conventions
