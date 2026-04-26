@@ -20,6 +20,7 @@ interface State {
   parsed: { headers: string[]; rows: Record<string, string>[] } | null;
   mapping: Record<string, string | null>;
   skipped: Set<number>;
+  autoCreateContact: boolean;
   result: {
     created: number;
     skippedDup: number;
@@ -33,6 +34,7 @@ type Action =
   | { type: "PARSED"; parsed: State["parsed"]; mapping: State["mapping"] }
   | { type: "MAP"; mapping: State["mapping"] }
   | { type: "TOGGLE_SKIP"; rowNumber: number }
+  | { type: "TOGGLE_AUTO_CREATE_CONTACT"; value: boolean }
   | { type: "RESULT"; result: State["result"] };
 
 function reducer(state: State, action: Action): State {
@@ -52,6 +54,8 @@ function reducer(state: State, action: Action): State {
       else next.add(action.rowNumber);
       return { ...state, skipped: next };
     }
+    case "TOGGLE_AUTO_CREATE_CONTACT":
+      return { ...state, autoCreateContact: action.value };
     case "RESULT":
       return { ...state, result: action.result, step: "commit" };
   }
@@ -66,6 +70,7 @@ export function ImportWizard({ entityKey, entityLabel, fields }: WizardProps) {
     parsed: null,
     mapping: {},
     skipped: new Set<number>(),
+    autoCreateContact: true, // v1.1 default ON, #220
     result: null,
   } satisfies State);
 
@@ -103,7 +108,7 @@ export function ImportWizard({ entityKey, entityLabel, fields }: WizardProps) {
         rows: state.parsed!.rows,
         mapping: state.mapping,
         skippedByUser: Array.from(state.skipped),
-        autoCreateToggles: {},
+        autoCreateToggles: { contact: state.autoCreateContact },
       });
       dispatch({ type: "RESULT", result });
     });
@@ -137,6 +142,13 @@ export function ImportWizard({ entityKey, entityLabel, fields }: WizardProps) {
           headers={state.parsed.headers}
           mapping={state.mapping}
           fields={fields}
+          showAutoCreateContact={
+            entityKey === "invoices" || entityKey === "credit-notes"
+          }
+          autoCreateContact={state.autoCreateContact}
+          onAutoCreateContactChange={(v) =>
+            dispatch({ type: "TOGGLE_AUTO_CREATE_CONTACT", value: v })
+          }
           onContinue={(m) => dispatch({ type: "MAP", mapping: m })}
         />
       )}
@@ -168,11 +180,17 @@ function MapStep({
   headers,
   mapping,
   fields,
+  showAutoCreateContact,
+  autoCreateContact,
+  onAutoCreateContactChange,
   onContinue,
 }: {
   headers: string[];
   mapping: Record<string, string | null>;
   fields: Array<{ name: string; required: boolean }>;
+  showAutoCreateContact: boolean;
+  autoCreateContact: boolean;
+  onAutoCreateContactChange: (v: boolean) => void;
   onContinue: (m: Record<string, string | null>) => void;
 }) {
   const t = useTranslations("import");
@@ -222,6 +240,16 @@ function MapStep({
           ))}
         </tbody>
       </table>
+      {showAutoCreateContact && (
+        <label className="flex items-center gap-2 text-sm text-on-surface">
+          <input
+            type="checkbox"
+            checked={autoCreateContact}
+            onChange={(e) => onAutoCreateContactChange(e.target.checked)}
+          />
+          <span>{t("autoCreateContactToggle")}</span>
+        </label>
+      )}
       <Button onClick={() => onContinue(m)} disabled={!requiredCovered}>
         {t("continueToPreview")}
       </Button>
