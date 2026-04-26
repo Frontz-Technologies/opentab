@@ -42,8 +42,6 @@ services:
       LEGAL_TERMS_URL: ${LEGAL_TERMS_URL:-}
       LEGAL_COOKIES_URL: ${LEGAL_COOKIES_URL:-}
       LEGAL_DPA_URL: ${LEGAL_DPA_URL:-}
-      MYDATA_USER_ID: ${MYDATA_USER_ID:-}
-      MYDATA_SUBSCRIPTION_KEY: ${MYDATA_SUBSCRIPTION_KEY:-}
     depends_on:
       db:
         condition: service_healthy
@@ -146,7 +144,7 @@ services:
       - "--api-timeout=60s"
 
   glitchtip:
-    image: glitchtip/glitchtip:v4
+    image: glitchtip/glitchtip:6
     restart: always
     expose:
       - "8000"
