@@ -47,6 +47,8 @@ describe("deriveTrustedOrigins", () => {
   it("handles undefined request (Better Auth calls without it at static init)", () => {
     process.env.NEXT_PUBLIC_APP_URL = "https://app.opentab.tech";
     expect(deriveTrustedOrigins()).toEqual(["https://app.opentab.tech"]);
-    expect(deriveTrustedOrigins(undefined)).toEqual(["https://app.opentab.tech"]);
+    expect(deriveTrustedOrigins(undefined)).toEqual([
+      "https://app.opentab.tech",
+    ]);
   });
 });
