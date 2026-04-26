@@ -7,7 +7,7 @@ import {
 
 describe("AI feature flags (#224)", () => {
   beforeEach(() => {
-    delete process.env.FEATURE_AI_CHAT;
+    delete process.env.NEXT_PUBLIC_FEATURE_AI_CHAT;
     delete process.env.FEATURE_AI_EXTRACTION;
     delete process.env.AI_MODEL_CHAT;
     delete process.env.AI_MODEL_EXTRACTION;
@@ -19,15 +19,25 @@ describe("AI feature flags (#224)", () => {
   });
 
   it("isFeatureEnabled returns true when env=on", () => {
-    process.env.FEATURE_AI_CHAT = "on";
+    process.env.NEXT_PUBLIC_FEATURE_AI_CHAT = "on";
     process.env.FEATURE_AI_EXTRACTION = "on";
     expect(isFeatureEnabled("chat")).toBe(true);
     expect(isFeatureEnabled("extraction")).toBe(true);
   });
 
   it("isFeatureEnabled returns false when env=off", () => {
-    process.env.FEATURE_AI_CHAT = "off";
+    process.env.NEXT_PUBLIC_FEATURE_AI_CHAT = "off";
     expect(isFeatureEnabled("chat")).toBe(false);
+  });
+
+  it("isFeatureEnabled('chat') reads NEXT_PUBLIC_FEATURE_AI_CHAT (single source of truth for client + server)", () => {
+    process.env.NEXT_PUBLIC_FEATURE_AI_CHAT = "on";
+    expect(isFeatureEnabled("chat")).toBe(true);
+    // The legacy server-only var should NOT enable chat anymore.
+    delete process.env.NEXT_PUBLIC_FEATURE_AI_CHAT;
+    process.env.FEATURE_AI_CHAT = "on";
+    expect(isFeatureEnabled("chat")).toBe(false);
+    delete process.env.FEATURE_AI_CHAT;
   });
 
   it("getFeatureModel returns env value when set", () => {

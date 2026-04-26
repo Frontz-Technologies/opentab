@@ -1,7 +1,10 @@
 export type AiFeature = "chat" | "extraction";
 
+// Chat uses NEXT_PUBLIC_* so a single env var gates BOTH the client FAB
+// (visibility) and the server route (404). One source of truth — no risk
+// of "button shows but API 404s" when one is set and the other isn't.
 const ENV_FLAG: Record<AiFeature, string> = {
-  chat: "FEATURE_AI_CHAT",
+  chat: "NEXT_PUBLIC_FEATURE_AI_CHAT",
   extraction: "FEATURE_AI_EXTRACTION",
 };
 
