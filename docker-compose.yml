@@ -22,18 +22,22 @@ services:
       EMAIL_SMTP_PASSWORD: ${EMAIL_SMTP_PASSWORD}
       EMAIL_FROM_ADDRESS: ${EMAIL_FROM_ADDRESS}
       EMAIL_FROM_NAME: ${EMAIL_FROM_NAME:-OpenTab}
-      STORAGE_TYPE: ${STORAGE_TYPE:-s3}
-      STORAGE_S3_REGION: ${STORAGE_S3_REGION}
-      STORAGE_S3_BUCKET: ${STORAGE_S3_BUCKET}
-      STORAGE_S3_ENDPOINT: ${STORAGE_S3_ENDPOINT}
-      STORAGE_S3_ACCESS_KEY: ${STORAGE_S3_ACCESS_KEY}
-      STORAGE_S3_SECRET_KEY: ${STORAGE_S3_SECRET_KEY}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      AI_ENCRYPTION_KEY: ${AI_ENCRYPTION_KEY}
+      S3_REGION: ${S3_REGION}
+      S3_BUCKET: ${S3_BUCKET}
+      S3_ENDPOINT: ${S3_ENDPOINT}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY}
+      S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-true}
+      GOTENBERG_URL: http://gotenberg:3000
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
       FEATURE_AI_EXTRACTION: ${FEATURE_AI_EXTRACTION:-on}
       AI_MODEL_EXTRACTION: ${AI_MODEL_EXTRACTION:-openai/gpt-4o}
       NEXT_PUBLIC_FEATURE_AI_CHAT: ${NEXT_PUBLIC_FEATURE_AI_CHAT:-off}
       SENTRY_DSN: ${SENTRY_DSN:-}
       SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
+      ENABLE_QUEUE_DASHBOARD: ${ENABLE_QUEUE_DASHBOARD:-false}
       LEGAL_PRIVACY_URL: ${LEGAL_PRIVACY_URL:-}
       LEGAL_TERMS_URL: ${LEGAL_TERMS_URL:-}
       LEGAL_COOKIES_URL: ${LEGAL_COOKIES_URL:-}
@@ -45,6 +49,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      gotenberg:
+        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:3000/api/healthz"]
       interval: 30s
@@ -69,12 +75,14 @@ services:
       EMAIL_SMTP_PASSWORD: ${EMAIL_SMTP_PASSWORD}
       EMAIL_FROM_ADDRESS: ${EMAIL_FROM_ADDRESS}
       EMAIL_FROM_NAME: ${EMAIL_FROM_NAME:-OpenTab}
-      STORAGE_TYPE: ${STORAGE_TYPE:-s3}
-      STORAGE_S3_REGION: ${STORAGE_S3_REGION}
-      STORAGE_S3_BUCKET: ${STORAGE_S3_BUCKET}
-      STORAGE_S3_ENDPOINT: ${STORAGE_S3_ENDPOINT}
-      STORAGE_S3_ACCESS_KEY: ${STORAGE_S3_ACCESS_KEY}
-      STORAGE_S3_SECRET_KEY: ${STORAGE_S3_SECRET_KEY}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      AI_ENCRYPTION_KEY: ${AI_ENCRYPTION_KEY}
+      S3_REGION: ${S3_REGION}
+      S3_BUCKET: ${S3_BUCKET}
+      S3_ENDPOINT: ${S3_ENDPOINT}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY}
+      S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-true}
       BACKUP_S3_BUCKET: ${BACKUP_S3_BUCKET}
       BACKUP_S3_REGION: ${BACKUP_S3_REGION}
       BACKUP_S3_ENDPOINT: ${BACKUP_S3_ENDPOINT}
@@ -125,6 +133,17 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    restart: always
+    expose:
+      - "3000"
+    command:
+      - "gotenberg"
+      - "--api-port=3000"
+      - "--chromium-disable-javascript=true"
+      - "--api-timeout=60s"
 
   glitchtip:
     image: glitchtip/glitchtip:v4
