@@ -6,7 +6,14 @@ import { db } from "./db";
 import { deriveTrustedOrigins } from "./auth-trusted-origins";
 
 export const auth = betterAuth({
-  baseURL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  // When unset, Better Auth derives the base URL from the incoming request
+  // (apps/.../utils/url.mjs:getBaseURL → request origin). That is what we
+  // want in production where the env may not propagate from Coolify into
+  // the container — falling back to localhost would silently bake the
+  // wrong origin into password-reset email links. Keeping `undefined`
+  // here means a misconfigured env still produces correct, request-based
+  // URLs.
+  baseURL: process.env.NEXT_PUBLIC_APP_URL || undefined,
   trustedOrigins: deriveTrustedOrigins,
   database: drizzleAdapter(db, {
     provider: "pg",
