@@ -43,7 +43,7 @@ vi.mock("ai", () => ({
 
 describe("POST /api/ai/chat", () => {
   beforeEach(() => {
-    process.env.FEATURE_AI_CHAT = "on";
+    process.env.NEXT_PUBLIC_FEATURE_AI_CHAT = "on";
     vi.resetAllMocks();
     aiRateLimiterCheckMock.mockReturnValue({ allowed: true, remaining: 19 });
     createAiProviderMock.mockReturnValue({ provider: "mock" });
