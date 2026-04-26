@@ -58,7 +58,11 @@ export async function sendEmail(args: SendEmailArgs): Promise<void> {
     html: args.html,
     attachments: args.attachments,
   });
-  log.info("email sent", { to: args.to, subject: args.subject, messageId: result.messageId });
+  log.info("email sent", {
+    to: args.to,
+    subject: args.subject,
+    messageId: result.messageId,
+  });
 }
 
 export function resetTransportForTests(): void {
