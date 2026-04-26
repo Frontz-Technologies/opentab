@@ -130,8 +130,8 @@ services:
   glitchtip:
     image: glitchtip/glitchtip:v4
     restart: always
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-opentab}:${POSTGRES_PASSWORD}@db:5432/glitchtip
       SECRET_KEY: ${GLITCHTIP_SECRET_KEY}
