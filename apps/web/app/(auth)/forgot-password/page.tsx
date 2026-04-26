@@ -19,9 +19,14 @@ export default function ForgotPasswordPage() {
     setLoading(true);
 
     try {
+      const origin =
+        process.env.NEXT_PUBLIC_APP_URL ||
+        (typeof window !== "undefined"
+          ? window.location.origin
+          : "http://localhost:3000");
       await authClient.requestPasswordReset({
         email,
-        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/reset-password`,
+        redirectTo: `${origin}/reset-password`,
       });
     } catch {
       // Always show success to prevent email enumeration
