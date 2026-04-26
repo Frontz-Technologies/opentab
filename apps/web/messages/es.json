@@ -890,5 +890,15 @@
     "downloadErrorCsv": "Descargar CSV de errores",
     "import": "Importar",
     "autoCreateContactToggle": "Crear contactos faltantes automáticamente (recomendado para migraciones)"
+  },
+  "legal": {
+    "pageTitle": "Legal",
+    "intro": "Documentos que rigen el uso de este servicio:",
+    "links": {
+      "privacy": "Política de Privacidad",
+      "terms": "Términos del Servicio",
+      "cookies": "Aviso de Cookies",
+      "dpa": "Acuerdo de Tratamiento de Datos"
+    }
   }
 }

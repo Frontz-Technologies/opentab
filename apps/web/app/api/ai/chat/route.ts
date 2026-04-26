@@ -5,6 +5,7 @@ import {
   type UIMessage,
 } from "ai";
 import { getAiSettingsSecret } from "@/lib/actions/ai-settings";
+import { isFeatureEnabled } from "@/lib/ai/features";
 import { createAiProvider } from "@/lib/ai/provider";
 import { aiRateLimiter } from "@/lib/ai/rate-limiter";
 import { getSystemPrompt } from "@/lib/ai/system-prompt";
@@ -21,6 +22,10 @@ type ChatRequestBody = {
 };
 
 export async function POST(req: Request): Promise<Response> {
+  if (!isFeatureEnabled("chat")) {
+    return new Response("Not Found", { status: 404 });
+  }
+
   const session = await getSession();
   if (!session) {
     return new Response("Unauthorized", { status: 401 });

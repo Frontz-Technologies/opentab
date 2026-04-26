@@ -7,6 +7,8 @@ export function AiChatButton() {
   const t = useTranslations("ai");
   const open = useAiChatStore((state) => state.open);
 
+  if (process.env.NEXT_PUBLIC_FEATURE_AI_CHAT !== "on") return null;
+
   return (
     <button
       type="button"
