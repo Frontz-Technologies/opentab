@@ -1,0 +1,11 @@
+node_modules
+.next
+.turbo
+.git
+*.log
+__tests__
+e2e
+.env
+.env.*
+!.env.example
+README.md
