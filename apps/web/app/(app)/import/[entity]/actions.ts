@@ -276,10 +276,7 @@ async function resolveInvoiceContactIds(
           ]),
         };
       });
-      await db
-        .insert(contacts)
-        .values(stubsToInsert)
-        .onConflictDoNothing();
+      await db.insert(contacts).values(stubsToInsert).onConflictDoNothing();
       // Re-query to pick up the auto-created ids (and any that lost
       // a race against another import — ON CONFLICT swallows them).
       const refound = await db
@@ -409,7 +406,10 @@ async function insertLineItemsForHeaderImport(
       okRows as unknown as Parameters<typeof groupRowsByInvoice>[0],
     );
     for (const g of grouped) {
-      keysByGroup.set(g.header.invoiceNumber ?? `__group_${grouped.indexOf(g)}`, keyForGroup(g));
+      keysByGroup.set(
+        g.header.invoiceNumber ?? `__group_${grouped.indexOf(g)}`,
+        keyForGroup(g),
+      );
     }
     const headerRows = await db
       .select({
@@ -420,7 +420,10 @@ async function insertLineItemsForHeaderImport(
       .where(
         and(
           eq(invoices.orgId, orgId),
-          inArray(invoices.importIdempotencyKey, Array.from(keysByGroup.values())),
+          inArray(
+            invoices.importIdempotencyKey,
+            Array.from(keysByGroup.values()),
+          ),
         ),
       );
     const keyToId = new Map(
