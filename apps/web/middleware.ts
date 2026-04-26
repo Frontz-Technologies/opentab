@@ -7,6 +7,8 @@ const publicPaths = [
   "/forgot-password",
   "/reset-password",
   "/api/auth",
+  "/api/healthz",
+  "/legal",
 ];
 
 export function middleware(request: NextRequest) {
