@@ -47,6 +47,7 @@ vi.mock("@/lib/logging/logger", () => ({
 
 describe("extractReceiptData — NoObjectGeneratedError observability (#175)", () => {
   beforeEach(() => {
+    process.env.FEATURE_AI_EXTRACTION = "on";
     generateObjectMock.mockReset();
     generateTextMock.mockReset();
     warnSpy.mockReset();
@@ -65,13 +66,13 @@ describe("extractReceiptData — NoObjectGeneratedError observability (#175)", (
       text: JSON.stringify({ vendorName: "Acme", totalAmount: 10 }),
     });
 
+    process.env.AI_MODEL_EXTRACTION = "google/gemini-2.5-flash-lite";
     const { extractReceiptData } =
       await import("../lib/expenses/ai-extraction");
     await extractReceiptData(
       Buffer.from("fake-pdf"),
       "application/pdf",
       "apiKey",
-      "google/gemini-2.5-flash-lite",
       [{ code: "gr_other", name: "Other" }],
     );
 
@@ -90,6 +91,7 @@ describe("extractReceiptData — NoObjectGeneratedError observability (#175)", (
   it("logs the generated JSON Schema at most once per category-code set per process", async () => {
     generateObjectMock.mockResolvedValue({ object: { vendorName: "A" } });
 
+    process.env.AI_MODEL_EXTRACTION = "google/gemini-2.5-flash-lite";
     const { extractReceiptData } =
       await import("../lib/expenses/ai-extraction");
     const categories = [{ code: "gr_rent", name: "Rent" }];
@@ -97,14 +99,12 @@ describe("extractReceiptData — NoObjectGeneratedError observability (#175)", (
       Buffer.from("x"),
       "image/png",
       "apiKey",
-      "google/gemini-2.5-flash-lite",
       categories,
     );
     await extractReceiptData(
       Buffer.from("x"),
       "image/png",
       "apiKey",
-      "google/gemini-2.5-flash-lite",
       categories,
     );
 
