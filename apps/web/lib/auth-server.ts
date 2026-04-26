@@ -3,10 +3,11 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import * as schema from "@opentab/db/schema";
 import { generateUniqueSlug } from "./utils";
 import { db } from "./db";
+import { deriveTrustedOrigins } from "./auth-trusted-origins";
 
 export const auth = betterAuth({
   baseURL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-  trustedOrigins: [process.env.NEXT_PUBLIC_APP_URL].filter(Boolean) as string[],
+  trustedOrigins: deriveTrustedOrigins,
   database: drizzleAdapter(db, {
     provider: "pg",
     schema,
