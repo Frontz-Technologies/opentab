@@ -66,7 +66,9 @@ async function main() {
     console.log(`✅ Password-reset email sent to ${email}`);
   }
 
-  console.log(`\n🎉 Done. Tell ${name} to check their inbox or visit /forgot-password.`);
+  console.log(
+    `\n🎉 Done. Tell ${name} to check their inbox or visit /forgot-password.`,
+  );
 }
 
 main().catch((err) => {

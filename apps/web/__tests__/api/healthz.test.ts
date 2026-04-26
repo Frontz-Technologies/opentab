@@ -7,7 +7,9 @@ vi.mock("@/lib/db", () => ({
   db: { execute: (...args: unknown[]) => dbExecMock(...args) },
 }));
 vi.mock("@/lib/jobs/queues", () => ({
-  getRedisConnection: () => ({ ping: (...args: unknown[]) => redisPingMock(...args) }),
+  getRedisConnection: () => ({
+    ping: (...args: unknown[]) => redisPingMock(...args),
+  }),
 }));
 
 import { GET } from "../../app/api/healthz/route";
