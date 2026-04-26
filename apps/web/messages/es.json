@@ -889,5 +889,39 @@
     "failed": "Fallidos",
     "downloadErrorCsv": "Descargar CSV de errores",
     "import": "Importar"
+  },
+  "legal": {
+    "pageTitle": "Legal",
+    "lastUpdated": "Última actualización: 26 de abril de 2026",
+    "privacy": {
+      "title": "Política de Privacidad",
+      "intro": "OpenTab (\"nosotros\", \"el Servicio\") es operado por Frontz Technologies. Esta página explica qué datos personales recopilamos, por qué y durante cuánto tiempo los conservamos.",
+      "dataCollected": "Datos de la cuenta (nombre, correo electrónico, hash de la contraseña), datos comerciales que introduces (facturas, contactos, gastos), PDF generados y registros operativos.",
+      "dataLocation": "Todos los datos se almacenan dentro de la UE (Hetzner Online GmbH, Núremberg, Alemania; copias de seguridad en Helsinki, Finlandia).",
+      "retention": "Conservamos tus datos mientras tu cuenta esté activa. Tras el cierre de la cuenta, conservamos los datos durante 90 días y luego los eliminamos de forma permanente.",
+      "yourRights": "Conforme al RGPD, tienes derechos de acceso, rectificación, supresión, portabilidad y a presentar una reclamación ante tu autoridad de control. Envía un correo a support@opentab.tech para ejercer cualquiera de ellos.",
+      "thirdParties": "Utilizamos los siguientes subencargados del tratamiento, todos ubicados en la UE: Hetzner (alojamiento + almacenamiento), Brevo (envío de correos electrónicos, Francia). No utilizamos cookies de marketing ni rastreadores de analítica."
+    },
+    "terms": {
+      "title": "Términos del Servicio",
+      "intro": "Estos términos rigen el uso que haces de OpenTab.",
+      "betaNotice": "OpenTab se encuentra actualmente en BETA CERRADA. El servicio se proporciona de forma gratuita durante la beta. No ofrecemos garantías de nivel de servicio y podemos modificar, suspender o interrumpir el servicio en cualquier momento. Tus datos pueden exportarse en cualquier momento desde el panel de control.",
+      "yourContent": "Conservas la propiedad de todos los datos que subes. Nos concedes una licencia limitada para procesarlos únicamente con el fin de proporcionar el servicio.",
+      "acceptableUse": "Aceptas no utilizar el servicio para fines ilícitos, no intentar comprometer su seguridad y no enviar correos electrónicos masivos no solicitados a través de él.",
+      "termination": "Cualquiera de las partes puede rescindir el servicio en cualquier momento. Tras la rescisión, podrás exportar tus datos; tras 90 días de inactividad podemos eliminar la cuenta.",
+      "jurisdiction": "Estos términos se rigen por la ley griega, con jurisdicción exclusiva de los tribunales de Atenas, sujetos a las protecciones obligatorias del derecho del consumidor de la UE."
+    },
+    "cookies": {
+      "title": "Aviso de Cookies",
+      "intro": "OpenTab utiliza únicamente cookies estrictamente necesarias.",
+      "list": "Cookie de sesión (te mantiene conectado, expira tras 30 días), cookie CSRF (anti-falsificación, expira con la sesión). No se establecen cookies de marketing, analítica ni de rastreo de terceros."
+    },
+    "dpa": {
+      "title": "Acuerdo de Tratamiento de Datos",
+      "intro": "Si eres un cliente empresarial que trata datos personales en nombre de tus propios clientes a través de OpenTab, actuamos como tu encargado del tratamiento conforme al art. 28 del RGPD.",
+      "summary": "Nuestro DPA estándar cubre: objeto y duración, alcance y finalidad, tipos de datos y categorías de interesados, nuestras obligaciones, lista de subencargados, medidas de seguridad, notificación de brechas (en un plazo de 72 horas), devolución/eliminación de datos al finalizar.",
+      "request": "Envía un correo a support@opentab.tech para obtener la plantilla completa de DPA firmada."
+    },
+    "contact": "¿Preguntas? support@opentab.tech"
   }
 }
