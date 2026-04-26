@@ -36,6 +36,10 @@ COPY --from=builder /app/apps/web/scripts ./apps/web/scripts
 COPY --from=builder /app/apps/web/worker.ts ./apps/web/worker.ts
 COPY --from=builder /app/apps/web/lib ./apps/web/lib
 COPY --from=builder /app/apps/web/instrumentation.ts ./apps/web/instrumentation.ts
+# tsx resolves the `@/*` path alias via tsconfig.json at runtime — the
+# worker (run via `tsx ./worker.ts`) imports `@/lib/...` and breaks
+# without it.
+COPY --from=builder /app/apps/web/tsconfig.json ./apps/web/tsconfig.json
 
 WORKDIR /app/apps/web
 EXPOSE 3000
