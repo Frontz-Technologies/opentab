@@ -14,7 +14,7 @@ vi.mock("@/lib/jobs/queues", () => ({
 
 import { GET } from "../../app/api/healthz/route";
 
-describe("healthz route (#224)", () => {
+describe("healthz route", () => {
   it("returns 200 with status: ok when db + redis are up", async () => {
     const res = await GET();
     expect(res.status).toBe(200);

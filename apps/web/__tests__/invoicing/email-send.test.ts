@@ -12,7 +12,7 @@ import {
   generateInvoiceEmail,
 } from "../../lib/invoicing/email";
 
-describe("invoice email send (#224)", () => {
+describe("invoice email send", () => {
   beforeEach(() => sendEmailMock.mockClear());
 
   it("sendInvoiceEmail forwards to the transport", async () => {

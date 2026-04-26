@@ -5,7 +5,7 @@ import {
   type AiFeature,
 } from "../../lib/ai/features";
 
-describe("AI feature flags (#224)", () => {
+describe("AI feature flags", () => {
   beforeEach(() => {
     delete process.env.NEXT_PUBLIC_FEATURE_AI_CHAT;
     delete process.env.FEATURE_AI_EXTRACTION;

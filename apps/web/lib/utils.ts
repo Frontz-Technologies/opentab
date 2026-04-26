@@ -22,15 +22,8 @@ export function generateUniqueSlug(base: string): string {
 }
 
 // Formats a currency amount for at-a-glance display. Values ≥ 10,000
-// use compact notation ("€10.5K", "€523.4K", "€1.2M"); smaller values
-// render full precision ("€4,250.00"). Use on dashboard KPI cards; do
-// NOT use on invoice / report / PDF surfaces where precision matters.
-//
-// Threshold at 10K keeps the 4-up KPI grid fitting at mid-viewport
-// widths without truncation. Matches dashboard-style prior art in peer
-// apps (Wealthfolio uses always-compact on chart axes). Accounting-
-// table apps that want precision everywhere (Invoiceninja, Akaunting,
-// Bigcapital) deliberately don't use compact notation.
+// Use on dashboard KPI cards (compact for ≥10K, full precision below).
+// Never use on invoice / report / PDF surfaces — precision matters there.
 export function formatCurrencyCompact(
   amount: number,
   currency = "EUR",

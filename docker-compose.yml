@@ -137,7 +137,7 @@ services:
       PORT: "8000"
       EMAIL_URL: smtp://${EMAIL_SMTP_USER}:${EMAIL_SMTP_PASSWORD}@${EMAIL_SMTP_HOST}:${EMAIL_SMTP_PORT}
       DEFAULT_FROM_EMAIL: ${EMAIL_FROM_ADDRESS}
-      GLITCHTIP_DOMAIN: ${GLITCHTIP_URL:-https://glitchtip.opentab.tech}
+      GLITCHTIP_DOMAIN: ${GLITCHTIP_URL}
       ENABLE_USER_REGISTRATION: "false"
     depends_on:
       db:

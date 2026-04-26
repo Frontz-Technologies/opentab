@@ -105,18 +105,17 @@ vi.mock("@aws-sdk/lib-storage", () => ({
 
 import { processBackup } from "../../lib/jobs/processors/backup";
 
-describe("backup job (#224)", () => {
+describe("nightly backup job", () => {
   beforeEach(() => {
     uploadDoneMock.mockClear();
     spawnMock.mockClear();
     (spawnMock as unknown as { __reset: () => void }).__reset();
-    // Reset all handler overrides
     for (const k of Object.keys(handlers))
       delete (handlers as Record<string, unknown>)[k];
     process.env.DATABASE_URL = "postgres://u:p@h:5432/d";
-    process.env.BACKUP_S3_BUCKET = "opentab-backups";
-    process.env.BACKUP_S3_REGION = "hel1";
-    process.env.BACKUP_S3_ENDPOINT = "https://hel1.your-objectstorage.com";
+    process.env.BACKUP_S3_BUCKET = "test-bucket";
+    process.env.BACKUP_S3_REGION = "test-region";
+    process.env.BACKUP_S3_ENDPOINT = "https://s3.example.com";
     process.env.BACKUP_S3_ACCESS_KEY = "k";
     process.env.BACKUP_S3_SECRET_KEY = "s";
     process.env.BACKUP_AGE_PUBLIC_KEY = "age1xyz";
@@ -128,7 +127,7 @@ describe("backup job (#224)", () => {
     expect(UploadMock).toHaveBeenCalledOnce();
     const params = (UploadMock as unknown as { mock: { calls: unknown[][] } })
       .mock.calls[0][0] as { params: { Bucket: string; Key: string } };
-    expect(params.params.Bucket).toBe("opentab-backups");
+    expect(params.params.Bucket).toBe("test-bucket");
     // db/YYYY-MM-DD-HH-mm-ss.dump.age
     expect(params.params.Key).toMatch(
       /^db\/\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}\.dump\.age$/,
@@ -141,7 +140,6 @@ describe("backup job (#224)", () => {
     await expect(processBackup({ data: {} } as never)).rejects.toThrow(
       /AGE_PUBLIC_KEY/,
     );
-    // No spawns should have happened — env check is before validation
     expect(spawnMock).not.toHaveBeenCalled();
   });
 
@@ -150,7 +148,6 @@ describe("backup job (#224)", () => {
     await expect(processBackup({ data: {} } as never)).rejects.toThrow(
       /invalid age recipient/,
     );
-    // pg_dump and age should NOT have been spawned after validation failed
     expect(spawnMock).toHaveBeenCalledOnce();
   });
 

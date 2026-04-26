@@ -13,7 +13,7 @@ vi.mock("nodemailer", () => ({
 
 import { sendEmail, resetTransportForTests } from "../../lib/email/transport";
 
-describe("email transport (#224)", () => {
+describe("email transport", () => {
   beforeEach(() => {
     sendMailMock.mockClear();
     createTransportMock.mockClear();
@@ -23,7 +23,7 @@ describe("email transport (#224)", () => {
     process.env.EMAIL_SMTP_PORT = "587";
     process.env.EMAIL_SMTP_USER = "u";
     process.env.EMAIL_SMTP_PASSWORD = "p";
-    process.env.EMAIL_FROM_ADDRESS = "noreply@opentab.tech";
+    process.env.EMAIL_FROM_ADDRESS = "noreply@example.com";
     process.env.EMAIL_FROM_NAME = "OpenTab";
   });
 
@@ -38,7 +38,7 @@ describe("email transport (#224)", () => {
     expect(arg.to).toBe("user@example.com");
     expect(arg.subject).toBe("Hi");
     expect(arg.text).toBe("Hello");
-    expect(arg.from).toBe('"OpenTab" <noreply@opentab.tech>');
+    expect(arg.from).toBe('"OpenTab" <noreply@example.com>');
   });
 
   it("reuses the transport across calls", async () => {
