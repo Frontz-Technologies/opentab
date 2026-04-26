@@ -35,6 +35,10 @@ services:
       NEXT_PUBLIC_FEATURE_AI_CHAT: ${FEATURE_AI_CHAT:-off}
       SENTRY_DSN: ${SENTRY_DSN:-}
       SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
+      LEGAL_PRIVACY_URL: ${LEGAL_PRIVACY_URL:-}
+      LEGAL_TERMS_URL: ${LEGAL_TERMS_URL:-}
+      LEGAL_COOKIES_URL: ${LEGAL_COOKIES_URL:-}
+      LEGAL_DPA_URL: ${LEGAL_DPA_URL:-}
       MYDATA_USER_ID: ${MYDATA_USER_ID:-}
       MYDATA_SUBSCRIPTION_KEY: ${MYDATA_SUBSCRIPTION_KEY:-}
     depends_on:
@@ -107,7 +111,14 @@ services:
   redis:
     image: redis:7-alpine
     restart: always
-    command: ["redis-server", "--maxmemory-policy", "noeviction", "--appendonly", "yes"]
+    command:
+      [
+        "redis-server",
+        "--maxmemory-policy",
+        "noeviction",
+        "--appendonly",
+        "yes",
+      ]
     volumes:
       - redis-data:/data
     healthcheck:
