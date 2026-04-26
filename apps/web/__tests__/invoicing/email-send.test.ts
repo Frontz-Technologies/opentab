@@ -7,13 +7,19 @@ vi.mock("../../lib/email/transport", () => ({
   sendEmail: sendEmailMock,
 }));
 
-import { sendInvoiceEmail, generateInvoiceEmail } from "../../lib/invoicing/email";
+import {
+  sendInvoiceEmail,
+  generateInvoiceEmail,
+} from "../../lib/invoicing/email";
 
 describe("invoice email send (#224)", () => {
   beforeEach(() => sendEmailMock.mockClear());
 
   it("sendInvoiceEmail forwards to the transport", async () => {
-    await sendInvoiceEmail("customer@example.com", { subject: "INV-1", body: "Hello" });
+    await sendInvoiceEmail("customer@example.com", {
+      subject: "INV-1",
+      body: "Hello",
+    });
     expect(sendEmailMock).toHaveBeenCalledWith({
       to: "customer@example.com",
       subject: "INV-1",

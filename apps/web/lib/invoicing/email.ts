@@ -17,7 +17,10 @@ export async function generateInvoiceEmail(
   return generateFallbackEmail(invoice, orgName);
 }
 
-function generateFallbackEmail(invoice: Invoice, orgName: string): EmailContent {
+function generateFallbackEmail(
+  invoice: Invoice,
+  orgName: string,
+): EmailContent {
   const total = `${invoice.total} ${invoice.currencyCode ?? "EUR"}`;
   const dueText = invoice.dueDate
     ? `Payment is due by ${invoice.dueDate}.`
