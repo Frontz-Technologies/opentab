@@ -35,20 +35,24 @@ async function registerRepeatables() {
   log.info("registered repeatable cleanup-temp-files (every 24h)");
 
   // Nightly age-encrypted pg_dump → S3. 00:00 UTC = 03:00 Athens.
-  // Deterministic jobId means re-registering on each worker boot is
-  // a no-op in BullMQ — the existing repeatable is reused.
-  const backup = new Queue(QUEUE.BACKUP, {
-    connection: getRedisConnection(),
-  });
-  await backup.add(
-    "nightly",
-    {},
-    {
-      repeat: { pattern: "0 0 * * *" },
-      jobId: "nightly-backup",
-    },
-  );
-  log.info("registered repeatable backup (nightly 00:00 UTC)");
+  // Only registered when the operator has opted in by providing an age
+  // public key — self-hosters who don't want managed backups skip this.
+  if (process.env.BACKUP_AGE_PUBLIC_KEY) {
+    const backup = new Queue(QUEUE.BACKUP, {
+      connection: getRedisConnection(),
+    });
+    await backup.add(
+      "nightly",
+      {},
+      {
+        repeat: { pattern: "0 0 * * *" },
+        jobId: "nightly-backup",
+      },
+    );
+    log.info("registered repeatable backup (nightly 00:00 UTC)");
+  } else {
+    log.info("skipping backup registration — BACKUP_AGE_PUBLIC_KEY unset");
+  }
 }
 
 async function main() {
@@ -69,9 +73,13 @@ async function main() {
       async (job) => processDeleteExpenseFiles(job.data),
       { connection: getRedisConnection() },
     ),
-    new Worker(QUEUE.BACKUP, processBackup, {
-      connection: getRedisConnection(),
-    }),
+    ...(process.env.BACKUP_AGE_PUBLIC_KEY
+      ? [
+          new Worker(QUEUE.BACKUP, processBackup, {
+            connection: getRedisConnection(),
+          }),
+        ]
+      : []),
   ];
 
   for (const w of workers) {

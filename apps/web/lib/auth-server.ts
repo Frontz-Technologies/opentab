@@ -14,21 +14,27 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     sendResetPassword: async ({ user, url }) => {
+      // Self-hosters without SMTP configured: log the reset URL so they
+      // can copy it into the user's chat. Never block the reset flow.
+      if (!process.env.EMAIL_SMTP_HOST) {
+        console.warn(
+          `[auth] EMAIL_SMTP_HOST unset — password-reset URL for ${user.email}: ${url}`,
+        );
+        return;
+      }
       const { sendEmail } = await import("./email/transport");
       await sendEmail({
         to: user.email,
-        subject: "Reset your OpenTab password",
+        subject: "Reset your password",
         text: `Hello ${user.name ?? ""},
 
-You requested a password reset for your OpenTab account.
+You requested a password reset for your account.
 
 Click the link below to set a new password (valid for 1 hour):
 
 ${url}
 
-If you didn't request this, you can safely ignore this email.
-
-— OpenTab`,
+If you didn't request this, you can safely ignore this email.`,
       });
     },
   },
