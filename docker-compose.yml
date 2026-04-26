@@ -3,6 +3,7 @@ name: opentab
 services:
   web:
     image: ${OPENTAB_IMAGE:-ghcr.io/frontz-technologies/opentab:latest}
+    pull_policy: always
     restart: always
     ports:
       - "3000:3000"
@@ -58,6 +59,7 @@ services:
 
   worker:
     image: ${OPENTAB_IMAGE:-ghcr.io/frontz-technologies/opentab:latest}
+    pull_policy: always
     restart: always
     command: ["pnpm", "worker"]
     environment:
