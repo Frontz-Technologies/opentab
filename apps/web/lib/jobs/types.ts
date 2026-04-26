@@ -3,6 +3,7 @@
 export const QUEUE = {
   CLEANUP_TEMP_FILES: "cleanup-temp-files",
   DELETE_EXPENSE_FILES: "delete-expense-files",
+  BACKUP: "backup",
 } as const;
 
 export type QueueName = (typeof QUEUE)[keyof typeof QUEUE];
@@ -16,6 +17,7 @@ export interface JobPayloadMap {
     expenseId: string;
     filePaths: string[];
   };
+  [QUEUE.BACKUP]: Record<string, never>;
 }
 
 export type JobPayload<Q extends QueueName> = JobPayloadMap[Q];

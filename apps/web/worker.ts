@@ -12,6 +12,7 @@ import { QUEUE } from "./lib/jobs/types";
 import { getRedisConnection, getRegisteredQueues } from "./lib/jobs/queues";
 import { processCleanupTempFiles } from "./lib/jobs/processors/cleanup-temp-files";
 import { processDeleteExpenseFiles } from "./lib/jobs/processors/delete-expense-files";
+import { processBackup } from "./lib/jobs/processors/backup";
 import { createLogger } from "./lib/logging/logger";
 
 const log = createLogger("worker");
@@ -32,6 +33,22 @@ async function registerRepeatables() {
     },
   );
   log.info("registered repeatable cleanup-temp-files (every 24h)");
+
+  // Nightly age-encrypted pg_dump → S3. 00:00 UTC = 03:00 Athens.
+  // Deterministic jobId means re-registering on each worker boot is
+  // a no-op in BullMQ — the existing repeatable is reused.
+  const backup = new Queue(QUEUE.BACKUP, {
+    connection: getRedisConnection(),
+  });
+  await backup.add(
+    "nightly",
+    {},
+    {
+      repeat: { pattern: "0 0 * * *" },
+      jobId: "nightly-backup",
+    },
+  );
+  log.info("registered repeatable backup (nightly 00:00 UTC)");
 }
 
 async function main() {
@@ -52,6 +69,9 @@ async function main() {
       async (job) => processDeleteExpenseFiles(job.data),
       { connection: getRedisConnection() },
     ),
+    new Worker(QUEUE.BACKUP, processBackup, {
+      connection: getRedisConnection(),
+    }),
   ];
 
   for (const w of workers) {
