@@ -145,11 +145,20 @@ services:
 
   glitchtip:
     image: glitchtip/glitchtip:6
+    pull_policy: always
     restart: always
     expose:
       - "8000"
     environment:
+      # Default boot mode is "Web only" — accepts /api/1/store/ events but
+      # never processes them (task_id: null, issues never created). Setting
+      # SERVER_ROLE=all_in_one runs web + Celery worker + beat in the same
+      # container, which is what the upstream sample compose ships.
+      SERVER_ROLE: all_in_one
       DATABASE_URL: postgres://${POSTGRES_USER:-opentab}:${POSTGRES_PASSWORD}@db:5432/glitchtip
+      # GlitchTip 6 expects VALKEY_URL (Valkey is the Redis fork upstream uses).
+      # Redis 7 is wire-compatible, so we point at the existing redis service.
+      VALKEY_URL: redis://redis:6379
       SECRET_KEY: ${GLITCHTIP_SECRET_KEY}
       PORT: "8000"
       EMAIL_URL: smtp://${EMAIL_SMTP_USER}:${EMAIL_SMTP_PASSWORD}@${EMAIL_SMTP_HOST}:${EMAIL_SMTP_PORT}
@@ -158,6 +167,8 @@ services:
       ENABLE_USER_REGISTRATION: "false"
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
 volumes:
