@@ -65,4 +65,29 @@ describe("email transport", () => {
     const arg = sendMailMock.mock.calls[0][0];
     expect(arg.html).toBe("<p>T</p>");
   });
+
+  it("logs error and re-throws when SMTP send fails", async () => {
+    sendMailMock.mockRejectedValueOnce(
+      new Error("EAUTH: authentication failed"),
+    );
+    const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await expect(
+      sendEmail({
+        to: "user@example.com",
+        subject: "Reset your password",
+        text: "click here",
+      }),
+    ).rejects.toThrow(/EAUTH/);
+
+    expect(errSpy).toHaveBeenCalledOnce();
+    const logged = JSON.parse(errSpy.mock.calls[0][0] as string);
+    expect(logged.level).toBe("error");
+    expect(logged.module).toBe("email-transport");
+    expect(logged.to).toBe("user@example.com");
+    expect(logged.subject).toBe("Reset your password");
+    expect(logged.error).toMatch(/EAUTH/);
+
+    errSpy.mockRestore();
+  });
 });

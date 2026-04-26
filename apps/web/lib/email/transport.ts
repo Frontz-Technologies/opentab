@@ -50,19 +50,31 @@ function getFromHeader(): string {
 export async function sendEmail(args: SendEmailArgs): Promise<void> {
   const transporter = getTransporter();
   const from = getFromHeader();
-  const result = await transporter.sendMail({
-    from,
-    to: args.to,
-    subject: args.subject,
-    text: args.text,
-    html: args.html,
-    attachments: args.attachments,
-  });
-  log.info("email sent", {
-    to: args.to,
-    subject: args.subject,
-    messageId: result.messageId,
-  });
+  try {
+    const result = await transporter.sendMail({
+      from,
+      to: args.to,
+      subject: args.subject,
+      text: args.text,
+      html: args.html,
+      attachments: args.attachments,
+    });
+    log.info("email sent", {
+      to: args.to,
+      subject: args.subject,
+      messageId: result.messageId,
+    });
+  } catch (err) {
+    // Better Auth's sendResetPassword swallows exceptions on purpose to
+    // prevent user-enumeration. Log here so SMTP failures still surface
+    // in the operator's logs (and Sentry/GlitchTip) regardless of caller.
+    log.error("email send failed", {
+      to: args.to,
+      subject: args.subject,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    throw err;
+  }
 }
 
 export function resetTransportForTests(): void {
