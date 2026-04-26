@@ -5,8 +5,15 @@ import type { ImporterDescriptor } from "../core/types";
 // - `reason` (required, enum from CREDIT_NOTE_REASON)
 // - `parentInvoiceNumber` (optional back-ref; engine looks up the
 //   parent at commit-time and links if found, never auto-creates)
+//
+// creditNoteNumber is optional from v1.1 (#220) — empty number →
+// imports as DRAFT, opentab assigns the number on first publish.
 export const creditNoteRowSchema = z.object({
-  creditNoteNumber: z.string().min(1),
+  creditNoteNumber: z
+    .string()
+    .optional()
+    .or(z.literal(""))
+    .transform((v) => v || undefined),
   issueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   contactName: z.string().min(1),
   contactVatNumber: z
@@ -44,7 +51,7 @@ export const creditNotesImporter: ImporterDescriptor<CreditNoteRow> = {
   entityKey: "credit-notes",
   label: "Credit Notes",
   fields: [
-    { name: "creditNoteNumber", required: true, type: "string" },
+    { name: "creditNoteNumber", required: false, type: "string" },
     { name: "issueDate", required: true, type: "date" },
     { name: "contactName", required: true, type: "string" },
     { name: "contactVatNumber", required: false, type: "string" },
@@ -98,15 +105,24 @@ export const creditNotesImporter: ImporterDescriptor<CreditNoteRow> = {
     unit: ["unit", "uom"],
   },
   rowSchema: creditNoteRowSchema,
-  idempotencyKeyParts: (row, orgId) => [
-    orgId,
-    row.creditNoteNumber.toLowerCase(),
-  ],
+  idempotencyKeyParts: (row, orgId) =>
+    row.creditNoteNumber
+      ? [orgId, "num", row.creditNoteNumber.toLowerCase()]
+      : // Empty-number fallback (v1.1, #220): contact+date+total
+        // fingerprint. "nonum" tag prevents collision with "num" keys.
+        [
+          orgId,
+          "nonum",
+          row.contactName.toLowerCase(),
+          row.issueDate,
+          row.total,
+        ],
 };
 
 // Same multi-row grouping as invoices: rows that share the same
 // creditNoteNumber across the CSV become one credit note with
-// multiple line items.
+// multiple line items. Empty-number rows can't be grouped — each
+// becomes its own single-line credit note.
 export function groupRowsByCreditNote(
   rows: CreditNoteRow[],
 ): { header: CreditNoteRow; lines: CreditNoteRow[] }[] {
@@ -114,7 +130,13 @@ export function groupRowsByCreditNote(
     string,
     { header: CreditNoteRow; lines: CreditNoteRow[] }
   >();
+  let nonumCounter = 0;
   for (const row of rows) {
+    if (!row.creditNoteNumber) {
+      const key = `__nonum__${nonumCounter++}`;
+      map.set(key, { header: row, lines: [row] });
+      continue;
+    }
     const key = row.creditNoteNumber;
     let entry = map.get(key);
     if (!entry) {

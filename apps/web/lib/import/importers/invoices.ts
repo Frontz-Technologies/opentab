@@ -1,11 +1,17 @@
 import { z } from "zod";
 import type { ImporterDescriptor } from "../core/types";
 
-// invoiceNumber is REQUIRED in v1 — v1.1 will let the field be empty
-// to mean "treat as draft, defer numbering" now that #132's nullable
-// migration covers existing rows.
+// invoiceNumber is optional from v1.1 onward (#220). Empty number →
+// invoice imports as DRAFT, opentab assigns the number on first
+// publish using the deferred-numbering pattern from #132. The
+// idempotency-key fn falls back to a contact+date+total fingerprint
+// for empty-number rows so re-importing the same CSV is still safe.
 export const invoiceRowSchema = z.object({
-  invoiceNumber: z.string().min(1),
+  invoiceNumber: z
+    .string()
+    .optional()
+    .or(z.literal(""))
+    .transform((v) => v || undefined),
   issueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   contactName: z.string().min(1),
   contactVatNumber: z
@@ -36,7 +42,7 @@ export const invoicesImporter: ImporterDescriptor<InvoiceRow> = {
   entityKey: "invoices",
   label: "Invoices",
   fields: [
-    { name: "invoiceNumber", required: true, type: "string" },
+    { name: "invoiceNumber", required: false, type: "string" },
     { name: "issueDate", required: true, type: "date" },
     { name: "contactName", required: true, type: "string" },
     { name: "contactVatNumber", required: false, type: "string" },
@@ -70,7 +76,20 @@ export const invoicesImporter: ImporterDescriptor<InvoiceRow> = {
     unit: ["unit", "uom"],
   },
   rowSchema: invoiceRowSchema,
-  idempotencyKeyParts: (row, orgId) => [orgId, row.invoiceNumber.toLowerCase()],
+  idempotencyKeyParts: (row, orgId) =>
+    row.invoiceNumber
+      ? [orgId, "num", row.invoiceNumber.toLowerCase()]
+      : // Empty-number fallback (v1.1, #220): contact+date+total
+        // fingerprint. Prefix with a tag ("nonum") so an empty-number
+        // row whose fingerprint accidentally collides with a numbered
+        // row's "num" key cannot dedup against it.
+        [
+          orgId,
+          "nonum",
+          row.contactName.toLowerCase(),
+          row.issueDate,
+          row.total,
+        ],
 };
 
 // Multi-row grouping: rows that share the same invoiceNumber across
@@ -78,11 +97,20 @@ export const invoicesImporter: ImporterDescriptor<InvoiceRow> = {
 // pattern adapted to single-CSV). The invoice header is taken from
 // the first row in the group; subsequent rows contribute their line
 // item only.
+//
+// Empty-number rows can't be grouped (no shared key), so each one
+// becomes its own single-line invoice. Index appended for uniqueness.
 export function groupRowsByInvoice(
   rows: InvoiceRow[],
 ): { header: InvoiceRow; lines: InvoiceRow[] }[] {
   const map = new Map<string, { header: InvoiceRow; lines: InvoiceRow[] }>();
+  let nonumCounter = 0;
   for (const row of rows) {
+    if (!row.invoiceNumber) {
+      const key = `__nonum__${nonumCounter++}`;
+      map.set(key, { header: row, lines: [row] });
+      continue;
+    }
     const key = row.invoiceNumber;
     let entry = map.get(key);
     if (!entry) {

@@ -19,6 +19,7 @@ import { createLogger } from "@/lib/logging/logger";
 import { getImporter } from "@/lib/import/importers";
 import { runImport } from "@/lib/import/core/runner";
 import { validateRows } from "@/lib/import/core/validator";
+import { computeIdempotencyKey } from "@/lib/import/core/idempotency";
 import { groupRowsByInvoice } from "@/lib/import/importers/invoices";
 import { groupRowsByCreditNote } from "@/lib/import/importers/credit-notes";
 import { calculateLineTotal } from "@/lib/invoicing/calculations";
@@ -90,13 +91,12 @@ function buildInsertForEntity(entityKey: string, orgId: string) {
     case "invoices":
       return (row: Record<string, unknown>) => ({
         orgId,
-        // contactId resolved by resolveInvoiceContactIds before this
-        // call. Rows whose contact wasn't found were demoted to
-        // "blocked" upstream so this never sees a missing __contactId.
-        // Auto-create-missing-contact lands in v1.1.
         contactId: row.__contactId,
-        status: 2, // SENT — published+sent for imports
-        invoiceNumber: row.invoiceNumber,
+        // Empty-number rows import as DRAFT (v1.1, #220) — opentab
+        // assigns the number on first publish via #132's deferred-
+        // numbering pattern. Numbered rows import as SENT.
+        status: row.invoiceNumber ? 2 : 1,
+        invoiceNumber: row.invoiceNumber ?? null,
         issueDate: row.issueDate,
         dueDate: row.dueDate ?? null,
         currencyCode: row.currencyCode ?? "EUR",
@@ -112,8 +112,10 @@ function buildInsertForEntity(entityKey: string, orgId: string) {
         orgId,
         contactId: row.__contactId,
         invoiceId: row.__parentInvoiceId ?? null,
-        status: 3, // SENT — credit notes imported as already-issued
-        creditNoteNumber: row.creditNoteNumber,
+        // Same status rule as invoices: empty number → DRAFT, else
+        // SENT (CREDIT_NOTE_STATUS.SENT = 3, DRAFT = 1).
+        status: row.creditNoteNumber ? 3 : 1,
+        creditNoteNumber: row.creditNoteNumber ?? null,
         issueDate: row.issueDate,
         currencyCode: row.currencyCode ?? "EUR",
         subtotal: row.total,
@@ -146,7 +148,15 @@ export async function commitImport(args: CommitArgs) {
   // (link-only, never auto-create the parent — see spec #215).
   let resolved = validated;
   if (args.entityKey === "invoices" || args.entityKey === "credit-notes") {
-    resolved = await resolveInvoiceContactIds(orgId, resolved);
+    // autoCreateToggles.contact defaults to true (v1.1, #220) — most
+    // imports want the auto-create-on-the-fly behaviour. Set to false
+    // in the wizard for strict mode.
+    const autoCreateContact = args.autoCreateToggles.contact !== false;
+    resolved = await resolveInvoiceContactIds(
+      orgId,
+      resolved,
+      autoCreateContact,
+    );
   }
   if (args.entityKey === "credit-notes") {
     resolved = await linkParentInvoiceIds(orgId, resolved);
@@ -195,15 +205,22 @@ export async function commitImport(args: CommitArgs) {
   return { success: true, ...result };
 }
 
-// Batch contact-name → id lookup for invoice imports. Walks the ok
-// rows once, builds a unique-name set, runs a single SELECT, then
-// either attaches __contactId to each row's data or demotes the row
-// to "blocked" with a clear "contact not found" message. Auto-create-
-// missing-contact behavior is the v1.1 follow-up — for v1 we require
-// the contact to already exist (matches the spec's PR-A scope).
+// Batch contact-name → id lookup for invoice/credit-note imports.
+//
+//   1. Build the unique-name set from ok rows.
+//   2. SELECT existing contacts in one query.
+//   3. For names that didn't resolve:
+//      - If autoCreate is true (v1.1, #220) → INSERT a stub contact
+//        (displayName + vatNumber from the row, type=client, no
+//        email/phone). Stub gets its own import_idempotency_key so
+//        re-importing the same CSV reuses the auto-created contact
+//        instead of creating a fresh one.
+//      - If autoCreate is false → demote the row to "blocked" with
+//        a clear "create the contact first" message (v1 behaviour).
 async function resolveInvoiceContactIds(
   orgId: string,
   rows: RowResult<Record<string, unknown>>[],
+  autoCreate: boolean,
 ): Promise<RowResult<Record<string, unknown>>[]> {
   const distinctNames = new Set<string>();
   for (const r of rows) {
@@ -224,6 +241,60 @@ async function resolveInvoiceContactIds(
     );
   const nameToId = new Map(found.map((c) => [c.displayName, c.id]));
 
+  // Auto-create the missing ones. Use ON CONFLICT DO NOTHING on the
+  // import_idempotency_key partial-unique index so a re-import of
+  // the same CSV doesn't create duplicate stubs — the second run
+  // just re-fetches the id below.
+  if (autoCreate) {
+    const missingNames = Array.from(distinctNames).filter(
+      (n) => !nameToId.has(n),
+    );
+    if (missingNames.length > 0) {
+      // Per-name idempotency key. Stable across imports of the same
+      // displayName so the same stub is reused on re-import.
+      const stubsToInsert = missingNames.map((name) => {
+        // Find the first row carrying this contactName to grab vat
+        // (if any) — best-effort enrichment, no-op if no vat in CSV.
+        let vat: string | undefined;
+        for (const r of rows) {
+          if (r.kind === "blocked") continue;
+          if (r.data.contactName === name) {
+            vat = r.data.contactVatNumber as string | undefined;
+            break;
+          }
+        }
+        return {
+          orgId,
+          type: "client" as const,
+          classification: "business" as const,
+          displayName: name,
+          vatNumber: vat ?? null,
+          importIdempotencyKey: computeIdempotencyKey([
+            orgId,
+            "auto-contact",
+            name.toLowerCase(),
+          ]),
+        };
+      });
+      await db
+        .insert(contacts)
+        .values(stubsToInsert)
+        .onConflictDoNothing();
+      // Re-query to pick up the auto-created ids (and any that lost
+      // a race against another import — ON CONFLICT swallows them).
+      const refound = await db
+        .select({ id: contacts.id, displayName: contacts.displayName })
+        .from(contacts)
+        .where(
+          and(
+            eq(contacts.orgId, orgId),
+            inArray(contacts.displayName, missingNames),
+          ),
+        );
+      for (const c of refound) nameToId.set(c.displayName, c.id);
+    }
+  }
+
   return rows.map((r) => {
     if (r.kind === "blocked") return r;
     const name = r.data.contactName as string | undefined;
@@ -234,7 +305,7 @@ async function resolveInvoiceContactIds(
         rowNumber: r.rowNumber,
         raw: { contactName: name ?? "" },
         messages: [
-          `contactName: contact "${name ?? ""}" not found in this org. Create it via /import/contacts first, then re-run.`,
+          `contactName: contact "${name ?? ""}" not found in this org. Toggle "Create missing contacts automatically" in the Map step, or create it via /import/contacts first.`,
         ],
       };
     }
@@ -320,31 +391,50 @@ async function insertLineItemsForHeaderImport(
 
   if (okRows.length === 0) return;
 
+  // Match headers by import_idempotency_key — works for both
+  // numbered and empty-number rows (v1.1, #220), since the engine
+  // sets the key on every insert. Compute the key inline using the
+  // descriptor's idempotencyKeyParts fn so it matches what the
+  // runner used.
+  const importer = getImporter(entityKey);
+  const keysByGroup = new Map<string, string>(); // group-natural-key → idempotency-key
+  function keyForGroup(g: { header: Record<string, unknown> }): string {
+    return computeIdempotencyKey(
+      importer.idempotencyKeyParts(g.header as never, orgId),
+    );
+  }
+
   if (entityKey === "invoices") {
     const grouped = groupRowsByInvoice(
       okRows as unknown as Parameters<typeof groupRowsByInvoice>[0],
     );
-    const numbers = grouped.map((g) => g.header.invoiceNumber);
+    for (const g of grouped) {
+      keysByGroup.set(g.header.invoiceNumber ?? `__group_${grouped.indexOf(g)}`, keyForGroup(g));
+    }
     const headerRows = await db
-      .select({ id: invoices.id, invoiceNumber: invoices.invoiceNumber })
+      .select({
+        id: invoices.id,
+        importIdempotencyKey: invoices.importIdempotencyKey,
+      })
       .from(invoices)
       .where(
         and(
           eq(invoices.orgId, orgId),
-          inArray(invoices.invoiceNumber, numbers),
+          inArray(invoices.importIdempotencyKey, Array.from(keysByGroup.values())),
         ),
       );
-    const numToId = new Map(
+    const keyToId = new Map(
       headerRows
-        .filter((h): h is { id: string; invoiceNumber: string } =>
-          Boolean(h.invoiceNumber),
+        .filter((h): h is { id: string; importIdempotencyKey: string } =>
+          Boolean(h.importIdempotencyKey),
         )
-        .map((h) => [h.invoiceNumber, h.id]),
+        .map((h) => [h.importIdempotencyKey, h.id]),
     );
 
     const itemRows: (typeof invoiceItems.$inferInsert)[] = [];
     for (const g of grouped) {
-      const invoiceId = numToId.get(g.header.invoiceNumber);
+      const idempotencyKey = keyForGroup(g);
+      const invoiceId = keyToId.get(idempotencyKey);
       if (!invoiceId) continue; // header was a duplicate / not landed
       let sortOrder = 0;
       for (const line of g.lines) {
@@ -378,30 +468,39 @@ async function insertLineItemsForHeaderImport(
   const grouped = groupRowsByCreditNote(
     okRows as unknown as Parameters<typeof groupRowsByCreditNote>[0],
   );
-  const numbers = grouped.map((g) => g.header.creditNoteNumber);
+  for (const g of grouped) {
+    keysByGroup.set(
+      g.header.creditNoteNumber ?? `__group_${grouped.indexOf(g)}`,
+      keyForGroup(g),
+    );
+  }
   const headerRows = await db
     .select({
       id: creditNotes.id,
-      creditNoteNumber: creditNotes.creditNoteNumber,
+      importIdempotencyKey: creditNotes.importIdempotencyKey,
     })
     .from(creditNotes)
     .where(
       and(
         eq(creditNotes.orgId, orgId),
-        inArray(creditNotes.creditNoteNumber, numbers),
+        inArray(
+          creditNotes.importIdempotencyKey,
+          Array.from(keysByGroup.values()),
+        ),
       ),
     );
-  const numToId = new Map(
+  const keyToId = new Map(
     headerRows
-      .filter((h): h is { id: string; creditNoteNumber: string } =>
-        Boolean(h.creditNoteNumber),
+      .filter((h): h is { id: string; importIdempotencyKey: string } =>
+        Boolean(h.importIdempotencyKey),
       )
-      .map((h) => [h.creditNoteNumber, h.id]),
+      .map((h) => [h.importIdempotencyKey, h.id]),
   );
 
   const itemRows: (typeof creditNoteItems.$inferInsert)[] = [];
   for (const g of grouped) {
-    const creditNoteId = numToId.get(g.header.creditNoteNumber);
+    const idempotencyKey = keyForGroup(g);
+    const creditNoteId = keyToId.get(idempotencyKey);
     if (!creditNoteId) continue;
     let sortOrder = 0;
     for (const line of g.lines) {

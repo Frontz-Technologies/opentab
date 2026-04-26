@@ -888,6 +888,7 @@
     "skippedByUser": "Παράληψη (από χρήστη)",
     "failed": "Απέτυχαν",
     "downloadErrorCsv": "Λήψη CSV σφαλμάτων",
-    "import": "Εισαγωγή"
+    "import": "Εισαγωγή",
+    "autoCreateContactToggle": "Αυτόματη δημιουργία επαφών που λείπουν (προτείνεται για μετάβαση)"
   }
 }
