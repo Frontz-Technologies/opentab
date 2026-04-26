@@ -14,14 +14,16 @@
 // origins.
 const ENV_KEYS = ["NEXT_PUBLIC_APP_URL", "APP_URL", "BETTER_AUTH_URL"] as const;
 
-export function deriveTrustedOrigins(request: Request): string[] {
+export function deriveTrustedOrigins(request?: Request): string[] {
   const origins = new Set<string>();
 
-  try {
-    const url = new URL(request.url);
-    origins.add(`${url.protocol}//${url.host}`);
-  } catch {
-    // Unparseable request URL — fall through to env-only origins.
+  if (request) {
+    try {
+      const url = new URL(request.url);
+      origins.add(`${url.protocol}//${url.host}`);
+    } catch {
+      // Unparseable request URL — fall through to env-only origins.
+    }
   }
 
   for (const key of ENV_KEYS) {
