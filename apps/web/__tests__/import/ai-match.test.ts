@@ -7,8 +7,25 @@ const { generateObjectMock, isFeatureEnabledMock, getFeatureModelMock } =
     getFeatureModelMock: vi.fn(),
   }));
 
+// Minimal stand-in for the AI SDK's `NoObjectGeneratedError`. The real
+// class has an `isInstance(err)` static for nominal-typing across module
+// boundaries — we mirror that shape so the production catch-block can
+// branch on it. Defined via `vi.hoisted` so the `vi.mock` factory below
+// (which is itself hoisted) can capture it without the standard
+// "cannot access before initialization" error.
+const { NoObjectGeneratedErrorStub } = vi.hoisted(() => {
+  class NoObjectGeneratedErrorStub extends Error {
+    text?: string;
+    static isInstance(err: unknown): err is NoObjectGeneratedErrorStub {
+      return err instanceof NoObjectGeneratedErrorStub;
+    }
+  }
+  return { NoObjectGeneratedErrorStub };
+});
+
 vi.mock("ai", () => ({
   generateObject: generateObjectMock,
+  NoObjectGeneratedError: NoObjectGeneratedErrorStub,
 }));
 
 vi.mock("@/lib/ai/features", () => ({
@@ -161,6 +178,59 @@ describe("getAiColumnMatches", () => {
     generateObjectMock.mockRejectedValue(new Error("network down"));
     const out = await getAiColumnMatches(FIXED_INPUT);
     expect(out).toEqual([]);
+  });
+
+  it("returns [] on schema-validation failure (NoObjectGeneratedError)", async () => {
+    const err = new NoObjectGeneratedErrorStub("malformed JSON from model");
+    err.text = "garbage that doesn't fit the schema";
+    generateObjectMock.mockRejectedValue(err);
+    const out = await getAiColumnMatches(FIXED_INPUT);
+    expect(out).toEqual([]);
+  });
+
+  it("caps unmappedHeaders at 25 when more are submitted (large CSV resilience)", async () => {
+    generateObjectMock.mockResolvedValue({ object: { matches: [] } });
+    const fortyHeaders = Array.from({ length: 40 }, (_, i) => `col${i}`);
+    const samples: Record<string, string[]> = {};
+    for (const h of fortyHeaders) samples[h] = ["x"];
+    await getAiColumnMatches({
+      ...FIXED_INPUT,
+      unmappedHeaders: fortyHeaders,
+      samplesByHeader: samples,
+    });
+    const arg = generateObjectMock.mock.calls[0][0];
+    const prompt = JSON.parse(arg.prompt) as {
+      theirColumns: { header: string; samples: string[] }[];
+    };
+    expect(prompt.theirColumns).toHaveLength(25);
+    // Order preserved: leftmost CSV columns are the ones we send.
+    expect(prompt.theirColumns[0].header).toBe("col0");
+    expect(prompt.theirColumns[24].header).toBe("col24");
+  });
+
+  it("filters out matches whose theirHeader was truncated past the cap", async () => {
+    // Defensive: even if the LLM (somehow) returned a match for a header
+    // we didn't include in the prompt, the post-parse filter rejects it
+    // because the unmappedSet only contains the truncated subset.
+    const fortyHeaders = Array.from({ length: 40 }, (_, i) => `col${i}`);
+    const samples: Record<string, string[]> = {};
+    for (const h of fortyHeaders) samples[h] = ["x"];
+    generateObjectMock.mockResolvedValue({
+      object: {
+        matches: [
+          { ourField: "invoiceNumber", theirHeader: "col0", confidence: 0.9 },
+          // col30 was truncated out of the prompt, so this match must be dropped.
+          { ourField: "invoiceNumber", theirHeader: "col30", confidence: 0.9 },
+        ],
+      },
+    });
+    const out = await getAiColumnMatches({
+      ...FIXED_INPUT,
+      unmappedHeaders: fortyHeaders,
+      samplesByHeader: samples,
+    });
+    expect(out).toHaveLength(1);
+    expect(out[0].theirHeader).toBe("col0");
   });
 });
 

@@ -1,4 +1,4 @@
-import { generateObject } from "ai";
+import { generateObject, NoObjectGeneratedError } from "ai";
 import { z } from "zod";
 import { isFeatureEnabled, getFeatureModel } from "@/lib/ai/features";
 import { createAiProvider } from "@/lib/ai/provider";
@@ -15,6 +15,15 @@ const MAX_SAMPLES_PER_COLUMN = 3;
 // looking for 3 non-empty values. 200 is generous: even if a column is
 // 95% empty, we'll still find ≥3 non-empty samples in expectation.
 const MAX_ROWS_SCANNED_FOR_SAMPLES = 200;
+// Cap how many unmapped headers we ask the LLM to consider in one call.
+// Real-world Greek expense exports have observed 50+ columns (`Γραμμή 1
+// - Δημιουργία` x4 sub-rows etc.) — at that scale the structured-output
+// JSON the model has to emit gets long enough to start failing schema
+// validation, and most of the headers are non-mappable anyway. 25 covers
+// the common "auto-map missed half a dozen columns" case comfortably and
+// keeps cost / output-token usage bounded. Unmapped-but-not-LLM'd headers
+// fall back to the manual dropdown.
+const MAX_UNMAPPED_HEADERS_TO_LLM = 25;
 
 export interface AiSuggestion {
   ourField: string;
@@ -85,8 +94,17 @@ export async function getAiColumnMatches(
   if (!isFeatureEnabled("extraction")) return [];
   if (input.unmappedHeaders.length === 0) return [];
 
+  // Truncate to the first N unmapped headers. Headers beyond the cap
+  // stay null; the user maps them manually. We pick the first N from
+  // the array order — these are the leftmost CSV columns, statistically
+  // the most likely to carry the entity's primary identifiers.
+  const truncated =
+    input.unmappedHeaders.length > MAX_UNMAPPED_HEADERS_TO_LLM
+      ? input.unmappedHeaders.slice(0, MAX_UNMAPPED_HEADERS_TO_LLM)
+      : input.unmappedHeaders;
+
   const fieldNames = new Set(input.fields.map((f) => f.name));
-  const unmappedSet = new Set(input.unmappedHeaders);
+  const unmappedSet = new Set(truncated);
 
   const promptObject = {
     entity: input.entityKey,
@@ -94,7 +112,7 @@ export async function getAiColumnMatches(
       "Match each unmappedHeader to the best ourField name. Confidence 0-1. " +
       "Use the sample values to disambiguate similar field names.",
     ourFields: input.fields,
-    theirColumns: input.unmappedHeaders.map((header) => ({
+    theirColumns: truncated.map((header) => ({
       header,
       samples: input.samplesByHeader[header] ?? [],
     })),
@@ -124,10 +142,31 @@ export async function getAiColumnMatches(
         autoApply: m.confidence >= AUTO_APPLY_THRESHOLD,
       }));
   } catch (err) {
-    log.error("ai column-match failed", {
-      entity: input.entityKey,
-      error: err instanceof Error ? err.message : String(err),
-    });
+    // Distinguish "schema-shape mismatch on LLM output" from "everything
+    // else" so the operator can tell whether it's a model-quirk
+    // (capture the raw response, fix the schema or prompt) or a transport
+    // failure (timeout, rate limit, network). Mirrors the diagnostic
+    // pattern in `lib/expenses/ai-extraction.ts`.
+    if (NoObjectGeneratedError.isInstance(err)) {
+      const rawText =
+        typeof (err as { text?: unknown }).text === "string"
+          ? (err as { text: string }).text
+          : undefined;
+      log.error("ai column-match: schema validation failed", {
+        entity: input.entityKey,
+        unmappedCount: truncated.length,
+        truncatedFromTotal: input.unmappedHeaders.length,
+        rawResponse: rawText ? rawText.slice(0, 1024) : undefined,
+      });
+    } else {
+      log.error("ai column-match failed", {
+        entity: input.entityKey,
+        unmappedCount: truncated.length,
+        truncatedFromTotal: input.unmappedHeaders.length,
+        error: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack?.slice(0, 1024) : undefined,
+      });
+    }
     return [];
   }
 }
