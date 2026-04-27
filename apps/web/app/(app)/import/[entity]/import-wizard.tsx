@@ -1,11 +1,18 @@
 "use client";
 
-import { useReducer, useState, useTransition } from "react";
+import { useReducer, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { commitImport, getSampleCsv } from "./actions";
+import { WizardStepper } from "@/components/import/wizard-stepper";
+import { UploadDropzone } from "@/components/import/upload-dropzone";
+import {
+  MappingPanel,
+  type AiSuggestion,
+} from "@/components/import/mapping-panel";
+import { ReviewList } from "@/components/import/review-list";
+import { DoneSummary } from "@/components/import/done-summary";
 
 interface WizardProps {
   entityKey: string;
@@ -13,14 +20,17 @@ interface WizardProps {
   fields: Array<{ name: string; required: boolean }>;
 }
 
-type Step = "upload" | "map" | "preview" | "commit";
+type Step = "upload" | "review" | "done";
 
 interface State {
   step: Step;
+  parsing: boolean;
   parsed: { headers: string[]; rows: Record<string, string>[] } | null;
   mapping: Record<string, string | null>;
   skipped: Set<number>;
   autoCreateContact: boolean;
+  aiLoading: boolean;
+  aiSuggestions: AiSuggestion[];
   result: {
     created: number;
     skippedDup: number;
@@ -31,23 +41,32 @@ interface State {
 }
 
 type Action =
+  | { type: "PARSING" }
   | { type: "PARSED"; parsed: State["parsed"]; mapping: State["mapping"] }
+  | { type: "PARSE_ERROR" }
   | { type: "MAP"; mapping: State["mapping"] }
   | { type: "TOGGLE_SKIP"; rowNumber: number }
   | { type: "TOGGLE_AUTO_CREATE_CONTACT"; value: boolean }
+  | { type: "AI_LOADING"; loading: boolean }
+  | { type: "AI_SUGGESTIONS"; suggestions: AiSuggestion[] }
   | { type: "RESULT"; result: State["result"] };
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
+    case "PARSING":
+      return { ...state, parsing: true };
     case "PARSED":
       return {
         ...state,
+        parsing: false,
         parsed: action.parsed,
         mapping: action.mapping,
-        step: "map",
+        step: "review",
       };
+    case "PARSE_ERROR":
+      return { ...state, parsing: false };
     case "MAP":
-      return { ...state, mapping: action.mapping, step: "preview" };
+      return { ...state, mapping: action.mapping };
     case "TOGGLE_SKIP": {
       const next = new Set(state.skipped);
       if (next.has(action.rowNumber)) next.delete(action.rowNumber);
@@ -56,8 +75,21 @@ function reducer(state: State, action: Action): State {
     }
     case "TOGGLE_AUTO_CREATE_CONTACT":
       return { ...state, autoCreateContact: action.value };
+    case "AI_LOADING":
+      return { ...state, aiLoading: action.loading };
+    case "AI_SUGGESTIONS": {
+      // Auto-applied suggestions merge into the mapping, but only where the
+      // user hasn't already mapped that header (manual override always wins).
+      const next = { ...state.mapping };
+      for (const s of action.suggestions) {
+        if (s.autoApply && !next[s.theirHeader]) {
+          next[s.theirHeader] = s.ourField;
+        }
+      }
+      return { ...state, aiSuggestions: action.suggestions, mapping: next };
+    }
     case "RESULT":
-      return { ...state, result: action.result, step: "commit" };
+      return { ...state, result: action.result, step: "done" };
   }
 }
 
@@ -67,24 +99,58 @@ export function ImportWizard({ entityKey, entityLabel, fields }: WizardProps) {
   const [isPending, startTransition] = useTransition();
   const [state, dispatch] = useReducer(reducer, {
     step: "upload" as Step,
+    parsing: false,
     parsed: null,
     mapping: {},
     skipped: new Set<number>(),
-    autoCreateContact: true, // v1.1 default ON, #220
+    autoCreateContact: true,
+    aiLoading: false,
+    aiSuggestions: [],
     result: null,
   } satisfies State);
 
   async function handleFile(file: File) {
+    dispatch({ type: "PARSING" });
     const buffer = Buffer.from(await file.arrayBuffer());
-    const { parseCsv } = await import("@/lib/import/core/parser");
-    const { autoMap } = await import("@/lib/import/core/mapper");
-    const { getImporter } = await import("@/lib/import/importers");
     try {
+      const { parseCsv } = await import("@/lib/import/core/parser");
+      const { autoMap } = await import("@/lib/import/core/mapper");
+      const { getImporter } = await import("@/lib/import/importers");
       const parsed = await parseCsv(buffer);
       const importer = getImporter(entityKey);
       const mapping = autoMap(parsed.headers, importer.aliases);
       dispatch({ type: "PARSED", parsed, mapping });
+
+      // Fire-and-forget AI suggestions if any header is null. Resolved in
+      // Task 9 once `getAiSuggestions` is exported from ./actions.
+      const unmapped = parsed.headers.filter((h) => !mapping[h]);
+      if (unmapped.length > 0) {
+        dispatch({ type: "AI_LOADING", loading: true });
+        import("./actions")
+          .then(async (mod) => {
+            const fn = (
+              mod as unknown as {
+                getAiSuggestions?: (
+                  entityKey: string,
+                  parsed: { headers: string[]; rows: Record<string, string>[] },
+                ) => Promise<AiSuggestion[]>;
+              }
+            ).getAiSuggestions;
+            if (!fn) return [];
+            return fn(entityKey, parsed);
+          })
+          .then((suggestions) => {
+            dispatch({ type: "AI_SUGGESTIONS", suggestions });
+          })
+          .catch(() => {
+            /* fail-silent: wizard works without AI */
+          })
+          .finally(() => {
+            dispatch({ type: "AI_LOADING", loading: false });
+          });
+      }
     } catch (e) {
+      dispatch({ type: "PARSE_ERROR" });
       toast.error(e instanceof Error ? e.message : t("parseError"));
     }
   }
@@ -114,231 +180,9 @@ export function ImportWizard({ entityKey, entityLabel, fields }: WizardProps) {
     });
   }
 
-  return (
-    <div className="space-y-6">
-      <h1 className="font-headline text-2xl font-bold">
-        {t("heading", { entity: entityLabel })}
-      </h1>
-
-      {state.step === "upload" && (
-        <div className="bg-surface-container rounded-xl p-6 space-y-4">
-          <p className="text-on-surface-variant">{t("uploadHelp")}</p>
-          <input
-            type="file"
-            accept=".csv,text/csv"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) handleFile(f);
-            }}
-          />
-          <Button variant="outline" onClick={handleSampleDownload}>
-            {t("downloadSample")}
-          </Button>
-        </div>
-      )}
-
-      {state.step === "map" && state.parsed && (
-        <MapStep
-          headers={state.parsed.headers}
-          mapping={state.mapping}
-          fields={fields}
-          showAutoCreateContact={
-            entityKey === "invoices" || entityKey === "credit-notes"
-          }
-          autoCreateContact={state.autoCreateContact}
-          onAutoCreateContactChange={(v) =>
-            dispatch({ type: "TOGGLE_AUTO_CREATE_CONTACT", value: v })
-          }
-          onContinue={(m) => dispatch({ type: "MAP", mapping: m })}
-        />
-      )}
-
-      {state.step === "preview" && state.parsed && (
-        <PreviewStep
-          parsed={state.parsed}
-          mapping={state.mapping}
-          skipped={state.skipped}
-          onToggleSkip={(rn) =>
-            dispatch({ type: "TOGGLE_SKIP", rowNumber: rn })
-          }
-          onCommit={handleCommit}
-          isPending={isPending}
-        />
-      )}
-
-      {state.step === "commit" && state.result && (
-        <CommitStep
-          result={state.result}
-          onDone={() => router.push(`/${entityKey}`)}
-        />
-      )}
-    </div>
-  );
-}
-
-function MapStep({
-  headers,
-  mapping,
-  fields,
-  showAutoCreateContact,
-  autoCreateContact,
-  onAutoCreateContactChange,
-  onContinue,
-}: {
-  headers: string[];
-  mapping: Record<string, string | null>;
-  fields: Array<{ name: string; required: boolean }>;
-  showAutoCreateContact: boolean;
-  autoCreateContact: boolean;
-  onAutoCreateContactChange: (v: boolean) => void;
-  onContinue: (m: Record<string, string | null>) => void;
-}) {
-  const t = useTranslations("import");
-  const [m, setM] = useState(mapping);
-  const requiredCovered = fields
-    .filter((f) => f.required)
-    .every((f) => Object.values(m).includes(f.name));
-
-  return (
-    <div className="bg-surface-container rounded-xl p-6 space-y-4">
-      <h2 className="font-label text-on-surface">{t("mapHeading")}</h2>
-      <table className="w-full">
-        <thead>
-          <tr>
-            <th className="text-left py-2 font-label text-sm text-on-surface/60">
-              {t("yourColumn")}
-            </th>
-            <th className="text-left py-2 font-label text-sm text-on-surface/60">
-              {t("mapsTo")}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {headers.map((h) => (
-            <tr key={h}>
-              <td className="py-2 font-mono text-sm">{h}</td>
-              <td>
-                <label htmlFor={`map-${h}`} className="sr-only">
-                  {t("mapsTo")}
-                </label>
-                <select
-                  id={`map-${h}`}
-                  className="bg-surface-container-lowest text-on-surface rounded-lg px-3 h-10"
-                  value={m[h] ?? ""}
-                  onChange={(e) => setM({ ...m, [h]: e.target.value || null })}
-                >
-                  <option value="">{t("skip")}</option>
-                  {fields.map((f) => (
-                    <option key={f.name} value={f.name}>
-                      {f.name}
-                      {f.required ? " *" : ""}
-                    </option>
-                  ))}
-                </select>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {showAutoCreateContact && (
-        <label className="flex items-center gap-2 text-sm text-on-surface">
-          <input
-            type="checkbox"
-            checked={autoCreateContact}
-            onChange={(e) => onAutoCreateContactChange(e.target.checked)}
-          />
-          <span>{t("autoCreateContactToggle")}</span>
-        </label>
-      )}
-      <Button onClick={() => onContinue(m)} disabled={!requiredCovered}>
-        {t("continueToPreview")}
-      </Button>
-    </div>
-  );
-}
-
-function PreviewStep({
-  parsed,
-  mapping,
-  skipped,
-  onToggleSkip,
-  onCommit,
-  isPending,
-}: {
-  parsed: { headers: string[]; rows: Record<string, string>[] };
-  mapping: Record<string, string | null>;
-  skipped: Set<number>;
-  onToggleSkip: (rn: number) => void;
-  onCommit: () => void;
-  isPending: boolean;
-}) {
-  const t = useTranslations("import");
-  const previewRows = parsed.rows.slice(0, 50);
-  return (
-    <div className="bg-surface-container rounded-xl p-6 space-y-4 overflow-x-auto">
-      <h2 className="font-label text-on-surface">
-        {t("previewHeading", { count: parsed.rows.length })}
-      </h2>
-      <table className="w-full text-sm">
-        <thead>
-          <tr>
-            <th className="text-left">#</th>
-            <th className="text-left">{t("skip")}</th>
-            {parsed.headers.map((h) => (
-              <th
-                key={h}
-                className="text-left px-2 font-label text-on-surface/60"
-              >
-                {h}
-                <div className="text-xs text-on-surface-variant">
-                  → {mapping[h] ?? "—"}
-                </div>
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {previewRows.map((row, idx) => {
-            const rowNumber = idx + 2;
-            return (
-              <tr key={rowNumber}>
-                <td className="px-2 py-1 text-on-surface/60">{rowNumber}</td>
-                <td className="px-2">
-                  <input
-                    type="checkbox"
-                    checked={skipped.has(rowNumber)}
-                    onChange={() => onToggleSkip(rowNumber)}
-                    aria-label={t("skip")}
-                  />
-                </td>
-                {parsed.headers.map((h) => (
-                  <td key={h} className="px-2 py-1 text-on-surface">
-                    {row[h]}
-                  </td>
-                ))}
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-      <Button onClick={onCommit} disabled={isPending}>
-        {t("commit")}
-      </Button>
-    </div>
-  );
-}
-
-function CommitStep({
-  result,
-  onDone,
-}: {
-  result: NonNullable<State["result"]>;
-  onDone: () => void;
-}) {
-  const t = useTranslations("import");
   function downloadErrorCsv() {
-    if (!result.errorCsv) return;
-    const blob = new Blob([result.errorCsv], { type: "text/csv" });
+    if (!state.result?.errorCsv) return;
+    const blob = new Blob([state.result.errorCsv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -346,29 +190,75 @@ function CommitStep({
     a.click();
     URL.revokeObjectURL(url);
   }
+
   return (
-    <div className="bg-surface-container rounded-xl p-6 space-y-4">
-      <h2 className="font-label text-on-surface">{t("done")}</h2>
-      <ul className="space-y-1">
-        <li>
-          {t("created")}: <strong>{result.created}</strong>
-        </li>
-        <li>
-          {t("skippedDup")}: <strong>{result.skippedDup}</strong>
-        </li>
-        <li>
-          {t("skippedByUser")}: <strong>{result.skippedByUser}</strong>
-        </li>
-        <li>
-          {t("failed")}: <strong>{result.failed}</strong>
-        </li>
-      </ul>
-      {result.errorCsv && (
-        <Button variant="outline" onClick={downloadErrorCsv}>
-          {t("downloadErrorCsv")}
-        </Button>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <h1 className="font-headline text-2xl font-bold text-on-surface">
+          {t("heading", { entity: entityLabel })}
+        </h1>
+        <WizardStepper
+          steps={[
+            { id: "upload", label: t("step.upload") },
+            { id: "review", label: t("step.review") },
+            { id: "done", label: t("step.done") },
+          ]}
+          currentId={state.step}
+        />
+      </div>
+
+      {state.step === "upload" && (
+        <UploadDropzone
+          parsing={state.parsing}
+          onFile={handleFile}
+          onDownloadSample={handleSampleDownload}
+        />
       )}
-      <Button onClick={onDone}>{t("done")}</Button>
+
+      {state.step === "review" && state.parsed && (
+        <div className="flex flex-col md:flex-row gap-6">
+          <MappingPanel
+            headers={state.parsed.headers}
+            fields={fields}
+            mapping={state.mapping}
+            onChange={(m) => dispatch({ type: "MAP", mapping: m })}
+            showAutoCreateContact={
+              entityKey === "invoices" || entityKey === "credit-notes"
+            }
+            autoCreateContact={state.autoCreateContact}
+            onAutoCreateContactChange={(v) =>
+              dispatch({ type: "TOGGLE_AUTO_CREATE_CONTACT", value: v })
+            }
+            onContinue={handleCommit}
+            aiLoading={state.aiLoading}
+            aiSuggestions={state.aiSuggestions}
+          />
+          <div className="flex-1 min-w-0">
+            <ReviewList
+              entityKey={entityKey}
+              rows={state.parsed.rows}
+              mapping={state.mapping}
+              skipped={state.skipped}
+              onToggleSkip={(rn) =>
+                dispatch({ type: "TOGGLE_SKIP", rowNumber: rn })
+              }
+            />
+          </div>
+        </div>
+      )}
+
+      {state.step === "review" && isPending && (
+        <div className="text-sm text-on-surface-variant">{t("committing")}</div>
+      )}
+
+      {state.step === "done" && state.result && (
+        <DoneSummary
+          result={state.result}
+          entityKey={entityKey}
+          onDownloadErrors={downloadErrorCsv}
+          onDone={() => router.push(`/${entityKey}`)}
+        />
+      )}
     </div>
   );
 }
