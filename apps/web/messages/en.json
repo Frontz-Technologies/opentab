@@ -185,7 +185,7 @@
     "title": "Numbering",
     "description": "Customise the format of your invoice numbers. Drafts won't consume a number; the format below is applied when an invoice is published or sent.",
     "simpleSection": "Simple",
-    "advancedSection": "Advanced — custom pattern",
+    "advancedSection": "Advanced (custom pattern)",
     "prefix": "Prefix",
     "prefixHelp": "Short identifier prepended to every number (e.g. INV-, ACME-).",
     "digitCount": "Digit count",
@@ -872,7 +872,7 @@
   },
   "import": {
     "heading": "Import {entity}",
-    "uploadHelp": "Drop a CSV file or click to choose. Required columns vary by entity — see the sample.",
+    "uploadHelp": "Drop a CSV file or click to choose. Need a head start? Download the sample.",
     "downloadSample": "Download sample CSV",
     "parseError": "Could not parse CSV",
     "mapHeading": "Map your columns to ours",

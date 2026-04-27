@@ -185,7 +185,7 @@
     "title": "Numeración",
     "description": "Personalice el formato de los números de sus facturas. Los borradores no consumen número; el formato se aplica al publicar o enviar la factura.",
     "simpleSection": "Sencillo",
-    "advancedSection": "Avanzado — patrón personalizado",
+    "advancedSection": "Avanzado (patrón personalizado)",
     "prefix": "Prefijo",
     "prefixHelp": "Identificador corto antepuesto a cada número (p. ej. INV-, ACME-).",
     "digitCount": "Número de dígitos",
@@ -872,7 +872,7 @@
   },
   "import": {
     "heading": "Importar {entity}",
-    "uploadHelp": "Arrastre un archivo CSV o haga clic para elegir. Las columnas requeridas varían por entidad — vea el ejemplo.",
+    "uploadHelp": "Suelta un archivo CSV o haz clic para elegir. ¿Quieres un punto de partida? Descarga la muestra.",
     "downloadSample": "Descargar CSV de ejemplo",
     "parseError": "No se pudo analizar el CSV",
     "mapHeading": "Asigne sus columnas a las nuestras",
