@@ -36,6 +36,14 @@ import {
 import { buildAutofilledLineItems } from "@/lib/expenses/autofill-line-items";
 import { GROUP_TYPE_MARKER } from "@/lib/expenses/group-type";
 import {
+  acceptExtractionPreview,
+  discardPreview,
+  exitFieldPreview,
+  exitItemPreview,
+  type PreviewableFieldName,
+  type Snapshot,
+} from "@/lib/expenses/extraction-preview-state";
+import {
   createExpense,
   uploadAndExtractReceipt,
   cleanupTempAttachment,
@@ -86,6 +94,15 @@ export function ExpenseForm({
     useState<UploadReceiptResult | null>(null);
   const [showAutofillPrompt, setShowAutofillPrompt] = useState(false);
   const [showNoDataNotice, setShowNoDataNotice] = useState(false);
+  const [previewFields, setPreviewFields] = useState<Set<PreviewableFieldName>>(
+    new Set(),
+  );
+  const [previewLineItems, setPreviewLineItems] = useState<Set<string>>(
+    new Set(),
+  );
+  const [preExtractionSnapshot, setPreExtractionSnapshot] = useState<Snapshot>(
+    {},
+  );
   const [isUploading, setIsUploading] = useState(false);
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -110,38 +127,98 @@ export function ExpenseForm({
     const data = result.extractedData;
     if (!data) return;
 
-    if (result.supplierMatch) {
-      setContactId(result.supplierMatch.contactId);
-    }
-    if (data.vendorName && !contactId) {
-      setSupplierName(data.vendorName);
-    }
-    if (data.date) {
-      setExpenseDate(data.date);
-    }
-    if (data.currency && currencyCode === defaultCurrency) {
-      setCurrencyCode(data.currency);
-    }
-    if (data.description && !description) {
-      setDescription(data.description);
-    }
-    if (data.categoryId && !categoryId) {
-      setCategoryId(data.categoryId);
-    }
+    const builtItems =
+      items.length === 0 && (data.lineItems.length > 0 || data.totalAmount)
+        ? buildAutofilledLineItems({
+            lineItems: data.lineItems,
+            totalAmount: data.totalAmount,
+            description: data.description,
+            defaultTaxRate,
+            usesInclusiveTax,
+          })
+        : [];
 
-    if (items.length === 0 && (data.lineItems.length > 0 || data.totalAmount)) {
-      setItems(
-        buildAutofilledLineItems({
-          lineItems: data.lineItems,
-          totalAmount: data.totalAmount,
-          description: data.description,
-          defaultTaxRate,
-          usesInclusiveTax,
-        }),
-      );
-    }
+    const accepted = acceptExtractionPreview({
+      state: {
+        contactId,
+        supplierName,
+        expenseDate,
+        currencyCode,
+        description,
+        categoryId,
+        items,
+      },
+      defaultCurrency,
+      defaultTaxRate,
+      usesInclusiveTax,
+      supplierMatch: result.supplierMatch ?? null,
+      data,
+      builtItems,
+    });
 
+    setContactId(accepted.nextState.contactId);
+    setSupplierName(accepted.nextState.supplierName);
+    setExpenseDate(accepted.nextState.expenseDate);
+    setCurrencyCode(accepted.nextState.currencyCode);
+    setDescription(accepted.nextState.description);
+    setCategoryId(accepted.nextState.categoryId);
+    setItems(accepted.nextState.items);
+
+    setPreviewFields(accepted.previewFields);
+    setPreviewLineItems(accepted.previewLineItems);
+    setPreExtractionSnapshot(accepted.snapshot);
+  }
+
+  function handleApplyPanel() {
+    setPreviewFields(new Set());
+    setPreviewLineItems(new Set());
+    setPreExtractionSnapshot({});
     setShowAutofillPrompt(false);
+  }
+
+  function handleDiscardPanel() {
+    const result = discardPreview({
+      state: {
+        contactId,
+        supplierName,
+        expenseDate,
+        currencyCode,
+        description,
+        categoryId,
+        items,
+      },
+      previewFields,
+      previewLineItems,
+      snapshot: preExtractionSnapshot,
+    });
+    setContactId(result.nextState.contactId);
+    setSupplierName(result.nextState.supplierName);
+    setExpenseDate(result.nextState.expenseDate);
+    setCurrencyCode(result.nextState.currencyCode);
+    setDescription(result.nextState.description);
+    setCategoryId(result.nextState.categoryId);
+    setItems(result.nextState.items);
+    setPreviewFields(new Set());
+    setPreviewLineItems(new Set());
+    setPreExtractionSnapshot({});
+    setShowAutofillPrompt(false);
+  }
+
+  function handleExitFieldPreview(name: PreviewableFieldName) {
+    if (!previewFields.has(name)) return;
+    const result = exitFieldPreview({
+      name,
+      previewFields,
+      snapshot: preExtractionSnapshot,
+    });
+    setPreviewFields(result.previewFields);
+    setPreExtractionSnapshot(result.snapshot);
+  }
+
+  function handleExitItemPreview(id: string) {
+    if (!previewLineItems.has(id)) return;
+    const result = exitItemPreview({ id, previewLineItems });
+    setPreviewLineItems(result.previewLineItems);
   }
 
   async function handleReceiptUpload(file: File) {
@@ -170,9 +247,10 @@ export function ExpenseForm({
           result.extractedData.lineItems.length > 0);
 
       if (hasData) {
+        applyAutofill(result);
         const pref = localStorage.getItem("receiptAutofillPreference");
         if (pref === "always") {
-          applyAutofill(result);
+          handleApplyPanel();
         } else {
           setShowAutofillPrompt(true);
         }
@@ -404,20 +482,14 @@ export function ExpenseForm({
                   {t("autofillPrompt")}
                 </span>
                 <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    type="button"
-                    onClick={() => {
-                      if (extractResult) applyAutofill(extractResult);
-                    }}
-                  >
+                  <Button size="sm" type="button" onClick={handleApplyPanel}>
                     {t("autofillApply")}
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
                     type="button"
-                    onClick={() => setShowAutofillPrompt(false)}
+                    onClick={handleDiscardPanel}
                   >
                     {t("autofillIgnore")}
                   </Button>
