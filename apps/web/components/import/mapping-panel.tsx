@@ -135,7 +135,15 @@ export function MappingPanel({
             <ul className="space-y-2">
               {headers.map((h) => {
                 const suggestion = suggestionByHeader.get(h);
-                const value = mapping[h] ?? SKIP_VALUE;
+                // Pass `undefined` (not SKIP_VALUE) to the Select when the
+                // header is unmapped — base-ui's <SelectValue> renders the
+                // raw value string when one is set, so passing
+                // SKIP_VALUE made the trigger read "__skip__" instead of
+                // the localised placeholder. Keeping the SKIP_VALUE-only
+                // SelectItem inside the dropdown lets the user explicitly
+                // re-skip a previously-mapped header; the onValueChange
+                // handler translates SKIP_VALUE → null at the boundary.
+                const value = mapping[h] ?? undefined;
                 const labelId = `map-label-${h}`;
                 return (
                   <li key={h} className="flex items-center gap-2">
