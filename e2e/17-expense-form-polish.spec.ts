@@ -75,7 +75,7 @@ test.describe("Expense form polish (#252)", () => {
   // is fully covered by the Vitest suite at
   // apps/web/__tests__/extraction-preview-state.test.ts (13 tests).
 
-  test.skip("Apply commits the AI receipt-extraction preview", async () => {
+  test.fixme("Apply commits the AI receipt-extraction preview", async () => {
     await page.goto("/expenses/new");
     const fileInput = page.locator('input[type="file"]');
     await fileInput.setInputFiles("e2e/fixtures/sample-receipt.pdf");
@@ -93,7 +93,7 @@ test.describe("Expense form polish (#252)", () => {
     await expect(supplierField).not.toHaveValue("");
   });
 
-  test.skip("Discard reverts the AI receipt-extraction preview", async () => {
+  test.fixme("Discard reverts the AI receipt-extraction preview", async () => {
     await page.goto("/expenses/new");
     const fileInput = page.locator('input[type="file"]');
     await fileInput.setInputFiles("e2e/fixtures/sample-receipt.pdf");
@@ -109,7 +109,7 @@ test.describe("Expense form polish (#252)", () => {
     await expect(page.locator(".bg-primary\\/10")).toHaveCount(0);
   });
 
-  test.skip("single-field edit exits one preview without committing rest", async () => {
+  test.fixme("single-field edit exits one preview without committing rest", async () => {
     await page.goto("/expenses/new");
     const fileInput = page.locator('input[type="file"]');
     await fileInput.setInputFiles("e2e/fixtures/sample-receipt.pdf");
