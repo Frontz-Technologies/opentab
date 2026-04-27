@@ -7,6 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { IntrospectedField } from "@/lib/country/schema-introspect";
 import {
   saveIntegrationCredentials,
@@ -29,6 +36,35 @@ function humanise(name: string): string {
     .replace(/([A-Z])/g, " $1")
     .replace(/^./, (s) => s.toUpperCase())
     .trim();
+}
+
+function EnumField({
+  name,
+  options,
+  defaultValue,
+}: {
+  name: string;
+  options: string[];
+  defaultValue: string;
+}) {
+  const [value, setValue] = useState<string>(defaultValue);
+  return (
+    <>
+      <Select value={value} onValueChange={(v) => setValue(v ?? "")}>
+        <SelectTrigger id={name} className="w-full">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map((opt) => (
+            <SelectItem key={opt} value={opt}>
+              {opt}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <input type="hidden" name={name} value={value} />
+    </>
+  );
 }
 
 export function GenericIntegrationSettingsForm({
@@ -155,22 +191,15 @@ export function GenericIntegrationSettingsForm({
             return (
               <div key={field.name} className="space-y-2">
                 <Label htmlFor={field.name}>{labelText}</Label>
-                <select
-                  id={field.name}
+                <EnumField
                   name={field.name}
+                  options={field.options}
                   defaultValue={
                     typeof existingValue === "string"
                       ? existingValue
                       : field.options[0]
                   }
-                  className="flex h-9 w-full rounded-md border border-on-surface/10 bg-surface-container px-3 py-1 text-sm text-on-surface shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
-                >
-                  {field.options.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
             );
           }

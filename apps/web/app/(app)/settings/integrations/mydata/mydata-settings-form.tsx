@@ -8,6 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   saveMyDataCredentials,
   testMyDataConnection,
   deleteMyDataCredentials,
@@ -34,6 +41,9 @@ export function MyDataSettingsForm({ credentials }: MyDataSettingsFormProps) {
     error?: string;
   } | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+  const [environment, setEnvironment] = useState<string>(
+    credentials?.environment ?? "sandbox",
+  );
 
   function handleSubmit(formData: FormData) {
     startTransition(async () => {
@@ -167,15 +177,19 @@ export function MyDataSettingsForm({ credentials }: MyDataSettingsFormProps) {
 
         <div className="space-y-2">
           <Label htmlFor="environment">{t("environment")}</Label>
-          <select
-            id="environment"
-            name="environment"
-            defaultValue={credentials?.environment ?? "sandbox"}
-            className="flex h-9 w-full rounded-md border border-on-surface/10 bg-surface-container px-3 py-1 text-sm text-on-surface shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+          <Select
+            value={environment}
+            onValueChange={(v) => setEnvironment(v ?? "")}
           >
-            <option value="sandbox">{t("sandbox")}</option>
-            <option value="production">{t("production")}</option>
-          </select>
+            <SelectTrigger id="environment" className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="sandbox">{t("sandbox")}</SelectItem>
+              <SelectItem value="production">{t("production")}</SelectItem>
+            </SelectContent>
+          </Select>
+          <input type="hidden" name="environment" value={environment} />
           <p className="text-on-surface/50 text-xs">{t("environmentHelp")}</p>
         </div>
 

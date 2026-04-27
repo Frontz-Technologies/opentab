@@ -8,6 +8,13 @@ import { FREQUENCY } from "@opentab/db/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   LineItemsBuilder,
   type LineItem,
 } from "@/components/invoicing/line-items-builder";
@@ -104,18 +111,21 @@ export function RecurringForm({
         <h2 className="font-headline text-lg font-semibold text-on-surface">
           {t("client")}
         </h2>
-        <select
-          value={contactId}
-          onChange={(e) => setContactId(e.target.value)}
-          className="w-full rounded-lg bg-surface-container-low border border-on-surface/10 px-3 py-2 text-sm text-on-surface"
+        <Select
+          value={contactId || undefined}
+          onValueChange={(v) => setContactId(v ?? "")}
         >
-          <option value="">{t("selectClient")}</option>
-          {contacts.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.displayName}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder={t("selectClient")} />
+          </SelectTrigger>
+          <SelectContent>
+            {contacts.map((c) => (
+              <SelectItem key={c.id} value={c.id}>
+                {c.displayName}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="bg-surface-container rounded-xl p-6 space-y-4">
@@ -127,17 +137,21 @@ export function RecurringForm({
             <label className="block text-sm font-label text-on-surface/60 mb-1">
               {t("frequency")}
             </label>
-            <select
+            <Select
               value={frequency}
-              onChange={(e) => setFrequency(e.target.value)}
-              className="w-full rounded-lg bg-surface-container-low border border-on-surface/10 px-3 py-2 text-sm text-on-surface"
+              onValueChange={(v) => setFrequency(v ?? "")}
             >
-              {frequencyOptions.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {frequencyOptions.map((opt) => (
+                  <SelectItem key={opt.value} value={String(opt.value)}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <label className="block text-sm font-label text-on-surface/60 mb-1">

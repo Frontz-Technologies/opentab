@@ -7,6 +7,13 @@ import type { Contact, Product } from "@opentab/db/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -152,11 +159,12 @@ export function InvoiceForm({
           {t("client")} <span className="text-tertiary">*</span>
         </h2>
         <div className="flex items-stretch gap-2">
-          <select
-            value={contactId}
-            onChange={(e) => {
-              setContactId(e.target.value);
-              const contact = allContacts.find((c) => c.id === e.target.value);
+          <Select
+            value={contactId || undefined}
+            onValueChange={(v) => {
+              const next = v ?? "";
+              setContactId(next);
+              const contact = allContacts.find((c) => c.id === next);
               if (contact?.defaultCurrency)
                 setCurrencyCode(contact.defaultCurrency);
               if (contact?.defaultPaymentTerms) {
@@ -165,15 +173,18 @@ export function InvoiceForm({
                 setDueDate(due.toISOString().split("T")[0]);
               }
             }}
-            className="flex-1 min-w-0 rounded-lg bg-surface-container-low border border-on-surface/10 px-3 py-2 text-sm text-on-surface"
           >
-            <option value="">{t("selectClient")}</option>
-            {allContacts.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.displayName}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="flex-1 min-w-0">
+              <SelectValue placeholder={t("selectClient")} />
+            </SelectTrigger>
+            <SelectContent>
+              {allContacts.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.displayName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <button
             type="button"
             onClick={() => setShowCreateContact(true)}
@@ -202,21 +213,25 @@ export function InvoiceForm({
                   {t("contactClassification")}{" "}
                   <span className="text-tertiary">*</span>
                 </label>
-                <select
+                <Select
                   value={newContactClassification}
-                  onChange={(e) => setNewContactClassification(e.target.value)}
-                  className="w-full rounded-lg bg-surface-container-low border border-on-surface/10 px-3 py-2 text-sm text-on-surface"
+                  onValueChange={(v) => setNewContactClassification(v ?? "")}
                 >
-                  <option value="business">
-                    {t("classificationBusiness")}
-                  </option>
-                  <option value="government">
-                    {t("classificationGovernment")}
-                  </option>
-                  <option value="individual">
-                    {t("classificationIndividual")}
-                  </option>
-                </select>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="business">
+                      {t("classificationBusiness")}
+                    </SelectItem>
+                    <SelectItem value="government">
+                      {t("classificationGovernment")}
+                    </SelectItem>
+                    <SelectItem value="individual">
+                      {t("classificationIndividual")}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <label className="block text-sm font-label text-on-surface/60 mb-1">

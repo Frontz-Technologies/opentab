@@ -2,6 +2,13 @@
 
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { detectCountryFromTaxId } from "@/lib/utils";
 import { updateCompanySettings } from "./actions";
 
@@ -115,6 +122,12 @@ export function CompanyForm({ initialData }: CompanyFormProps) {
   const [detectedCountry, setDetectedCountry] = useState<string | null>(
     initialData.country || null,
   );
+  const [defaultCurrency, setDefaultCurrency] = useState<string>(
+    initialData.defaultCurrency,
+  );
+  const [fiscalYearStart, setFiscalYearStart] = useState<string>(
+    String(initialData.fiscalYearStart),
+  );
   const [toast, setToast] = useState<{
     type: "success" | "error";
     message: string;
@@ -173,40 +186,48 @@ export function CompanyForm({ initialData }: CompanyFormProps) {
               />
             </Field>
             <Field label={t("defaultCurrency")}>
-              <div className="relative">
-                <select
-                  name="defaultCurrency"
-                  className={selectClass}
-                  defaultValue={initialData.defaultCurrency}
-                >
+              <Select
+                value={defaultCurrency}
+                onValueChange={(v) => setDefaultCurrency(v ?? "")}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
                   {CURRENCIES.map((c) => (
-                    <option key={c.code} value={c.code}>
+                    <SelectItem key={c.code} value={c.code}>
                       {c.label}
-                    </option>
+                    </SelectItem>
                   ))}
-                </select>
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-base text-on-surface-variant">
-                  expand_more
-                </span>
-              </div>
+                </SelectContent>
+              </Select>
+              <input
+                type="hidden"
+                name="defaultCurrency"
+                value={defaultCurrency}
+              />
             </Field>
             <Field label={t("fiscalYearStart")}>
-              <div className="relative">
-                <select
-                  name="fiscalYearStart"
-                  className={selectClass}
-                  defaultValue={String(initialData.fiscalYearStart)}
-                >
+              <Select
+                value={fiscalYearStart}
+                onValueChange={(v) => setFiscalYearStart(v ?? "")}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
                   {MONTHS.map((month, index) => (
-                    <option key={index + 1} value={index + 1}>
+                    <SelectItem key={index + 1} value={String(index + 1)}>
                       {month}
-                    </option>
+                    </SelectItem>
                   ))}
-                </select>
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-base text-on-surface-variant">
-                  expand_more
-                </span>
-              </div>
+                </SelectContent>
+              </Select>
+              <input
+                type="hidden"
+                name="fiscalYearStart"
+                value={fiscalYearStart}
+              />
             </Field>
           </div>
         </section>
@@ -249,24 +270,26 @@ export function CompanyForm({ initialData }: CompanyFormProps) {
           <SectionHeading>{t("address")}</SectionHeading>
           <div className="grid grid-cols-1 gap-5">
             <Field label={t("country")}>
-              <div className="relative">
-                <select
-                  name="country"
-                  className={selectClass}
-                  value={detectedCountry ?? ""}
-                  onChange={(e) => setDetectedCountry(e.target.value || null)}
-                >
-                  <option value="">Select country…</option>
+              <Select
+                value={detectedCountry ?? undefined}
+                onValueChange={(v) => setDetectedCountry(v ? v : null)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select country…" />
+                </SelectTrigger>
+                <SelectContent>
                   {EU_COUNTRIES.map((c) => (
-                    <option key={c.code} value={c.code}>
+                    <SelectItem key={c.code} value={c.code}>
                       {c.name}
-                    </option>
+                    </SelectItem>
                   ))}
-                </select>
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-base text-on-surface-variant">
-                  expand_more
-                </span>
-              </div>
+                </SelectContent>
+              </Select>
+              <input
+                type="hidden"
+                name="country"
+                value={detectedCountry ?? ""}
+              />
             </Field>
             <Field label={t("addressLine1")}>
               <input

@@ -12,6 +12,15 @@ import type {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -445,26 +454,30 @@ export function ExpenseForm({
         <h2 className="font-headline text-lg font-semibold text-on-surface">
           {t("supplier")}
         </h2>
-        <select
-          value={contactId}
-          onChange={(e) => {
-            setContactId(e.target.value);
-            if (e.target.value) setSupplierName("");
-            const contact = contacts.find((c) => c.id === e.target.value);
+        <Select
+          value={contactId || undefined}
+          onValueChange={(v) => {
+            const next = v ?? "";
+            setContactId(next);
+            if (next) setSupplierName("");
+            const contact = contacts.find((c) => c.id === next);
             if (contact?.defaultCurrency)
               setCurrencyCode(contact.defaultCurrency);
           }}
-          className="w-full rounded-lg bg-surface-container-low border border-on-surface/10 px-3 py-2 text-sm text-on-surface"
         >
-          <option value="">{t("selectSupplier")}</option>
-          {contacts
-            .filter((c) => c.type === "supplier" || c.type === "both")
-            .map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.displayName}
-              </option>
-            ))}
-        </select>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder={t("selectSupplier")} />
+          </SelectTrigger>
+          <SelectContent>
+            {contacts
+              .filter((c) => c.type === "supplier" || c.type === "both")
+              .map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.displayName}
+                </SelectItem>
+              ))}
+          </SelectContent>
+        </Select>
         {!contactId && (
           <div>
             <label className="block text-sm font-label text-on-surface/60 mb-1">
@@ -488,27 +501,30 @@ export function ExpenseForm({
             <label className="block text-sm font-label text-on-surface/60 mb-1">
               {t("category")}
             </label>
-            <select
-              value={categoryId}
-              onChange={(e) => handleCategoryChange(e.target.value)}
-              className="w-full rounded-lg bg-surface-container-low border border-on-surface/10 px-3 py-2 text-sm text-on-surface"
+            <Select
+              value={categoryId || undefined}
+              onValueChange={(v) => handleCategoryChange(v ?? "")}
             >
-              <option value="">{t("selectCategory")}</option>
-              {groupedCategories
-                .filter((g) => g.items.length > 0)
-                .map((g) => (
-                  <optgroup
-                    key={g.group.code}
-                    label={`${GROUP_TYPE_MARKER[g.group.type]} ${groupNameForLocale(g.group)}`}
-                  >
-                    {g.items.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-            </select>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder={t("selectCategory")} />
+              </SelectTrigger>
+              <SelectContent>
+                {groupedCategories
+                  .filter((g) => g.items.length > 0)
+                  .map((g) => (
+                    <SelectGroup key={g.group.code}>
+                      <SelectLabel>
+                        {`${GROUP_TYPE_MARKER[g.group.type]} ${groupNameForLocale(g.group)}`}
+                      </SelectLabel>
+                      {g.items.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  ))}
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <label className="block text-sm font-label text-on-surface/60 mb-1">

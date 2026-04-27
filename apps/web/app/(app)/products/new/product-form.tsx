@@ -5,13 +5,17 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import type { Product } from "@opentab/db/schema";
 import type { VatRate } from "@/lib/country";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { createProduct, updateProduct } from "../actions";
 
 const inputClass =
   "w-full bg-surface-container-lowest border-none rounded-xl px-4 h-12 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:bg-surface-container-high transition-colors";
-
-const selectClass =
-  "w-full bg-surface-container-lowest border-none rounded-xl px-4 h-12 text-sm text-on-surface focus:outline-none focus:bg-surface-container-high transition-colors appearance-none cursor-pointer";
 
 interface FieldProps {
   label: string;
@@ -55,6 +59,11 @@ export function ProductForm({ product, vatRates }: ProductFormProps) {
     type: "success" | "error";
     message: string;
   } | null>(null);
+  const [unit, setUnit] = useState<string>(product?.unit ?? "item");
+  const [taxCategory, setTaxCategory] = useState<string>(
+    product?.taxCategory ?? "standard",
+  );
+  const [vatRate, setVatRate] = useState<string>(product?.vatRate ?? "");
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -144,23 +153,20 @@ export function ProductForm({ product, vatRates }: ProductFormProps) {
               />
             </Field>
             <Field label={t("unit")}>
-              <div className="relative">
-                <select
-                  name="unit"
-                  className={selectClass}
-                  defaultValue={product?.unit ?? "item"}
-                >
-                  <option value="item">{t("unitItem")}</option>
-                  <option value="hour">{t("unitHour")}</option>
-                  <option value="day">{t("unitDay")}</option>
-                  <option value="service">{t("unitService")}</option>
-                  <option value="kg">{t("unitKg")}</option>
-                  <option value="unit">{t("unitUnit")}</option>
-                </select>
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-base text-on-surface-variant">
-                  expand_more
-                </span>
-              </div>
+              <Select value={unit} onValueChange={(v) => setUnit(v ?? "")}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="item">{t("unitItem")}</SelectItem>
+                  <SelectItem value="hour">{t("unitHour")}</SelectItem>
+                  <SelectItem value="day">{t("unitDay")}</SelectItem>
+                  <SelectItem value="service">{t("unitService")}</SelectItem>
+                  <SelectItem value="kg">{t("unitKg")}</SelectItem>
+                  <SelectItem value="unit">{t("unitUnit")}</SelectItem>
+                </SelectContent>
+              </Select>
+              <input type="hidden" name="unit" value={unit} />
             </Field>
           </div>
         </section>
@@ -170,44 +176,47 @@ export function ProductForm({ product, vatRates }: ProductFormProps) {
           <SectionHeading>{t("taxCategory")}</SectionHeading>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <Field label={t("taxCategory")}>
-              <div className="relative">
-                <select
-                  name="taxCategory"
-                  className={selectClass}
-                  defaultValue={product?.taxCategory ?? "standard"}
-                >
-                  <option value="standard">{t("taxStandard")}</option>
-                  <option value="reduced">{t("taxReduced")}</option>
-                  <option value="super_reduced">{t("taxSuperReduced")}</option>
-                  <option value="zero_rated">{t("taxZeroRated")}</option>
-                  <option value="exempt">{t("taxExempt")}</option>
-                  <option value="reverse_charge">
+              <Select
+                value={taxCategory}
+                onValueChange={(v) => setTaxCategory(v ?? "")}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="standard">{t("taxStandard")}</SelectItem>
+                  <SelectItem value="reduced">{t("taxReduced")}</SelectItem>
+                  <SelectItem value="super_reduced">
+                    {t("taxSuperReduced")}
+                  </SelectItem>
+                  <SelectItem value="zero_rated">
+                    {t("taxZeroRated")}
+                  </SelectItem>
+                  <SelectItem value="exempt">{t("taxExempt")}</SelectItem>
+                  <SelectItem value="reverse_charge">
                     {t("taxReverseCharge")}
-                  </option>
-                </select>
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-base text-on-surface-variant">
-                  expand_more
-                </span>
-              </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <input type="hidden" name="taxCategory" value={taxCategory} />
             </Field>
             <Field label={t("vatRate")} hint={t("vatRateHelp")}>
-              <div className="relative">
-                <select
-                  name="vatRate"
-                  className={selectClass}
-                  defaultValue={product?.vatRate ?? ""}
-                >
-                  <option value="">---</option>
+              <Select
+                value={vatRate || undefined}
+                onValueChange={(v) => setVatRate(v ?? "")}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="---" />
+                </SelectTrigger>
+                <SelectContent>
                   {vatRates.map((vr) => (
-                    <option key={vr.rate} value={vr.rate}>
+                    <SelectItem key={vr.rate} value={vr.rate}>
                       {vr.label}
-                    </option>
+                    </SelectItem>
                   ))}
-                </select>
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-base text-on-surface-variant">
-                  expand_more
-                </span>
-              </div>
+                </SelectContent>
+              </Select>
+              <input type="hidden" name="vatRate" value={vatRate} />
             </Field>
           </div>
         </section>

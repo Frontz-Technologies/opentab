@@ -5,13 +5,17 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import type { Contact } from "@opentab/db/schema";
 import type { VatRate, TaxOffice } from "@/lib/country";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { createContact, updateContact, lookupVat } from "../actions";
 
 const inputClass =
   "w-full bg-surface-container-lowest border-none rounded-xl px-4 h-12 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:bg-surface-container-high transition-colors";
-
-const selectClass =
-  "w-full bg-surface-container-lowest border-none rounded-xl px-4 h-12 text-sm text-on-surface focus:outline-none focus:bg-surface-container-high transition-colors appearance-none cursor-pointer";
 
 interface FieldProps {
   label: string;
@@ -75,6 +79,16 @@ export function ContactForm({
   const [city, setCity] = useState(contact?.city ?? "");
   const [postalCode, setPostalCode] = useState(contact?.postalCode ?? "");
   const [taxOffice, setTaxOffice] = useState(contact?.taxOffice ?? "");
+  const [type, setType] = useState<string>(contact?.type ?? "client");
+  const [classification, setClassification] = useState<string>(
+    contact?.classification ?? "business",
+  );
+  const [defaultCurrency, setDefaultCurrency] = useState<string>(
+    contact?.defaultCurrency ?? "",
+  );
+  const [defaultLanguage, setDefaultLanguage] = useState<string>(
+    contact?.defaultLanguage ?? "",
+  );
 
   async function handleLookup() {
     if (!vatValue.trim()) return;
@@ -148,42 +162,43 @@ export function ContactForm({
           <SectionHeading>{t("type")}</SectionHeading>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <Field label={t("type")} required>
-              <div className="relative">
-                <select
-                  name="type"
-                  className={selectClass}
-                  defaultValue={contact?.type ?? "client"}
-                >
-                  <option value="client">{t("typeClient")}</option>
-                  <option value="supplier">{t("typeSupplier")}</option>
-                  <option value="both">{t("typeBoth")}</option>
-                </select>
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-base text-on-surface-variant">
-                  expand_more
-                </span>
-              </div>
+              <Select value={type} onValueChange={(v) => setType(v ?? "")}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="client">{t("typeClient")}</SelectItem>
+                  <SelectItem value="supplier">{t("typeSupplier")}</SelectItem>
+                  <SelectItem value="both">{t("typeBoth")}</SelectItem>
+                </SelectContent>
+              </Select>
+              <input type="hidden" name="type" value={type} />
             </Field>
             <Field label={t("classification")}>
-              <div className="relative">
-                <select
-                  name="classification"
-                  className={selectClass}
-                  defaultValue={contact?.classification ?? "business"}
-                >
-                  <option value="individual">
+              <Select
+                value={classification}
+                onValueChange={(v) => setClassification(v ?? "")}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="individual">
                     {t("classificationIndividual")}
-                  </option>
-                  <option value="business">
+                  </SelectItem>
+                  <SelectItem value="business">
                     {t("classificationBusiness")}
-                  </option>
-                  <option value="government">
+                  </SelectItem>
+                  <SelectItem value="government">
                     {t("classificationGovernment")}
-                  </option>
-                </select>
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-base text-on-surface-variant">
-                  expand_more
-                </span>
-              </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <input
+                type="hidden"
+                name="classification"
+                value={classification}
+              />
             </Field>
           </div>
         </section>
@@ -278,24 +293,22 @@ export function ContactForm({
             />
             {capabilities.taxOfficeList && taxOffices && (
               <Field label={t("taxOffice")}>
-                <div className="relative">
-                  <select
-                    name="taxOffice"
-                    className={selectClass}
-                    value={taxOffice}
-                    onChange={(e) => setTaxOffice(e.target.value)}
-                  >
-                    <option value="">---</option>
+                <Select
+                  value={taxOffice || undefined}
+                  onValueChange={(v) => setTaxOffice(v ?? "")}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="---" />
+                  </SelectTrigger>
+                  <SelectContent>
                     {taxOffices.map((to) => (
-                      <option key={to.code} value={to.name}>
+                      <SelectItem key={to.code} value={to.name}>
                         {to.name}
-                      </option>
+                      </SelectItem>
                     ))}
-                  </select>
-                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-base text-on-surface-variant">
-                    expand_more
-                  </span>
-                </div>
+                  </SelectContent>
+                </Select>
+                <input type="hidden" name="taxOffice" value={taxOffice} />
               </Field>
             )}
           </div>
@@ -363,39 +376,45 @@ export function ContactForm({
           <SectionHeading>{t("defaults")}</SectionHeading>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             <Field label={t("defaultCurrency")}>
-              <div className="relative">
-                <select
-                  name="defaultCurrency"
-                  className={selectClass}
-                  defaultValue={contact?.defaultCurrency ?? ""}
-                >
-                  <option value="">---</option>
-                  <option value="EUR">Euro (EUR)</option>
-                  <option value="USD">US Dollar (USD)</option>
-                  <option value="GBP">British Pound (GBP)</option>
-                </select>
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-base text-on-surface-variant">
-                  expand_more
-                </span>
-              </div>
+              <Select
+                value={defaultCurrency || undefined}
+                onValueChange={(v) => setDefaultCurrency(v ?? "")}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="---" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="EUR">Euro (EUR)</SelectItem>
+                  <SelectItem value="USD">US Dollar (USD)</SelectItem>
+                  <SelectItem value="GBP">British Pound (GBP)</SelectItem>
+                </SelectContent>
+              </Select>
+              <input
+                type="hidden"
+                name="defaultCurrency"
+                value={defaultCurrency}
+              />
             </Field>
             <Field label={t("defaultLanguage")}>
-              <div className="relative">
-                <select
-                  name="defaultLanguage"
-                  className={selectClass}
-                  defaultValue={contact?.defaultLanguage ?? ""}
-                >
-                  <option value="">---</option>
-                  <option value="en">English</option>
-                  <option value="el">Greek</option>
-                  <option value="de">German</option>
-                  <option value="fr">French</option>
-                </select>
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-base text-on-surface-variant">
-                  expand_more
-                </span>
-              </div>
+              <Select
+                value={defaultLanguage || undefined}
+                onValueChange={(v) => setDefaultLanguage(v ?? "")}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="---" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="en">English</SelectItem>
+                  <SelectItem value="el">Greek</SelectItem>
+                  <SelectItem value="de">German</SelectItem>
+                  <SelectItem value="fr">French</SelectItem>
+                </SelectContent>
+              </Select>
+              <input
+                type="hidden"
+                name="defaultLanguage"
+                value={defaultLanguage}
+              />
             </Field>
             <Field label={t("defaultPaymentTerms")}>
               <input

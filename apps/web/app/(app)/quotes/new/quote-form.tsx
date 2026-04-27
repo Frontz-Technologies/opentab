@@ -7,6 +7,13 @@ import type { Contact, Product } from "@opentab/db/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   LineItemsBuilder,
   type LineItem,
 } from "@/components/invoicing/line-items-builder";
@@ -102,23 +109,27 @@ export function QuoteForm({
         <h2 className="font-headline text-lg font-semibold text-on-surface">
           {t("client")} <span className="text-tertiary">*</span>
         </h2>
-        <select
-          value={contactId}
-          onChange={(e) => {
-            setContactId(e.target.value);
-            const contact = contacts.find((c) => c.id === e.target.value);
+        <Select
+          value={contactId || undefined}
+          onValueChange={(v) => {
+            const next = v ?? "";
+            setContactId(next);
+            const contact = contacts.find((c) => c.id === next);
             if (contact?.defaultCurrency)
               setCurrencyCode(contact.defaultCurrency);
           }}
-          className="w-full rounded-lg bg-surface-container-low border border-on-surface/10 px-3 py-2 text-sm text-on-surface"
         >
-          <option value="">{t("selectClient")}</option>
-          {contacts.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.displayName}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder={t("selectClient")} />
+          </SelectTrigger>
+          <SelectContent>
+            {contacts.map((c) => (
+              <SelectItem key={c.id} value={c.id}>
+                {c.displayName}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="bg-surface-container rounded-xl p-6 space-y-4">

@@ -5,6 +5,13 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { renderInvoiceNumberPattern } from "@/lib/invoicing/numbering";
 import { updateInvoiceNumbering } from "./actions";
 
@@ -83,18 +90,24 @@ export function NumberingForm({ initial }: { initial: InitialState }) {
           <label className="block text-sm font-label text-on-surface mb-1">
             {t("digitCount")}
           </label>
-          <select
-            className="bg-surface-container-lowest text-on-surface rounded-lg px-3 h-10 w-32"
-            value={digitCount}
-            onChange={(e) => setDigitCount(Number(e.target.value))}
+          <Select
+            value={String(digitCount)}
+            onValueChange={(v) => {
+              if (v) setDigitCount(Number(v));
+            }}
             disabled={pattern.length > 0}
           >
-            {[3, 4, 5, 6].map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {[3, 4, 5, 6].map((n) => (
+                <SelectItem key={n} value={String(n)}>
+                  {n}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <p className="text-xs text-on-surface-variant mt-1">
             {t("digitCountHelp")}
           </p>
