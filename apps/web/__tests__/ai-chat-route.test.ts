@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const getSessionMock = vi.fn();
 const getAiSettingsSecretMock = vi.fn();
+const isAiChatEnabledMock = vi.fn();
 const createAiProviderMock = vi.fn();
 const createToolsMock = vi.fn();
 const convertToModelMessagesMock = vi.fn();
@@ -15,6 +16,7 @@ vi.mock("@/lib/session", () => ({
 
 vi.mock("@/lib/actions/ai-settings", () => ({
   getAiSettingsSecret: getAiSettingsSecretMock,
+  isAiChatEnabled: isAiChatEnabledMock,
 }));
 
 vi.mock("@/lib/ai/provider", () => ({
@@ -53,6 +55,10 @@ describe("POST /api/ai/chat", () => {
     streamTextMock.mockReturnValue({
       toUIMessageStreamResponse: () => new Response("ok"),
     });
+    // Default the master toggle to enabled so secret-resolution tests
+    // exercise their own paths. The "returns 400 when chat is disabled"
+    // case overrides this.
+    isAiChatEnabledMock.mockResolvedValue(true);
   });
 
   it("returns 401 when there is no session", async () => {
@@ -67,6 +73,47 @@ describe("POST /api/ai/chat", () => {
     );
 
     expect(response.status).toBe(401);
+  });
+
+  it("returns 400 when the master AI toggle is off", async () => {
+    getSessionMock.mockResolvedValue({
+      user: {
+        id: "user-1",
+        name: "Alex",
+        email: "alex@example.com",
+        locale: "en",
+      },
+      org: {
+        id: "org-1",
+        name: "OpenTab",
+        slug: "opentab",
+        countryCode: "GR",
+        defaultCurrency: "EUR",
+        fiscalYearStart: 1,
+        taxId: null,
+        taxAuthority: null,
+        addressLine1: null,
+        addressLine2: null,
+        city: null,
+        postalCode: null,
+        region: null,
+        phone: null,
+        setupCompletedSteps: [],
+      },
+      role: "owner",
+    });
+    isAiChatEnabledMock.mockResolvedValue(false);
+
+    const { POST } = await import("@/app/api/ai/chat/route");
+    const response = await POST(
+      new Request("http://localhost/api/ai/chat", {
+        method: "POST",
+        body: JSON.stringify({ messages: [{ role: "user", content: "hi" }] }),
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    expect(getAiSettingsSecretMock).not.toHaveBeenCalled();
   });
 
   it("returns 400 when AI is not configured", async () => {

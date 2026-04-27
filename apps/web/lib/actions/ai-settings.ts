@@ -14,6 +14,20 @@ import { getFeatureModel, type AiFeature } from "@/lib/ai/features";
 
 const log = createLogger("ai-settings");
 
+// One-shot boot warning for operators upgrading from the pre-#246 env
+// surface. The old `OPENROUTER_MODEL` knob is no longer read — point
+// them at the per-feature replacement so they don't sit confused with
+// a stale env var that silently does nothing.
+if (
+  process.env.OPENROUTER_MODEL &&
+  !process.env.AI_MODEL_CHAT &&
+  !process.env.AI_MODEL_EXTRACTION
+) {
+  log.warn(
+    "OPENROUTER_MODEL is no longer read; use AI_MODEL_CHAT or AI_MODEL_EXTRACTION (or set per-org models in /settings/integrations/ai)",
+  );
+}
+
 const updateAiSettingsSchema = z.object({
   enabled: z.boolean(),
   chatModel: z.string().min(1).max(100).nullable(),
@@ -307,4 +321,18 @@ export async function isReceiptExtractionEnabled(
     Boolean(settings.apiKeyEncrypted) &&
     settings.receiptExtractionEnabled
   );
+}
+
+// Mirrors `isReceiptExtractionEnabled` so the chat route gates on the
+// same master "Enable AI assistant" toggle that the extraction surface
+// honours. Without this, unchecking the toggle leaves chat working —
+// confusing operators since the label promises to disable AI.
+// `OPENROUTER_API_KEY` from env wins over the toggle (deployment-level
+// configuration overrides per-org choices, same as extraction).
+export async function isAiChatEnabled(orgId: string): Promise<boolean> {
+  if (process.env.OPENROUTER_API_KEY) return true;
+
+  const settings = await getAiSettingsRow(orgId);
+  if (!settings) return false;
+  return settings.enabled && Boolean(settings.apiKeyEncrypted);
 }
