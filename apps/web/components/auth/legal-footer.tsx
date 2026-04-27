@@ -4,15 +4,16 @@
 // self-hosters who haven't deployed legal pages don't get dead links
 // that 404.
 //
-// Reads server-side env vars (LEGAL_TERMS_URL, LEGAL_PRIVACY_URL) so
-// they don't need to be exposed via NEXT_PUBLIC_* and don't get baked
-// into the client bundle at build time.
+// URLs come from `getLegalUrls()` (lib/config/legal.ts), which reads
+// server-side env vars and validates them as http(s) — non-conforming
+// values (e.g. an accidentally-pasted `javascript:` URL) get dropped
+// before they ever land in an `<a href>`.
 
 import { getTranslations } from "next-intl/server";
+import { getLegalUrls } from "@/lib/config/legal";
 
 export async function LegalFooter() {
-  const termsUrl = process.env.LEGAL_TERMS_URL;
-  const privacyUrl = process.env.LEGAL_PRIVACY_URL;
+  const { termsUrl, privacyUrl } = getLegalUrls();
 
   if (!termsUrl && !privacyUrl) return null;
 
