@@ -19,6 +19,11 @@ import { createLogger } from "@/lib/logging/logger";
 import { getImporter } from "@/lib/import/importers";
 import { runImport } from "@/lib/import/core/runner";
 import { validateRows } from "@/lib/import/core/validator";
+import {
+  getAiColumnMatches,
+  type AiSuggestion,
+} from "@/lib/import/core/ai-match";
+import { getAiSettingsSecret } from "@/lib/actions/ai-settings";
 import { computeIdempotencyKey } from "@/lib/import/core/idempotency";
 import { groupRowsByInvoice } from "@/lib/import/importers/invoices";
 import { groupRowsByCreditNote } from "@/lib/import/importers/credit-notes";
@@ -545,4 +550,38 @@ export async function getSampleCsv(entityKey: string): Promise<string> {
     .filter((f) => !f.required)
     .map((f) => f.name);
   return [...required, ...optional].join(",") + "\n";
+}
+
+export interface AiSuggestionsInput {
+  unmappedHeaders: string[];
+  // Pre-trimmed by the client via `buildSamplesByHeader` from
+  // `lib/import/core/ai-match.ts`. Sending only samples (≤ 3 × 32
+  // chars per header) keeps the RSC payload bounded for large CSVs.
+  samplesByHeader: Record<string, string[]>;
+}
+
+export async function getAiSuggestions(
+  entityKey: string,
+  input: AiSuggestionsInput,
+): Promise<AiSuggestion[]> {
+  const session = await getSession();
+  if (!session) return [];
+  if (session.role !== "owner" && session.role !== "admin") return [];
+
+  const importer = getImporter(entityKey);
+  if (!importer) return [];
+
+  const aiSecrets = await getAiSettingsSecret(session.org.id);
+  if (!aiSecrets?.apiKey) return [];
+
+  return getAiColumnMatches({
+    apiKey: aiSecrets.apiKey,
+    entityKey,
+    fields: importer.fields.map((f) => ({
+      name: f.name,
+      required: f.required,
+    })),
+    unmappedHeaders: input.unmappedHeaders,
+    samplesByHeader: input.samplesByHeader,
+  });
 }
