@@ -1,11 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-const { generateObjectMock, isFeatureEnabledMock, getFeatureModelMock } =
-  vi.hoisted(() => ({
-    generateObjectMock: vi.fn(),
-    isFeatureEnabledMock: vi.fn(),
-    getFeatureModelMock: vi.fn(),
-  }));
+const { generateObjectMock, isFeatureEnabledMock } = vi.hoisted(() => ({
+  generateObjectMock: vi.fn(),
+  isFeatureEnabledMock: vi.fn(),
+}));
 
 vi.mock("ai", () => ({
   generateObject: generateObjectMock,
@@ -13,7 +11,6 @@ vi.mock("ai", () => ({
 
 vi.mock("@/lib/ai/features", () => ({
   isFeatureEnabled: isFeatureEnabledMock,
-  getFeatureModel: getFeatureModelMock,
 }));
 
 vi.mock("@/lib/ai/provider", () => ({
@@ -34,6 +31,7 @@ const INVOICES_FIELDS = [
 
 const FIXED_INPUT = {
   apiKey: "sk-test",
+  model: "openai/gpt-4o",
   entityKey: "invoices",
   fields: INVOICES_FIELDS,
   unmappedHeaders: ["#"],
@@ -43,7 +41,6 @@ const FIXED_INPUT = {
 beforeEach(() => {
   generateObjectMock.mockReset();
   isFeatureEnabledMock.mockReturnValue(true);
-  getFeatureModelMock.mockReturnValue("openai/gpt-4o");
 });
 
 afterEach(() => {

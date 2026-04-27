@@ -33,8 +33,8 @@ export async function POST(req: Request): Promise<Response> {
 
   const orgId = session.org.id;
 
-  const settings = await getAiSettingsSecret(orgId);
-  if (!settings?.enabled || !settings.apiKey) {
+  const settings = await getAiSettingsSecret(orgId, "chat");
+  if (!settings) {
     log.warn("AI chat request with no config", { orgId });
     return new Response("AI not configured", { status: 400 });
   }

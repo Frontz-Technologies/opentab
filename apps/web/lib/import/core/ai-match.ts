@@ -1,6 +1,6 @@
 import { generateObject } from "ai";
 import { z } from "zod";
-import { isFeatureEnabled, getFeatureModel } from "@/lib/ai/features";
+import { isFeatureEnabled } from "@/lib/ai/features";
 import { createAiProvider } from "@/lib/ai/provider";
 import { createLogger } from "@/lib/logging/logger";
 
@@ -26,6 +26,7 @@ export interface AiSuggestion {
 
 export interface AiMatchInput {
   apiKey: string;
+  model: string;
   entityKey: string;
   fields: { name: string; required: boolean }[];
   unmappedHeaders: string[];
@@ -74,11 +75,10 @@ export function buildSamplesByHeader(
   return out;
 }
 
-// Reuse `getFeatureModel("extraction")` rather than the per-org
-// `getAiSettingsSecret(orgId).model`. Mirrors `lib/expenses/ai-extraction.ts`
-// — env is the global default, the per-org record only carries the
-// encrypted API key. Kept consistent so future tooling that lists
-// "AI features" sees one model knob across both extraction surfaces.
+// Caller (the import server action) resolves apiKey + model via
+// `getAiSettingsSecret(orgId, "extraction")` and passes both. Keeping
+// the model in the input means a single resolution path covers env
+// override + per-org DB fallback consistently.
 export async function getAiColumnMatches(
   input: AiMatchInput,
 ): Promise<AiSuggestion[]> {
@@ -101,8 +101,7 @@ export async function getAiColumnMatches(
   };
 
   try {
-    const model = getFeatureModel("extraction");
-    const provider = createAiProvider(input.apiKey, model);
+    const provider = createAiProvider(input.apiKey, input.model);
     const { object } = await generateObject({
       model: provider,
       schema: matchSchema,
