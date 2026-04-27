@@ -189,6 +189,21 @@ services:
       DEFAULT_FROM_EMAIL: ${EMAIL_FROM_ADDRESS}
       GLITCHTIP_DOMAIN: ${GLITCHTIP_URL}
       ENABLE_USER_REGISTRATION: "false"
+    # GlitchTip's image ships no curl/wget but Python is always present
+    # (it's a Django app). We probe localhost:8000 with stdlib urllib so
+    # Coolify's Traefik can flip the resource to healthy on the first
+    # successful response. start_period 60s covers Django + Celery worker
+    # + beat cold start; HEALTHCHECK becomes authoritative after that.
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python3 -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/', timeout=5).status < 500 else 1)\"",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
     depends_on:
       db:
         condition: service_healthy
