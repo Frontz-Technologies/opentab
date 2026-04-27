@@ -19,10 +19,12 @@ test.describe("Dashboard KPIs", () => {
     await page.close();
   });
 
-  test("dashboard page renders with heading", async () => {
+  test("dashboard page renders with time-based greeting", async () => {
     await page.goto("/dashboard");
+    // The hero h1 is "Good morning/afternoon/evening, {firstName}".
+    // Match the greeting pattern without pinning to a specific time.
     await expect(
-      page.getByRole("heading", { name: "Dashboard" }),
+      page.getByRole("heading", { name: /^Good (morning|afternoon|evening),/ }),
     ).toBeVisible();
   });
 

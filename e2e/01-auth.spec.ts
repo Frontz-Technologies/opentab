@@ -103,7 +103,7 @@ test.describe("Authentication", () => {
     await page.getByRole("button", { name: "Create account" }).click();
     await page.waitForURL("**/dashboard", { timeout: 15000 });
     await expect(
-      page.getByRole("heading", { name: "Dashboard" }),
+      page.getByRole("heading", { name: /^Good (morning|afternoon|evening),/ }),
     ).toBeVisible();
   });
 
@@ -142,7 +142,7 @@ test.describe("Authentication", () => {
     await page.getByRole("button", { name: "Sign in" }).click();
     await page.waitForURL("**/dashboard");
     await expect(
-      page.getByRole("heading", { name: "Dashboard" }),
+      page.getByRole("heading", { name: /^Good (morning|afternoon|evening),/ }),
     ).toBeVisible();
   });
 

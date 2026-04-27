@@ -64,12 +64,9 @@ export async function loginTestUser(page: Page): Promise<void> {
 
   // Use URL stability as the post-auth marker rather than a heading
   // assertion. Middleware redirects unauthenticated requests to /login,
-  // so staying on /dashboard proves the session is live. This avoids
-  // the strict-mode `getByRole("heading", { name: "Dashboard" })`
-  // ambiguity when a page renders more than one <h1>/<h2> with that
-  // text — the dashboard currently does two (PageHeader + body hero),
-  // and more broadly the helper should not be coupled to any
-  // page-specific heading copy. See #178.
+  // so staying on /dashboard proves the session is live. The dashboard
+  // hero is a time-based greeting ("Good morning, {name}"), so coupling
+  // helpers to a specific heading string would be brittle.
   await expect(page).toHaveURL(/\/dashboard(?:[/?#]|$)/, { timeout: 10000 });
 }
 

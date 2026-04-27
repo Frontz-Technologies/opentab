@@ -50,7 +50,7 @@ test.describe("Demo mode happy path", () => {
     // first compile is another ~10–15 s on cold dev.
     await page.waitForURL("**/dashboard", { timeout: 60_000 });
     await expect(
-      page.getByRole("heading", { name: "Dashboard" }),
+      page.getByRole("heading", { name: /^Good (morning|afternoon|evening),/ }),
     ).toBeVisible();
 
     // Dashboard KPI cards must not overflow their grid with realistic totals.
