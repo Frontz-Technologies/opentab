@@ -709,6 +709,8 @@ export function ExpenseForm({
           products={[]}
           defaultTaxRate={defaultTaxRate}
           usesInclusiveTax={usesInclusiveTax}
+          previewIds={previewLineItems}
+          onItemEdit={handleExitItemPreview}
         />
       </div>
 
