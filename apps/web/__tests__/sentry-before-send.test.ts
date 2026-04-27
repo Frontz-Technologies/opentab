@@ -99,9 +99,12 @@ describe("beforeSend", () => {
     // would have wrongly dropped any path embedding "/api/healthz".
     const event = fakeEvent("https://app.opentab.tech/foo/api/healthz/bar");
     expect(
-      beforeSend(event as never, {
-        originalException: new TypeError("real bug here"),
-      } as never),
+      beforeSend(
+        event as never,
+        {
+          originalException: new TypeError("real bug here"),
+        } as never,
+      ),
     ).toBe(event);
   });
 });

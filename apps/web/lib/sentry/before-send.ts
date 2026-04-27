@@ -41,9 +41,7 @@ export function beforeSend(
 ): ErrorEvent | null {
   const rawUrl = event.request?.url ?? "";
   const pathname = pathnameOf(rawUrl);
-  if (
-    DROPPED_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix))
-  ) {
+  if (DROPPED_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
     return null;
   }
 
