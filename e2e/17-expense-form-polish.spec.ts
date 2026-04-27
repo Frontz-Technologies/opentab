@@ -68,13 +68,12 @@ test.describe("Expense form polish (#252)", () => {
     );
   });
 
-  // Receipt-extraction inline preview state (#253). Skipped until the
-  // test environment has a fixture receipt PDF + a working AI extraction
-  // backend (or a Playwright route mock for the Server Action). The
-  // state-transition logic is fully covered by the Vitest suite at
+  // Receipt-extraction inline preview state (#253). Skipped — tracked in #256.
+  // Unblock requires either e2e/fixtures/sample-receipt.pdf + Gemini key in
+  // the e2e dev-server stack, or a page.route() mock for the upload Server
+  // Action returning a canned UploadReceiptResult. State-transition logic
+  // is fully covered by the Vitest suite at
   // apps/web/__tests__/extraction-preview-state.test.ts (13 tests).
-  // When un-skipping, ensure e2e/fixtures/sample-receipt.pdf exists and
-  // env has GEMINI / OPENAI keys configured for the dev server.
 
   test.skip("Apply commits the AI receipt-extraction preview", async () => {
     await page.goto("/expenses/new");
