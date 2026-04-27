@@ -6,6 +6,12 @@ import { and, eq, inArray } from "drizzle-orm";
 import { getSession } from "@/lib/session";
 import { db } from "@/lib/db";
 import {
+  storeImportTempFile,
+  getImportTempFile,
+  deleteTempFile,
+} from "@/lib/expenses/file-storage";
+import { parseCsv } from "@/lib/import/core/parser";
+import {
   contacts,
   expenses,
   invoices,
@@ -45,6 +51,58 @@ function ensureOwnerOrAdmin(role: string | undefined) {
   if (role !== "owner" && role !== "admin") {
     throw new Error("Forbidden");
   }
+}
+
+export interface ParsedSummary {
+  importId: string;
+  headers: string[];
+  rowCount: number;
+  sample: Record<string, string>[];
+}
+
+const SAMPLE_ROW_CAP = 50;
+
+export async function uploadImportCsv(
+  formData: FormData,
+): Promise<{ ok: true; parsed: ParsedSummary } | { ok: false; error: string }> {
+  const session = await getSession();
+  if (!session) return { ok: false, error: "Unauthorized" };
+  try {
+    ensureOwnerOrAdmin(session.role);
+  } catch {
+    return { ok: false, error: "Forbidden" };
+  }
+
+  const file = formData.get("file");
+  if (!(file instanceof Blob)) {
+    return { ok: false, error: "No file supplied" };
+  }
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const originalName = file instanceof File ? file.name : "import.csv";
+
+  let parsed;
+  try {
+    parsed = await parseCsv(buffer);
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Failed to parse CSV",
+    };
+  }
+
+  const importId = `tmp_${randomUUID()}`;
+  await storeImportTempFile(session.org.id, importId, buffer, originalName);
+
+  return {
+    ok: true,
+    parsed: {
+      importId,
+      headers: parsed.headers,
+      rowCount: parsed.rows.length,
+      sample: parsed.rows.slice(0, SAMPLE_ROW_CAP),
+    },
+  };
 }
 
 const TABLE_BY_ENTITY: Record<string, PgTable> = {
