@@ -49,12 +49,13 @@ export default async function QuotesPage({
         actions={
           <Link
             href="/quotes/new"
-            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-primary text-on-primary font-medium text-sm hover:bg-primary/80 transition-colors"
+            aria-label={t("addQuote")}
+            className="inline-flex items-center gap-1.5 h-8 px-2 sm:px-3 rounded-lg bg-primary text-on-primary font-medium text-sm hover:bg-primary/80 transition-colors"
           >
             <span className="material-symbols-outlined text-[18px] leading-none">
               add
             </span>
-            {t("addQuote")}
+            <span className="hidden sm:inline">{t("addQuote")}</span>
           </Link>
         }
       />

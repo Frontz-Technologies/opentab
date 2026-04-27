@@ -49,12 +49,13 @@ export default async function ProductsPage({
         actions={
           <Link
             href="/products/new"
-            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-primary text-on-primary font-medium text-sm hover:bg-primary/80 transition-colors"
+            aria-label={t("addProduct")}
+            className="inline-flex items-center gap-1.5 h-8 px-2 sm:px-3 rounded-lg bg-primary text-on-primary font-medium text-sm hover:bg-primary/80 transition-colors"
           >
             <span className="material-symbols-outlined text-[18px] leading-none">
               add
             </span>
-            {t("addProduct")}
+            <span className="hidden sm:inline">{t("addProduct")}</span>
           </Link>
         }
       />
