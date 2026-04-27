@@ -107,3 +107,79 @@ export function acceptExtractionPreview(input: AcceptInput): AcceptOutput {
 
   return { nextState: next, previewFields, previewLineItems, snapshot };
 }
+
+interface DiscardInput {
+  state: CurrentFormState;
+  previewFields: Set<PreviewableFieldName>;
+  previewLineItems: Set<string>;
+  snapshot: Snapshot;
+}
+
+interface DiscardOutput {
+  nextState: CurrentFormState;
+}
+
+export function discardPreview(input: DiscardInput): DiscardOutput {
+  const { state, previewFields, previewLineItems, snapshot } = input;
+  const next: CurrentFormState = { ...state };
+
+  for (const name of previewFields) {
+    if (name === "contactId" && snapshot.contactId !== undefined) {
+      next.contactId = snapshot.contactId;
+    } else if (name === "supplierName" && snapshot.supplierName !== undefined) {
+      next.supplierName = snapshot.supplierName;
+    } else if (name === "expenseDate" && snapshot.expenseDate !== undefined) {
+      next.expenseDate = snapshot.expenseDate;
+    } else if (name === "currencyCode" && snapshot.currencyCode !== undefined) {
+      next.currencyCode = snapshot.currencyCode;
+    } else if (name === "description" && snapshot.description !== undefined) {
+      next.description = snapshot.description;
+    } else if (name === "categoryId" && snapshot.categoryId !== undefined) {
+      next.categoryId = snapshot.categoryId;
+    }
+  }
+
+  if (previewLineItems.size > 0) {
+    if (snapshot.items !== undefined) {
+      next.items = snapshot.items;
+    } else {
+      next.items = state.items.filter((it) => !previewLineItems.has(it.id));
+    }
+  }
+
+  return { nextState: next };
+}
+
+interface ExitFieldInput {
+  name: PreviewableFieldName;
+  previewFields: Set<PreviewableFieldName>;
+  snapshot: Snapshot;
+}
+
+interface ExitFieldOutput {
+  previewFields: Set<PreviewableFieldName>;
+  snapshot: Snapshot;
+}
+
+export function exitFieldPreview(input: ExitFieldInput): ExitFieldOutput {
+  const previewFields = new Set(input.previewFields);
+  previewFields.delete(input.name);
+  const snapshot: Snapshot = { ...input.snapshot };
+  delete snapshot[input.name];
+  return { previewFields, snapshot };
+}
+
+interface ExitItemInput {
+  id: string;
+  previewLineItems: Set<string>;
+}
+
+interface ExitItemOutput {
+  previewLineItems: Set<string>;
+}
+
+export function exitItemPreview(input: ExitItemInput): ExitItemOutput {
+  const previewLineItems = new Set(input.previewLineItems);
+  previewLineItems.delete(input.id);
+  return { previewLineItems };
+}
