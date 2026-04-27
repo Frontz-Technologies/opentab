@@ -162,7 +162,7 @@ export function ContactForm({
           <SectionHeading>{t("type")}</SectionHeading>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <Field label={t("type")} required>
-              <Select value={type} onValueChange={(v) => setType(v ?? "")}>
+              <Select value={type} onValueChange={(v) => setType(v)}>
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
@@ -177,7 +177,7 @@ export function ContactForm({
             <Field label={t("classification")}>
               <Select
                 value={classification}
-                onValueChange={(v) => setClassification(v ?? "")}
+                onValueChange={(v) => setClassification(v)}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue />
@@ -295,7 +295,7 @@ export function ContactForm({
               <Field label={t("taxOffice")}>
                 <Select
                   value={taxOffice || undefined}
-                  onValueChange={(v) => setTaxOffice(v ?? "")}
+                  onValueChange={(v) => setTaxOffice(v)}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="---" />
@@ -378,7 +378,7 @@ export function ContactForm({
             <Field label={t("defaultCurrency")}>
               <Select
                 value={defaultCurrency || undefined}
-                onValueChange={(v) => setDefaultCurrency(v ?? "")}
+                onValueChange={(v) => setDefaultCurrency(v)}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="---" />
@@ -398,7 +398,7 @@ export function ContactForm({
             <Field label={t("defaultLanguage")}>
               <Select
                 value={defaultLanguage || undefined}
-                onValueChange={(v) => setDefaultLanguage(v ?? "")}
+                onValueChange={(v) => setDefaultLanguage(v)}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="---" />

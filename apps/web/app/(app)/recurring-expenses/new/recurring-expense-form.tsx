@@ -129,7 +129,7 @@ export function RecurringExpenseForm({
           return (
             <Select
               value={contactId || undefined}
-              onValueChange={(v) => setContactId(v ?? "")}
+              onValueChange={(v) => setContactId(v)}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder={tExp("selectSupplier")} />
@@ -164,7 +164,7 @@ export function RecurringExpenseForm({
             ) : (
               <Select
                 value={categoryId || undefined}
-                onValueChange={(v) => setCategoryId(v ?? "")}
+                onValueChange={(v) => setCategoryId(v)}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder={tExp("selectCategory")} />
@@ -190,10 +190,7 @@ export function RecurringExpenseForm({
             <label className="block text-sm font-label text-on-surface/60 mb-1">
               {t("frequency")}
             </label>
-            <Select
-              value={frequency}
-              onValueChange={(v) => setFrequency(v ?? "")}
-            >
+            <Select value={frequency} onValueChange={(v) => setFrequency(v)}>
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>

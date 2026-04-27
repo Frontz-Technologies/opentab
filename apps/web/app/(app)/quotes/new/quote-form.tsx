@@ -120,7 +120,7 @@ export function QuoteForm({
           <Select
             value={contactId || undefined}
             onValueChange={(v) => {
-              const next = v ?? "";
+              const next = v;
               setContactId(next);
               const contact = contacts.find((c) => c.id === next);
               if (contact?.defaultCurrency)

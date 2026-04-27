@@ -50,7 +50,7 @@ function EnumField({
   const [value, setValue] = useState<string>(defaultValue);
   return (
     <>
-      <Select value={value} onValueChange={(v) => setValue(v ?? "")}>
+      <Select value={value} onValueChange={(v) => setValue(v)}>
         <SelectTrigger id={name} className="w-full">
           <SelectValue />
         </SelectTrigger>

@@ -188,7 +188,7 @@ export function CompanyForm({ initialData }: CompanyFormProps) {
             <Field label={t("defaultCurrency")}>
               <Select
                 value={defaultCurrency}
-                onValueChange={(v) => setDefaultCurrency(v ?? "")}
+                onValueChange={(v) => setDefaultCurrency(v)}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue />
@@ -210,7 +210,7 @@ export function CompanyForm({ initialData }: CompanyFormProps) {
             <Field label={t("fiscalYearStart")}>
               <Select
                 value={fiscalYearStart}
-                onValueChange={(v) => setFiscalYearStart(v ?? "")}
+                onValueChange={(v) => setFiscalYearStart(v)}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue />

@@ -170,7 +170,7 @@ export function InvoiceForm({
             <Select
               value={contactId || undefined}
               onValueChange={(v) => {
-                const next = v ?? "";
+                const next = v;
                 setContactId(next);
                 const contact = allContacts.find((c) => c.id === next);
                 if (contact?.defaultCurrency)
@@ -224,7 +224,7 @@ export function InvoiceForm({
                 </label>
                 <Select
                   value={newContactClassification}
-                  onValueChange={(v) => setNewContactClassification(v ?? "")}
+                  onValueChange={(v) => setNewContactClassification(v)}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue />

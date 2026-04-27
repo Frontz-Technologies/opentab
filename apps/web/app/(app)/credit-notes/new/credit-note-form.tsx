@@ -147,7 +147,7 @@ export function CreditNoteForm({
           ) : (
             <Select
               value={contactId || undefined}
-              onValueChange={(v) => setContactId(v ?? "")}
+              onValueChange={(v) => setContactId(v)}
             >
               <SelectTrigger id="cn-contactId" className="w-full">
                 <SelectValue placeholder={t("selectClient")} />
@@ -186,7 +186,7 @@ export function CreditNoteForm({
         >
           {t("reason")}
         </label>
-        <Select value={reason} onValueChange={(v) => setReason(v ?? "")}>
+        <Select value={reason} onValueChange={(v) => setReason(v)}>
           <SelectTrigger id="cn-reason" className="w-full">
             <SelectValue />
           </SelectTrigger>

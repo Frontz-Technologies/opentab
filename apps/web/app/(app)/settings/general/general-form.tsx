@@ -54,7 +54,7 @@ export function GeneralForm({ initialData }: GeneralFormProps) {
       )}
 
       <SettingsSection title={t("language")}>
-        <Select value={locale} onValueChange={(v) => setLocale(v ?? "")}>
+        <Select value={locale} onValueChange={(v) => setLocale(v)}>
           <SelectTrigger className="w-full">
             <SelectValue />
           </SelectTrigger>
@@ -68,10 +68,7 @@ export function GeneralForm({ initialData }: GeneralFormProps) {
       </SettingsSection>
 
       <SettingsSection title={t("dateFormat")}>
-        <Select
-          value={dateFormat}
-          onValueChange={(v) => setDateFormat(v ?? "")}
-        >
+        <Select value={dateFormat} onValueChange={(v) => setDateFormat(v)}>
           <SelectTrigger className="w-full">
             <SelectValue />
           </SelectTrigger>
@@ -87,10 +84,7 @@ export function GeneralForm({ initialData }: GeneralFormProps) {
       </SettingsSection>
 
       <SettingsSection title={t("numberFormat")}>
-        <Select
-          value={numberFormat}
-          onValueChange={(v) => setNumberFormat(v ?? "")}
-        >
+        <Select value={numberFormat} onValueChange={(v) => setNumberFormat(v)}>
           <SelectTrigger className="w-full">
             <SelectValue />
           </SelectTrigger>

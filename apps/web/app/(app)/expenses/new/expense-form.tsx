@@ -458,7 +458,7 @@ export function ExpenseForm({
         <Select
           value={contactId || undefined}
           onValueChange={(v) => {
-            const next = v ?? "";
+            const next = v;
             setContactId(next);
             if (next) setSupplierName("");
             const contact = contacts.find((c) => c.id === next);
@@ -511,7 +511,7 @@ export function ExpenseForm({
             ) : (
               <Select
                 value={categoryId || undefined}
-                onValueChange={(v) => handleCategoryChange(v ?? "")}
+                onValueChange={(v) => handleCategoryChange(v)}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder={t("selectCategory")} />

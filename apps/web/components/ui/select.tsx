@@ -1,5 +1,17 @@
 "use client";
 
+// Caller contract:
+// - Pass `value={state || undefined}` (NOT `value={state}`) when the
+//   field is allowed to be empty. Radix renders the placeholder when
+//   value is undefined; passing the literal "" makes Radix look for a
+//   matching SelectItem with value="" and finding none, breaks.
+// - Never render <SelectItem value="">. Radix throws at runtime. Use
+//   a sentinel ("__none__") or omit the item entirely when "no choice"
+//   is the default.
+// - Trigger label resolves automatically from the matching SelectItem's
+//   children (the Radix advantage over base-ui — keep this primitive on
+//   Radix specifically for that behaviour).
+
 import * as React from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react";

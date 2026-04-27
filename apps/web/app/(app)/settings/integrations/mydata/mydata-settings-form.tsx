@@ -177,10 +177,7 @@ export function MyDataSettingsForm({ credentials }: MyDataSettingsFormProps) {
 
         <div className="space-y-2">
           <Label htmlFor="environment">{t("environment")}</Label>
-          <Select
-            value={environment}
-            onValueChange={(v) => setEnvironment(v ?? "")}
-          >
+          <Select value={environment} onValueChange={(v) => setEnvironment(v)}>
             <SelectTrigger id="environment" className="w-full">
               <SelectValue />
             </SelectTrigger>

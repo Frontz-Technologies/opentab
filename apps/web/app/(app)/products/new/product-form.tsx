@@ -153,7 +153,7 @@ export function ProductForm({ product, vatRates }: ProductFormProps) {
               />
             </Field>
             <Field label={t("unit")}>
-              <Select value={unit} onValueChange={(v) => setUnit(v ?? "")}>
+              <Select value={unit} onValueChange={(v) => setUnit(v)}>
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
@@ -178,7 +178,7 @@ export function ProductForm({ product, vatRates }: ProductFormProps) {
             <Field label={t("taxCategory")}>
               <Select
                 value={taxCategory}
-                onValueChange={(v) => setTaxCategory(v ?? "")}
+                onValueChange={(v) => setTaxCategory(v)}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue />
@@ -203,7 +203,7 @@ export function ProductForm({ product, vatRates }: ProductFormProps) {
             <Field label={t("vatRate")} hint={t("vatRateHelp")}>
               <Select
                 value={vatRate || undefined}
-                onValueChange={(v) => setVatRate(v ?? "")}
+                onValueChange={(v) => setVatRate(v)}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="---" />
