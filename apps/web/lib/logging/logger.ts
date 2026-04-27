@@ -90,6 +90,22 @@ function emit(
   switch (level) {
     case "error":
       console.error(output);
+      // Pipe error-level logs to Sentry/GlitchTip with module-scoped
+      // fingerprint so the same failure deduplicates into one issue.
+      // Dynamic import keeps the logger usable in test/dev without the
+      // SDK installed; .catch() swallows missing-module in those envs.
+      void import("@sentry/nextjs")
+        .then((Sentry) => {
+          Sentry.withScope((scope) => {
+            scope.setTag("module", module);
+            scope.setExtras(data ? sanitize(data) : {});
+            scope.setFingerprint([module, message]);
+            Sentry.captureException(new Error(message));
+          });
+        })
+        .catch(() => {
+          // Sentry not present (dev/test/edge runtime without SDK) — no-op.
+        });
       break;
     case "warn":
       console.warn(output);
