@@ -17,10 +17,14 @@ interface AiSettingsFormProps {
   orgId: string;
   initialData: {
     enabled: boolean;
-    model: string;
+    chatModel: string | null;
+    extractionModel: string | null;
     apiKeyLast4: string | null;
     hasApiKey: boolean;
     receiptExtractionEnabled: boolean;
+    apiKeyOverriddenByEnv: boolean;
+    chatModelOverriddenByEnv: boolean;
+    extractionModelOverriddenByEnv: boolean;
   };
   initialCapabilities?: ModelCapabilities | null;
 }
@@ -45,6 +49,25 @@ function CapabilityBadge({
       </span>
       {label}
     </span>
+  );
+}
+
+function DeploymentPill({
+  labelKey,
+  helpKey,
+}: {
+  labelKey: "setByDeployment" | "apiKeySetByDeployment";
+  helpKey: "setByDeploymentHelp";
+}) {
+  const t = useTranslations("settingsAi");
+  return (
+    <div className="space-y-2">
+      <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-sm text-primary">
+        <span className="material-symbols-outlined text-[16px]">lock</span>
+        {t(labelKey)}
+      </div>
+      <p className="text-xs text-on-surface/50">{t(helpKey)}</p>
+    </div>
   );
 }
 
@@ -74,8 +97,10 @@ export function AiSettingsForm({
     startTransition(async () => {
       const result = await updateAiSettings({
         enabled: formData.get("enabled") === "on",
-        model: formData.get("model"),
-        apiKey: formData.get("apiKey"),
+        chatModel: (formData.get("chatModel") as string | null) || null,
+        extractionModel:
+          (formData.get("extractionModel") as string | null) || null,
+        apiKey: formData.get("apiKey") ?? "",
         receiptExtractionEnabled:
           formData.get("receiptExtractionEnabled") === "on",
       });
@@ -129,46 +154,104 @@ export function AiSettingsForm({
         </label>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="model" className="text-sm font-medium text-on-surface">
-          {t("model")}
-        </Label>
-        <Input
-          id="model"
-          name="model"
-          defaultValue={initialData.model}
-          onBlur={(e) => fetchCapabilities(e.target.value)}
-        />
-        <div className="flex items-center gap-2 min-h-[24px]">
-          {isLoadingCaps ? (
-            <span className="text-xs text-on-surface/40">
-              {t("checkingCapabilities")}
-            </span>
-          ) : capabilities ? (
-            <>
-              <CapabilityBadge label="Text" supported={capabilities.text} />
-              <CapabilityBadge label="Image" supported={capabilities.image} />
-              <CapabilityBadge label="File" supported={capabilities.file} />
-            </>
-          ) : null}
-        </div>
-      </div>
+      <section className="space-y-3">
+        <h3 className="text-sm font-medium text-on-surface">
+          {t("chatSection")}
+        </h3>
+        {initialData.chatModelOverriddenByEnv ? (
+          <DeploymentPill
+            labelKey="setByDeployment"
+            helpKey="setByDeploymentHelp"
+          />
+        ) : (
+          <div className="space-y-2">
+            <Label
+              htmlFor="chatModel"
+              className="text-sm font-medium text-on-surface"
+            >
+              {t("chatModelLabel")}
+            </Label>
+            <Input
+              id="chatModel"
+              name="chatModel"
+              defaultValue={initialData.chatModel ?? ""}
+              placeholder="openai/gpt-4o-mini"
+            />
+          </div>
+        )}
+      </section>
 
-      <div className="space-y-2">
-        <Label htmlFor="apiKey" className="text-sm font-medium text-on-surface">
-          {t("apiKey")}
-        </Label>
-        <Input
-          id="apiKey"
-          name="apiKey"
-          type="password"
-          placeholder={
-            initialData.hasApiKey
-              ? t("apiKeyStored", { last4: initialData.apiKeyLast4 ?? "----" })
-              : t("apiKeyPlaceholder")
-          }
+      <section className="space-y-3">
+        <h3 className="text-sm font-medium text-on-surface">
+          {t("extractionSection")}
+        </h3>
+        {initialData.extractionModelOverriddenByEnv ? (
+          <DeploymentPill
+            labelKey="setByDeployment"
+            helpKey="setByDeploymentHelp"
+          />
+        ) : (
+          <div className="space-y-2">
+            <Label
+              htmlFor="extractionModel"
+              className="text-sm font-medium text-on-surface"
+            >
+              {t("extractionModelLabel")}
+            </Label>
+            <Input
+              id="extractionModel"
+              name="extractionModel"
+              defaultValue={initialData.extractionModel ?? ""}
+              placeholder="openai/gpt-4o"
+              onBlur={(e) => fetchCapabilities(e.target.value)}
+            />
+            <div className="flex items-center gap-2 min-h-[24px]">
+              {isLoadingCaps ? (
+                <span className="text-xs text-on-surface/40">
+                  {t("checkingCapabilities")}
+                </span>
+              ) : capabilities ? (
+                <>
+                  <CapabilityBadge label="Text" supported={capabilities.text} />
+                  <CapabilityBadge
+                    label="Image"
+                    supported={capabilities.image}
+                  />
+                  <CapabilityBadge label="File" supported={capabilities.file} />
+                </>
+              ) : null}
+            </div>
+          </div>
+        )}
+      </section>
+
+      {initialData.apiKeyOverriddenByEnv ? (
+        <DeploymentPill
+          labelKey="apiKeySetByDeployment"
+          helpKey="setByDeploymentHelp"
         />
-      </div>
+      ) : (
+        <div className="space-y-2">
+          <Label
+            htmlFor="apiKey"
+            className="text-sm font-medium text-on-surface"
+          >
+            {t("apiKey")}
+          </Label>
+          <Input
+            id="apiKey"
+            name="apiKey"
+            type="password"
+            placeholder={
+              initialData.hasApiKey
+                ? t("apiKeyStored", {
+                    last4: initialData.apiKeyLast4 ?? "----",
+                  })
+                : t("apiKeyPlaceholder")
+            }
+          />
+        </div>
+      )}
 
       <div className="space-y-2">
         <Label
@@ -206,7 +289,7 @@ export function AiSettingsForm({
         >
           {t("test")}
         </Button>
-        {initialData.hasApiKey && (
+        {initialData.hasApiKey && !initialData.apiKeyOverriddenByEnv && (
           <Button
             type="button"
             variant="outline"
