@@ -624,6 +624,7 @@
     "uploadReceipt": "Subir recibo",
     "uploading": "Subiendo...",
     "uploadReceiptHint": "Suba un PDF o imagen para adjuntar al gasto",
+    "processingReceiptHint": "Procesando tu recibo...",
     "analyzingReceipt": "Analizando recibo...",
     "receiptAttached": "Recibo adjunto",
     "autofillPrompt": "Encontramos datos en su recibo. ¿Autocompletar campos?",

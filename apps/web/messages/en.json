@@ -624,6 +624,7 @@
     "uploadReceipt": "Upload Receipt",
     "uploading": "Uploading...",
     "uploadReceiptHint": "Upload a PDF or image to attach to this expense",
+    "processingReceiptHint": "Processing your receipt...",
     "analyzingReceipt": "Analyzing receipt...",
     "receiptAttached": "Receipt attached",
     "autofillPrompt": "We found data in your receipt. Autofill fields?",

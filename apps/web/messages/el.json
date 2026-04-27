@@ -624,6 +624,7 @@
     "uploadReceipt": "Μεταφόρτωση Απόδειξης",
     "uploading": "Μεταφόρτωση...",
     "uploadReceiptHint": "Ανεβάστε PDF ή εικόνα για επισύναψη στη δαπάνη",
+    "processingReceiptHint": "Επεξεργασία της απόδειξής σας...",
     "analyzingReceipt": "Ανάλυση απόδειξης...",
     "receiptAttached": "Απόδειξη επισυνάφθηκε",
     "autofillPrompt": "Βρήκαμε δεδομένα στην απόδειξή σας. Αυτόματη συμπλήρωση;",

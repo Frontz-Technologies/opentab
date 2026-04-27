@@ -284,7 +284,9 @@ export function ExpenseForm({
                 : t("uploadReceipt")}
             </Button>
             <span className="text-sm text-on-surface/50">
-              {t("uploadReceiptHint")}
+              {isUploading
+                ? t("processingReceiptHint")
+                : t("uploadReceiptHint")}
             </span>
           </div>
         ) : (
