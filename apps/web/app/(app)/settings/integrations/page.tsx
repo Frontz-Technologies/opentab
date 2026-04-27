@@ -7,7 +7,7 @@ import { db } from "@/lib/db";
 import { countryIntegrationCredentials } from "@opentab/db/schema";
 import { and, eq } from "drizzle-orm";
 import { getCountryProvider } from "@/lib/country";
-import { getAiSettings, getAiEnvConfig } from "@/lib/actions/ai-settings";
+import { getAiSettings } from "@/lib/actions/ai-settings";
 
 export default async function IntegrationsPage() {
   const session = await getSession();
@@ -41,10 +41,13 @@ export default async function IntegrationsPage() {
     credentialRows.filter((r) => r.isActive).map((r) => r.kind),
   );
 
-  const [aiSettings, aiEnvConfig] = await Promise.all([
-    isOwnerOrAdmin ? getAiSettings(session.org.id) : null,
-    isOwnerOrAdmin ? getAiEnvConfig() : null,
-  ]);
+  const aiSettings = isOwnerOrAdmin
+    ? await getAiSettings(session.org.id)
+    : null;
+  // The card shows "connected" when the deployment env supplies a key
+  // (any feature gets a usable secret) or the per-org row is enabled.
+  const aiKeyFromEnv =
+    isOwnerOrAdmin && Boolean(process.env.OPENROUTER_API_KEY);
 
   const statusLabels = {
     connected: t("connected"),
@@ -84,7 +87,7 @@ export default async function IntegrationsPage() {
               description={t("aiDescription")}
               href="/settings/integrations/ai"
               status={
-                aiEnvConfig || aiSettings?.enabled
+                aiKeyFromEnv || aiSettings?.enabled
                   ? "connected"
                   : "not_configured"
               }
