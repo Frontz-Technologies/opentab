@@ -73,6 +73,7 @@ describe("extractReceiptData — NoObjectGeneratedError observability (#175)", (
       Buffer.from("fake-pdf"),
       "application/pdf",
       "apiKey",
+      "google/gemini-2.5-flash-lite",
       [{ code: "gr_other", name: "Other" }],
     );
 
@@ -99,12 +100,14 @@ describe("extractReceiptData — NoObjectGeneratedError observability (#175)", (
       Buffer.from("x"),
       "image/png",
       "apiKey",
+      "google/gemini-2.5-flash-lite",
       categories,
     );
     await extractReceiptData(
       Buffer.from("x"),
       "image/png",
       "apiKey",
+      "google/gemini-2.5-flash-lite",
       categories,
     );
 

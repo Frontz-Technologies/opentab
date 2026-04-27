@@ -6,7 +6,7 @@ import {
   type ModelCapabilities,
 } from "@/lib/actions/ai-settings";
 import { createLogger } from "@/lib/logging/logger";
-import { getFeatureModel, isFeatureEnabled } from "../ai/features";
+import { isFeatureEnabled } from "../ai/features";
 
 const log = createLogger("ai-extraction");
 
@@ -231,6 +231,7 @@ export async function extractReceiptData(
   buffer: Buffer,
   mimeType: string,
   apiKey: string,
+  model: string,
   categories: readonly CategoryHint[] = [],
 ): Promise<ExtractedExpenseData | null> {
   if (!isFeatureEnabled("extraction")) {
@@ -238,7 +239,6 @@ export async function extractReceiptData(
       "AI extraction is disabled. Set FEATURE_AI_EXTRACTION=on to enable.",
     );
   }
-  const model = getFeatureModel("extraction");
   try {
     const capTimer = log.time("capability-check");
     const capabilities = await getModelCapabilities(model);

@@ -276,6 +276,7 @@ export async function uploadAndExtractReceipt(
         buffer,
         mimeType,
         aiSecrets.apiKey,
+        aiSecrets.model,
         activeCategories.map((c) => ({ code: c.code, name: c.name })),
       );
       extractTimer(
