@@ -67,4 +67,71 @@ test.describe("Expense form polish (#252)", () => {
       "Dirty supplier",
     );
   });
+
+  // Receipt-extraction inline preview state (#253). Skipped until the
+  // test environment has a fixture receipt PDF + a working AI extraction
+  // backend (or a Playwright route mock for the Server Action). The
+  // state-transition logic is fully covered by the Vitest suite at
+  // apps/web/__tests__/extraction-preview-state.test.ts (13 tests).
+  // When un-skipping, ensure e2e/fixtures/sample-receipt.pdf exists and
+  // env has GEMINI / OPENAI keys configured for the dev server.
+
+  test.skip("Apply commits the AI receipt-extraction preview", async () => {
+    await page.goto("/expenses/new");
+    const fileInput = page.locator('input[type="file"]');
+    await fileInput.setInputFiles("e2e/fixtures/sample-receipt.pdf");
+    await page
+      .getByText(/we found data|autofill/i)
+      .waitFor({ state: "visible", timeout: 30000 });
+
+    const supplierField = page.locator('input[name="supplierName"]');
+    const supplierWrapper = supplierField.locator("..");
+    await expect(supplierWrapper).toHaveClass(/bg-primary\/10/);
+
+    await page.getByRole("button", { name: /apply/i }).click();
+
+    await expect(supplierWrapper).not.toHaveClass(/bg-primary\/10/);
+    await expect(supplierField).not.toHaveValue("");
+  });
+
+  test.skip("Discard reverts the AI receipt-extraction preview", async () => {
+    await page.goto("/expenses/new");
+    const fileInput = page.locator('input[type="file"]');
+    await fileInput.setInputFiles("e2e/fixtures/sample-receipt.pdf");
+    await page
+      .getByText(/we found data|autofill/i)
+      .waitFor({ state: "visible", timeout: 30000 });
+
+    const supplierField = page.locator('input[name="supplierName"]');
+
+    await page.getByRole("button", { name: /(discard|ignore)/i }).click();
+
+    await expect(supplierField).toHaveValue("");
+    await expect(page.locator(".bg-primary\\/10")).toHaveCount(0);
+  });
+
+  test.skip("single-field edit exits one preview without committing rest", async () => {
+    await page.goto("/expenses/new");
+    const fileInput = page.locator('input[type="file"]');
+    await fileInput.setInputFiles("e2e/fixtures/sample-receipt.pdf");
+    await page
+      .getByText(/we found data|autofill/i)
+      .waitFor({ state: "visible", timeout: 30000 });
+
+    const supplierField = page.locator('input[name="supplierName"]');
+    const supplierWrapper = supplierField.locator("..");
+    const dateField = page.locator('input[name="expenseDate"]');
+    const dateWrapper = dateField.locator("..");
+
+    await expect(supplierWrapper).toHaveClass(/bg-primary\/10/);
+    await expect(dateWrapper).toHaveClass(/bg-primary\/10/);
+
+    await supplierField.fill("Manual override");
+
+    await expect(supplierWrapper).not.toHaveClass(/bg-primary\/10/);
+    await expect(dateWrapper).toHaveClass(/bg-primary\/10/);
+
+    await page.getByRole("button", { name: /apply/i }).click();
+    await expect(supplierField).toHaveValue("Manual override");
+  });
 });
