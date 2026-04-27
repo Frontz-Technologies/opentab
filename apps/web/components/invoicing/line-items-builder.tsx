@@ -6,6 +6,7 @@ import type { Product } from "@opentab/db/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { calculateLineTotal } from "@/lib/invoicing/calculations";
+import { cn } from "@/lib/utils";
 
 export interface LineItem {
   id: string;
@@ -28,6 +29,10 @@ interface LineItemsBuilderProps {
   products?: Product[];
   defaultTaxRate: string;
   usesInclusiveTax: boolean;
+  /** Line-item IDs currently in receipt-extraction preview state. */
+  previewIds?: Set<string>;
+  /** Fires the first time a previewed row's cell is edited. */
+  onItemEdit?: (id: string) => void;
 }
 
 function createEmptyItem(sortOrder: number, defaultTaxRate: string): LineItem {
@@ -63,17 +68,23 @@ export function LineItemsBuilder({
   products,
   defaultTaxRate,
   usesInclusiveTax,
+  previewIds,
+  onItemEdit,
 }: LineItemsBuilderProps) {
   const t = useTranslations("invoices");
 
   const updateItem = useCallback(
     (index: number, field: keyof LineItem, value: string) => {
       const updated = [...items];
-      updated[index] = { ...updated[index], [field]: value };
+      const target = updated[index];
+      if (target && previewIds?.has(target.id)) {
+        onItemEdit?.(target.id);
+      }
+      updated[index] = { ...target, [field]: value };
       updated[index] = recalcItem(updated[index], usesInclusiveTax);
       onChange(updated);
     },
-    [items, onChange, usesInclusiveTax],
+    [items, onChange, usesInclusiveTax, previewIds, onItemEdit],
   );
 
   const addItem = useCallback(() => {
@@ -207,7 +218,11 @@ export function LineItemsBuilder({
           {items.map((item, index) => (
             <div
               key={item.id}
-              className="grid grid-cols-[1fr_80px_100px_80px_100px_100px_40px] gap-2 items-center bg-surface-container rounded-lg p-2"
+              className={cn(
+                "grid grid-cols-[1fr_80px_100px_80px_100px_100px_40px] gap-2 items-center bg-surface-container rounded-lg p-2",
+                previewIds?.has(item.id) &&
+                  "bg-primary/10 outline outline-1 outline-primary/15 outline-offset-0 transition-colors duration-200",
+              )}
             >
               <div className="space-y-1">
                 <Input

@@ -27,7 +27,7 @@ export function AnimatedFilterBar<T extends string = string>({
   return (
     <div
       className={cn(
-        "inline-flex items-center gap-0.5 rounded-full bg-surface-container p-1",
+        "flex items-center gap-0.5 rounded-full bg-surface-container p-1 overflow-x-auto max-w-full whitespace-nowrap [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
         className,
       )}
     >
@@ -39,7 +39,7 @@ export function AnimatedFilterBar<T extends string = string>({
             type="button"
             onClick={() => onValueChange(item.value)}
             className={cn(
-              "relative cursor-pointer rounded-full px-3 py-1.5 font-label text-sm transition-colors duration-200",
+              "relative shrink-0 cursor-pointer rounded-full px-3 py-1.5 font-label text-sm transition-colors duration-200",
               isActive
                 ? "text-on-surface"
                 : "text-on-surface-variant hover:text-on-surface/80",

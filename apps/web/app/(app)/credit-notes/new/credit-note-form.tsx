@@ -7,7 +7,15 @@ import { toast } from "sonner";
 import type { Invoice } from "@opentab/db/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { CREDIT_NOTE_REASON } from "@opentab/db/schema";
+import { EmptyEntityHint } from "@/components/forms/empty-entity-hint";
 import { createCreditNote } from "../actions";
 
 interface ContactRow {
@@ -130,19 +138,29 @@ export function CreditNoteForm({
           >
             {t("client")}
           </label>
-          <select
-            id="cn-contactId"
-            className="bg-surface-container-lowest text-on-surface rounded-lg px-3 h-10 w-full"
-            value={contactId}
-            onChange={(e) => setContactId(e.target.value)}
-            required
-          >
-            {contacts.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.displayName}
-              </option>
-            ))}
-          </select>
+          {contacts.length === 0 ? (
+            <EmptyEntityHint
+              message={t("noClientsYet")}
+              ctaLabel={t("createContact")}
+              ctaHref="/contacts/new"
+            />
+          ) : (
+            <Select
+              value={contactId || undefined}
+              onValueChange={(v) => setContactId(v)}
+            >
+              <SelectTrigger id="cn-contactId" className="w-full">
+                <SelectValue placeholder={t("selectClient")} />
+              </SelectTrigger>
+              <SelectContent>
+                {contacts.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.displayName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
         <div>
           <label
@@ -168,21 +186,25 @@ export function CreditNoteForm({
         >
           {t("reason")}
         </label>
-        <select
-          id="cn-reason"
-          className="bg-surface-container-lowest text-on-surface rounded-lg px-3 h-10 w-full"
-          value={reason}
-          onChange={(e) => setReason(e.target.value)}
-        >
-          <option value={CREDIT_NOTE_REASON.RETURN}>{t("reasonReturn")}</option>
-          <option value={CREDIT_NOTE_REASON.CORRECTION}>
-            {t("reasonCorrection")}
-          </option>
-          <option value={CREDIT_NOTE_REASON.DISCOUNT}>
-            {t("reasonDiscount")}
-          </option>
-          <option value={CREDIT_NOTE_REASON.OTHER}>{t("reasonOther")}</option>
-        </select>
+        <Select value={reason} onValueChange={(v) => setReason(v)}>
+          <SelectTrigger id="cn-reason" className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={CREDIT_NOTE_REASON.RETURN}>
+              {t("reasonReturn")}
+            </SelectItem>
+            <SelectItem value={CREDIT_NOTE_REASON.CORRECTION}>
+              {t("reasonCorrection")}
+            </SelectItem>
+            <SelectItem value={CREDIT_NOTE_REASON.DISCOUNT}>
+              {t("reasonDiscount")}
+            </SelectItem>
+            <SelectItem value={CREDIT_NOTE_REASON.OTHER}>
+              {t("reasonOther")}
+            </SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div>

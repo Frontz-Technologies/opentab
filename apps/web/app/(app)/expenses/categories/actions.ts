@@ -128,6 +128,32 @@ export async function deleteCategory(id: string) {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
 
+  // Default categories (one per group, country-seeded) are the per-group
+  // fallback the form falls back to when the user disables every other
+  // leaf in that group. Allowing delete would create groups with zero
+  // categories, which the new-expense form has no way to recover from.
+  // The UI already hides the delete button for isDefault rows; this is
+  // server-side defence-in-depth.
+  const [cat] = await db
+    .select({ isDefault: expenseCategories.isDefault })
+    .from(expenseCategories)
+    .where(
+      and(
+        eq(expenseCategories.id, id),
+        eq(expenseCategories.orgId, session.org.id),
+      ),
+    )
+    .limit(1);
+
+  if (!cat) return { success: false, error: "Category not found" };
+  if (cat.isDefault) {
+    return {
+      success: false,
+      error:
+        "Default categories can't be deleted. Disable instead to keep the per-group fallback intact.",
+    };
+  }
+
   await db
     .delete(expenseCategories)
     .where(

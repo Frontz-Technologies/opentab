@@ -14,30 +14,27 @@ export default async function DashboardPage({
 }) {
   const session = (await getSession())!;
   const t = await getTranslations("dashboard");
-  const tNav = await getTranslations("nav");
 
   const params = await searchParams;
   const period = (params.period as PeriodKey) || "month";
   const dataExists = await hasAnyData();
 
+  const hour = new Date().getHours();
+  const greetingKey =
+    hour < 12
+      ? "greetingMorning"
+      : hour < 18
+        ? "greetingAfternoon"
+        : "greetingEvening";
+  const firstName = session.user.name.split(" ")[0] || session.user.name;
+
   return (
     <>
-      <PageHeader
-        heading={t("title")}
-        userName={session.user.name}
-        userEmail={session.user.email}
-      />
+      <PageHeader userName={session.user.name} userEmail={session.user.email} />
       <main className="px-6 py-8 max-w-7xl mx-auto">
-        {/* Hero display — PageHeader already carries the page's h1,
-            so this is a styled div, not a duplicate heading. Avoids
-            the ambiguous role=heading match that surfaced in #178.
-            aria-hidden stops assistive tech reading "Dashboard" twice. */}
-        <div
-          aria-hidden="true"
-          className="font-headline text-3xl sm:text-4xl font-bold text-on-surface tracking-tight mb-8"
-        >
-          {t("title")}
-        </div>
+        <h1 className="font-headline text-3xl sm:text-4xl font-bold text-on-surface tracking-tight mb-8">
+          {t(greetingKey, { name: firstName })}
+        </h1>
         {dataExists ? (
           <DashboardWithData period={period} session={session} />
         ) : (

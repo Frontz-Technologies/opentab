@@ -3,6 +3,13 @@
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { SettingsSection } from "@/components/settings/settings-section";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { updateGeneralSettings } from "./actions";
 
 const DATE_FORMATS = ["DD/MM/YYYY", "MM/DD/YYYY", "YYYY-MM-DD"] as const;
@@ -17,14 +24,16 @@ interface GeneralFormProps {
   };
 }
 
-const selectClass =
-  "w-full bg-surface-container-lowest border-none rounded-xl px-4 h-12 text-sm text-on-surface focus:outline-none focus:bg-surface-container-high transition-colors appearance-none cursor-pointer";
-
 export function GeneralForm({ initialData }: GeneralFormProps) {
   const t = useTranslations("settingsGeneral");
   const tCommon = useTranslations("common");
   const [isPending, startTransition] = useTransition();
   const [toast, setToast] = useState<string | null>(null);
+  const [locale, setLocale] = useState<string>(initialData.locale);
+  const [dateFormat, setDateFormat] = useState<string>(initialData.dateFormat);
+  const [numberFormat, setNumberFormat] = useState<string>(
+    initialData.numberFormat,
+  );
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -45,55 +54,46 @@ export function GeneralForm({ initialData }: GeneralFormProps) {
       )}
 
       <SettingsSection title={t("language")}>
-        <div className="relative">
-          <select
-            name="locale"
-            className={selectClass}
-            defaultValue={initialData.locale}
-          >
-            <option value="en">{t("languageEn")}</option>
-            <option value="el">{t("languageEl")}</option>
-            <option value="es">{t("languageEs")}</option>
-          </select>
-          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-base text-on-surface-variant">
-            expand_more
-          </span>
-        </div>
+        <Select value={locale} onValueChange={(v) => setLocale(v)}>
+          <SelectTrigger className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="en">{t("languageEn")}</SelectItem>
+            <SelectItem value="el">{t("languageEl")}</SelectItem>
+            <SelectItem value="es">{t("languageEs")}</SelectItem>
+          </SelectContent>
+        </Select>
+        <input type="hidden" name="locale" value={locale} />
       </SettingsSection>
 
       <SettingsSection title={t("dateFormat")}>
-        <div className="relative">
-          <select
-            name="dateFormat"
-            className={selectClass}
-            defaultValue={initialData.dateFormat}
-          >
+        <Select value={dateFormat} onValueChange={(v) => setDateFormat(v)}>
+          <SelectTrigger className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
             {DATE_FORMATS.map((fmt) => (
-              <option key={fmt} value={fmt}>
+              <SelectItem key={fmt} value={fmt}>
                 {fmt}
-              </option>
+              </SelectItem>
             ))}
-          </select>
-          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-base text-on-surface-variant">
-            expand_more
-          </span>
-        </div>
+          </SelectContent>
+        </Select>
+        <input type="hidden" name="dateFormat" value={dateFormat} />
       </SettingsSection>
 
       <SettingsSection title={t("numberFormat")}>
-        <div className="relative">
-          <select
-            name="numberFormat"
-            className={selectClass}
-            defaultValue={initialData.numberFormat}
-          >
-            <option value="eu">{t("numberFormatEu")}</option>
-            <option value="us">{t("numberFormatUs")}</option>
-          </select>
-          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-base text-on-surface-variant">
-            expand_more
-          </span>
-        </div>
+        <Select value={numberFormat} onValueChange={(v) => setNumberFormat(v)}>
+          <SelectTrigger className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="eu">{t("numberFormatEu")}</SelectItem>
+            <SelectItem value="us">{t("numberFormatUs")}</SelectItem>
+          </SelectContent>
+        </Select>
+        <input type="hidden" name="numberFormat" value={numberFormat} />
       </SettingsSection>
 
       <SettingsSection title={t("notifications")}>

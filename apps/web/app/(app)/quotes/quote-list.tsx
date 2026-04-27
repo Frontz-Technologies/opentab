@@ -79,13 +79,33 @@ export function QuoteList({ quotes }: QuoteListProps) {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="text-center py-12 text-on-surface/50">
-          <span className="material-symbols-outlined text-4xl mb-2 block">
-            description
-          </span>
-          <p className="font-label">{t("noQuotes")}</p>
-          <p className="text-sm mt-1">{t("noQuotesDescription")}</p>
-        </div>
+        quotes.length === 0 ? (
+          <div className="flex flex-col items-center text-center py-16 px-6">
+            <span className="material-symbols-outlined text-5xl text-on-surface-variant mb-4 block">
+              description
+            </span>
+            <h3 className="font-headline text-xl font-semibold text-on-surface mb-2">
+              {t("noQuotes")}
+            </h3>
+            <p className="text-sm text-on-surface-variant max-w-sm mb-6">
+              {t("noQuotesDescription")}
+            </p>
+            <Link
+              href="/quotes/new"
+              className="inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-5 font-label text-sm font-medium text-on-primary transition-colors hover:bg-primary/90"
+            >
+              <span className="material-symbols-outlined text-[18px]">add</span>
+              {t("addQuote")}
+            </Link>
+          </div>
+        ) : (
+          <div className="text-center py-12 text-on-surface-variant">
+            <span className="material-symbols-outlined text-4xl mb-2 block">
+              description
+            </span>
+            <p className="font-label">{t("noQuotesMatch")}</p>
+          </div>
+        )
       ) : (
         <>
           <div className="hidden md:block">

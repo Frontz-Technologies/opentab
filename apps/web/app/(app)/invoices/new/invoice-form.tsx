@@ -7,6 +7,13 @@ import type { Contact, Product } from "@opentab/db/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -16,6 +23,7 @@ import {
   LineItemsBuilder,
   type LineItem,
 } from "@/components/invoicing/line-items-builder";
+import { EmptyEntityHint } from "@/components/forms/empty-entity-hint";
 import { createInvoice } from "../actions";
 import { createContact } from "../../contacts/actions";
 
@@ -151,36 +159,51 @@ export function InvoiceForm({
         <h2 className="font-headline text-lg font-semibold text-on-surface">
           {t("client")} <span className="text-tertiary">*</span>
         </h2>
-        <select
-          value={contactId}
-          onChange={(e) => {
-            setContactId(e.target.value);
-            const contact = allContacts.find((c) => c.id === e.target.value);
-            if (contact?.defaultCurrency)
-              setCurrencyCode(contact.defaultCurrency);
-            if (contact?.defaultPaymentTerms) {
-              const due = new Date(issueDate);
-              due.setDate(due.getDate() + contact.defaultPaymentTerms);
-              setDueDate(due.toISOString().split("T")[0]);
-            }
-          }}
-          className="w-full rounded-lg bg-surface-container-low border border-on-surface/10 px-3 py-2 text-sm text-on-surface"
-        >
-          <option value="">{t("selectClient")}</option>
-          {allContacts.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.displayName}
-            </option>
-          ))}
-        </select>
-        <button
-          type="button"
-          onClick={() => setShowCreateContact(true)}
-          className="text-sm text-primary hover:text-primary/80 font-medium flex items-center gap-1"
-        >
-          <span className="material-symbols-outlined text-[16px]">add</span>
-          {t("createContact")}
-        </button>
+        {allContacts.length === 0 ? (
+          <EmptyEntityHint
+            message={t("noClientsYet")}
+            ctaLabel={t("createContact")}
+            ctaOnClick={() => setShowCreateContact(true)}
+          />
+        ) : (
+          <div className="flex items-stretch gap-2">
+            <Select
+              value={contactId || undefined}
+              onValueChange={(v) => {
+                const next = v;
+                setContactId(next);
+                const contact = allContacts.find((c) => c.id === next);
+                if (contact?.defaultCurrency)
+                  setCurrencyCode(contact.defaultCurrency);
+                if (contact?.defaultPaymentTerms) {
+                  const due = new Date(issueDate);
+                  due.setDate(due.getDate() + contact.defaultPaymentTerms);
+                  setDueDate(due.toISOString().split("T")[0]);
+                }
+              }}
+            >
+              <SelectTrigger className="flex-1 min-w-0">
+                <SelectValue placeholder={t("selectClient")} />
+              </SelectTrigger>
+              <SelectContent>
+                {allContacts.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.displayName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <button
+              type="button"
+              onClick={() => setShowCreateContact(true)}
+              aria-label={t("createContact")}
+              title={t("createContact")}
+              className="shrink-0 inline-flex h-auto w-10 items-center justify-center rounded-lg bg-surface-container-low border border-on-surface/10 text-on-surface hover:bg-surface-container hover:text-primary transition-colors"
+            >
+              <span className="material-symbols-outlined text-[20px]">add</span>
+            </button>
+          </div>
+        )}
 
         <Dialog
           open={showCreateContact}
@@ -199,21 +222,25 @@ export function InvoiceForm({
                   {t("contactClassification")}{" "}
                   <span className="text-tertiary">*</span>
                 </label>
-                <select
+                <Select
                   value={newContactClassification}
-                  onChange={(e) => setNewContactClassification(e.target.value)}
-                  className="w-full rounded-lg bg-surface-container-low border border-on-surface/10 px-3 py-2 text-sm text-on-surface"
+                  onValueChange={(v) => setNewContactClassification(v)}
                 >
-                  <option value="business">
-                    {t("classificationBusiness")}
-                  </option>
-                  <option value="government">
-                    {t("classificationGovernment")}
-                  </option>
-                  <option value="individual">
-                    {t("classificationIndividual")}
-                  </option>
-                </select>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="business">
+                      {t("classificationBusiness")}
+                    </SelectItem>
+                    <SelectItem value="government">
+                      {t("classificationGovernment")}
+                    </SelectItem>
+                    <SelectItem value="individual">
+                      {t("classificationIndividual")}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <label className="block text-sm font-label text-on-surface/60 mb-1">

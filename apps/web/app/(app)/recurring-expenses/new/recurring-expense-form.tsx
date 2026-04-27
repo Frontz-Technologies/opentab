@@ -11,9 +11,19 @@ import type {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   LineItemsBuilder,
   type LineItem,
 } from "@/components/invoicing/line-items-builder";
+import { EmptyEntityHint } from "@/components/forms/empty-entity-hint";
 import { createRecurringExpense } from "../actions";
 
 interface RecurringExpenseFormProps {
@@ -103,20 +113,37 @@ export function RecurringExpenseForm({
         <h2 className="font-headline text-lg font-semibold text-on-surface">
           {tExp("supplier")}
         </h2>
-        <select
-          value={contactId}
-          onChange={(e) => setContactId(e.target.value)}
-          className="w-full rounded-lg bg-surface-container-low border border-on-surface/10 px-3 py-2 text-sm text-on-surface"
-        >
-          <option value="">{tExp("selectSupplier")}</option>
-          {contacts
-            .filter((c) => c.type === "supplier" || c.type === "both")
-            .map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.displayName}
-              </option>
-            ))}
-        </select>
+        {(() => {
+          const supplierContacts = contacts.filter(
+            (c) => c.type === "supplier" || c.type === "both",
+          );
+          if (supplierContacts.length === 0) {
+            return (
+              <EmptyEntityHint
+                message={tExp("noSuppliersYet")}
+                ctaLabel={tExp("createContact")}
+                ctaHref="/contacts/new"
+              />
+            );
+          }
+          return (
+            <Select
+              value={contactId || undefined}
+              onValueChange={(v) => setContactId(v)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder={tExp("selectSupplier")} />
+              </SelectTrigger>
+              <SelectContent>
+                {supplierContacts.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.displayName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          );
+        })()}
       </div>
 
       <div className="bg-surface-container rounded-xl p-6 space-y-4">
@@ -128,42 +155,55 @@ export function RecurringExpenseForm({
             <label className="block text-sm font-label text-on-surface/60 mb-1">
               {tExp("category")}
             </label>
-            <select
-              value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
-              className="w-full rounded-lg bg-surface-container-low border border-on-surface/10 px-3 py-2 text-sm text-on-surface"
-            >
-              <option value="">{tExp("selectCategory")}</option>
-              {groupedCategories
-                .filter((g) => g.items.length > 0)
-                .map((g) => (
-                  <optgroup key={g.group.code} label={g.group.nameEn}>
-                    {g.items.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
+            {categories.length === 0 ? (
+              <EmptyEntityHint
+                message={tExp("noCategoriesYet")}
+                ctaLabel={tExp("manageCategories")}
+                ctaHref="/expenses/categories"
+              />
+            ) : (
+              <Select
+                value={categoryId || undefined}
+                onValueChange={(v) => setCategoryId(v)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={tExp("selectCategory")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {groupedCategories
+                    .filter((g) => g.items.length > 0)
+                    .map((g) => (
+                      <SelectGroup key={g.group.code}>
+                        <SelectLabel>{g.group.nameEn}</SelectLabel>
+                        {g.items.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>
+                            {c.name}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
                     ))}
-                  </optgroup>
-                ))}
-            </select>
+                </SelectContent>
+              </Select>
+            )}
           </div>
           <div>
             <label className="block text-sm font-label text-on-surface/60 mb-1">
               {t("frequency")}
             </label>
-            <select
-              value={frequency}
-              onChange={(e) => setFrequency(e.target.value)}
-              className="w-full rounded-lg bg-surface-container-low border border-on-surface/10 px-3 py-2 text-sm text-on-surface"
-            >
-              <option value="1">{t("frequencyDaily")}</option>
-              <option value="2">{t("frequencyWeekly")}</option>
-              <option value="3">{t("frequencyBiweekly")}</option>
-              <option value="4">{t("frequencyMonthly")}</option>
-              <option value="5">{t("frequencyQuarterly")}</option>
-              <option value="6">{t("frequencyBiannually")}</option>
-              <option value="7">{t("frequencyAnnually")}</option>
-            </select>
+            <Select value={frequency} onValueChange={(v) => setFrequency(v)}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">{t("frequencyDaily")}</SelectItem>
+                <SelectItem value="2">{t("frequencyWeekly")}</SelectItem>
+                <SelectItem value="3">{t("frequencyBiweekly")}</SelectItem>
+                <SelectItem value="4">{t("frequencyMonthly")}</SelectItem>
+                <SelectItem value="5">{t("frequencyQuarterly")}</SelectItem>
+                <SelectItem value="6">{t("frequencyBiannually")}</SelectItem>
+                <SelectItem value="7">{t("frequencyAnnually")}</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <label className="block text-sm font-label text-on-surface/60 mb-1">

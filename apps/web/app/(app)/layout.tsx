@@ -52,7 +52,7 @@ export default async function AppLayout({
         </SidebarInset>
         <AiChatButton />
         <AiChatPanel />
-        <MobileNav />
+        <MobileNav integrationNav={integrationNav} />
         <Toaster richColors position="top-right" />
       </SidebarProvider>
     </TooltipProvider>

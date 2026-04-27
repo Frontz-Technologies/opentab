@@ -72,7 +72,7 @@ test.describe("Navigation", () => {
     await sidebar.getByRole("link", { name: /Dashboard/ }).click();
     await page.waitForURL("**/dashboard");
     await expect(
-      page.getByRole("heading", { name: "Dashboard" }),
+      page.getByRole("heading", { name: /^Good (morning|afternoon|evening),/ }),
     ).toBeVisible();
   });
 

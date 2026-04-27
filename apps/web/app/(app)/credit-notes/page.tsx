@@ -6,6 +6,7 @@ import { getSession } from "@/lib/session";
 import { db } from "@/lib/db";
 import { creditNotes, CREDIT_NOTE_STATUS } from "@opentab/db/schema";
 import { Badge } from "@/components/ui/badge";
+import { PageHeader } from "@/components/layout/page-header";
 
 const statusColors: Record<number, string> = {
   [CREDIT_NOTE_STATUS.DRAFT]:
@@ -37,99 +38,116 @@ export default async function CreditNotesPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="font-headline text-2xl font-bold text-on-surface">
-          {t("title")}
-        </h1>
-        <div className="flex items-center gap-2">
-          <Link
-            href="/import/credit-notes"
-            className="inline-flex h-10 items-center gap-2 rounded-lg border border-on-surface/20 px-5 font-label text-sm font-medium text-on-surface transition-colors hover:bg-surface-container-low"
-          >
-            <span className="material-symbols-outlined text-[18px]">
-              upload
+    <>
+      <PageHeader
+        heading={t("title")}
+        userName={session.user.name}
+        userEmail={session.user.email}
+        actions={
+          <div className="flex items-center gap-2">
+            <Link
+              href="/import/credit-notes"
+              aria-label={t("import")}
+              className="inline-flex items-center gap-1.5 h-8 px-2 sm:px-3 rounded-lg border border-on-surface/20 text-on-surface font-medium text-sm hover:bg-surface-container-low transition-colors"
+            >
+              <span className="material-symbols-outlined text-[18px] leading-none">
+                upload
+              </span>
+              <span className="hidden sm:inline">{t("import")}</span>
+            </Link>
+            <Link
+              href="/credit-notes/new"
+              aria-label={t("addCreditNote")}
+              className="inline-flex items-center gap-1.5 h-8 px-2 sm:px-3 rounded-lg bg-primary text-on-primary font-medium text-sm hover:bg-primary/80 transition-colors"
+            >
+              <span className="material-symbols-outlined text-[18px] leading-none">
+                add
+              </span>
+              <span className="hidden sm:inline">{t("addCreditNote")}</span>
+            </Link>
+          </div>
+        }
+      />
+      <div className="px-6 py-6 space-y-6">
+        {rows.length === 0 ? (
+          <div className="flex flex-col items-center text-center py-16 px-6">
+            <span className="material-symbols-outlined text-5xl text-on-surface-variant mb-4 block">
+              receipt_long
             </span>
-            {t("import")}
-          </Link>
-          <Link
-            href="/credit-notes/new"
-            className="inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-5 font-label text-sm font-medium text-on-primary transition-colors hover:bg-primary/90"
-          >
-            <span className="material-symbols-outlined text-[18px]">add</span>
-            {t("addCreditNote")}
-          </Link>
-        </div>
-      </div>
-
-      {rows.length === 0 ? (
-        <div className="flex flex-col items-center text-center py-16 px-6">
-          <span className="material-symbols-outlined text-5xl text-on-surface-variant mb-4 block">
-            receipt_long
-          </span>
-          <h3 className="font-headline text-xl font-semibold text-on-surface mb-2">
-            {t("noCreditNotes")}
-          </h3>
-        </div>
-      ) : (
-        <div className="bg-surface-container rounded-xl overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-on-surface/10">
-                <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
-                  {t("number")}
-                </th>
-                <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
-                  {t("client")}
-                </th>
-                <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
-                  {t("issueDate")}
-                </th>
-                <th className="text-right px-4 py-3 font-label text-sm text-on-surface/60">
-                  {t("total")}
-                </th>
-                <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
-                  {t("status")}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((cn) => (
-                <tr
-                  key={cn.id}
-                  className="border-b border-on-surface/5 hover:bg-surface-container-low transition-colors"
-                >
-                  <td className="px-4 py-3 font-mono text-sm">
-                    <Link
-                      href={`/credit-notes/${cn.id}`}
-                      className="text-on-surface hover:text-primary"
-                    >
-                      {cn.creditNoteNumber ?? t("placeholderDraft")}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-on-surface text-sm">
-                    {cn.contactName}
-                  </td>
-                  <td className="px-4 py-3 text-on-surface/60 text-sm">
-                    {cn.issueDate}
-                  </td>
-                  <td className="px-4 py-3 text-on-surface text-sm text-right font-mono">
-                    {cn.currencyCode} -{cn.total}
-                  </td>
-                  <td className="px-4 py-3">
-                    <Badge
-                      className={statusColors[cn.status] ?? ""}
-                      variant="outline"
-                    >
-                      {statusLabels[cn.status]}
-                    </Badge>
-                  </td>
+            <h3 className="font-headline text-xl font-semibold text-on-surface mb-2">
+              {t("noCreditNotes")}
+            </h3>
+            <p className="text-sm text-on-surface-variant max-w-sm mb-6">
+              {t("noCreditNotesDescription")}
+            </p>
+            <Link
+              href="/credit-notes/new"
+              className="inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-5 font-label text-sm font-medium text-on-primary transition-colors hover:bg-primary/90"
+            >
+              <span className="material-symbols-outlined text-[18px]">add</span>
+              {t("addCreditNote")}
+            </Link>
+          </div>
+        ) : (
+          <div className="bg-surface-container rounded-xl overflow-hidden">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-on-surface/10">
+                  <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
+                    {t("number")}
+                  </th>
+                  <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
+                    {t("client")}
+                  </th>
+                  <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
+                    {t("issueDate")}
+                  </th>
+                  <th className="text-right px-4 py-3 font-label text-sm text-on-surface/60">
+                    {t("total")}
+                  </th>
+                  <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
+                    {t("status")}
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
+              </thead>
+              <tbody>
+                {rows.map((cn) => (
+                  <tr
+                    key={cn.id}
+                    className="border-b border-on-surface/5 hover:bg-surface-container-low transition-colors"
+                  >
+                    <td className="px-4 py-3 font-mono text-sm">
+                      <Link
+                        href={`/credit-notes/${cn.id}`}
+                        className="text-on-surface hover:text-primary"
+                      >
+                        {cn.creditNoteNumber ?? t("placeholderDraft")}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3 text-on-surface text-sm">
+                      {cn.contactName}
+                    </td>
+                    <td className="px-4 py-3 text-on-surface/60 text-sm">
+                      {cn.issueDate}
+                    </td>
+                    <td className="px-4 py-3 text-on-surface text-sm text-right font-mono">
+                      {cn.currencyCode} -{cn.total}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge
+                        className={statusColors[cn.status] ?? ""}
+                        variant="outline"
+                      >
+                        {statusLabels[cn.status]}
+                      </Badge>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </>
   );
 }

@@ -135,13 +135,12 @@ export function MappingPanel({
             <ul className="space-y-2">
               {headers.map((h) => {
                 const suggestion = suggestionByHeader.get(h);
-                // Pass `undefined` (not SKIP_VALUE) to the Select when the
-                // header is unmapped — base-ui's <SelectValue> renders the
-                // raw value string when one is set. The render-prop child
-                // below also catches the SKIP_VALUE case in case a user
-                // explicitly picks the "skip" item, so the trigger always
-                // shows the localised label.
-                const value = mapping[h] ?? undefined;
+                // Default to SKIP_VALUE so the Select stays controlled from
+                // the first render (passing undefined makes base-ui treat it
+                // as uncontrolled, then it flips to controlled on first
+                // interaction and warns). The render-prop child below maps
+                // SKIP_VALUE back to the localised "skip" label.
+                const value = mapping[h] ?? SKIP_VALUE;
                 const labelId = `map-label-${h}`;
                 return (
                   <li key={h} className="flex items-center gap-2">
@@ -163,13 +162,7 @@ export function MappingPanel({
                           aria-labelledby={labelId}
                           aria-label={t("mapsTo")}
                         >
-                          <SelectValue placeholder={t("skip")}>
-                            {(v) =>
-                              v === SKIP_VALUE || v == null
-                                ? t("skip")
-                                : (v as string)
-                            }
-                          </SelectValue>
+                          <SelectValue placeholder={t("skip")} />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value={SKIP_VALUE}>

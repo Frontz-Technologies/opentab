@@ -6,17 +6,44 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
 
-const moreItems = [
+interface IntegrationNavEntry {
+  kind: string;
+  label: string;
+  slug: string;
+}
+
+type MoreItem =
+  | { icon: string; labelKey: string; href: string }
+  | { icon: string; literalLabel: string; href: string };
+
+const baseItems: MoreItem[] = [
+  { icon: "undo", labelKey: "creditNotes", href: "/credit-notes" },
+  { icon: "request_quote", labelKey: "quotes", href: "/quotes" },
   { icon: "bar_chart", labelKey: "reports", href: "/reports" },
   { icon: "settings", labelKey: "settings", href: "/settings" },
-] as const;
+];
 
-export function MobileMoreSheet() {
+interface MobileMoreSheetProps {
+  integrationNav?: IntegrationNavEntry[];
+}
+
+export function MobileMoreSheet({ integrationNav }: MobileMoreSheetProps) {
   const pathname = usePathname();
   const t = useTranslations("nav");
   const [open, setOpen] = useState(false);
 
-  const isActive = moreItems.some(
+  const items: MoreItem[] = [...baseItems];
+  if (integrationNav) {
+    for (const entry of integrationNav) {
+      items.push({
+        icon: "cloud_sync",
+        literalLabel: entry.label,
+        href: `/integrations/${entry.slug}`,
+      });
+    }
+  }
+
+  const isActive = items.some(
     (item) => pathname === item.href || pathname.startsWith(item.href + "/"),
   );
 
@@ -46,9 +73,11 @@ export function MobileMoreSheet() {
         className="bg-surface-container/70 backdrop-blur-[24px] border-t border-outline-variant/15 rounded-t-2xl p-4 pb-8"
       >
         <div className="flex flex-col gap-1">
-          {moreItems.map((item) => {
+          {items.map((item) => {
             const active =
               pathname === item.href || pathname.startsWith(item.href + "/");
+            const label =
+              "labelKey" in item ? t(item.labelKey) : item.literalLabel;
             return (
               <Link
                 key={item.href}
@@ -63,7 +92,7 @@ export function MobileMoreSheet() {
                 <span className="material-symbols-outlined text-[22px] leading-none">
                   {item.icon}
                 </span>
-                <span className="font-label text-sm">{t(item.labelKey)}</span>
+                <span className="font-label text-sm">{label}</span>
               </Link>
             );
           })}

@@ -1,13 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { UserMenu } from "@/components/layout/user-menu";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface PageHeaderProps {
-  heading: string;
+  heading?: string;
   headingPrefix?: string;
   onBack?: () => void;
   actions?: React.ReactNode;
@@ -44,10 +43,6 @@ export function PageHeader({
     >
       <div className="flex h-14 items-center gap-3 px-4">
         <div className="flex min-w-0 flex-1 items-center gap-2">
-          <div className="md:hidden">
-            <SidebarTrigger />
-          </div>
-
           {onBack && (
             <Button
               variant="ghost"
@@ -70,9 +65,11 @@ export function PageHeader({
                 <div className="h-5 w-px bg-outline-variant/30" />
               </>
             )}
-            <h1 className="truncate font-headline text-lg font-semibold text-on-surface">
-              {heading}
-            </h1>
+            {heading && (
+              <h1 className="truncate font-headline text-lg font-semibold text-on-surface">
+                {heading}
+              </h1>
+            )}
           </div>
         </div>
 
