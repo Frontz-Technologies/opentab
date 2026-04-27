@@ -571,11 +571,12 @@ export async function getAiSuggestions(
   const importer = getImporter(entityKey);
   if (!importer) return [];
 
-  const aiSecrets = await getAiSettingsSecret(session.org.id);
+  const aiSecrets = await getAiSettingsSecret(session.org.id, "extraction");
   if (!aiSecrets?.apiKey) return [];
 
   return getAiColumnMatches({
     apiKey: aiSecrets.apiKey,
+    model: aiSecrets.model,
     entityKey,
     fields: importer.fields.map((f) => ({
       name: f.name,

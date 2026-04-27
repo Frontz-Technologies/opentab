@@ -161,8 +161,13 @@
     "receiptExtraction": "Extracción de datos de recibos",
     "receiptExtractionHelp": "Extraer automáticamente datos de recibos subidos usando IA",
     "checkingCapabilities": "Verificando capacidades del modelo...",
-    "configuredFromEnv": "IA configurada desde variables de entorno",
-    "configuredFromEnvHelp": "OPENROUTER_API_KEY y OPENROUTER_MODEL están configuradas en su entorno."
+    "chatSection": "Chat",
+    "chatModelLabel": "Modelo de chat",
+    "extractionSection": "Extracción",
+    "extractionModelLabel": "Modelo de extracción",
+    "setByDeployment": "Definido por el despliegue",
+    "setByDeploymentHelp": "Configurado mediante variable de entorno. Edita la configuración del despliegue para cambiar.",
+    "apiKeySetByDeployment": "Clave API definida por el despliegue"
   },
   "settingsNav": {
     "organisation": "Organización",

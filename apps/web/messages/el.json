@@ -161,8 +161,13 @@
     "receiptExtraction": "Εξαγωγή δεδομένων απόδειξης",
     "receiptExtractionHelp": "Αυτόματη εξαγωγή δεδομένων από μεταφορτωμένες αποδείξεις με AI",
     "checkingCapabilities": "Έλεγχος δυνατοτήτων μοντέλου...",
-    "configuredFromEnv": "Το AI έχει ρυθμιστεί από μεταβλητές περιβάλλοντος",
-    "configuredFromEnvHelp": "Οι OPENROUTER_API_KEY και OPENROUTER_MODEL είναι ορισμένες στο περιβάλλον σας."
+    "chatSection": "Συνομιλία",
+    "chatModelLabel": "Μοντέλο συνομιλίας",
+    "extractionSection": "Εξαγωγή δεδομένων",
+    "extractionModelLabel": "Μοντέλο εξαγωγής",
+    "setByDeployment": "Ορίστηκε από την εγκατάσταση",
+    "setByDeploymentHelp": "Διαμορφωμένο μέσω μεταβλητής περιβάλλοντος. Επεξεργαστείτε τη διαμόρφωση εγκατάστασης για να αλλάξετε.",
+    "apiKeySetByDeployment": "Το κλειδί API ορίστηκε από την εγκατάσταση"
   },
   "settingsNav": {
     "organisation": "Οργανισμός",

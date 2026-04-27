@@ -4,7 +4,10 @@ import {
   streamText,
   type UIMessage,
 } from "ai";
-import { getAiSettingsSecret } from "@/lib/actions/ai-settings";
+import {
+  getAiSettingsSecret,
+  isAiChatEnabled,
+} from "@/lib/actions/ai-settings";
 import { isFeatureEnabled } from "@/lib/ai/features";
 import { createAiProvider } from "@/lib/ai/provider";
 import { aiRateLimiter } from "@/lib/ai/rate-limiter";
@@ -33,8 +36,17 @@ export async function POST(req: Request): Promise<Response> {
 
   const orgId = session.org.id;
 
-  const settings = await getAiSettingsSecret(orgId);
-  if (!settings?.enabled || !settings.apiKey) {
+  // Master "Enable AI assistant" toggle gate — mirrors the extraction
+  // surface's `isReceiptExtractionEnabled` check so unchecking the
+  // toggle disables chat too. Env API key bypasses (deployment-level
+  // config wins).
+  if (!(await isAiChatEnabled(orgId))) {
+    log.warn("AI chat request while disabled", { orgId });
+    return new Response("AI not configured", { status: 400 });
+  }
+
+  const settings = await getAiSettingsSecret(orgId, "chat");
+  if (!settings) {
     log.warn("AI chat request with no config", { orgId });
     return new Response("AI not configured", { status: 400 });
   }

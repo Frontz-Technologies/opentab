@@ -20,9 +20,8 @@ export const aiSettings = pgTable(
     apiKeyEncrypted: text("api_key_encrypted"),
     apiKeyIv: varchar("api_key_iv", { length: 32 }),
     apiKeyLast4: varchar("api_key_last4", { length: 4 }),
-    model: varchar("model", { length: 100 })
-      .notNull()
-      .default("anthropic/claude-sonnet-4"),
+    chatModel: text("chat_model"),
+    extractionModel: text("extraction_model"),
     receiptExtractionEnabled: boolean("receipt_extraction_enabled")
       .notNull()
       .default(true),

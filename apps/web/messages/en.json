@@ -161,8 +161,13 @@
     "receiptExtraction": "Receipt data extraction",
     "receiptExtractionHelp": "Automatically extract data from uploaded receipts using AI",
     "checkingCapabilities": "Checking model capabilities...",
-    "configuredFromEnv": "AI configured from environment variables",
-    "configuredFromEnvHelp": "OPENROUTER_API_KEY and OPENROUTER_MODEL are set in your environment. To manage settings here instead, remove those variables."
+    "chatSection": "Chat",
+    "chatModelLabel": "Chat model",
+    "extractionSection": "Extraction",
+    "extractionModelLabel": "Extraction model",
+    "setByDeployment": "Set by deployment",
+    "setByDeploymentHelp": "Configured via environment variable. Edit the deployment config to change.",
+    "apiKeySetByDeployment": "API key set by deployment"
   },
   "settingsNav": {
     "organisation": "Organisation",

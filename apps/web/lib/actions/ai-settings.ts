@@ -10,22 +10,42 @@ import { getSession } from "@/lib/session";
 import { encryptApiKey, decryptApiKey } from "@/lib/ai/encryption";
 import { createAiProvider } from "@/lib/ai/provider";
 import { createLogger } from "@/lib/logging/logger";
+import { getFeatureModel, type AiFeature } from "@/lib/ai/features";
 
 const log = createLogger("ai-settings");
 
+// One-shot boot warning for operators upgrading from the pre-#246 env
+// surface. The old `OPENROUTER_MODEL` knob is no longer read — point
+// them at the per-feature replacement so they don't sit confused with
+// a stale env var that silently does nothing.
+if (
+  process.env.OPENROUTER_MODEL &&
+  !process.env.AI_MODEL_CHAT &&
+  !process.env.AI_MODEL_EXTRACTION
+) {
+  log.warn(
+    "OPENROUTER_MODEL is no longer read; use AI_MODEL_CHAT or AI_MODEL_EXTRACTION (or set per-org models in /settings/integrations/ai)",
+  );
+}
+
 const updateAiSettingsSchema = z.object({
   enabled: z.boolean(),
-  model: z.string().min(1).max(100),
+  chatModel: z.string().min(1).max(100).nullable(),
+  extractionModel: z.string().min(1).max(100).nullable(),
   apiKey: z.string().trim().optional().default(""),
   receiptExtractionEnabled: z.boolean().default(true),
 });
 
 export type AiSettingsPublic = {
   enabled: boolean;
-  model: string;
+  chatModel: string | null;
+  extractionModel: string | null;
   apiKeyLast4: string | null;
   hasApiKey: boolean;
   receiptExtractionEnabled: boolean;
+  apiKeyOverriddenByEnv: boolean;
+  chatModelOverriddenByEnv: boolean;
+  extractionModelOverriddenByEnv: boolean;
 };
 
 function assertSettingsAdmin(role: string) {
@@ -52,44 +72,47 @@ export async function getAiSettings(
 
   return {
     enabled: settings.enabled,
-    model: settings.model,
+    chatModel: settings.chatModel ?? null,
+    extractionModel: settings.extractionModel ?? null,
     apiKeyLast4: settings.apiKeyLast4 ?? null,
     hasApiKey: Boolean(settings.apiKeyEncrypted),
     receiptExtractionEnabled: settings.receiptExtractionEnabled,
+    apiKeyOverriddenByEnv: Boolean(process.env.OPENROUTER_API_KEY),
+    chatModelOverriddenByEnv: Boolean(process.env.AI_MODEL_CHAT),
+    extractionModelOverriddenByEnv: Boolean(process.env.AI_MODEL_EXTRACTION),
   };
 }
 
-export async function getAiEnvConfig(): Promise<{
-  model: string;
-  apiKeyLast4: string;
-} | null> {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) return null;
-  return {
-    model: process.env.OPENROUTER_MODEL ?? "anthropic/claude-sonnet-4-5",
-    apiKeyLast4: apiKey.slice(-4),
-  };
-}
-
-export async function getAiSettingsSecret(orgId: string) {
-  // Env vars take priority over DB settings
+export async function getAiSettingsSecret(
+  orgId: string,
+  feature: AiFeature,
+): Promise<{ apiKey: string; model: string } | null> {
   const envApiKey = process.env.OPENROUTER_API_KEY;
-  const envModel =
-    process.env.OPENROUTER_MODEL ?? "anthropic/claude-sonnet-4-5";
-  if (envApiKey) {
-    return { enabled: true, model: envModel, apiKey: envApiKey };
-  }
+  const envModel = getFeatureModel(feature);
 
-  const settings = await getAiSettingsRow(orgId);
-  if (!settings || !settings.apiKeyEncrypted || !settings.apiKeyIv) {
-    return null;
-  }
+  let apiKey: string | undefined = envApiKey;
+  let dbRow: Awaited<ReturnType<typeof getAiSettingsRow>> | undefined =
+    undefined;
 
-  return {
-    enabled: settings.enabled,
-    model: settings.model,
-    apiKey: decryptApiKey(settings.apiKeyEncrypted, settings.apiKeyIv),
-  };
+  if (!apiKey) {
+    dbRow = await getAiSettingsRow(orgId);
+    if (dbRow?.apiKeyEncrypted && dbRow?.apiKeyIv) {
+      apiKey = decryptApiKey(dbRow.apiKeyEncrypted, dbRow.apiKeyIv);
+    }
+  }
+  if (!apiKey) return null;
+
+  let model: string | null = envModel;
+  if (!model) {
+    if (dbRow === undefined) dbRow = await getAiSettingsRow(orgId);
+    model =
+      feature === "chat"
+        ? (dbRow?.chatModel ?? null)
+        : (dbRow?.extractionModel ?? null);
+  }
+  if (!model) return null;
+
+  return { apiKey, model };
 }
 
 export async function updateAiSettings(input: unknown) {
@@ -109,8 +132,15 @@ export async function updateAiSettings(input: unknown) {
   const existing = await getAiSettingsRow(orgId);
   const next = parsed.data;
 
+  // Env-overridden columns are read-only at the API surface — preserve
+  // the existing DB value rather than letting the client overwrite a
+  // value that's hidden behind a "Set by deployment" pill in the UI.
+  const apiKeyOverridden = Boolean(process.env.OPENROUTER_API_KEY);
+  const chatOverridden = Boolean(process.env.AI_MODEL_CHAT);
+  const extractionOverridden = Boolean(process.env.AI_MODEL_EXTRACTION);
+
   let encryptedKey: ReturnType<typeof encryptApiKey> | null = null;
-  if (next.apiKey) {
+  if (next.apiKey && !apiKeyOverridden) {
     try {
       encryptedKey = encryptApiKey(next.apiKey);
     } catch {
@@ -126,16 +156,33 @@ export async function updateAiSettings(input: unknown) {
     }
   }
 
+  const nextChatModel = chatOverridden
+    ? (existing?.chatModel ?? null)
+    : (next.chatModel ?? null);
+  const nextExtractionModel = extractionOverridden
+    ? (existing?.extractionModel ?? null)
+    : (next.extractionModel ?? null);
+  const nextApiKeyEncrypted = apiKeyOverridden
+    ? (existing?.apiKeyEncrypted ?? null)
+    : (encryptedKey?.encrypted ?? existing?.apiKeyEncrypted ?? null);
+  const nextApiKeyIv = apiKeyOverridden
+    ? (existing?.apiKeyIv ?? null)
+    : (encryptedKey?.iv ?? existing?.apiKeyIv ?? null);
+  const nextApiKeyLast4 = apiKeyOverridden
+    ? (existing?.apiKeyLast4 ?? null)
+    : (encryptedKey?.last4 ?? existing?.apiKeyLast4 ?? null);
+
   if (existing) {
     await db
       .update(aiSettings)
       .set({
         enabled: next.enabled,
-        model: next.model,
+        chatModel: nextChatModel,
+        extractionModel: nextExtractionModel,
         receiptExtractionEnabled: next.receiptExtractionEnabled,
-        apiKeyEncrypted: encryptedKey?.encrypted ?? existing.apiKeyEncrypted,
-        apiKeyIv: encryptedKey?.iv ?? existing.apiKeyIv,
-        apiKeyLast4: encryptedKey?.last4 ?? existing.apiKeyLast4,
+        apiKeyEncrypted: nextApiKeyEncrypted,
+        apiKeyIv: nextApiKeyIv,
+        apiKeyLast4: nextApiKeyLast4,
         updatedAt: new Date(),
       })
       .where(eq(aiSettings.id, existing.id));
@@ -143,18 +190,20 @@ export async function updateAiSettings(input: unknown) {
     await db.insert(aiSettings).values({
       orgId,
       enabled: next.enabled,
-      model: next.model,
+      chatModel: nextChatModel,
+      extractionModel: nextExtractionModel,
       receiptExtractionEnabled: next.receiptExtractionEnabled,
-      apiKeyEncrypted: encryptedKey?.encrypted ?? null,
-      apiKeyIv: encryptedKey?.iv ?? null,
-      apiKeyLast4: encryptedKey?.last4 ?? null,
+      apiKeyEncrypted: nextApiKeyEncrypted,
+      apiKeyIv: nextApiKeyIv,
+      apiKeyLast4: nextApiKeyLast4,
     });
   }
 
   log.info("AI settings updated", {
     orgId,
     enabled: next.enabled,
-    model: next.model,
+    chatModel: nextChatModel,
+    extractionModel: nextExtractionModel,
     receiptExtractionEnabled: next.receiptExtractionEnabled,
     apiKeyChanged: !!encryptedKey,
   });
@@ -192,7 +241,12 @@ export async function testAiConnection(orgId: string) {
   assertSettingsAdmin(session.role);
   if (session.org.id !== orgId) throw new Error("Forbidden");
 
-  const settings = await getAiSettingsSecret(orgId);
+  // Test against the extraction feature — that's the surface most likely
+  // to need a working key (PDF/receipt OCR). If chat is the only feature
+  // configured, fall back to that.
+  const settings =
+    (await getAiSettingsSecret(orgId, "extraction")) ??
+    (await getAiSettingsSecret(orgId, "chat"));
   if (!settings?.apiKey) {
     return { success: false, error: "No API key configured" };
   }
@@ -258,7 +312,6 @@ export async function getModelCapabilities(
 export async function isReceiptExtractionEnabled(
   orgId: string,
 ): Promise<boolean> {
-  // Env var config enables extraction automatically
   if (process.env.OPENROUTER_API_KEY) return true;
 
   const settings = await getAiSettingsRow(orgId);
@@ -268,4 +321,18 @@ export async function isReceiptExtractionEnabled(
     Boolean(settings.apiKeyEncrypted) &&
     settings.receiptExtractionEnabled
   );
+}
+
+// Mirrors `isReceiptExtractionEnabled` so the chat route gates on the
+// same master "Enable AI assistant" toggle that the extraction surface
+// honours. Without this, unchecking the toggle leaves chat working —
+// confusing operators since the label promises to disable AI.
+// `OPENROUTER_API_KEY` from env wins over the toggle (deployment-level
+// configuration overrides per-org choices, same as extraction).
+export async function isAiChatEnabled(orgId: string): Promise<boolean> {
+  if (process.env.OPENROUTER_API_KEY) return true;
+
+  const settings = await getAiSettingsRow(orgId);
+  if (!settings) return false;
+  return settings.enabled && Boolean(settings.apiKeyEncrypted);
 }

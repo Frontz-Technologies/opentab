@@ -248,7 +248,7 @@ export async function uploadAndExtractReceipt(
 
   const extractionEnabled = await isReceiptExtractionEnabled(session.org.id);
   if (extractionEnabled) {
-    const aiSecrets = await getAiSettingsSecret(session.org.id);
+    const aiSecrets = await getAiSettingsSecret(session.org.id, "extraction");
     if (aiSecrets?.apiKey) {
       log.info("ai extraction starting", {
         orgId: session.org.id,
@@ -276,6 +276,7 @@ export async function uploadAndExtractReceipt(
         buffer,
         mimeType,
         aiSecrets.apiKey,
+        aiSecrets.model,
         activeCategories.map((c) => ({ code: c.code, name: c.name })),
       );
       extractTimer(

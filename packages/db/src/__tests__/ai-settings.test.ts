@@ -32,6 +32,9 @@ describe("AiSettings", () => {
 
     expect(rows).toHaveLength(1);
     expect(rows[0]?.enabled).toBe(false);
-    expect(rows[0]?.model).toBe("anthropic/claude-sonnet-4");
+    // Per-feature model columns are nullable with no default — env or
+    // the AI Settings page populates them. A bare insert leaves them null.
+    expect(rows[0]?.chatModel).toBeNull();
+    expect(rows[0]?.extractionModel).toBeNull();
   });
 });
