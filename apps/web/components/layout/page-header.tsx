@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface PageHeaderProps {
-  heading: string;
+  heading?: string;
   headingPrefix?: string;
   onBack?: () => void;
   actions?: React.ReactNode;
@@ -70,9 +70,11 @@ export function PageHeader({
                 <div className="h-5 w-px bg-outline-variant/30" />
               </>
             )}
-            <h1 className="truncate font-headline text-lg font-semibold text-on-surface">
-              {heading}
-            </h1>
+            {heading && (
+              <h1 className="truncate font-headline text-lg font-semibold text-on-surface">
+                {heading}
+              </h1>
+            )}
           </div>
         </div>
 

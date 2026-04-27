@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { QuickSetup } from "@/components/onboarding/quick-setup";
 import { KpiCard } from "@/components/reports/kpi-card";
 import { DashboardClient } from "./dashboard-client";
+import { DashboardGreeting } from "./dashboard-greeting";
 import { getDashboardData, hasAnyData } from "./actions";
 import type { PeriodKey } from "@/lib/reports/types";
 
@@ -22,22 +23,9 @@ export default async function DashboardPage({
 
   return (
     <>
-      <PageHeader
-        heading={t("title")}
-        userName={session.user.name}
-        userEmail={session.user.email}
-      />
+      <PageHeader userName={session.user.name} userEmail={session.user.email} />
       <main className="px-6 py-8 max-w-7xl mx-auto">
-        {/* Hero display — PageHeader already carries the page's h1,
-            so this is a styled div, not a duplicate heading. Avoids
-            the ambiguous role=heading match that surfaced in #178.
-            aria-hidden stops assistive tech reading "Dashboard" twice. */}
-        <div
-          aria-hidden="true"
-          className="font-headline text-3xl sm:text-4xl font-bold text-on-surface tracking-tight mb-8"
-        >
-          {t("title")}
-        </div>
+        <DashboardGreeting userName={session.user.name} />
         {dataExists ? (
           <DashboardWithData period={period} session={session} />
         ) : (

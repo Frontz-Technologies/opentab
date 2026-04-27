@@ -92,6 +92,9 @@
   "dashboard": {
     "title": "Panel",
     "welcome": "Bienvenido a OpenTab",
+    "greetingMorning": "Buenos días, {name}",
+    "greetingAfternoon": "Buenas tardes, {name}",
+    "greetingEvening": "Buenas noches, {name}",
     "revenue": "Ingresos",
     "outstanding": "Pendiente",
     "expenses": "Gastos",

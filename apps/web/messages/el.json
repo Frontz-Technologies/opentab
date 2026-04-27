@@ -92,6 +92,9 @@
   "dashboard": {
     "title": "Επισκόπηση",
     "welcome": "Καλώς ήρθατε στο OpenTab",
+    "greetingMorning": "Καλημέρα, {name}",
+    "greetingAfternoon": "Καλό μεσημέρι, {name}",
+    "greetingEvening": "Καλησπέρα, {name}",
     "revenue": "Έσοδα",
     "outstanding": "Εκκρεμή",
     "expenses": "Δαπάνες",

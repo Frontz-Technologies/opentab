@@ -92,6 +92,9 @@
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Welcome to OpenTab",
+    "greetingMorning": "Good morning, {name}",
+    "greetingAfternoon": "Good afternoon, {name}",
+    "greetingEvening": "Good evening, {name}",
     "revenue": "Revenue",
     "outstanding": "Outstanding",
     "expenses": "Expenses",
