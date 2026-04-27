@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -10,7 +10,22 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormError } from "@/components/auth/form-error";
 
-export function RegisterClient() {
+interface RegisterClientProps {
+  // Both URLs are required for the legal-consent text to render
+  // ("By creating an account you agree to our Terms and Privacy Policy"
+  // is meaningless if either link is broken). The server resolves these
+  // from LEGAL_TERMS_URL / LEGAL_PRIVACY_URL and passes null when
+  // either is unset.
+  termsUrl: string | null;
+  privacyUrl: string | null;
+  legalFooter?: ReactNode;
+}
+
+export function RegisterClient({
+  termsUrl,
+  privacyUrl,
+  legalFooter,
+}: RegisterClientProps) {
   const router = useRouter();
   const t = useTranslations("auth");
   const [name, setName] = useState("");
@@ -132,30 +147,32 @@ export function RegisterClient() {
           />
         </div>
 
-        <p className="text-xs text-on-surface-variant/60 text-center">
-          {t.rich("legalConsent", {
-            terms: (chunks) => (
-              <a
-                href="https://opentab.tech/terms"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:text-primary-container transition-colors"
-              >
-                {chunks}
-              </a>
-            ),
-            privacy: (chunks) => (
-              <a
-                href="https://opentab.tech/privacy"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:text-primary-container transition-colors"
-              >
-                {chunks}
-              </a>
-            ),
-          })}
-        </p>
+        {termsUrl && privacyUrl && (
+          <p className="text-xs text-on-surface-variant/60 text-center">
+            {t.rich("legalConsent", {
+              terms: (chunks) => (
+                <a
+                  href={termsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:text-primary-container transition-colors"
+                >
+                  {chunks}
+                </a>
+              ),
+              privacy: (chunks) => (
+                <a
+                  href={privacyUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:text-primary-container transition-colors"
+                >
+                  {chunks}
+                </a>
+              ),
+            })}
+          </p>
+        )}
 
         <Button
           type="submit"
@@ -181,6 +198,8 @@ export function RegisterClient() {
           {t("login")}
         </Link>
       </p>
+
+      {legalFooter}
     </div>
   );
 }
