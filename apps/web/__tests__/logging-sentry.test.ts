@@ -1,4 +1,12 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import {
+  describe,
+  it,
+  expect,
+  vi,
+  beforeAll,
+  beforeEach,
+  afterEach,
+} from "vitest";
 
 const { captureException, setTag, setExtras, setFingerprint } = vi.hoisted(
   () => ({
@@ -23,6 +31,23 @@ vi.mock("@sentry/nextjs", () => ({
 import { createLogger } from "@/lib/logging/logger";
 
 describe("logger error level → Sentry", () => {
+  // Warm the dynamic `import("@sentry/nextjs")` cache once. On cold CI
+  // workers the first resolution can take more than a single setTimeout(0)
+  // microtask tick, which would let captureException calls leak into the
+  // following test. After this beforeAll the import is cached and resolves
+  // in one microtask cycle.
+  beforeAll(async () => {
+    const warmup = createLogger("warmup");
+    warmup.error("warmup");
+    await vi.waitFor(() => {
+      expect(captureException).toHaveBeenCalled();
+    });
+    captureException.mockClear();
+    setTag.mockClear();
+    setExtras.mockClear();
+    setFingerprint.mockClear();
+  });
+
   beforeEach(() => {
     captureException.mockClear();
     setTag.mockClear();
@@ -38,21 +63,23 @@ describe("logger error level → Sentry", () => {
   it("captures error-level logs with module tag", async () => {
     const log = createLogger("email-transport");
     log.error("email send failed", { to: "user@example.com" });
-    await new Promise((r) => setTimeout(r, 0));
 
-    expect(captureException).toHaveBeenCalledOnce();
+    await vi.waitFor(() => {
+      expect(captureException).toHaveBeenCalledOnce();
+    });
     expect(setTag).toHaveBeenCalledWith("module", "email-transport");
   });
 
   it("fingerprints by [module, message] for dedup", async () => {
     const log = createLogger("worker");
     log.error("redis connection lost", { attempt: 3 });
-    await new Promise((r) => setTimeout(r, 0));
 
-    expect(setFingerprint).toHaveBeenCalledWith([
-      "worker",
-      "redis connection lost",
-    ]);
+    await vi.waitFor(() => {
+      expect(setFingerprint).toHaveBeenCalledWith([
+        "worker",
+        "redis connection lost",
+      ]);
+    });
   });
 
   it("attaches sanitized data as extras (secrets redacted)", async () => {
@@ -62,8 +89,10 @@ describe("logger error level → Sentry", () => {
       password: "hunter2",
       apiKey: "sk-secret",
     });
-    await new Promise((r) => setTimeout(r, 0));
 
+    await vi.waitFor(() => {
+      expect(setExtras).toHaveBeenCalled();
+    });
     const extras = setExtras.mock.calls[0][0];
     expect(extras.password).toBe("[REDACTED]");
     expect(extras.apiKey).toBe("[REDACTED]");
@@ -73,8 +102,10 @@ describe("logger error level → Sentry", () => {
   it("constructs an Error with the log message for the stack", async () => {
     const log = createLogger("invoicing");
     log.error("PDF render timed out");
-    await new Promise((r) => setTimeout(r, 0));
 
+    await vi.waitFor(() => {
+      expect(captureException).toHaveBeenCalled();
+    });
     const captured = captureException.mock.calls[0][0];
     expect(captured).toBeInstanceOf(Error);
     expect((captured as Error).message).toBe("PDF render timed out");
@@ -85,8 +116,11 @@ describe("logger error level → Sentry", () => {
     log.info("nothing to see");
     log.warn("watch out");
     log.debug("verbose");
-    await new Promise((r) => setTimeout(r, 0));
 
+    // Give any leaked microtask plenty of time to land — on a healthy
+    // logger nothing should fire because info/warn/debug skip the Sentry
+    // path entirely.
+    await new Promise((r) => setTimeout(r, 100));
     expect(captureException).not.toHaveBeenCalled();
   });
 });
