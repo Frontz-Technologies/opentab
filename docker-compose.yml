@@ -128,6 +128,7 @@ services:
 
   db:
     image: postgres:16-alpine
+    pull_policy: always
     restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-opentab}
@@ -143,6 +144,7 @@ services:
 
   redis:
     image: redis:7-alpine
+    pull_policy: always
     restart: always
     command:
       [
@@ -162,6 +164,7 @@ services:
 
   gotenberg:
     image: gotenberg/gotenberg:8
+    pull_policy: always
     restart: always
     expose:
       - "3000"
