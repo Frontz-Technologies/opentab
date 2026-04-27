@@ -187,9 +187,7 @@ export async function storeImportTempFile(
   return key;
 }
 
-export async function getImportTempFile(
-  relativePath: string,
-): Promise<Buffer> {
+export async function getImportTempFile(relativePath: string): Promise<Buffer> {
   return getFile(relativePath);
 }
 
@@ -253,10 +251,7 @@ export async function deleteTempFile(key: string): Promise<void> {
     // Idempotent: missing key (already cleaned by another path) is fine.
     const code = (err as NodeJS.ErrnoException).code;
     if (code === "ENOENT") return;
-    if (
-      err instanceof Error &&
-      /NoSuchKey|NotFound/i.test(err.message)
-    ) {
+    if (err instanceof Error && /NoSuchKey|NotFound/i.test(err.message)) {
       return;
     }
     throw err;
