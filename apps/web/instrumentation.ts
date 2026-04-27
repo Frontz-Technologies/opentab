@@ -9,6 +9,8 @@
 //
 // Sentry init is skipped if SENTRY_DSN is unset.
 
+import { beforeSend } from "./lib/sentry/before-send";
+
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
     const key = process.env.ENCRYPTION_KEY;
@@ -36,6 +38,7 @@ export async function register() {
       environment: process.env.SENTRY_ENVIRONMENT ?? process.env.NODE_ENV,
       tracesSampleRate: 0,
       debug: false,
+      beforeSend,
     });
   }
 
@@ -45,6 +48,7 @@ export async function register() {
       dsn: process.env.SENTRY_DSN,
       environment: process.env.SENTRY_ENVIRONMENT ?? process.env.NODE_ENV,
       tracesSampleRate: 0,
+      beforeSend,
     });
   }
 }
