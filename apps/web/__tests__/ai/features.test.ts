@@ -40,12 +40,14 @@ describe("AI feature flags", () => {
     delete process.env.FEATURE_AI_CHAT;
   });
 
-  it("getFeatureModel returns env value when set", () => {
-    process.env.AI_MODEL_EXTRACTION = "openai/gpt-4o";
-    expect(getFeatureModel("extraction")).toBe("openai/gpt-4o");
+  it("getFeatureModel returns null when env unset (no hardcoded default)", () => {
+    expect(getFeatureModel("chat")).toBeNull();
+    expect(getFeatureModel("extraction")).toBeNull();
   });
 
-  it("getFeatureModel returns documented default when unset", () => {
+  it("getFeatureModel returns env value per feature when set", () => {
+    process.env.AI_MODEL_CHAT = "openai/gpt-4o-mini";
+    process.env.AI_MODEL_EXTRACTION = "openai/gpt-4o";
     expect(getFeatureModel("chat")).toBe("openai/gpt-4o-mini");
     expect(getFeatureModel("extraction")).toBe("openai/gpt-4o");
   });
@@ -53,7 +55,7 @@ describe("AI feature flags", () => {
   it("typed feature names cover known features", () => {
     const features: AiFeature[] = ["chat", "extraction"];
     for (const f of features) {
-      expect(typeof getFeatureModel(f)).toBe("string");
+      expect(() => getFeatureModel(f)).not.toThrow();
     }
   });
 });

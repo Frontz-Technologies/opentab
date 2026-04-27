@@ -13,15 +13,13 @@ const ENV_MODEL: Record<AiFeature, string> = {
   extraction: "AI_MODEL_EXTRACTION",
 };
 
-const DEFAULT_MODEL: Record<AiFeature, string> = {
-  chat: "openai/gpt-4o-mini",
-  extraction: "openai/gpt-4o",
-};
-
 export function isFeatureEnabled(feature: AiFeature): boolean {
   return process.env[ENV_FLAG[feature]] === "on";
 }
 
-export function getFeatureModel(feature: AiFeature): string {
-  return process.env[ENV_MODEL[feature]] ?? DEFAULT_MODEL[feature];
+// Returns null when the env is unset. Callers fall through to the
+// per-org DB-stored model (`getAiSettingsSecret(orgId, feature)`); if
+// neither is configured, the feature is just off — no surprise default.
+export function getFeatureModel(feature: AiFeature): string | null {
+  return process.env[ENV_MODEL[feature]] ?? null;
 }
