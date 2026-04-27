@@ -23,6 +23,7 @@ import {
   LineItemsBuilder,
   type LineItem,
 } from "@/components/invoicing/line-items-builder";
+import { EmptyEntityHint } from "@/components/forms/empty-entity-hint";
 import { createRecurringExpense } from "../actions";
 
 interface RecurringExpenseFormProps {
@@ -112,23 +113,37 @@ export function RecurringExpenseForm({
         <h2 className="font-headline text-lg font-semibold text-on-surface">
           {tExp("supplier")}
         </h2>
-        <Select
-          value={contactId || undefined}
-          onValueChange={(v) => setContactId(v ?? "")}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder={tExp("selectSupplier")} />
-          </SelectTrigger>
-          <SelectContent>
-            {contacts
-              .filter((c) => c.type === "supplier" || c.type === "both")
-              .map((c) => (
-                <SelectItem key={c.id} value={c.id}>
-                  {c.displayName}
-                </SelectItem>
-              ))}
-          </SelectContent>
-        </Select>
+        {(() => {
+          const supplierContacts = contacts.filter(
+            (c) => c.type === "supplier" || c.type === "both",
+          );
+          if (supplierContacts.length === 0) {
+            return (
+              <EmptyEntityHint
+                message={tExp("noSuppliersYet")}
+                ctaLabel={tExp("createContact")}
+                ctaHref="/contacts/new"
+              />
+            );
+          }
+          return (
+            <Select
+              value={contactId || undefined}
+              onValueChange={(v) => setContactId(v ?? "")}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder={tExp("selectSupplier")} />
+              </SelectTrigger>
+              <SelectContent>
+                {supplierContacts.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.displayName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          );
+        })()}
       </div>
 
       <div className="bg-surface-container rounded-xl p-6 space-y-4">

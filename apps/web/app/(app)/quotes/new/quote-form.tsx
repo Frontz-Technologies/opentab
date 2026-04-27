@@ -17,6 +17,7 @@ import {
   LineItemsBuilder,
   type LineItem,
 } from "@/components/invoicing/line-items-builder";
+import { EmptyEntityHint } from "@/components/forms/empty-entity-hint";
 import { createQuote } from "../actions";
 
 interface QuoteFormProps {
@@ -109,27 +110,35 @@ export function QuoteForm({
         <h2 className="font-headline text-lg font-semibold text-on-surface">
           {t("client")} <span className="text-tertiary">*</span>
         </h2>
-        <Select
-          value={contactId || undefined}
-          onValueChange={(v) => {
-            const next = v ?? "";
-            setContactId(next);
-            const contact = contacts.find((c) => c.id === next);
-            if (contact?.defaultCurrency)
-              setCurrencyCode(contact.defaultCurrency);
-          }}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder={t("selectClient")} />
-          </SelectTrigger>
-          <SelectContent>
-            {contacts.map((c) => (
-              <SelectItem key={c.id} value={c.id}>
-                {c.displayName}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {contacts.length === 0 ? (
+          <EmptyEntityHint
+            message={t("noClientsYet")}
+            ctaLabel={t("createContact")}
+            ctaHref="/contacts/new"
+          />
+        ) : (
+          <Select
+            value={contactId || undefined}
+            onValueChange={(v) => {
+              const next = v ?? "";
+              setContactId(next);
+              const contact = contacts.find((c) => c.id === next);
+              if (contact?.defaultCurrency)
+                setCurrencyCode(contact.defaultCurrency);
+            }}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder={t("selectClient")} />
+            </SelectTrigger>
+            <SelectContent>
+              {contacts.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.displayName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       <div className="bg-surface-container rounded-xl p-6 space-y-4">

@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CREDIT_NOTE_REASON } from "@opentab/db/schema";
+import { EmptyEntityHint } from "@/components/forms/empty-entity-hint";
 import { createCreditNote } from "../actions";
 
 interface ContactRow {
@@ -137,21 +138,29 @@ export function CreditNoteForm({
           >
             {t("client")}
           </label>
-          <Select
-            value={contactId || undefined}
-            onValueChange={(v) => setContactId(v ?? "")}
-          >
-            <SelectTrigger id="cn-contactId" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {contacts.map((c) => (
-                <SelectItem key={c.id} value={c.id}>
-                  {c.displayName}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {contacts.length === 0 ? (
+            <EmptyEntityHint
+              message={t("noClientsYet")}
+              ctaLabel={t("createContact")}
+              ctaHref="/contacts/new"
+            />
+          ) : (
+            <Select
+              value={contactId || undefined}
+              onValueChange={(v) => setContactId(v ?? "")}
+            >
+              <SelectTrigger id="cn-contactId" className="w-full">
+                <SelectValue placeholder={t("selectClient")} />
+              </SelectTrigger>
+              <SelectContent>
+                {contacts.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.displayName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
         <div>
           <label

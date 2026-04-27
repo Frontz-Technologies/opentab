@@ -440,6 +440,7 @@
     "cancelled": "Factura cancelada",
     "deleted": "Factura eliminada",
     "selectClient": "Seleccionar un cliente",
+    "noClientsYet": "Aún no hay clientes. Cree uno para facturarle.",
     "createContact": "Crear contacto",
     "contactClassification": "Tipo",
     "classificationBusiness": "Empresa",
@@ -472,6 +473,9 @@
     "import": "Importar",
     "noCreditNotes": "Aún no hay notas de crédito",
     "noCreditNotesDescription": "Cree una nota de crédito para reembolsar o ajustar una factura publicada.",
+    "selectClient": "Seleccionar un cliente",
+    "noClientsYet": "Aún no hay clientes. Cree uno para emitir una nota de crédito.",
+    "createContact": "Crear contacto",
     "placeholderDraft": "Borrador",
     "draftHeading": "Borrador de nota de crédito",
     "number": "Número",
@@ -560,6 +564,8 @@
     "converted": "Cotización convertida a factura",
     "deleted": "Cotización eliminada",
     "selectClient": "Seleccionar un cliente",
+    "noClientsYet": "Aún no hay clientes. Cree uno para enviar una cotización.",
+    "createContact": "Crear contacto",
     "lineItems": "Partidas",
     "itemRequired": "Se requiere al menos un artículo"
   },
@@ -605,7 +611,9 @@
     "resumed": "Factura recurrente reanudada",
     "deleted": "Factura recurrente eliminada",
     "generatedInvoices": "Facturas generadas",
-    "selectClient": "Seleccionar un cliente"
+    "selectClient": "Seleccionar un cliente",
+    "noClientsYet": "Aún no hay clientes. Cree uno para programar una factura recurrente.",
+    "createContact": "Crear contacto"
   },
   "expenseGroups": {
     "rent": "Alquiler y arrendamiento",
@@ -653,6 +661,8 @@
     "number": "Número",
     "supplier": "Proveedor",
     "selectSupplier": "Seleccionar un proveedor",
+    "noSuppliersYet": "Aún no hay proveedores. Cree uno para registrar este gasto.",
+    "createContact": "Crear contacto",
     "supplierNameFreeText": "O ingrese nombre del proveedor",
     "supplierNamePlaceholder": "ej. Cafetería, Estacionamiento, Suministros",
     "category": "Categoría",

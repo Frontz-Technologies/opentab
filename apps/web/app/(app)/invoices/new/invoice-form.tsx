@@ -23,6 +23,7 @@ import {
   LineItemsBuilder,
   type LineItem,
 } from "@/components/invoicing/line-items-builder";
+import { EmptyEntityHint } from "@/components/forms/empty-entity-hint";
 import { createInvoice } from "../actions";
 import { createContact } from "../../contacts/actions";
 
@@ -158,43 +159,51 @@ export function InvoiceForm({
         <h2 className="font-headline text-lg font-semibold text-on-surface">
           {t("client")} <span className="text-tertiary">*</span>
         </h2>
-        <div className="flex items-stretch gap-2">
-          <Select
-            value={contactId || undefined}
-            onValueChange={(v) => {
-              const next = v ?? "";
-              setContactId(next);
-              const contact = allContacts.find((c) => c.id === next);
-              if (contact?.defaultCurrency)
-                setCurrencyCode(contact.defaultCurrency);
-              if (contact?.defaultPaymentTerms) {
-                const due = new Date(issueDate);
-                due.setDate(due.getDate() + contact.defaultPaymentTerms);
-                setDueDate(due.toISOString().split("T")[0]);
-              }
-            }}
-          >
-            <SelectTrigger className="flex-1 min-w-0">
-              <SelectValue placeholder={t("selectClient")} />
-            </SelectTrigger>
-            <SelectContent>
-              {allContacts.map((c) => (
-                <SelectItem key={c.id} value={c.id}>
-                  {c.displayName}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <button
-            type="button"
-            onClick={() => setShowCreateContact(true)}
-            aria-label={t("createContact")}
-            title={t("createContact")}
-            className="shrink-0 inline-flex h-auto w-10 items-center justify-center rounded-lg bg-surface-container-low border border-on-surface/10 text-on-surface hover:bg-surface-container hover:text-primary transition-colors"
-          >
-            <span className="material-symbols-outlined text-[20px]">add</span>
-          </button>
-        </div>
+        {allContacts.length === 0 ? (
+          <EmptyEntityHint
+            message={t("noClientsYet")}
+            ctaLabel={t("createContact")}
+            ctaOnClick={() => setShowCreateContact(true)}
+          />
+        ) : (
+          <div className="flex items-stretch gap-2">
+            <Select
+              value={contactId || undefined}
+              onValueChange={(v) => {
+                const next = v ?? "";
+                setContactId(next);
+                const contact = allContacts.find((c) => c.id === next);
+                if (contact?.defaultCurrency)
+                  setCurrencyCode(contact.defaultCurrency);
+                if (contact?.defaultPaymentTerms) {
+                  const due = new Date(issueDate);
+                  due.setDate(due.getDate() + contact.defaultPaymentTerms);
+                  setDueDate(due.toISOString().split("T")[0]);
+                }
+              }}
+            >
+              <SelectTrigger className="flex-1 min-w-0">
+                <SelectValue placeholder={t("selectClient")} />
+              </SelectTrigger>
+              <SelectContent>
+                {allContacts.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.displayName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <button
+              type="button"
+              onClick={() => setShowCreateContact(true)}
+              aria-label={t("createContact")}
+              title={t("createContact")}
+              className="shrink-0 inline-flex h-auto w-10 items-center justify-center rounded-lg bg-surface-container-low border border-on-surface/10 text-on-surface hover:bg-surface-container hover:text-primary transition-colors"
+            >
+              <span className="material-symbols-outlined text-[20px]">add</span>
+            </button>
+          </div>
+        )}
 
         <Dialog
           open={showCreateContact}

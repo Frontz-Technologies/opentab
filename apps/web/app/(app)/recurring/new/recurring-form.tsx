@@ -18,6 +18,7 @@ import {
   LineItemsBuilder,
   type LineItem,
 } from "@/components/invoicing/line-items-builder";
+import { EmptyEntityHint } from "@/components/forms/empty-entity-hint";
 import { createRecurring } from "../actions";
 
 interface RecurringFormProps {
@@ -111,21 +112,29 @@ export function RecurringForm({
         <h2 className="font-headline text-lg font-semibold text-on-surface">
           {t("client")}
         </h2>
-        <Select
-          value={contactId || undefined}
-          onValueChange={(v) => setContactId(v ?? "")}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder={t("selectClient")} />
-          </SelectTrigger>
-          <SelectContent>
-            {contacts.map((c) => (
-              <SelectItem key={c.id} value={c.id}>
-                {c.displayName}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {contacts.length === 0 ? (
+          <EmptyEntityHint
+            message={t("noClientsYet")}
+            ctaLabel={t("createContact")}
+            ctaHref="/contacts/new"
+          />
+        ) : (
+          <Select
+            value={contactId || undefined}
+            onValueChange={(v) => setContactId(v ?? "")}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder={t("selectClient")} />
+            </SelectTrigger>
+            <SelectContent>
+              {contacts.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.displayName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       <div className="bg-surface-container rounded-xl p-6 space-y-4">

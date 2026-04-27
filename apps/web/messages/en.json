@@ -440,6 +440,7 @@
     "cancelled": "Invoice cancelled",
     "deleted": "Invoice deleted",
     "selectClient": "Select a client",
+    "noClientsYet": "No clients yet. Create one to bill them.",
     "createContact": "Create Contact",
     "contactClassification": "Type",
     "classificationBusiness": "Business",
@@ -472,6 +473,9 @@
     "import": "Import",
     "noCreditNotes": "No credit notes yet",
     "noCreditNotesDescription": "Create a credit note to refund or adjust a published invoice.",
+    "selectClient": "Select a client",
+    "noClientsYet": "No clients yet. Create one to issue a credit note.",
+    "createContact": "Create Contact",
     "placeholderDraft": "Draft",
     "draftHeading": "Draft Credit Note",
     "number": "Number",
@@ -560,6 +564,8 @@
     "converted": "Quote converted to invoice",
     "deleted": "Quote deleted",
     "selectClient": "Select a client",
+    "noClientsYet": "No clients yet. Create one to send a quote.",
+    "createContact": "Create Contact",
     "lineItems": "Line Items",
     "itemRequired": "At least one item is required"
   },
@@ -605,7 +611,9 @@
     "resumed": "Recurring invoice resumed",
     "deleted": "Recurring invoice deleted",
     "generatedInvoices": "Generated Invoices",
-    "selectClient": "Select a client"
+    "selectClient": "Select a client",
+    "noClientsYet": "No clients yet. Create one to schedule a recurring invoice.",
+    "createContact": "Create Contact"
   },
   "expenseGroups": {
     "rent": "Rent & Leasing",
@@ -653,6 +661,8 @@
     "number": "Number",
     "supplier": "Supplier",
     "selectSupplier": "Select a supplier",
+    "noSuppliersYet": "No suppliers yet. Create one to log this expense.",
+    "createContact": "Create Contact",
     "supplierNameFreeText": "Or enter supplier name",
     "supplierNamePlaceholder": "e.g. Coffee shop, Parking, Office supplies",
     "category": "Category",
