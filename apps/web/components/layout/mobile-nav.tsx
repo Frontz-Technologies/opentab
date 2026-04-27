@@ -4,6 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { MobileMoreSheet } from "./mobile-more-sheet";
 
+interface IntegrationNavEntry {
+  kind: string;
+  label: string;
+  slug: string;
+}
+
 const navItems = [
   { icon: "dashboard", label: "Dashboard", href: "/dashboard" },
   { icon: "receipt_long", label: "Invoices", href: "/invoices" },
@@ -12,7 +18,11 @@ const navItems = [
   { icon: "inventory_2", label: "Products", href: "/products" },
 ] as const;
 
-export function MobileNav() {
+export function MobileNav({
+  integrationNav,
+}: {
+  integrationNav?: IntegrationNavEntry[];
+}) {
   const pathname = usePathname();
 
   return (
@@ -45,7 +55,7 @@ export function MobileNav() {
             </Link>
           );
         })}
-        <MobileMoreSheet />
+        <MobileMoreSheet integrationNav={integrationNav} />
       </div>
     </nav>
   );

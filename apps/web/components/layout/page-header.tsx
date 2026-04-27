@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { UserMenu } from "@/components/layout/user-menu";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -44,10 +43,6 @@ export function PageHeader({
     >
       <div className="flex h-14 items-center gap-3 px-4">
         <div className="flex min-w-0 flex-1 items-center gap-2">
-          <div className="md:hidden">
-            <SidebarTrigger />
-          </div>
-
           {onBack && (
             <Button
               variant="ghost"
