@@ -41,7 +41,7 @@ const log = createLogger("import-actions");
 
 interface CommitArgs {
   entityKey: string;
-  rows: Record<string, string>[];
+  importId: string;
   mapping: Record<string, string | null>;
   skippedByUser: number[];
   autoCreateToggles: Record<string, boolean>;
@@ -201,7 +201,56 @@ export async function commitImport(args: CommitArgs) {
 
   const orgId = session.org.id;
   const importer = getImporter(args.entityKey);
-  const validated = validateRows(args.rows, args.mapping, importer, orgId);
+
+  const storageKey = `${orgId}/imports/tmp/${args.importId}.csv`;
+
+  let buffer: Buffer;
+  try {
+    buffer = await getImportTempFile(storageKey);
+  } catch (err) {
+    // Narrow to "file is genuinely missing" — TTL sweep, abandoned
+    // wizard, idempotent double-commit. Anything else (S3 5xx, IAM
+    // denial, network blip, malformed key) should propagate as a 500
+    // so it surfaces in logs instead of being mislabelled as session
+    // expiry.
+    const code = (err as NodeJS.ErrnoException).code;
+    const name = (err as { name?: string }).name;
+    const status = (err as { $metadata?: { httpStatusCode?: number } })
+      .$metadata?.httpStatusCode;
+    const isMissing =
+      code === "ENOENT" ||
+      name === "NoSuchKey" ||
+      name === "NotFound" ||
+      status === 404 ||
+      (err instanceof Error && /NoSuchKey|NotFound/i.test(err.message));
+    if (!isMissing) throw err;
+    return {
+      created: 0,
+      skippedDup: 0,
+      skippedByUser: 0,
+      failed: 0,
+      errorCsv: null,
+      ok: false as const,
+      error: "Import session expired — please re-upload the file.",
+    };
+  }
+
+  let parsed;
+  try {
+    parsed = await parseCsv(buffer);
+  } catch (err) {
+    return {
+      created: 0,
+      skippedDup: 0,
+      skippedByUser: 0,
+      failed: 0,
+      errorCsv: null,
+      ok: false as const,
+      error: err instanceof Error ? err.message : "Failed to parse CSV",
+    };
+  }
+
+  const validated = validateRows(parsed.rows, args.mapping, importer, orgId);
 
   // Invoice + credit-note rows need a real contactId (notNull at DB
   // level). Pre-resolve via a single batch lookup over distinct
@@ -265,6 +314,12 @@ export async function commitImport(args: CommitArgs) {
   });
 
   revalidatePath(`/${args.entityKey}`);
+  // Delete only on the success path — if anything above this point
+  // throws (line-item insert failure, recordActivity outage), the
+  // raw CSV stays in storage so the user can retry. The TTL sweep
+  // (cleanup-temp-files, 24h) catches files left behind by exceptions
+  // that the user never retries.
+  await deleteTempFile(storageKey);
   return { success: true, ...result };
 }
 

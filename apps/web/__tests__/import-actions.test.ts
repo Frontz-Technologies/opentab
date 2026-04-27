@@ -11,7 +11,24 @@ vi.mock("@/lib/session", () => ({
   getSession: getSessionMock,
 }));
 
-import { uploadImportCsv } from "@/app/(app)/import/[entity]/actions";
+vi.mock("@/lib/db", () => ({
+  db: new Proxy(
+    {},
+    {
+      get: () => {
+        throw new Error("db should not be touched");
+      },
+    },
+  ),
+}));
+
+vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+vi.mock("@/lib/activities/record", () => ({ recordActivity: vi.fn() }));
+
+import {
+  uploadImportCsv,
+  commitImport,
+} from "@/app/(app)/import/[entity]/actions";
 
 function ownerSession() {
   return {
@@ -101,5 +118,28 @@ describe("uploadImportCsv", () => {
     const result = await uploadImportCsv(fd);
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error).toBe("Forbidden");
+  });
+});
+
+// (Tests for commitImport happy paths require DB binding. The existing
+// runner.test.ts already covers the post-validation insert pipeline
+// against PGlite, so this test file focuses ONLY on the new behaviour
+// commitImport added in Task 3: reading from storage and the missing-file
+// branch.)
+
+describe("commitImport — missing storage object", () => {
+  it("returns ok=false 'Import session expired' when the file isn't in storage", async () => {
+    // No upload happened first — pretend the cleanup processor swept the file.
+    const result = await commitImport({
+      entityKey: "contacts",
+      importId: "tmp_does_not_exist",
+      mapping: {},
+      skippedByUser: [],
+      autoCreateToggles: {},
+    });
+    expect("ok" in result && result.ok).toBe(false);
+    if ("error" in result) {
+      expect(result.error).toMatch(/expired|re-upload/i);
+    }
   });
 });
