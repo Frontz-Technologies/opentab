@@ -107,19 +107,20 @@ services:
 
   db-sync:
     # One-shot init that syncs the live DB schema with the Drizzle schema-
-    # as-code via `db:push --force` before web/worker start. Push is the
-    # v1 strategy (no migration history): on every `compose up` it diffs
-    # schema vs. DB and emits the necessary CREATE/ALTER statements.
-    # `--force` accepts destructive operations (column drops, type
-    # changes that lose data) without an interactive prompt — required
-    # because the container has no TTY. Closed-beta scope makes this
-    # acceptable; for the next ring of users we'll switch to a proper
-    # `db:migrate` flow with versioned SQL files.
+    # as-code via `db:push` before web/worker start. Push is the v1 strategy
+    # (no migration history): on every `compose up` it diffs schema vs. DB
+    # and emits the necessary CREATE/ALTER statements. Without `--force`
+    # it refuses any destructive operation (column drops, type changes that
+    # lose data) and exits non-zero, gating the deploy. When you knowingly
+    # ship a destructive schema change, append `--force` for that one
+    # deploy then revert (see #248 for the chat/extraction model cutover
+    # precedent), or generate a versioned SQL migration via
+    # `drizzle-kit generate` and switch this command to `db:migrate`.
     image: ${OPENTAB_IMAGE:-ghcr.io/frontz-technologies/opentab:latest}
     pull_policy: always
     restart: "no"
     working_dir: /app/packages/db
-    command: ["pnpm", "db:push", "--force"]
+    command: ["pnpm", "db:push"]
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-opentab}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-opentab}
     depends_on:
