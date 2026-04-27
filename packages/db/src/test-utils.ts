@@ -564,7 +564,8 @@ async function pushSchema(pglite: PGlite) {
       "api_key_encrypted" text,
       "api_key_iv" varchar(32),
       "api_key_last4" varchar(4),
-      "model" varchar(100) NOT NULL DEFAULT 'anthropic/claude-sonnet-4',
+      "chat_model" text,
+      "extraction_model" text,
       "receipt_extraction_enabled" boolean NOT NULL DEFAULT true,
       "created_at" timestamp NOT NULL DEFAULT now(),
       "updated_at" timestamp NOT NULL DEFAULT now()
