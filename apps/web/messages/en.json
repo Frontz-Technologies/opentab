@@ -5,6 +5,8 @@
     "save": "Save changes",
     "cancel": "Cancel",
     "discard": "Discard",
+    "unsavedChangesTitle": "Discard unsaved changes?",
+    "unsavedChangesDescription": "You'll lose everything you've entered on this page. This can't be undone.",
     "loading": "Loading...",
     "comingSoon": "Coming soon",
     "soonBadge": "Soon"
@@ -643,7 +645,6 @@
     "receiptNoDataTitle": "Couldn't read this receipt",
     "receiptNoDataBody": "The file was saved but the AI couldn't extract any fields. Fill the form manually.",
     "dismiss": "Dismiss",
-    "discardConfirm": "Discard current expense? Uploaded attachments will be deleted.",
     "removeAttachment": "Remove",
     "editExpense": "Edit Expense",
     "noExpenses": "No expenses yet",

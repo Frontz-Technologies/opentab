@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { useUnsavedChangesWarning } from "@/hooks/use-unsaved-changes-warning";
+import { UnsavedChangesGuard } from "@/components/forms/unsaved-changes-guard";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import type {
@@ -93,8 +93,6 @@ export function ExpenseForm({
     !!notes ||
     !!supplierInvoiceNumber ||
     items.length > 0;
-
-  useUnsavedChangesWarning(isDirty, t("discardConfirm"));
 
   const submittedRef = useRef(false);
 
@@ -289,6 +287,7 @@ export function ExpenseForm({
 
   return (
     <div className="space-y-6 max-w-4xl">
+      <UnsavedChangesGuard isDirty={isDirty} />
       <div className="bg-surface-container rounded-xl p-6">
         {!uploadedFile ? (
           <div className="flex items-center gap-4">

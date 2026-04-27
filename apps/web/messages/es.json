@@ -5,6 +5,8 @@
     "save": "Guardar cambios",
     "cancel": "Cancelar",
     "discard": "Descartar",
+    "unsavedChangesTitle": "¿Descartar los cambios no guardados?",
+    "unsavedChangesDescription": "Perderá todo lo que ha introducido en esta página. No se puede deshacer.",
     "loading": "Cargando...",
     "comingSoon": "Próximamente",
     "soonBadge": "Pronto"
@@ -643,7 +645,6 @@
     "receiptNoDataTitle": "No se pudo leer este recibo",
     "receiptNoDataBody": "El archivo se guardó, pero la IA no pudo extraer ningún campo. Rellene el formulario manualmente.",
     "dismiss": "Cerrar",
-    "discardConfirm": "¿Descartar el gasto actual? Los archivos adjuntos se eliminarán.",
     "removeAttachment": "Eliminar",
     "editExpense": "Editar gasto",
     "noExpenses": "Aún no hay gastos",
