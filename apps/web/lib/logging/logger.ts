@@ -77,12 +77,18 @@ function emit(
 ) {
   if (!shouldLog(level)) return;
 
+  // Sanitize once and reuse for both the stdout JSON line and the Sentry
+  // extras. If sanitize ever grows from "redact-by-keyname" into something
+  // that mutates or normalises (e.g. trims long strings), the two surfaces
+  // would otherwise diverge.
+  const safe = data ? sanitize(data) : null;
+
   const entry = {
     ts: new Date().toISOString(),
     level,
     module,
     msg: message,
-    ...(data ? sanitize(data) : {}),
+    ...(safe ?? {}),
   };
 
   const output = JSON.stringify(entry);
@@ -92,13 +98,21 @@ function emit(
       console.error(output);
       // Pipe error-level logs to Sentry/GlitchTip with module-scoped
       // fingerprint so the same failure deduplicates into one issue.
+      //
+      // Convention: log messages are STATIC strings ("email send failed",
+      // "redis connection lost"); dynamic data goes in `data`. The
+      // fingerprint `[module, message]` only dedupes well when callers
+      // honour this — interpolating IDs into the message
+      // (e.g. `failed to fetch invoice ${id}`) splits the issue list per
+      // ID and defeats the dedup. Code review for new log.error sites.
+      //
       // Dynamic import keeps the logger usable in test/dev without the
       // SDK installed; .catch() swallows missing-module in those envs.
       void import("@sentry/nextjs")
         .then((Sentry) => {
           Sentry.withScope((scope) => {
             scope.setTag("module", module);
-            scope.setExtras(data ? sanitize(data) : {});
+            scope.setExtras(safe ?? {});
             scope.setFingerprint([module, message]);
             Sentry.captureException(new Error(message));
           });

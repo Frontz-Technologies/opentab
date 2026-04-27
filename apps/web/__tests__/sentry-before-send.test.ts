@@ -93,4 +93,15 @@ describe("beforeSend", () => {
       ),
     ).toBe(event);
   });
+
+  it("does NOT drop a URL that merely contains a noise fragment mid-path", () => {
+    // Regression: previous version used url.includes(fragment), which
+    // would have wrongly dropped any path embedding "/api/healthz".
+    const event = fakeEvent("https://app.opentab.tech/foo/api/healthz/bar");
+    expect(
+      beforeSend(event as never, {
+        originalException: new TypeError("real bug here"),
+      } as never),
+    ).toBe(event);
+  });
 });
