@@ -323,6 +323,21 @@ export async function commitImport(args: CommitArgs) {
   return { success: true, ...result };
 }
 
+// Idempotent cleanup of an in-flight import's temp CSV. Called by
+// the wizard's React useEffect cleanup when the user navigates away
+// without committing. The beacon-on-beforeunload counterpart lives
+// at /api/import/cleanup (Server Actions can't accept the beacon
+// POST shape). No role-guard — the key shape pins the operation to
+// the caller's own org prefix, so the worst-case impact is a user
+// re-cleaning their own already-cleaned-up file.
+export async function cleanupImport(args: { importId: string }) {
+  const session = await getSession();
+  if (!session) return { ok: false };
+  const key = `${session.org.id}/imports/tmp/${args.importId}.csv`;
+  await deleteTempFile(key);
+  return { ok: true };
+}
+
 // Batch contact-name → id lookup for invoice/credit-note imports.
 //
 //   1. Build the unique-name set from ok rows.
