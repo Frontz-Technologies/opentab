@@ -1,16 +1,23 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-const captureException = vi.fn();
-const setTag = vi.fn();
-const setExtras = vi.fn();
-const setFingerprint = vi.fn();
-
-const scopeMethods = { setTag, setExtras, setFingerprint };
+const { captureException, setTag, setExtras, setFingerprint } = vi.hoisted(
+  () => ({
+    captureException: vi.fn(),
+    setTag: vi.fn(),
+    setExtras: vi.fn(),
+    setFingerprint: vi.fn(),
+  }),
+);
 
 vi.mock("@sentry/nextjs", () => ({
-  captureException: (err: unknown, ctx?: unknown) =>
-    captureException(err, ctx),
-  withScope: (cb: (scope: typeof scopeMethods) => void) => cb(scopeMethods),
+  captureException,
+  withScope: (
+    cb: (scope: {
+      setTag: typeof setTag;
+      setExtras: typeof setExtras;
+      setFingerprint: typeof setFingerprint;
+    }) => void,
+  ) => cb({ setTag, setExtras, setFingerprint }),
 }));
 
 import { createLogger } from "@/lib/logging/logger";

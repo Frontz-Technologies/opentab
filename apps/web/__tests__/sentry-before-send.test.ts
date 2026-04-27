@@ -12,9 +12,12 @@ function fakeEvent(url?: string): PartialEvent {
 describe("beforeSend", () => {
   it("drops events whose request URL is /api/healthz", () => {
     expect(
-      beforeSend(fakeEvent("https://app.opentab.tech/api/healthz") as never, {
-        originalException: new Error("ignored"),
-      } as never),
+      beforeSend(
+        fakeEvent("https://app.opentab.tech/api/healthz") as never,
+        {
+          originalException: new Error("ignored"),
+        } as never,
+      ),
     ).toBeNull();
   });
 
@@ -43,9 +46,12 @@ describe("beforeSend", () => {
       "Invalid callbackURL: /dashboard",
     ]) {
       expect(
-        beforeSend(fakeEvent("https://app.opentab.tech/api/auth/x") as never, {
-          originalException: new Error(message),
-        } as never),
+        beforeSend(
+          fakeEvent("https://app.opentab.tech/api/auth/x") as never,
+          {
+            originalException: new Error(message),
+          } as never,
+        ),
       ).toBeNull();
     }
   });
@@ -53,29 +59,38 @@ describe("beforeSend", () => {
   it("forwards real errors on real routes", () => {
     const event = fakeEvent("https://app.opentab.tech/dashboard");
     expect(
-      beforeSend(event as never, {
-        originalException: new TypeError(
-          "Cannot read properties of null (reading 'user')",
-        ),
-      } as never),
+      beforeSend(
+        event as never,
+        {
+          originalException: new TypeError(
+            "Cannot read properties of null (reading 'user')",
+          ),
+        } as never,
+      ),
     ).toBe(event);
   });
 
   it("forwards events when no request URL is present (server-side throw)", () => {
     const event: PartialEvent = {};
     expect(
-      beforeSend(event as never, {
-        originalException: new Error("server crashed"),
-      } as never),
+      beforeSend(
+        event as never,
+        {
+          originalException: new Error("server crashed"),
+        } as never,
+      ),
     ).toBe(event);
   });
 
   it("treats string originalException safely", () => {
     const event = fakeEvent("https://app.opentab.tech/dashboard");
     expect(
-      beforeSend(event as never, {
-        originalException: "some non-Error value" as never,
-      } as never),
+      beforeSend(
+        event as never,
+        {
+          originalException: "some non-Error value" as never,
+        } as never,
+      ),
     ).toBe(event);
   });
 });
