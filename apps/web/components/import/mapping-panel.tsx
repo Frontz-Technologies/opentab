@@ -87,7 +87,7 @@ export function MappingPanel({
   }
 
   return (
-    <div className="md:sticky md:top-4 md:self-start md:w-[360px] space-y-3">
+    <div className="md:sticky md:top-4 md:self-start md:w-[440px] space-y-3">
       <Collapsible open={open} onOpenChange={setOpen}>
         <CollapsibleTrigger className="md:hidden flex items-center justify-between w-full bg-surface-container rounded-xl p-4 text-left">
           <span className="font-label text-on-surface">
@@ -137,23 +137,21 @@ export function MappingPanel({
                 const suggestion = suggestionByHeader.get(h);
                 // Pass `undefined` (not SKIP_VALUE) to the Select when the
                 // header is unmapped — base-ui's <SelectValue> renders the
-                // raw value string when one is set, so passing
-                // SKIP_VALUE made the trigger read "__skip__" instead of
-                // the localised placeholder. Keeping the SKIP_VALUE-only
-                // SelectItem inside the dropdown lets the user explicitly
-                // re-skip a previously-mapped header; the onValueChange
-                // handler translates SKIP_VALUE → null at the boundary.
+                // raw value string when one is set. The render-prop child
+                // below also catches the SKIP_VALUE case in case a user
+                // explicitly picks the "skip" item, so the trigger always
+                // shows the localised label.
                 const value = mapping[h] ?? undefined;
                 const labelId = `map-label-${h}`;
                 return (
                   <li key={h} className="flex items-center gap-2">
                     <span
                       id={labelId}
-                      className="font-mono text-xs text-on-surface w-1/3 truncate"
+                      className="font-mono text-xs text-on-surface flex-[3_1_0] min-w-0 truncate"
                     >
                       {h}
                     </span>
-                    <div className="flex-1 flex items-center gap-2">
+                    <div className="flex-[2_1_0] flex items-center gap-2 min-w-0">
                       <Select
                         value={value}
                         onValueChange={(v) =>
@@ -161,11 +159,17 @@ export function MappingPanel({
                         }
                       >
                         <SelectTrigger
-                          className="h-9"
+                          className="h-9 w-full"
                           aria-labelledby={labelId}
                           aria-label={t("mapsTo")}
                         >
-                          <SelectValue placeholder={t("skip")} />
+                          <SelectValue placeholder={t("skip")}>
+                            {(v) =>
+                              v === SKIP_VALUE || v == null
+                                ? t("skip")
+                                : (v as string)
+                            }
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value={SKIP_VALUE}>
