@@ -162,13 +162,7 @@ export function MappingPanel({
                           aria-labelledby={labelId}
                           aria-label={t("mapsTo")}
                         >
-                          <SelectValue placeholder={t("skip")}>
-                            {(v) =>
-                              v === SKIP_VALUE || v == null
-                                ? t("skip")
-                                : (v as string)
-                            }
-                          </SelectValue>
+                          <SelectValue placeholder={t("skip")} />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value={SKIP_VALUE}>
