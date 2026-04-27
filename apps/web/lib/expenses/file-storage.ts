@@ -152,6 +152,47 @@ export async function storeTempFile(
   return key;
 }
 
+export async function storeImportTempFile(
+  orgId: string,
+  importId: string,
+  buffer: Buffer,
+  originalName: string,
+): Promise<string> {
+  const ext = originalName.includes(".")
+    ? originalName.split(".").pop() || "bin"
+    : "bin";
+  const key = `${orgId}/imports/tmp/${importId}.${ext}`;
+  const backend = useS3 ? "s3" : "local";
+
+  log.info("storing import temp file", {
+    orgId,
+    importId,
+    ext,
+    sizeBytes: buffer.length,
+    backend,
+  });
+
+  if (useS3) {
+    const { s3Client, BUCKET, PutObjectCommand } = await s3();
+    await s3Client.send(
+      new PutObjectCommand({ Bucket: BUCKET, Key: key, Body: buffer }),
+    );
+  } else {
+    const { mkdir, writeFile, join, uploadsDir } = await fs();
+    const dir = join(uploadsDir, orgId, "imports", "tmp");
+    await mkdir(dir, { recursive: true });
+    await writeFile(join(dir, `${importId}.${ext}`), buffer);
+  }
+
+  return key;
+}
+
+export async function getImportTempFile(
+  relativePath: string,
+): Promise<Buffer> {
+  return getFile(relativePath);
+}
+
 export async function moveTempToExpense(
   tempRelativePath: string,
   orgId: string,
@@ -194,21 +235,30 @@ export async function moveTempToExpense(
   return finalKey;
 }
 
-export async function deleteTempFile(tempRelativePath: string): Promise<void> {
+export async function deleteTempFile(key: string): Promise<void> {
   const backend = useS3 ? "s3" : "local";
-  log.debug("deleting temp file", { tempRelativePath, backend });
 
   try {
     if (useS3) {
       const { s3Client, BUCKET, DeleteObjectCommand } = await s3();
       await s3Client.send(
-        new DeleteObjectCommand({ Bucket: BUCKET, Key: tempRelativePath }),
+        new DeleteObjectCommand({ Bucket: BUCKET, Key: key }),
       );
     } else {
       const { unlink, join, uploadsDir } = await fs();
-      await unlink(join(uploadsDir, tempRelativePath));
+      await unlink(join(uploadsDir, key));
     }
-  } catch {
-    log.debug("temp file already cleaned up", { tempRelativePath });
+    log.debug("temp file deleted", { key, backend });
+  } catch (err) {
+    // Idempotent: missing key (already cleaned by another path) is fine.
+    const code = (err as NodeJS.ErrnoException).code;
+    if (code === "ENOENT") return;
+    if (
+      err instanceof Error &&
+      /NoSuchKey|NotFound/i.test(err.message)
+    ) {
+      return;
+    }
+    throw err;
   }
 }
