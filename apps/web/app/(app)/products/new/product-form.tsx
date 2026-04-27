@@ -210,7 +210,7 @@ export function ProductForm({ product, vatRates }: ProductFormProps) {
                 </SelectTrigger>
                 <SelectContent>
                   {vatRates.map((vr) => (
-                    <SelectItem key={vr.rate} value={vr.rate}>
+                    <SelectItem key={vr.rate} value={String(vr.rate)}>
                       {vr.label}
                     </SelectItem>
                   ))}
