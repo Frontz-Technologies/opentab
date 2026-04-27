@@ -15,13 +15,14 @@ import {
 // 2. Empty-invoice-number → status = DRAFT, idempotency falls back
 //    to a contact+date+total fingerprint
 
-const { dbHolder, getSessionMock } = vi.hoisted(() => ({
+const { dbHolder, getSessionMock, fakeFileBuffer } = vi.hoisted(() => ({
   dbHolder: {
     current: null as unknown as Awaited<
       ReturnType<typeof import("@opentab/db/test-utils").createTestDb>
     >["db"],
   },
   getSessionMock: vi.fn(),
+  fakeFileBuffer: { current: Buffer.from("") },
 }));
 
 vi.mock("@/lib/db", () => ({
@@ -34,8 +35,42 @@ vi.mock("@/lib/activities/record", () => ({
   recordActivity: vi.fn().mockResolvedValue(undefined),
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+vi.mock("@/lib/expenses/file-storage", () => ({
+  getImportTempFile: async () => fakeFileBuffer.current,
+  deleteTempFile: async () => undefined,
+  storeImportTempFile: async () => "test-key",
+}));
 
 import { commitImport } from "../../app/(app)/import/[entity]/actions";
+
+function rowsToCsv(rows: Record<string, string>[]): string {
+  if (rows.length === 0) return "";
+  const headers = Object.keys(rows[0]);
+  const lines = [headers.join(",")];
+  for (const row of rows) {
+    lines.push(headers.map((h) => row[h] ?? "").join(","));
+  }
+  return lines.join("\n");
+}
+
+async function commitFromRows(
+  rows: Record<string, string>[],
+  args: {
+    entityKey: string;
+    mapping: Record<string, string | null>;
+    skippedByUser?: number[];
+    autoCreateToggles?: Record<string, boolean>;
+  },
+) {
+  fakeFileBuffer.current = Buffer.from(rowsToCsv(rows));
+  return commitImport({
+    entityKey: args.entityKey,
+    importId: "tmp_test",
+    mapping: args.mapping,
+    skippedByUser: args.skippedByUser ?? [],
+    autoCreateToggles: args.autoCreateToggles ?? {},
+  });
+}
 
 describe("import v1.1 polish — auto-create + empty-number (#220)", () => {
   let teardown: () => Promise<void>;
@@ -66,9 +101,8 @@ describe("import v1.1 polish — auto-create + empty-number (#220)", () => {
   afterAll(async () => teardown());
 
   it("invoice import with unknown contact + autoCreate ON: creates contact + invoice", async () => {
-    const result = await commitImport({
-      entityKey: "invoices",
-      rows: [
+    const result = await commitFromRows(
+      [
         {
           invoiceNumber: "INV-AUTO-1",
           issueDate: "2026-04-26",
@@ -81,20 +115,23 @@ describe("import v1.1 polish — auto-create + empty-number (#220)", () => {
           taxRate: "0",
         },
       ],
-      mapping: {
-        invoiceNumber: "invoiceNumber",
-        issueDate: "issueDate",
-        contactName: "contactName",
-        contactVatNumber: "contactVatNumber",
-        total: "total",
-        itemName: "itemName",
-        quantity: "quantity",
-        unitPrice: "unitPrice",
-        taxRate: "taxRate",
+      {
+        entityKey: "invoices",
+        mapping: {
+          invoiceNumber: "invoiceNumber",
+          issueDate: "issueDate",
+          contactName: "contactName",
+          contactVatNumber: "contactVatNumber",
+          total: "total",
+          itemName: "itemName",
+          quantity: "quantity",
+          unitPrice: "unitPrice",
+          taxRate: "taxRate",
+        },
+        skippedByUser: [],
+        autoCreateToggles: { contact: true },
       },
-      skippedByUser: [],
-      autoCreateToggles: { contact: true },
-    });
+    );
 
     expect(result.success).toBe(true);
     expect(result.created).toBe(1);
@@ -122,9 +159,8 @@ describe("import v1.1 polish — auto-create + empty-number (#220)", () => {
   });
 
   it("invoice import with unknown contact + autoCreate OFF: row blocked", async () => {
-    const result = await commitImport({
-      entityKey: "invoices",
-      rows: [
+    const result = await commitFromRows(
+      [
         {
           invoiceNumber: "INV-BLOCKED-1",
           issueDate: "2026-04-26",
@@ -136,19 +172,22 @@ describe("import v1.1 polish — auto-create + empty-number (#220)", () => {
           taxRate: "0",
         },
       ],
-      mapping: {
-        invoiceNumber: "invoiceNumber",
-        issueDate: "issueDate",
-        contactName: "contactName",
-        total: "total",
-        itemName: "itemName",
-        quantity: "quantity",
-        unitPrice: "unitPrice",
-        taxRate: "taxRate",
+      {
+        entityKey: "invoices",
+        mapping: {
+          invoiceNumber: "invoiceNumber",
+          issueDate: "issueDate",
+          contactName: "contactName",
+          total: "total",
+          itemName: "itemName",
+          quantity: "quantity",
+          unitPrice: "unitPrice",
+          taxRate: "taxRate",
+        },
+        skippedByUser: [],
+        autoCreateToggles: { contact: false },
       },
-      skippedByUser: [],
-      autoCreateToggles: { contact: false },
-    });
+    );
 
     expect(result.failed).toBe(1);
     expect(result.created).toBe(0);
@@ -165,9 +204,8 @@ describe("import v1.1 polish — auto-create + empty-number (#220)", () => {
       .insert(contacts)
       .values({ orgId, displayName: "Draft Test Co" });
 
-    const result = await commitImport({
-      entityKey: "invoices",
-      rows: [
+    const result = await commitFromRows(
+      [
         {
           invoiceNumber: "", // empty
           issueDate: "2026-04-26",
@@ -179,19 +217,22 @@ describe("import v1.1 polish — auto-create + empty-number (#220)", () => {
           taxRate: "0",
         },
       ],
-      mapping: {
-        invoiceNumber: "invoiceNumber",
-        issueDate: "issueDate",
-        contactName: "contactName",
-        total: "total",
-        itemName: "itemName",
-        quantity: "quantity",
-        unitPrice: "unitPrice",
-        taxRate: "taxRate",
+      {
+        entityKey: "invoices",
+        mapping: {
+          invoiceNumber: "invoiceNumber",
+          issueDate: "issueDate",
+          contactName: "contactName",
+          total: "total",
+          itemName: "itemName",
+          quantity: "quantity",
+          unitPrice: "unitPrice",
+          taxRate: "taxRate",
+        },
+        skippedByUser: [],
+        autoCreateToggles: { contact: true },
       },
-      skippedByUser: [],
-      autoCreateToggles: { contact: true },
-    });
+    );
 
     expect(result.success).toBe(true);
     expect(result.created).toBe(1);
@@ -212,9 +253,8 @@ describe("import v1.1 polish — auto-create + empty-number (#220)", () => {
 
   it("re-importing the same empty-number CSV is a no-op (fingerprint dedup)", async () => {
     // First import lands the row (above). Re-run the same import.
-    const result = await commitImport({
-      entityKey: "invoices",
-      rows: [
+    const result = await commitFromRows(
+      [
         {
           invoiceNumber: "",
           issueDate: "2026-04-26",
@@ -226,19 +266,22 @@ describe("import v1.1 polish — auto-create + empty-number (#220)", () => {
           taxRate: "0",
         },
       ],
-      mapping: {
-        invoiceNumber: "invoiceNumber",
-        issueDate: "issueDate",
-        contactName: "contactName",
-        total: "total",
-        itemName: "itemName",
-        quantity: "quantity",
-        unitPrice: "unitPrice",
-        taxRate: "taxRate",
+      {
+        entityKey: "invoices",
+        mapping: {
+          invoiceNumber: "invoiceNumber",
+          issueDate: "issueDate",
+          contactName: "contactName",
+          total: "total",
+          itemName: "itemName",
+          quantity: "quantity",
+          unitPrice: "unitPrice",
+          taxRate: "taxRate",
+        },
+        skippedByUser: [],
+        autoCreateToggles: { contact: true },
       },
-      skippedByUser: [],
-      autoCreateToggles: { contact: true },
-    });
+    );
 
     expect(result.created).toBe(0);
     expect(result.skippedDup).toBe(1);
@@ -249,9 +292,8 @@ describe("import v1.1 polish — auto-create + empty-number (#220)", () => {
       .insert(contacts)
       .values({ orgId, displayName: "Draft CN Co" });
 
-    const result = await commitImport({
-      entityKey: "credit-notes",
-      rows: [
+    const result = await commitFromRows(
+      [
         {
           creditNoteNumber: "",
           issueDate: "2026-04-26",
@@ -264,20 +306,23 @@ describe("import v1.1 polish — auto-create + empty-number (#220)", () => {
           taxRate: "0",
         },
       ],
-      mapping: {
-        creditNoteNumber: "creditNoteNumber",
-        issueDate: "issueDate",
-        contactName: "contactName",
-        total: "total",
-        reason: "reason",
-        itemName: "itemName",
-        quantity: "quantity",
-        unitPrice: "unitPrice",
-        taxRate: "taxRate",
+      {
+        entityKey: "credit-notes",
+        mapping: {
+          creditNoteNumber: "creditNoteNumber",
+          issueDate: "issueDate",
+          contactName: "contactName",
+          total: "total",
+          reason: "reason",
+          itemName: "itemName",
+          quantity: "quantity",
+          unitPrice: "unitPrice",
+          taxRate: "taxRate",
+        },
+        skippedByUser: [],
+        autoCreateToggles: { contact: true },
       },
-      skippedByUser: [],
-      autoCreateToggles: { contact: true },
-    });
+    );
 
     expect(result.success).toBe(true);
     expect(result.created).toBe(1);
@@ -297,9 +342,8 @@ describe("import v1.1 polish — auto-create + empty-number (#220)", () => {
 
   it("re-import on the same auto-created-contact CSV reuses the stub (no duplicate contact)", async () => {
     // Re-run the very first test's CSV — same contactName "Auto-Created Co"
-    await commitImport({
-      entityKey: "invoices",
-      rows: [
+    await commitFromRows(
+      [
         {
           invoiceNumber: "INV-AUTO-2",
           issueDate: "2026-04-26",
@@ -312,20 +356,23 @@ describe("import v1.1 polish — auto-create + empty-number (#220)", () => {
           taxRate: "0",
         },
       ],
-      mapping: {
-        invoiceNumber: "invoiceNumber",
-        issueDate: "issueDate",
-        contactName: "contactName",
-        contactVatNumber: "contactVatNumber",
-        total: "total",
-        itemName: "itemName",
-        quantity: "quantity",
-        unitPrice: "unitPrice",
-        taxRate: "taxRate",
+      {
+        entityKey: "invoices",
+        mapping: {
+          invoiceNumber: "invoiceNumber",
+          issueDate: "issueDate",
+          contactName: "contactName",
+          contactVatNumber: "contactVatNumber",
+          total: "total",
+          itemName: "itemName",
+          quantity: "quantity",
+          unitPrice: "unitPrice",
+          taxRate: "taxRate",
+        },
+        skippedByUser: [],
+        autoCreateToggles: { contact: true },
       },
-      skippedByUser: [],
-      autoCreateToggles: { contact: true },
-    });
+    );
 
     // Should still be exactly 1 contact named "Auto-Created Co"
     const all = await dbHolder.current

@@ -18,13 +18,14 @@ import {
 // commitImport pipeline (mocked session/db) and asserts BOTH the
 // header table AND the items table get rows.
 
-const { dbHolder, getSessionMock } = vi.hoisted(() => ({
+const { dbHolder, getSessionMock, fakeFileBuffer } = vi.hoisted(() => ({
   dbHolder: {
     current: null as unknown as Awaited<
       ReturnType<typeof import("@opentab/db/test-utils").createTestDb>
     >["db"],
   },
   getSessionMock: vi.fn(),
+  fakeFileBuffer: { current: Buffer.from("") },
 }));
 
 vi.mock("@/lib/db", () => ({
@@ -38,7 +39,46 @@ vi.mock("@/lib/activities/record", () => ({
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
+// After Task 3 the commit action reads the raw CSV from storage. Stub
+// the storage layer with a per-test buffer set by `commitFromRows()`
+// below, so the existing row-shape tests don't have to round-trip
+// through a real upload.
+vi.mock("@/lib/expenses/file-storage", () => ({
+  getImportTempFile: async () => fakeFileBuffer.current,
+  deleteTempFile: async () => undefined,
+  storeImportTempFile: async () => "test-key",
+}));
+
 import { commitImport } from "../../app/(app)/import/[entity]/actions";
+
+function rowsToCsv(rows: Record<string, string>[]): string {
+  if (rows.length === 0) return "";
+  const headers = Object.keys(rows[0]);
+  const lines = [headers.join(",")];
+  for (const row of rows) {
+    lines.push(headers.map((h) => row[h] ?? "").join(","));
+  }
+  return lines.join("\n");
+}
+
+async function commitFromRows(
+  rows: Record<string, string>[],
+  args: {
+    entityKey: string;
+    mapping: Record<string, string | null>;
+    skippedByUser?: number[];
+    autoCreateToggles?: Record<string, boolean>;
+  },
+) {
+  fakeFileBuffer.current = Buffer.from(rowsToCsv(rows));
+  return commitImport({
+    entityKey: args.entityKey,
+    importId: "tmp_test",
+    mapping: args.mapping,
+    skippedByUser: args.skippedByUser ?? [],
+    autoCreateToggles: args.autoCreateToggles ?? {},
+  });
+}
 
 describe("commitImport line-item insertion (#215 PR-B High)", () => {
   let teardown: () => Promise<void>;
@@ -78,9 +118,8 @@ describe("commitImport line-item insertion (#215 PR-B High)", () => {
   });
 
   it("invoice import: 2-row CSV lands 1 invoice + 2 invoice_items", async () => {
-    const result = await commitImport({
-      entityKey: "invoices",
-      rows: [
+    const result = await commitFromRows(
+      [
         {
           invoiceNumber: "INV-2001",
           issueDate: "2026-04-25",
@@ -102,19 +141,20 @@ describe("commitImport line-item insertion (#215 PR-B High)", () => {
           taxRate: "0",
         },
       ],
-      mapping: {
-        invoiceNumber: "invoiceNumber",
-        issueDate: "issueDate",
-        contactName: "contactName",
-        total: "total",
-        itemName: "itemName",
-        quantity: "quantity",
-        unitPrice: "unitPrice",
-        taxRate: "taxRate",
+      {
+        entityKey: "invoices",
+        mapping: {
+          invoiceNumber: "invoiceNumber",
+          issueDate: "issueDate",
+          contactName: "contactName",
+          total: "total",
+          itemName: "itemName",
+          quantity: "quantity",
+          unitPrice: "unitPrice",
+          taxRate: "taxRate",
+        },
       },
-      skippedByUser: [],
-      autoCreateToggles: {},
-    });
+    );
 
     expect(result.success).toBe(true);
     // Multi-row dedup means runner inserts 1 header (the second row's
@@ -136,9 +176,8 @@ describe("commitImport line-item insertion (#215 PR-B High)", () => {
   });
 
   it("credit-note import: 2-row CSV lands 1 credit_note + 2 credit_note_items", async () => {
-    const result = await commitImport({
-      entityKey: "credit-notes",
-      rows: [
+    const result = await commitFromRows(
+      [
         {
           creditNoteNumber: "CN-2001",
           issueDate: "2026-04-25",
@@ -162,20 +201,21 @@ describe("commitImport line-item insertion (#215 PR-B High)", () => {
           taxRate: "0",
         },
       ],
-      mapping: {
-        creditNoteNumber: "creditNoteNumber",
-        issueDate: "issueDate",
-        contactName: "contactName",
-        total: "total",
-        reason: "reason",
-        itemName: "itemName",
-        quantity: "quantity",
-        unitPrice: "unitPrice",
-        taxRate: "taxRate",
+      {
+        entityKey: "credit-notes",
+        mapping: {
+          creditNoteNumber: "creditNoteNumber",
+          issueDate: "issueDate",
+          contactName: "contactName",
+          total: "total",
+          reason: "reason",
+          itemName: "itemName",
+          quantity: "quantity",
+          unitPrice: "unitPrice",
+          taxRate: "taxRate",
+        },
       },
-      skippedByUser: [],
-      autoCreateToggles: {},
-    });
+    );
 
     expect(result.success).toBe(true);
     const headers = await dbHolder.current
