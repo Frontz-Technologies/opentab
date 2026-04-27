@@ -207,7 +207,8 @@ describe("buildSamplesByHeader", () => {
     // A 50k-row CSV with values only on row 250 — we should NOT find them
     // because the scan caps at the first 200 rows.
     const rows: Record<string, string>[] = [];
-    for (let i = 0; i < 50_000; i++) rows.push({ Sparse: i === 250 ? "X" : "" });
+    for (let i = 0; i < 50_000; i++)
+      rows.push({ Sparse: i === 250 ? "X" : "" });
     expect(buildSamplesByHeader(rows, ["Sparse"])).toEqual({ Sparse: [] });
 
     // Sanity: a value at row 100 IS found (still inside the 200-row window).
