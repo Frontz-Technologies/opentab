@@ -4,7 +4,6 @@ import { PageHeader } from "@/components/layout/page-header";
 import { QuickSetup } from "@/components/onboarding/quick-setup";
 import { KpiCard } from "@/components/reports/kpi-card";
 import { DashboardClient } from "./dashboard-client";
-import { DashboardGreeting } from "./dashboard-greeting";
 import { getDashboardData, hasAnyData } from "./actions";
 import type { PeriodKey } from "@/lib/reports/types";
 
@@ -15,17 +14,27 @@ export default async function DashboardPage({
 }) {
   const session = (await getSession())!;
   const t = await getTranslations("dashboard");
-  const tNav = await getTranslations("nav");
 
   const params = await searchParams;
   const period = (params.period as PeriodKey) || "month";
   const dataExists = await hasAnyData();
 
+  const hour = new Date().getHours();
+  const greetingKey =
+    hour < 12
+      ? "greetingMorning"
+      : hour < 18
+        ? "greetingAfternoon"
+        : "greetingEvening";
+  const firstName = session.user.name.split(" ")[0] || session.user.name;
+
   return (
     <>
       <PageHeader userName={session.user.name} userEmail={session.user.email} />
       <main className="px-6 py-8 max-w-7xl mx-auto">
-        <DashboardGreeting userName={session.user.name} />
+        <h1 className="font-headline text-3xl sm:text-4xl font-bold text-on-surface tracking-tight mb-8">
+          {t(greetingKey, { name: firstName })}
+        </h1>
         {dataExists ? (
           <DashboardWithData period={period} session={session} />
         ) : (
