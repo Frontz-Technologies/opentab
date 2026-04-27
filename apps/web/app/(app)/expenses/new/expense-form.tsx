@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { UnsavedChangesGuard } from "@/components/forms/unsaved-changes-guard";
+import { EmptyEntityHint } from "@/components/forms/empty-entity-hint";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import type {
@@ -501,30 +502,38 @@ export function ExpenseForm({
             <label className="block text-sm font-label text-on-surface/60 mb-1">
               {t("category")}
             </label>
-            <Select
-              value={categoryId || undefined}
-              onValueChange={(v) => handleCategoryChange(v ?? "")}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder={t("selectCategory")} />
-              </SelectTrigger>
-              <SelectContent>
-                {groupedCategories
-                  .filter((g) => g.items.length > 0)
-                  .map((g) => (
-                    <SelectGroup key={g.group.code}>
-                      <SelectLabel>
-                        {`${GROUP_TYPE_MARKER[g.group.type]} ${groupNameForLocale(g.group)}`}
-                      </SelectLabel>
-                      {g.items.map((c) => (
-                        <SelectItem key={c.id} value={c.id}>
-                          {c.name}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  ))}
-              </SelectContent>
-            </Select>
+            {categories.length === 0 ? (
+              <EmptyEntityHint
+                message={t("noCategoriesYet")}
+                ctaLabel={t("manageCategories")}
+                ctaHref="/expenses/categories"
+              />
+            ) : (
+              <Select
+                value={categoryId || undefined}
+                onValueChange={(v) => handleCategoryChange(v ?? "")}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={t("selectCategory")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {groupedCategories
+                    .filter((g) => g.items.length > 0)
+                    .map((g) => (
+                      <SelectGroup key={g.group.code}>
+                        <SelectLabel>
+                          {`${GROUP_TYPE_MARKER[g.group.type]} ${groupNameForLocale(g.group)}`}
+                        </SelectLabel>
+                        {g.items.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>
+                            {c.name}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
           <div>
             <label className="block text-sm font-label text-on-surface/60 mb-1">

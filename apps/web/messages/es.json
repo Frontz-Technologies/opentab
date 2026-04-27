@@ -663,6 +663,8 @@
     "selectSupplier": "Seleccionar un proveedor",
     "noSuppliersYet": "Aún no hay proveedores. Cree uno para registrar este gasto.",
     "createContact": "Crear contacto",
+    "noCategoriesYet": "No hay categorías activas. Gestiónelas para registrar gastos.",
+    "manageCategories": "Gestionar categorías",
     "supplierNameFreeText": "O ingrese nombre del proveedor",
     "supplierNamePlaceholder": "ej. Cafetería, Estacionamiento, Suministros",
     "category": "Categoría",

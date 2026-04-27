@@ -155,28 +155,36 @@ export function RecurringExpenseForm({
             <label className="block text-sm font-label text-on-surface/60 mb-1">
               {tExp("category")}
             </label>
-            <Select
-              value={categoryId || undefined}
-              onValueChange={(v) => setCategoryId(v ?? "")}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder={tExp("selectCategory")} />
-              </SelectTrigger>
-              <SelectContent>
-                {groupedCategories
-                  .filter((g) => g.items.length > 0)
-                  .map((g) => (
-                    <SelectGroup key={g.group.code}>
-                      <SelectLabel>{g.group.nameEn}</SelectLabel>
-                      {g.items.map((c) => (
-                        <SelectItem key={c.id} value={c.id}>
-                          {c.name}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  ))}
-              </SelectContent>
-            </Select>
+            {categories.length === 0 ? (
+              <EmptyEntityHint
+                message={tExp("noCategoriesYet")}
+                ctaLabel={tExp("manageCategories")}
+                ctaHref="/expenses/categories"
+              />
+            ) : (
+              <Select
+                value={categoryId || undefined}
+                onValueChange={(v) => setCategoryId(v ?? "")}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={tExp("selectCategory")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {groupedCategories
+                    .filter((g) => g.items.length > 0)
+                    .map((g) => (
+                      <SelectGroup key={g.group.code}>
+                        <SelectLabel>{g.group.nameEn}</SelectLabel>
+                        {g.items.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>
+                            {c.name}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
           <div>
             <label className="block text-sm font-label text-on-surface/60 mb-1">

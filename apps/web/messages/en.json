@@ -663,6 +663,8 @@
     "selectSupplier": "Select a supplier",
     "noSuppliersYet": "No suppliers yet. Create one to log this expense.",
     "createContact": "Create Contact",
+    "noCategoriesYet": "No active expense categories. Manage them to enable expense entry.",
+    "manageCategories": "Manage categories",
     "supplierNameFreeText": "Or enter supplier name",
     "supplierNamePlaceholder": "e.g. Coffee shop, Parking, Office supplies",
     "category": "Category",
