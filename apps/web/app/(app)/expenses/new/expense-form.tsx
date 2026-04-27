@@ -221,6 +221,13 @@ export function ExpenseForm({
     setPreviewLineItems(result.previewLineItems);
   }
 
+  const previewWrapperClass =
+    "rounded-lg bg-primary/10 outline outline-1 outline-primary/15 outline-offset-0 transition-colors duration-200";
+
+  function fieldWrapperClass(name: PreviewableFieldName): string {
+    return previewFields.has(name) ? previewWrapperClass : "";
+  }
+
   async function handleReceiptUpload(file: File) {
     setIsUploading(true);
     setError(null);
@@ -527,40 +534,49 @@ export function ExpenseForm({
         <h2 className="font-headline text-lg font-semibold text-on-surface">
           {t("supplier")}
         </h2>
-        <Select
-          value={contactId || undefined}
-          onValueChange={(v) => {
-            const next = v;
-            setContactId(next);
-            if (next) setSupplierName("");
-            const contact = contacts.find((c) => c.id === next);
-            if (contact?.defaultCurrency)
-              setCurrencyCode(contact.defaultCurrency);
-          }}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder={t("selectSupplier")} />
-          </SelectTrigger>
-          <SelectContent>
-            {contacts
-              .filter((c) => c.type === "supplier" || c.type === "both")
-              .map((c) => (
-                <SelectItem key={c.id} value={c.id}>
-                  {c.displayName}
-                </SelectItem>
-              ))}
-          </SelectContent>
-        </Select>
+        <div className={fieldWrapperClass("contactId")}>
+          <Select
+            value={contactId || undefined}
+            onValueChange={(v) => {
+              handleExitFieldPreview("contactId");
+              const next = v;
+              setContactId(next);
+              if (next) setSupplierName("");
+              const contact = contacts.find((c) => c.id === next);
+              if (contact?.defaultCurrency)
+                setCurrencyCode(contact.defaultCurrency);
+            }}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder={t("selectSupplier")} />
+            </SelectTrigger>
+            <SelectContent>
+              {contacts
+                .filter((c) => c.type === "supplier" || c.type === "both")
+                .map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.displayName}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
+        </div>
         {!contactId && (
           <div>
             <label className="block text-sm font-label text-on-surface/60 mb-1">
               {t("supplierNameFreeText")}
             </label>
-            <Input
-              value={supplierName}
-              onChange={(e) => setSupplierName(e.target.value)}
-              placeholder={t("supplierNamePlaceholder")}
-            />
+            <div className={fieldWrapperClass("supplierName")}>
+              <Input
+                value={supplierName}
+                onChange={(e) => {
+                  handleExitFieldPreview("supplierName");
+                  setSupplierName(e.target.value);
+                }}
+                onFocus={() => handleExitFieldPreview("supplierName")}
+                placeholder={t("supplierNamePlaceholder")}
+              />
+            </div>
           </div>
         )}
       </div>
@@ -581,30 +597,35 @@ export function ExpenseForm({
                 ctaHref="/expenses/categories"
               />
             ) : (
-              <Select
-                value={categoryId || undefined}
-                onValueChange={(v) => handleCategoryChange(v)}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder={t("selectCategory")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {groupedCategories
-                    .filter((g) => g.items.length > 0)
-                    .map((g) => (
-                      <SelectGroup key={g.group.code}>
-                        <SelectLabel>
-                          {`${GROUP_TYPE_MARKER[g.group.type]} ${groupNameForLocale(g.group)}`}
-                        </SelectLabel>
-                        {g.items.map((c) => (
-                          <SelectItem key={c.id} value={c.id}>
-                            {c.name}
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    ))}
-                </SelectContent>
-              </Select>
+              <div className={fieldWrapperClass("categoryId")}>
+                <Select
+                  value={categoryId || undefined}
+                  onValueChange={(v) => {
+                    handleExitFieldPreview("categoryId");
+                    handleCategoryChange(v);
+                  }}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder={t("selectCategory")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {groupedCategories
+                      .filter((g) => g.items.length > 0)
+                      .map((g) => (
+                        <SelectGroup key={g.group.code}>
+                          <SelectLabel>
+                            {`${GROUP_TYPE_MARKER[g.group.type]} ${groupNameForLocale(g.group)}`}
+                          </SelectLabel>
+                          {g.items.map((c) => (
+                            <SelectItem key={c.id} value={c.id}>
+                              {c.name}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
             )}
           </div>
           <div>
@@ -621,11 +642,17 @@ export function ExpenseForm({
             <label className="block text-sm font-label text-on-surface/60 mb-1">
               {t("expenseDate")} <span className="text-tertiary">*</span>
             </label>
-            <Input
-              type="date"
-              value={expenseDate}
-              onChange={(e) => setExpenseDate(e.target.value)}
-            />
+            <div className={fieldWrapperClass("expenseDate")}>
+              <Input
+                type="date"
+                value={expenseDate}
+                onChange={(e) => {
+                  handleExitFieldPreview("expenseDate");
+                  setExpenseDate(e.target.value);
+                }}
+                onFocus={() => handleExitFieldPreview("expenseDate")}
+              />
+            </div>
           </div>
           <div>
             <label className="block text-sm font-label text-on-surface/60 mb-1">
@@ -641,11 +668,17 @@ export function ExpenseForm({
             <label className="block text-sm font-label text-on-surface/60 mb-1">
               {t("currency")}
             </label>
-            <Input
-              value={currencyCode}
-              onChange={(e) => setCurrencyCode(e.target.value)}
-              maxLength={3}
-            />
+            <div className={fieldWrapperClass("currencyCode")}>
+              <Input
+                value={currencyCode}
+                onChange={(e) => {
+                  handleExitFieldPreview("currencyCode");
+                  setCurrencyCode(e.target.value);
+                }}
+                onFocus={() => handleExitFieldPreview("currencyCode")}
+                maxLength={3}
+              />
+            </div>
           </div>
           <div className="flex items-end">
             <label className="flex items-center gap-2 text-sm text-on-surface">
@@ -684,12 +717,18 @@ export function ExpenseForm({
           <label className="block text-sm font-label text-on-surface/60 mb-1">
             {t("description")}
           </label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={3}
-            className="w-full rounded-lg bg-surface-container-low border border-on-surface/10 px-3 py-2 text-sm text-on-surface"
-          />
+          <div className={fieldWrapperClass("description")}>
+            <textarea
+              value={description}
+              onChange={(e) => {
+                handleExitFieldPreview("description");
+                setDescription(e.target.value);
+              }}
+              onFocus={() => handleExitFieldPreview("description")}
+              rows={3}
+              className="w-full rounded-lg bg-surface-container-low border border-on-surface/10 px-3 py-2 text-sm text-on-surface"
+            />
+          </div>
         </div>
         <div>
           <label className="block text-sm font-label text-on-surface/60 mb-1">
