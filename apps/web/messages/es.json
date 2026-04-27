@@ -4,6 +4,7 @@
     "tagline": "Controle su negocio",
     "save": "Guardar cambios",
     "cancel": "Cancelar",
+    "discard": "Descartar",
     "loading": "Cargando...",
     "comingSoon": "Próximamente",
     "soonBadge": "Pronto"
@@ -630,6 +631,9 @@
     "uploading": "Subiendo...",
     "uploadReceiptHint": "Suba un PDF o imagen para adjuntar al gasto",
     "processingReceiptHint": "Procesando tu recibo...",
+    "clearAll": "Borrar todo",
+    "clearAllTitle": "¿Borrar todo?",
+    "clearAllDescription": "Se eliminarán todos los datos introducidos y el recibo subido. No se puede deshacer.",
     "analyzingReceipt": "Analizando recibo...",
     "receiptAttached": "Recibo adjunto",
     "autofillPrompt": "Encontramos datos en su recibo. ¿Autocompletar campos?",

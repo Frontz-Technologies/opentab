@@ -12,6 +12,14 @@ import type {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   LineItemsBuilder,
   type LineItem,
 } from "@/components/invoicing/line-items-builder";
@@ -69,7 +77,9 @@ export function ExpenseForm({
   const [showAutofillPrompt, setShowAutofillPrompt] = useState(false);
   const [showNoDataNotice, setShowNoDataNotice] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [clearDialogOpen, setClearDialogOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const tCommon = useTranslations("common");
 
   const selectedContact = contacts.find((c) => c.id === contactId);
 
@@ -214,6 +224,30 @@ export function ExpenseForm({
       if (first.name.trim()) return prev;
       return [{ ...first, name: cat.name }, ...rest];
     });
+  }
+
+  async function handleClearAll() {
+    if (uploadedFile) {
+      await cleanupTempAttachment(uploadedFile.filePath);
+    }
+    setContactId("");
+    setSupplierName("");
+    setCategoryId("");
+    setExpenseDate(new Date().toISOString().split("T")[0]);
+    setPaymentDate("");
+    setCurrencyCode(defaultCurrency);
+    setUsesInclusiveTax(false);
+    setSupplierInvoiceNumber("");
+    setDescription("");
+    setNotes("");
+    setItems([]);
+    setError(null);
+    setUploadedFile(null);
+    setExtractResult(null);
+    setShowAutofillPrompt(false);
+    setShowNoDataNotice(false);
+    setClearDialogOpen(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   function handleSubmit() {
@@ -574,11 +608,44 @@ export function ExpenseForm({
         </div>
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex items-center justify-end gap-2">
+        <Button
+          variant="outline"
+          type="button"
+          disabled={isPending || !isDirty}
+          onClick={() => setClearDialogOpen(true)}
+        >
+          {t("clearAll")}
+        </Button>
         <Button onClick={handleSubmit} disabled={isPending}>
           {isPending ? t("saving") : t("save")}
         </Button>
       </div>
+
+      <Dialog open={clearDialogOpen} onOpenChange={setClearDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("clearAllTitle")}</DialogTitle>
+            <DialogDescription>{t("clearAllDescription")}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              type="button"
+              onClick={() => setClearDialogOpen(false)}
+            >
+              {tCommon("cancel")}
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleClearAll}
+            >
+              {tCommon("discard")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -4,6 +4,7 @@
     "tagline": "Keep tabs on your business",
     "save": "Save changes",
     "cancel": "Cancel",
+    "discard": "Discard",
     "loading": "Loading...",
     "comingSoon": "Coming soon",
     "soonBadge": "Soon"
@@ -630,6 +631,9 @@
     "uploading": "Uploading...",
     "uploadReceiptHint": "Upload a PDF or image to attach to this expense",
     "processingReceiptHint": "Processing your receipt...",
+    "clearAll": "Clear all",
+    "clearAllTitle": "Clear everything?",
+    "clearAllDescription": "All entered data and the uploaded receipt will be removed. You can't undo this.",
     "analyzingReceipt": "Analyzing receipt...",
     "receiptAttached": "Receipt attached",
     "autofillPrompt": "We found data in your receipt. Autofill fields?",
