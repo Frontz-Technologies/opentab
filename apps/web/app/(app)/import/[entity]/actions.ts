@@ -19,6 +19,12 @@ import { createLogger } from "@/lib/logging/logger";
 import { getImporter } from "@/lib/import/importers";
 import { runImport } from "@/lib/import/core/runner";
 import { validateRows } from "@/lib/import/core/validator";
+import {
+  getAiColumnMatches,
+  type AiSuggestion,
+} from "@/lib/import/core/ai-match";
+import { autoMap } from "@/lib/import/core/mapper";
+import { getAiSettingsSecret } from "@/lib/actions/ai-settings";
 import { computeIdempotencyKey } from "@/lib/import/core/idempotency";
 import { groupRowsByInvoice } from "@/lib/import/importers/invoices";
 import { groupRowsByCreditNote } from "@/lib/import/importers/credit-notes";
@@ -545,4 +551,34 @@ export async function getSampleCsv(entityKey: string): Promise<string> {
     .filter((f) => !f.required)
     .map((f) => f.name);
   return [...required, ...optional].join(",") + "\n";
+}
+
+export async function getAiSuggestions(
+  entityKey: string,
+  parsed: { headers: string[]; rows: Record<string, string>[] },
+): Promise<AiSuggestion[]> {
+  const session = await getSession();
+  if (!session) return [];
+  if (session.role !== "owner" && session.role !== "admin") return [];
+
+  const importer = getImporter(entityKey);
+  if (!importer) return [];
+
+  const aiSecrets = await getAiSettingsSecret(session.org.id);
+  if (!aiSecrets?.apiKey) return [];
+
+  const mapping = autoMap(parsed.headers, importer.aliases);
+  const unmappedHeaders = parsed.headers.filter((h) => !mapping[h]);
+
+  return getAiColumnMatches({
+    apiKey: aiSecrets.apiKey,
+    entityKey,
+    fields: importer.fields.map((f) => ({
+      name: f.name,
+      required: f.required,
+    })),
+    headers: parsed.headers,
+    rows: parsed.rows,
+    unmappedHeaders,
+  });
 }
