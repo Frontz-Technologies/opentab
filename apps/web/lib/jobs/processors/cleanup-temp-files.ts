@@ -42,26 +42,32 @@ export async function processCleanupTempFiles(
     return { deleted: 0 };
   }
 
-  for (const org of orgs) {
-    const tmpDir = join(uploadsDir, org, "expenses", "tmp");
+  async function sweepDir(prefix: string): Promise<number> {
+    let n = 0;
     let files: string[];
     try {
-      files = await readdir(tmpDir);
+      files = await readdir(prefix);
     } catch {
-      continue;
+      return 0;
     }
     for (const file of files) {
-      const fullPath = join(tmpDir, file);
+      const fullPath = join(prefix, file);
       try {
         const s = await stat(fullPath);
         if (s.mtimeMs < cutoff) {
           await unlink(fullPath);
-          deleted++;
+          n++;
         }
       } catch {
         // file vanished between readdir and stat/unlink — ignore
       }
     }
+    return n;
+  }
+
+  for (const org of orgs) {
+    deleted += await sweepDir(join(uploadsDir, org, "expenses", "tmp"));
+    deleted += await sweepDir(join(uploadsDir, org, "imports", "tmp"));
   }
 
   log.info("cleanup-temp-files completed", { ageHours, deleted });
