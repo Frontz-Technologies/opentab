@@ -79,9 +79,8 @@ function sanitize(data: Record<string, unknown>): Record<string, unknown> {
 // in emit() handles that. Always-importing also keeps the existing
 // vi.mock("@sentry/nextjs") test pattern from PR #239 working without
 // per-test env stubs.
-const sentryReady: Promise<typeof import("@sentry/nextjs") | null> = import(
-  "@sentry/nextjs"
-).catch(() => null);
+const sentryReady: Promise<typeof import("@sentry/nextjs") | null> =
+  import("@sentry/nextjs").catch(() => null);
 
 function emit(
   level: LogLevel,
