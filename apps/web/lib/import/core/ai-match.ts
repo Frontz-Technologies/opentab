@@ -10,6 +10,11 @@ const AUTO_APPLY_THRESHOLD = 0.85;
 const SUGGESTION_THRESHOLD = 0.5;
 const MAX_SAMPLE_CHARS = 32;
 const MAX_SAMPLES_PER_COLUMN = 3;
+// Bound the sample-collection scan to the first N rows. Without this,
+// a column that's mostly empty in a 50k-row CSV walks the entire array
+// looking for 3 non-empty values. 200 is generous: even if a column is
+// 95% empty, we'll still find ≥3 non-empty samples in expectation.
+const MAX_ROWS_SCANNED_FOR_SAMPLES = 200;
 
 export interface AiSuggestion {
   ourField: string;
@@ -48,10 +53,14 @@ export function buildSamplesByHeader(
   rows: Record<string, string>[],
   headers: string[],
 ): Record<string, string[]> {
+  const scanned =
+    rows.length > MAX_ROWS_SCANNED_FOR_SAMPLES
+      ? rows.slice(0, MAX_ROWS_SCANNED_FOR_SAMPLES)
+      : rows;
   const out: Record<string, string[]> = {};
   for (const header of headers) {
     const samples: string[] = [];
-    for (const row of rows) {
+    for (const row of scanned) {
       const v = row[header];
       if (v && v.trim().length > 0) {
         samples.push(
