@@ -4,7 +4,8 @@ import { useReducer, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { commitImport, getSampleCsv } from "./actions";
+import { commitImport, getSampleCsv, getAiSuggestions } from "./actions";
+import { buildSamplesByHeader } from "@/lib/import/core/ai-match";
 import { WizardStepper } from "@/components/import/wizard-stepper";
 import { UploadDropzone } from "@/components/import/upload-dropzone";
 import {
@@ -64,7 +65,14 @@ function reducer(state: State, action: Action): State {
         step: "review",
       };
     case "PARSE_ERROR":
-      return { ...state, parsing: false };
+      return {
+        ...state,
+        parsing: false,
+        parsed: null,
+        mapping: {},
+        skipped: new Set<number>(),
+        aiSuggestions: [],
+      };
     case "MAP":
       return { ...state, mapping: action.mapping };
     case "TOGGLE_SKIP": {
@@ -121,24 +129,17 @@ export function ImportWizard({ entityKey, entityLabel, fields }: WizardProps) {
       const mapping = autoMap(parsed.headers, importer.aliases);
       dispatch({ type: "PARSED", parsed, mapping });
 
-      // Fire-and-forget AI suggestions if any header is null. Resolved in
-      // Task 9 once `getAiSuggestions` is exported from ./actions.
+      // Fire-and-forget AI suggestions if any header is null. Samples
+      // are computed client-side (≤ 3 × 32 chars per header) so the RSC
+      // payload stays tiny even for huge CSVs.
       const unmapped = parsed.headers.filter((h) => !mapping[h]);
       if (unmapped.length > 0) {
         dispatch({ type: "AI_LOADING", loading: true });
-        import("./actions")
-          .then(async (mod) => {
-            const fn = (
-              mod as unknown as {
-                getAiSuggestions?: (
-                  entityKey: string,
-                  parsed: { headers: string[]; rows: Record<string, string>[] },
-                ) => Promise<AiSuggestion[]>;
-              }
-            ).getAiSuggestions;
-            if (!fn) return [];
-            return fn(entityKey, parsed);
-          })
+        const samplesByHeader = buildSamplesByHeader(parsed.rows, unmapped);
+        getAiSuggestions(entityKey, {
+          unmappedHeaders: unmapped,
+          samplesByHeader,
+        })
           .then((suggestions) => {
             dispatch({ type: "AI_SUGGESTIONS", suggestions });
           })

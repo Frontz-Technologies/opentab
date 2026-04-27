@@ -23,9 +23,11 @@ export interface AiMatchInput {
   apiKey: string;
   entityKey: string;
   fields: { name: string; required: boolean }[];
-  headers: string[];
-  rows: Record<string, string>[];
   unmappedHeaders: string[];
+  // Pre-trimmed by the client: ≤ MAX_SAMPLES_PER_COLUMN entries per
+  // header, each ≤ MAX_SAMPLE_CHARS. Computing this client-side keeps
+  // the React Server Action payload small even for 50k-row CSVs.
+  samplesByHeader: Record<string, string[]>;
 }
 
 const matchSchema = z.object({
@@ -39,18 +41,35 @@ const matchSchema = z.object({
   ),
 });
 
-function takeSamples(rows: Record<string, string>[], header: string): string[] {
-  const out: string[] = [];
-  for (const row of rows) {
-    const v = row[header];
-    if (v && v.trim().length > 0) {
-      out.push(v.length > MAX_SAMPLE_CHARS ? v.slice(0, MAX_SAMPLE_CHARS) : v);
-      if (out.length >= MAX_SAMPLES_PER_COLUMN) break;
+// Client-side helper. Used by the wizard before invoking the server
+// action so the action only ever receives a few KB of samples instead
+// of the full CSV.
+export function buildSamplesByHeader(
+  rows: Record<string, string>[],
+  headers: string[],
+): Record<string, string[]> {
+  const out: Record<string, string[]> = {};
+  for (const header of headers) {
+    const samples: string[] = [];
+    for (const row of rows) {
+      const v = row[header];
+      if (v && v.trim().length > 0) {
+        samples.push(
+          v.length > MAX_SAMPLE_CHARS ? v.slice(0, MAX_SAMPLE_CHARS) : v,
+        );
+        if (samples.length >= MAX_SAMPLES_PER_COLUMN) break;
+      }
     }
+    out[header] = samples;
   }
   return out;
 }
 
+// Reuse `getFeatureModel("extraction")` rather than the per-org
+// `getAiSettingsSecret(orgId).model`. Mirrors `lib/expenses/ai-extraction.ts`
+// — env is the global default, the per-org record only carries the
+// encrypted API key. Kept consistent so future tooling that lists
+// "AI features" sees one model knob across both extraction surfaces.
 export async function getAiColumnMatches(
   input: AiMatchInput,
 ): Promise<AiSuggestion[]> {
@@ -68,7 +87,7 @@ export async function getAiColumnMatches(
     ourFields: input.fields,
     theirColumns: input.unmappedHeaders.map((header) => ({
       header,
-      samples: takeSamples(input.rows, header),
+      samples: input.samplesByHeader[header] ?? [],
     })),
   };
 

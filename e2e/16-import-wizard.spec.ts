@@ -20,8 +20,12 @@ test.describe("Import wizard happy path", () => {
     await page.getByRole("link", { name: /import/i }).click();
     await expect(page).toHaveURL(/\/import\/contacts/);
 
+    // Headers chosen so autoMap resolves them via the contacts importer's
+    // alias table — `company`, `email`, `countryCode` are real importer
+    // fields. A CSV with `name` would not match because the contacts
+    // importer has no `name` field (it has firstName / lastName / company).
     const csv = [
-      "name,email,countryCode",
+      "company,email,countryCode",
       "Acme Corp,billing@acme.example,GR",
       "Sample Two,two@example.com,DE",
     ].join("\n");
@@ -39,9 +43,15 @@ test.describe("Import wizard happy path", () => {
     // not be visible.
     await expect(page.getByText(/Missing required/i)).toBeHidden();
 
-    // Review list should render the two row primaries.
-    await expect(page.getByText("Acme Corp")).toBeVisible();
-    await expect(page.getByText("Sample Two")).toBeVisible();
+    // Assert against the rendered review-card primary lines specifically.
+    // A laxer "getByText('Acme Corp')" would match the raw-row disclosure
+    // <dl> too — the previous version of this spec missed the bug where
+    // primary lines all read "(empty row)" because the formatter
+    // referenced field names the importer never declared.
+    const primaries = page.locator('[data-slot="review-card-primary"]');
+    await expect(primaries).toHaveCount(2);
+    await expect(primaries.nth(0)).toHaveText("Acme Corp");
+    await expect(primaries.nth(1)).toHaveText("Sample Two");
 
     // Continue → commit.
     await page.getByRole("button", { name: /continue/i }).click();

@@ -73,6 +73,14 @@ export function MappingPanel({
   const suggestionByHeader = new Map(
     (aiSuggestions ?? []).map((s) => [s.theirHeader, s] as const),
   );
+  const autoMatchedCount = (aiSuggestions ?? []).filter(
+    (s) => s.autoApply,
+  ).length;
+
+  // Sentinel for the "skip this column" option. base-ui's Select tolerates
+  // empty-string values, but Radix (a likely future swap) does not — using
+  // a distinct sentinel lets the dropdown work on either.
+  const SKIP_VALUE = "__skip__";
 
   function setOne(header: string, value: string | null) {
     onChange({ ...mapping, [header]: value });
@@ -112,6 +120,12 @@ export function MappingPanel({
               </div>
             )}
 
+            {!aiLoading && autoMatchedCount > 0 && (
+              <p className="text-xs text-primary">
+                {t("ai.matchedSummary", { count: autoMatchedCount })}
+              </p>
+            )}
+
             {missingRequired.length > 0 && (
               <p className="text-xs text-error">
                 {t("requiredMissing", { fields: missingRequired.join(", ") })}
@@ -121,22 +135,34 @@ export function MappingPanel({
             <ul className="space-y-2">
               {headers.map((h) => {
                 const suggestion = suggestionByHeader.get(h);
-                const value = mapping[h] ?? "";
+                const value = mapping[h] ?? SKIP_VALUE;
+                const labelId = `map-label-${h}`;
                 return (
                   <li key={h} className="flex items-center gap-2">
-                    <span className="font-mono text-xs text-on-surface w-1/3 truncate">
+                    <span
+                      id={labelId}
+                      className="font-mono text-xs text-on-surface w-1/3 truncate"
+                    >
                       {h}
                     </span>
                     <div className="flex-1 flex items-center gap-2">
                       <Select
                         value={value}
-                        onValueChange={(v) => setOne(h, v || null)}
+                        onValueChange={(v) =>
+                          setOne(h, v === SKIP_VALUE ? null : v)
+                        }
                       >
-                        <SelectTrigger className="h-9">
+                        <SelectTrigger
+                          className="h-9"
+                          aria-labelledby={labelId}
+                          aria-label={t("mapsTo")}
+                        >
                           <SelectValue placeholder={t("skip")} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">{t("skip")}</SelectItem>
+                          <SelectItem value={SKIP_VALUE}>
+                            {t("skip")}
+                          </SelectItem>
                           {fields.map((f) => (
                             <SelectItem key={f.name} value={f.name}>
                               {f.name}

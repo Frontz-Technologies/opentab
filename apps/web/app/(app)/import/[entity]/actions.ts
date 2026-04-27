@@ -23,7 +23,6 @@ import {
   getAiColumnMatches,
   type AiSuggestion,
 } from "@/lib/import/core/ai-match";
-import { autoMap } from "@/lib/import/core/mapper";
 import { getAiSettingsSecret } from "@/lib/actions/ai-settings";
 import { computeIdempotencyKey } from "@/lib/import/core/idempotency";
 import { groupRowsByInvoice } from "@/lib/import/importers/invoices";
@@ -553,9 +552,17 @@ export async function getSampleCsv(entityKey: string): Promise<string> {
   return [...required, ...optional].join(",") + "\n";
 }
 
+export interface AiSuggestionsInput {
+  unmappedHeaders: string[];
+  // Pre-trimmed by the client via `buildSamplesByHeader` from
+  // `lib/import/core/ai-match.ts`. Sending only samples (≤ 3 × 32
+  // chars per header) keeps the RSC payload bounded for large CSVs.
+  samplesByHeader: Record<string, string[]>;
+}
+
 export async function getAiSuggestions(
   entityKey: string,
-  parsed: { headers: string[]; rows: Record<string, string>[] },
+  input: AiSuggestionsInput,
 ): Promise<AiSuggestion[]> {
   const session = await getSession();
   if (!session) return [];
@@ -567,9 +574,6 @@ export async function getAiSuggestions(
   const aiSecrets = await getAiSettingsSecret(session.org.id);
   if (!aiSecrets?.apiKey) return [];
 
-  const mapping = autoMap(parsed.headers, importer.aliases);
-  const unmappedHeaders = parsed.headers.filter((h) => !mapping[h]);
-
   return getAiColumnMatches({
     apiKey: aiSecrets.apiKey,
     entityKey,
@@ -577,8 +581,7 @@ export async function getAiSuggestions(
       name: f.name,
       required: f.required,
     })),
-    headers: parsed.headers,
-    rows: parsed.rows,
-    unmappedHeaders,
+    unmappedHeaders: input.unmappedHeaders,
+    samplesByHeader: input.samplesByHeader,
   });
 }

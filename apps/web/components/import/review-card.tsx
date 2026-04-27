@@ -25,6 +25,7 @@ export function ReviewCard({
   const [expanded, setExpanded] = useState(false);
   return (
     <div
+      data-slot="review-card"
       className={cn(
         "bg-surface-container-lowest rounded-xl p-4 transition-opacity",
         skipped && "opacity-60",
@@ -36,6 +37,7 @@ export function ReviewCard({
         </span>
         <div className="flex-1 min-w-0">
           <p
+            data-slot="review-card-primary"
             className={cn(
               "font-medium text-on-surface truncate",
               skipped && "line-through",

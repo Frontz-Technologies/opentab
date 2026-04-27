@@ -20,12 +20,15 @@ vi.mock("@/lib/ai/provider", () => ({
   createAiProvider: vi.fn(() => ({ id: "mock-language-model" })),
 }));
 
-import { getAiColumnMatches } from "@/lib/import/core/ai-match";
+import {
+  getAiColumnMatches,
+  buildSamplesByHeader,
+} from "@/lib/import/core/ai-match";
 
 const INVOICES_FIELDS = [
   { name: "invoiceNumber", required: true },
   { name: "contactName", required: true },
-  { name: "totalAmount", required: true },
+  { name: "total", required: true },
   { name: "issueDate", required: false },
 ];
 
@@ -33,9 +36,8 @@ const FIXED_INPUT = {
   apiKey: "sk-test",
   entityKey: "invoices",
   fields: INVOICES_FIELDS,
-  headers: ["#"],
-  rows: [{ "#": "INV-1" }],
   unmappedHeaders: ["#"],
+  samplesByHeader: { "#": ["INV-1"] },
 };
 
 beforeEach(() => {
@@ -59,26 +61,23 @@ describe("getAiColumnMatches", () => {
   it("returns [] when there are no unmapped headers", async () => {
     const out = await getAiColumnMatches({
       ...FIXED_INPUT,
-      headers: ["invoiceNumber"],
-      rows: [{ invoiceNumber: "INV-1" }],
       unmappedHeaders: [],
+      samplesByHeader: {},
     });
     expect(out).toEqual([]);
     expect(generateObjectMock).not.toHaveBeenCalled();
   });
 
-  it("calls generateObject with headers + 3 sample values per unmapped column", async () => {
+  it("forwards each unmapped header's pre-trimmed samples to generateObject", async () => {
     generateObjectMock.mockResolvedValue({ object: { matches: [] } });
     await getAiColumnMatches({
       ...FIXED_INPUT,
-      headers: ["#", "Customer", "Amount"],
-      rows: [
-        { "#": "INV-1", Customer: "A Corp", Amount: "1000" },
-        { "#": "INV-2", Customer: "B Corp", Amount: "2000" },
-        { "#": "INV-3", Customer: "C Corp", Amount: "3000" },
-        { "#": "INV-4", Customer: "D Corp", Amount: "4000" },
-      ],
       unmappedHeaders: ["#", "Customer", "Amount"],
+      samplesByHeader: {
+        "#": ["INV-1", "INV-2", "INV-3"],
+        Customer: ["A Corp", "B Corp", "C Corp"],
+        Amount: ["1000", "2000", "3000"],
+      },
     });
     expect(generateObjectMock).toHaveBeenCalledOnce();
     const arg = generateObjectMock.mock.calls[0][0];
@@ -90,37 +89,6 @@ describe("getAiColumnMatches", () => {
       header: "#",
       samples: ["INV-1", "INV-2", "INV-3"],
     });
-  });
-
-  it("truncates sample values to 32 chars", async () => {
-    const long = "x".repeat(60);
-    generateObjectMock.mockResolvedValue({ object: { matches: [] } });
-    await getAiColumnMatches({
-      ...FIXED_INPUT,
-      headers: ["Note"],
-      rows: [{ Note: long }],
-      unmappedHeaders: ["Note"],
-    });
-    const arg = generateObjectMock.mock.calls[0][0];
-    const prompt = JSON.parse(arg.prompt) as {
-      theirColumns: { header: string; samples: string[] }[];
-    };
-    expect(prompt.theirColumns[0].samples[0]).toHaveLength(32);
-  });
-
-  it("filters samples to non-empty values", async () => {
-    generateObjectMock.mockResolvedValue({ object: { matches: [] } });
-    await getAiColumnMatches({
-      ...FIXED_INPUT,
-      headers: ["Number"],
-      rows: [{ Number: "" }, { Number: "" }, { Number: "INV-3" }],
-      unmappedHeaders: ["Number"],
-    });
-    const arg = generateObjectMock.mock.calls[0][0];
-    const prompt = JSON.parse(arg.prompt) as {
-      theirColumns: { header: string; samples: string[] }[];
-    };
-    expect(prompt.theirColumns[0].samples).toEqual(["INV-3"]);
   });
 
   it("filters out hallucinated ourField values", async () => {
@@ -193,5 +161,45 @@ describe("getAiColumnMatches", () => {
     generateObjectMock.mockRejectedValue(new Error("network down"));
     const out = await getAiColumnMatches(FIXED_INPUT);
     expect(out).toEqual([]);
+  });
+});
+
+describe("buildSamplesByHeader", () => {
+  it("returns up to 3 non-empty samples per header", () => {
+    expect(
+      buildSamplesByHeader(
+        [
+          { "#": "INV-1", Customer: "A Corp" },
+          { "#": "INV-2", Customer: "B Corp" },
+          { "#": "INV-3", Customer: "C Corp" },
+          { "#": "INV-4", Customer: "D Corp" },
+        ],
+        ["#", "Customer"],
+      ),
+    ).toEqual({
+      "#": ["INV-1", "INV-2", "INV-3"],
+      Customer: ["A Corp", "B Corp", "C Corp"],
+    });
+  });
+
+  it("truncates each sample to 32 chars", () => {
+    const long = "x".repeat(60);
+    const out = buildSamplesByHeader([{ Note: long }], ["Note"]);
+    expect(out.Note[0]).toHaveLength(32);
+  });
+
+  it("skips empty + whitespace-only values", () => {
+    expect(
+      buildSamplesByHeader(
+        [{ Number: "" }, { Number: "   " }, { Number: "INV-3" }],
+        ["Number"],
+      ),
+    ).toEqual({ Number: ["INV-3"] });
+  });
+
+  it("returns an empty array for headers with no non-empty rows", () => {
+    expect(
+      buildSamplesByHeader([{ Empty: "" }, { Empty: "" }], ["Empty"]),
+    ).toEqual({ Empty: [] });
   });
 });

@@ -2,13 +2,13 @@ import { describe, it, expect } from "vitest";
 import { formatCard } from "@/lib/import/preview-formatter";
 
 describe("formatCard", () => {
-  it("formats invoices with number · contact · amount · date", () => {
+  it("formats invoices with number · contact then total · issue date", () => {
     expect(
       formatCard("invoices", {
         invoiceNumber: "INV-2026-001",
         contactName: "Acme Corp",
-        totalAmount: "1200.50",
-        currency: "EUR",
+        total: "1200.50",
+        currencyCode: "EUR",
         issueDate: "2026-04-27",
       }),
     ).toEqual({
@@ -17,10 +17,10 @@ describe("formatCard", () => {
     });
   });
 
-  it("formats contacts with name · country · email", () => {
+  it("formats contacts with company · country · email", () => {
     expect(
       formatCard("contacts", {
-        name: "Acme Corp",
+        company: "Acme Corp",
         countryCode: "GR",
         email: "billing@acme.example",
       }),
@@ -30,13 +30,26 @@ describe("formatCard", () => {
     });
   });
 
-  it("formats expenses with vendor · amount · date", () => {
+  it("falls back to firstName lastName when company is missing", () => {
+    expect(
+      formatCard("contacts", {
+        firstName: "John",
+        lastName: "Frontzos",
+        countryCode: "GR",
+      }),
+    ).toEqual({
+      primary: "John Frontzos",
+      secondary: ["GR"],
+    });
+  });
+
+  it("formats expenses with supplier · total · expenseDate", () => {
     expect(
       formatCard("expenses", {
-        vendorName: "Hetzner",
-        totalAmount: "120.00",
-        currency: "EUR",
-        date: "2026-04-15",
+        supplierName: "Hetzner",
+        total: "120.00",
+        currencyCode: "EUR",
+        expenseDate: "2026-04-15",
       }),
     ).toEqual({
       primary: "Hetzner",
@@ -44,17 +57,18 @@ describe("formatCard", () => {
     });
   });
 
-  it("formats credit-notes with number · contact · amount", () => {
+  it("formats credit-notes with number · contact · total · issue date", () => {
     expect(
       formatCard("credit-notes", {
         creditNoteNumber: "CN-2026-001",
         contactName: "Acme Corp",
-        totalAmount: "300.00",
-        currency: "EUR",
+        total: "300.00",
+        currencyCode: "EUR",
+        issueDate: "2026-04-20",
       }),
     ).toEqual({
       primary: "CN-2026-001 · Acme Corp",
-      secondary: ["300.00 EUR"],
+      secondary: ["300.00 EUR", "2026-04-20"],
     });
   });
 
@@ -77,7 +91,7 @@ describe("formatCard", () => {
       formatCard("invoices", {
         invoiceNumber: "INV-1",
         contactName: "",
-        totalAmount: "",
+        total: "",
         issueDate: "",
       }),
     ).toEqual({
@@ -90,8 +104,20 @@ describe("formatCard", () => {
     expect(
       formatCard("invoices", {
         invoiceNumber: "X",
-        totalAmount: "1234567.89",
+        total: "1234567.89",
+        currencyCode: "EUR",
       }).secondary,
-    ).toContain("1,234,567.89");
+    ).toContain("1,234,567.89 EUR");
+  });
+
+  it("returns (empty row) when contacts has neither company nor name parts", () => {
+    expect(
+      formatCard("contacts", {
+        countryCode: "GR",
+      }),
+    ).toEqual({
+      primary: "(empty row)",
+      secondary: ["GR"],
+    });
   });
 });
