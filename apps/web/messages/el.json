@@ -935,6 +935,7 @@
     "importComplete": "Η εισαγωγή ολοκληρώθηκε",
     "goToEntity": "Μετάβαση σε {entity}",
     "committing": "Εισαγωγή…",
+    "reviewSampleHint": "Εμφανίζονται οι πρώτες {shown} από {total} γραμμές. Θα εισαχθούν όλες.",
     "ai": {
       "lookingForMatches": "Αναζήτηση αντιστοιχίσεων με AI…",
       "autoMatched": "Αντιστοίχιση από AI",

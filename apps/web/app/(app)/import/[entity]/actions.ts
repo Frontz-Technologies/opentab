@@ -6,6 +6,14 @@ import { and, eq, inArray } from "drizzle-orm";
 import { getSession } from "@/lib/session";
 import { db } from "@/lib/db";
 import {
+  storeImportTempFile,
+  getImportTempFile,
+  deleteTempFile,
+  isMissingFileError,
+} from "@/lib/expenses/file-storage";
+import { parseCsv } from "@/lib/import/core/parser";
+import { isValidImportId } from "@/lib/import/import-id";
+import {
   contacts,
   expenses,
   invoices,
@@ -35,7 +43,7 @@ const log = createLogger("import-actions");
 
 interface CommitArgs {
   entityKey: string;
-  rows: Record<string, string>[];
+  importId: string;
   mapping: Record<string, string | null>;
   skippedByUser: number[];
   autoCreateToggles: Record<string, boolean>;
@@ -45,6 +53,58 @@ function ensureOwnerOrAdmin(role: string | undefined) {
   if (role !== "owner" && role !== "admin") {
     throw new Error("Forbidden");
   }
+}
+
+export interface ParsedSummary {
+  importId: string;
+  headers: string[];
+  rowCount: number;
+  sample: Record<string, string>[];
+}
+
+const SAMPLE_ROW_CAP = 50;
+
+export async function uploadImportCsv(
+  formData: FormData,
+): Promise<{ ok: true; parsed: ParsedSummary } | { ok: false; error: string }> {
+  const session = await getSession();
+  if (!session) return { ok: false, error: "Unauthorized" };
+  try {
+    ensureOwnerOrAdmin(session.role);
+  } catch {
+    return { ok: false, error: "Forbidden" };
+  }
+
+  const file = formData.get("file");
+  if (!(file instanceof Blob)) {
+    return { ok: false, error: "No file supplied" };
+  }
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const originalName = file instanceof File ? file.name : "import.csv";
+
+  let parsed;
+  try {
+    parsed = await parseCsv(buffer);
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Failed to parse CSV",
+    };
+  }
+
+  const importId = `tmp_${randomUUID()}`;
+  await storeImportTempFile(session.org.id, importId, buffer, originalName);
+
+  return {
+    ok: true,
+    parsed: {
+      importId,
+      headers: parsed.headers,
+      rowCount: parsed.rows.length,
+      sample: parsed.rows.slice(0, SAMPLE_ROW_CAP),
+    },
+  };
 }
 
 const TABLE_BY_ENTITY: Record<string, PgTable> = {
@@ -143,7 +203,57 @@ export async function commitImport(args: CommitArgs) {
 
   const orgId = session.org.id;
   const importer = getImporter(args.entityKey);
-  const validated = validateRows(args.rows, args.mapping, importer, orgId);
+
+  if (!isValidImportId(args.importId)) {
+    return {
+      created: 0,
+      skippedDup: 0,
+      skippedByUser: 0,
+      failed: 0,
+      errorCsv: null,
+      ok: false as const,
+      error: "Invalid import session — please re-upload the file.",
+    };
+  }
+
+  const storageKey = `${orgId}/imports/tmp/${args.importId}.csv`;
+
+  let buffer: Buffer;
+  try {
+    buffer = await getImportTempFile(storageKey);
+  } catch (err) {
+    // Narrow to "file is genuinely missing" — TTL sweep, abandoned
+    // wizard, idempotent double-commit. Anything else (S3 5xx, IAM
+    // denial, network blip, malformed key) propagates as a 500 so it
+    // surfaces in logs instead of being mislabelled as session expiry.
+    if (!isMissingFileError(err)) throw err;
+    return {
+      created: 0,
+      skippedDup: 0,
+      skippedByUser: 0,
+      failed: 0,
+      errorCsv: null,
+      ok: false as const,
+      error: "Import session expired — please re-upload the file.",
+    };
+  }
+
+  let parsed;
+  try {
+    parsed = await parseCsv(buffer);
+  } catch (err) {
+    return {
+      created: 0,
+      skippedDup: 0,
+      skippedByUser: 0,
+      failed: 0,
+      errorCsv: null,
+      ok: false as const,
+      error: err instanceof Error ? err.message : "Failed to parse CSV",
+    };
+  }
+
+  const validated = validateRows(parsed.rows, args.mapping, importer, orgId);
 
   // Invoice + credit-note rows need a real contactId (notNull at DB
   // level). Pre-resolve via a single batch lookup over distinct
@@ -207,7 +317,35 @@ export async function commitImport(args: CommitArgs) {
   });
 
   revalidatePath(`/${args.entityKey}`);
+  // Delete only on the success path — if anything above this point
+  // throws (line-item insert failure, recordActivity outage), the
+  // raw CSV stays in storage so the user can retry. The TTL sweep
+  // (cleanup-temp-files, 24h) catches files left behind by exceptions
+  // that the user never retries.
+  await deleteTempFile(storageKey);
   return { success: true, ...result };
+}
+
+// Idempotent cleanup of an in-flight import's temp CSV. Called by
+// the wizard's React useEffect cleanup when the user navigates away
+// without committing. The beacon-on-beforeunload counterpart lives
+// at /api/import/cleanup (Server Actions can't accept the beacon
+// POST shape). No role-guard — the key shape pins the operation to
+// the caller's own org prefix, so the worst-case impact is a user
+// re-cleaning their own already-cleaned-up file.
+export async function cleanupImport(args: { importId: string }) {
+  const session = await getSession();
+  if (!session) return { ok: false };
+  // Match the role posture of the other import actions — bounded blast
+  // radius (operates only on `${session.org.id}/imports/tmp/`) but
+  // reserved to owners/admins for consistency.
+  if (session.role !== "owner" && session.role !== "admin") {
+    return { ok: false };
+  }
+  if (!isValidImportId(args.importId)) return { ok: false };
+  const key = `${session.org.id}/imports/tmp/${args.importId}.csv`;
+  await deleteTempFile(key);
+  return { ok: true };
 }
 
 // Batch contact-name → id lookup for invoice/credit-note imports.

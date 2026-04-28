@@ -36,7 +36,7 @@ describe("commitImport / getSampleCsv role guard (#215)", () => {
     await expect(
       commitImport({
         entityKey: "contacts",
-        rows: [],
+        importId: "tmp_x",
         mapping: {},
         skippedByUser: [],
         autoCreateToggles: {},
@@ -54,7 +54,7 @@ describe("commitImport / getSampleCsv role guard (#215)", () => {
     await expect(
       commitImport({
         entityKey: "contacts",
-        rows: [],
+        importId: "tmp_x",
         mapping: {},
         skippedByUser: [],
         autoCreateToggles: {},
@@ -72,7 +72,7 @@ describe("commitImport / getSampleCsv role guard (#215)", () => {
     await expect(
       commitImport({
         entityKey: "contacts",
-        rows: [],
+        importId: "tmp_x",
         mapping: {},
         skippedByUser: [],
         autoCreateToggles: {},

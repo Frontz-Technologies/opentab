@@ -152,6 +152,45 @@ export async function storeTempFile(
   return key;
 }
 
+export async function storeImportTempFile(
+  orgId: string,
+  importId: string,
+  buffer: Buffer,
+  originalName: string,
+): Promise<string> {
+  const ext = originalName.includes(".")
+    ? originalName.split(".").pop() || "bin"
+    : "bin";
+  const key = `${orgId}/imports/tmp/${importId}.${ext}`;
+  const backend = useS3 ? "s3" : "local";
+
+  log.info("storing import temp file", {
+    orgId,
+    importId,
+    ext,
+    sizeBytes: buffer.length,
+    backend,
+  });
+
+  if (useS3) {
+    const { s3Client, BUCKET, PutObjectCommand } = await s3();
+    await s3Client.send(
+      new PutObjectCommand({ Bucket: BUCKET, Key: key, Body: buffer }),
+    );
+  } else {
+    const { mkdir, writeFile, join, uploadsDir } = await fs();
+    const dir = join(uploadsDir, orgId, "imports", "tmp");
+    await mkdir(dir, { recursive: true });
+    await writeFile(join(dir, `${importId}.${ext}`), buffer);
+  }
+
+  return key;
+}
+
+export async function getImportTempFile(relativePath: string): Promise<Buffer> {
+  return getFile(relativePath);
+}
+
 export async function moveTempToExpense(
   tempRelativePath: string,
   orgId: string,
@@ -194,21 +233,43 @@ export async function moveTempToExpense(
   return finalKey;
 }
 
-export async function deleteTempFile(tempRelativePath: string): Promise<void> {
+// Detects "the file isn't there" across both backends without falling back
+// to message-string regex. Local FS throws NodeJS.ErrnoException with
+// `code === "ENOENT"`; AWS SDK v3 throws errors with `name === "NoSuchKey"`
+// or `"NotFound"` and `$metadata.httpStatusCode === 404`. All four are
+// structured fields that the SDKs reliably set — the prior regex on
+// `err.message` was paranoia layered on top of the proper checks and is
+// dropped to avoid false positives on unrelated errors whose messages
+// happen to contain "NotFound".
+export function isMissingFileError(err: unknown): boolean {
+  const code = (err as NodeJS.ErrnoException).code;
+  const name = (err as { name?: string }).name;
+  const status = (err as { $metadata?: { httpStatusCode?: number } }).$metadata
+    ?.httpStatusCode;
+  return (
+    code === "ENOENT" ||
+    name === "NoSuchKey" ||
+    name === "NotFound" ||
+    status === 404
+  );
+}
+
+export async function deleteTempFile(key: string): Promise<void> {
   const backend = useS3 ? "s3" : "local";
-  log.debug("deleting temp file", { tempRelativePath, backend });
 
   try {
     if (useS3) {
       const { s3Client, BUCKET, DeleteObjectCommand } = await s3();
       await s3Client.send(
-        new DeleteObjectCommand({ Bucket: BUCKET, Key: tempRelativePath }),
+        new DeleteObjectCommand({ Bucket: BUCKET, Key: key }),
       );
     } else {
       const { unlink, join, uploadsDir } = await fs();
-      await unlink(join(uploadsDir, tempRelativePath));
+      await unlink(join(uploadsDir, key));
     }
-  } catch {
-    log.debug("temp file already cleaned up", { tempRelativePath });
+    log.debug("temp file deleted", { key, backend });
+  } catch (err) {
+    if (isMissingFileError(err)) return;
+    throw err;
   }
 }

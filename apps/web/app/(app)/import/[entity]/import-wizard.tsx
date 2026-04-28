@@ -1,10 +1,16 @@
 "use client";
 
-import { useReducer, useTransition } from "react";
+import { useEffect, useReducer, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { commitImport, getSampleCsv, getAiSuggestions } from "./actions";
+import {
+  cleanupImport,
+  commitImport,
+  getSampleCsv,
+  getAiSuggestions,
+  uploadImportCsv,
+} from "./actions";
 import { buildSamplesByHeader } from "@/lib/import/core/ai-match";
 import { WizardStepper } from "@/components/import/wizard-stepper";
 import { UploadDropzone } from "@/components/import/upload-dropzone";
@@ -26,7 +32,12 @@ type Step = "upload" | "review" | "done";
 interface State {
   step: Step;
   parsing: boolean;
-  parsed: { headers: string[]; rows: Record<string, string>[] } | null;
+  parsed: {
+    importId: string;
+    headers: string[];
+    rowCount: number;
+    sample: Record<string, string>[];
+  } | null;
   mapping: Record<string, string | null>;
   skipped: Set<number>;
   autoCreateContact: boolean;
@@ -117,25 +128,53 @@ export function ImportWizard({ entityKey, entityLabel, fields }: WizardProps) {
     result: null,
   } satisfies State);
 
+  useEffect(() => {
+    const importId = state.parsed?.importId;
+    if (!importId) return;
+    // Once the wizard reaches "done", the server already deleted the
+    // file on commit success — no cleanup needed from this side.
+    if (state.step === "done") return;
+
+    const onUnload = () => {
+      navigator.sendBeacon(
+        "/api/import/cleanup",
+        new Blob([JSON.stringify({ importId })], {
+          type: "application/json",
+        }),
+      );
+    };
+    window.addEventListener("beforeunload", onUnload);
+    return () => {
+      window.removeEventListener("beforeunload", onUnload);
+      void cleanupImport({ importId });
+    };
+  }, [state.parsed?.importId, state.step]);
+
   async function handleFile(file: File) {
     dispatch({ type: "PARSING" });
-    const buffer = Buffer.from(await file.arrayBuffer());
     try {
-      const { parseCsv } = await import("@/lib/import/core/parser");
+      const formData = new FormData();
+      formData.set("file", file);
+      const result = await uploadImportCsv(formData);
+      if (!result.ok) {
+        toast.error(result.error);
+        dispatch({ type: "PARSE_ERROR" });
+        return;
+      }
+
       const { autoMap } = await import("@/lib/import/core/mapper");
       const { getImporter } = await import("@/lib/import/importers");
-      const parsed = await parseCsv(buffer);
       const importer = getImporter(entityKey);
-      const mapping = autoMap(parsed.headers, importer.aliases);
-      dispatch({ type: "PARSED", parsed, mapping });
+      const mapping = autoMap(result.parsed.headers, importer.aliases);
+      dispatch({ type: "PARSED", parsed: result.parsed, mapping });
 
-      // Fire-and-forget AI suggestions if any header is null. Samples
-      // are computed client-side (≤ 3 × 32 chars per header) so the RSC
-      // payload stays tiny even for huge CSVs.
-      const unmapped = parsed.headers.filter((h) => !mapping[h]);
+      const unmapped = result.parsed.headers.filter((h) => !mapping[h]);
       if (unmapped.length > 0) {
         dispatch({ type: "AI_LOADING", loading: true });
-        const samplesByHeader = buildSamplesByHeader(parsed.rows, unmapped);
+        const samplesByHeader = buildSamplesByHeader(
+          result.parsed.sample,
+          unmapped,
+        );
         getAiSuggestions(entityKey, {
           unmappedHeaders: unmapped,
           samplesByHeader,
@@ -143,16 +182,13 @@ export function ImportWizard({ entityKey, entityLabel, fields }: WizardProps) {
           .then((suggestions) => {
             dispatch({ type: "AI_SUGGESTIONS", suggestions });
           })
-          .catch(() => {
-            /* fail-silent: wizard works without AI */
-          })
           .finally(() => {
             dispatch({ type: "AI_LOADING", loading: false });
           });
       }
-    } catch (e) {
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Upload failed");
       dispatch({ type: "PARSE_ERROR" });
-      toast.error(e instanceof Error ? e.message : t("parseError"));
     }
   }
 
@@ -172,7 +208,7 @@ export function ImportWizard({ entityKey, entityLabel, fields }: WizardProps) {
     startTransition(async () => {
       const result = await commitImport({
         entityKey,
-        rows: state.parsed!.rows,
+        importId: state.parsed!.importId,
         mapping: state.mapping,
         skippedByUser: Array.from(state.skipped),
         autoCreateToggles: { contact: state.autoCreateContact },
@@ -234,10 +270,18 @@ export function ImportWizard({ entityKey, entityLabel, fields }: WizardProps) {
             aiLoading={state.aiLoading}
             aiSuggestions={state.aiSuggestions}
           />
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 space-y-2">
+            {state.parsed.rowCount > state.parsed.sample.length && (
+              <p className="text-xs text-on-surface-variant">
+                {t("reviewSampleHint", {
+                  shown: state.parsed.sample.length,
+                  total: state.parsed.rowCount,
+                })}
+              </p>
+            )}
             <ReviewList
               entityKey={entityKey}
-              rows={state.parsed.rows}
+              rows={state.parsed.sample}
               mapping={state.mapping}
               skipped={state.skipped}
               onToggleSkip={(rn) =>

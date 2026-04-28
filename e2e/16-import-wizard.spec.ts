@@ -59,4 +59,42 @@ test.describe("Import wizard happy path", () => {
     // Done step.
     await expect(page.getByText(/Import complete/i)).toBeVisible();
   });
+
+  // CSV storage round-trip happy-path (#257). Uploads a CSV beyond the
+  // old Server Action 1MB body limit and asserts the wizard reaches Done.
+  // Skipped in this branch — needs `pnpm e2e` against a built dev server,
+  // which OOMs in the current sandbox. Un-skip when running locally
+  // (or in CI with sufficient memory).
+  test.fixme("CSV import via storage round-trip handles >1MB payloads (#257)", async () => {
+    const headers = Array.from({ length: 30 }, (_, i) => `field_${i}`);
+    const rowCount = 200;
+    const lines = [headers.join(",")];
+    for (let i = 0; i < rowCount; i++) {
+      lines.push(
+        headers.map((_, c) => `r${i}c${c}_${"x".repeat(40)}`).join(","),
+      );
+    }
+    const csv = lines.join("\n");
+
+    await page.goto("/import/contacts");
+    const fileInput = page.locator('input[type="file"]');
+    await fileInput.setInputFiles({
+      name: "big-import.csv",
+      mimeType: "text/csv",
+      buffer: Buffer.from(csv),
+    });
+
+    await expect(page.getByText(/review|mapping/i).first()).toBeVisible({
+      timeout: 15000,
+    });
+
+    await page
+      .getByRole("button", { name: /continue|import|run/i })
+      .first()
+      .click();
+
+    await expect(page.getByText(/imported|done|complete/i).first()).toBeVisible(
+      { timeout: 30000 },
+    );
+  });
 });
