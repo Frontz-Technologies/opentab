@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { deleteTempFile } from "@/lib/expenses/file-storage";
-import { isValidImportId } from "@/app/(app)/import/[entity]/actions";
+import { isValidImportId } from "@/lib/import/import-id";
 
 // Accepts the navigator.sendBeacon POST that the import wizard fires
 // on beforeunload. Server Actions can't accept beacon POSTs (they

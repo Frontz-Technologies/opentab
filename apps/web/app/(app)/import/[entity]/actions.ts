@@ -12,6 +12,7 @@ import {
   isMissingFileError,
 } from "@/lib/expenses/file-storage";
 import { parseCsv } from "@/lib/import/core/parser";
+import { isValidImportId } from "@/lib/import/import-id";
 import {
   contacts,
   expenses,
@@ -62,18 +63,6 @@ export interface ParsedSummary {
 }
 
 const SAMPLE_ROW_CAP = 50;
-
-// `tmp_<uuid-v4>` — minted server-side in uploadImportCsv via
-// `tmp_${randomUUID()}`. Validated wherever the wizard hands an
-// importId back to the server (commit / cleanup) so a malicious
-// caller can't sneak path-traversal segments through the storage-key
-// interpolation on the local-FS backend.
-const IMPORT_ID_REGEX =
-  /^tmp_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
-
-export function isValidImportId(id: unknown): id is string {
-  return typeof id === "string" && IMPORT_ID_REGEX.test(id);
-}
 
 export async function uploadImportCsv(
   formData: FormData,
