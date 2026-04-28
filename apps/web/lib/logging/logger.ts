@@ -56,21 +56,9 @@ const REDACTED_KEYS = new Set([
   "apiKey",
   "apikey",
   "api_key",
-  "bcc",
-  "body",
-  "cc",
   "password",
-  "fileName",
-  "filename",
-  "from",
-  "html",
-  "rawResponse",
-  "requestBody",
   "secret",
-  "subject",
-  "text",
   "token",
-  "to",
   "authorization",
   "cookie",
   "apiKeyEncrypted",
@@ -85,21 +73,42 @@ const REDACTED_KEYS = new Set([
   "responseXml",
 ]);
 
-function sanitizeValue(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map((item) => sanitizeValue(item));
+const REMOTE_LOG_REDACTED_KEYS = new Set([
+  ...REDACTED_KEYS,
+  "bcc",
+  "body",
+  "cc",
+  "fileName",
+  "filename",
+  "from",
+  "html",
+  "rawResponse",
+  "requestBody",
+  "subject",
+  "text",
+  "to",
+]);
+
+function sanitizeValue(value: unknown, keys: Set<string>): unknown {
+  if (Array.isArray(value)) {
+    return value.map((item) => sanitizeValue(item, keys));
+  }
   if (value && typeof value === "object") {
-    return sanitize(value as Record<string, unknown>);
+    return sanitize(value as Record<string, unknown>, keys);
   }
   return value;
 }
 
-function sanitize(data: Record<string, unknown>): Record<string, unknown> {
+function sanitize(
+  data: Record<string, unknown>,
+  keys = REDACTED_KEYS,
+): Record<string, unknown> {
   const clean: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(data)) {
-    if (REDACTED_KEYS.has(key) || REDACTED_KEYS.has(key.toLowerCase())) {
+    if (keys.has(key) || keys.has(key.toLowerCase())) {
       clean[key] = "[REDACTED]";
     } else {
-      clean[key] = sanitizeValue(value);
+      clean[key] = sanitizeValue(value, keys);
     }
   }
   return clean;
@@ -111,6 +120,7 @@ interface LogEvent {
   module: string;
   msg: string;
   attrs: Record<string, unknown>;
+  remoteAttrs: Record<string, unknown>;
 }
 
 // Module-scoped cached SDK promise. Single allocation at module load;
@@ -143,6 +153,7 @@ function emit(
     module,
     msg: message,
     attrs: data ? sanitize(data) : {},
+    remoteAttrs: data ? sanitize(data, REMOTE_LOG_REDACTED_KEYS) : {},
   };
 
   writeConsole(event);
@@ -207,7 +218,7 @@ function writeGlitchTipLog(event: LogEvent) {
     .then((Sentry) => {
       Sentry?.logger?.[event.level]?.(event.msg, {
         module: event.module,
-        ...event.attrs,
+        ...event.remoteAttrs,
       });
     })
     .catch(() => {

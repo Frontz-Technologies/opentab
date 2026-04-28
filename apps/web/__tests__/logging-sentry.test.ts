@@ -119,7 +119,7 @@ describe("logger error level → Sentry", () => {
     const extras = setExtras.mock.calls[0][0];
     expect(extras.password).toBe("[REDACTED]");
     expect(extras.apiKey).toBe("[REDACTED]");
-    expect(extras.to).toBe("[REDACTED]");
+    expect(extras.to).toBe("u@x");
   });
 
   it("constructs an Error with the log message for the stack", async () => {
@@ -242,6 +242,31 @@ describe("logger info/warn/error → Sentry.logger (Logs tab)", () => {
     expect(payload.apiKey).toBe("[REDACTED]");
     expect(payload.to).toBe("[REDACTED]");
     expect(payload.module).toBe("auth");
+  });
+
+  it("uses stricter redaction for remote logs than stdout/issues", async () => {
+    const log = createLogger("email-transport");
+    log.error("email send failed", {
+      to: "u@x",
+      subject: "Reset your password",
+      error: "EAUTH",
+    });
+
+    await vi.waitFor(() => {
+      expect(setExtras).toHaveBeenCalled();
+      expect(loggerError).toHaveBeenCalledOnce();
+    });
+    expect(setExtras.mock.calls[0][0]).toMatchObject({
+      to: "u@x",
+      subject: "Reset your password",
+      error: "EAUTH",
+    });
+    expect(loggerError).toHaveBeenCalledWith("email send failed", {
+      module: "email-transport",
+      to: "[REDACTED]",
+      subject: "[REDACTED]",
+      error: "EAUTH",
+    });
   });
 
   it("sanitizes nested objects inside arrays before forwarding", async () => {
