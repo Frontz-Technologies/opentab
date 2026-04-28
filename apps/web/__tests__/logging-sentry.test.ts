@@ -45,12 +45,17 @@ vi.mock("@sentry/nextjs", () => ({
 import { createLogger } from "@/lib/logging/logger";
 
 describe("logger error level → Sentry", () => {
+  const originalForwardLevel = process.env.LOG_FORWARD_LEVEL;
+  const originalDsn = process.env.SENTRY_DSN;
+
   // Warm the dynamic `import("@sentry/nextjs")` cache once. On cold CI
   // workers the first resolution can take more than a single setTimeout(0)
   // microtask tick, which would let captureException calls leak into the
   // following test. After this beforeAll the import is cached and resolves
   // in one microtask cycle.
   beforeAll(async () => {
+    process.env.SENTRY_DSN = "https://example@glitchtip.test/1";
+    process.env.LOG_FORWARD_LEVEL = "info";
     const warmup = createLogger("warmup");
     warmup.error("warmup");
     await vi.waitFor(() => {
@@ -63,6 +68,8 @@ describe("logger error level → Sentry", () => {
   });
 
   beforeEach(() => {
+    process.env.LOG_FORWARD_LEVEL = "info";
+    process.env.SENTRY_DSN = "https://example@glitchtip.test/1";
     captureException.mockClear();
     setTag.mockClear();
     setExtras.mockClear();
@@ -71,6 +78,8 @@ describe("logger error level → Sentry", () => {
   });
 
   afterEach(() => {
+    process.env.LOG_FORWARD_LEVEL = originalForwardLevel;
+    process.env.SENTRY_DSN = originalDsn;
     vi.restoreAllMocks();
   });
 
@@ -110,7 +119,7 @@ describe("logger error level → Sentry", () => {
     const extras = setExtras.mock.calls[0][0];
     expect(extras.password).toBe("[REDACTED]");
     expect(extras.apiKey).toBe("[REDACTED]");
-    expect(extras.to).toBe("u@x");
+    expect(extras.to).toBe("[REDACTED]");
   });
 
   it("constructs an Error with the log message for the stack", async () => {
@@ -140,7 +149,12 @@ describe("logger error level → Sentry", () => {
 });
 
 describe("logger info/warn/error → Sentry.logger (Logs tab)", () => {
+  const originalForwardLevel = process.env.LOG_FORWARD_LEVEL;
+  const originalDsn = process.env.SENTRY_DSN;
+
   beforeEach(() => {
+    process.env.LOG_FORWARD_LEVEL = "info";
+    process.env.SENTRY_DSN = "https://example@glitchtip.test/1";
     loggerInfo.mockClear();
     loggerWarn.mockClear();
     loggerError.mockClear();
@@ -154,6 +168,8 @@ describe("logger info/warn/error → Sentry.logger (Logs tab)", () => {
   });
 
   afterEach(() => {
+    process.env.LOG_FORWARD_LEVEL = originalForwardLevel;
+    process.env.SENTRY_DSN = originalDsn;
     vi.restoreAllMocks();
   });
 
@@ -167,7 +183,7 @@ describe("logger info/warn/error → Sentry.logger (Logs tab)", () => {
     expect(loggerInfo).toHaveBeenCalledWith("receipt uploaded", {
       module: "expenses",
       orgId: "org_1",
-      fileName: "r.pdf",
+      fileName: "[REDACTED]",
     });
   });
 
@@ -194,7 +210,7 @@ describe("logger info/warn/error → Sentry.logger (Logs tab)", () => {
     });
     expect(loggerError).toHaveBeenCalledWith("email send failed", {
       module: "email-transport",
-      to: "u@x",
+      to: "[REDACTED]",
     });
   });
 
@@ -224,7 +240,78 @@ describe("logger info/warn/error → Sentry.logger (Logs tab)", () => {
     const payload = loggerInfo.mock.calls[0][1];
     expect(payload.password).toBe("[REDACTED]");
     expect(payload.apiKey).toBe("[REDACTED]");
-    expect(payload.to).toBe("u@x");
+    expect(payload.to).toBe("[REDACTED]");
     expect(payload.module).toBe("auth");
+  });
+
+  it("sanitizes nested objects inside arrays before forwarding", async () => {
+    const log = createLogger("auth");
+    log.info("batch processed", {
+      items: [
+        { id: "safe", token: "secret-token" },
+        { nested: { apiKey: "sk-secret" } },
+      ],
+    });
+
+    await vi.waitFor(() => {
+      expect(loggerInfo).toHaveBeenCalledOnce();
+    });
+    const payload = loggerInfo.mock.calls[0][1];
+    expect(payload.items).toEqual([
+      { id: "safe", token: "[REDACTED]" },
+      { nested: { apiKey: "[REDACTED]" } },
+    ]);
+  });
+
+  it("honors LOG_FORWARD_LEVEL=warn by not forwarding info", async () => {
+    process.env.LOG_FORWARD_LEVEL = "warn";
+    const log = createLogger("test");
+
+    log.info("beta detail");
+    log.warn("actionable warning");
+
+    await vi.waitFor(() => {
+      expect(loggerWarn).toHaveBeenCalledOnce();
+    });
+    expect(loggerInfo).not.toHaveBeenCalled();
+    expect(loggerWarn).toHaveBeenCalledWith("actionable warning", {
+      module: "test",
+    });
+  });
+
+  it("honors LOG_FORWARD_LEVEL=off", async () => {
+    process.env.LOG_FORWARD_LEVEL = "off";
+    const log = createLogger("test");
+
+    log.error("not forwarded to logs tab");
+
+    await vi.waitFor(() => {
+      expect(captureException).toHaveBeenCalledOnce();
+    });
+    expect(loggerError).not.toHaveBeenCalled();
+  });
+
+  it("does not forward to GlitchTip when SENTRY_DSN is unset", async () => {
+    delete process.env.SENTRY_DSN;
+    process.env.LOG_FORWARD_LEVEL = "info";
+    const log = createLogger("test");
+
+    log.info("beta detail");
+    log.error("captured nowhere");
+
+    await new Promise((r) => setTimeout(r, 50));
+    expect(loggerInfo).not.toHaveBeenCalled();
+    expect(loggerError).not.toHaveBeenCalled();
+    expect(captureException).not.toHaveBeenCalled();
+  });
+
+  it("does not forward to GlitchTip Logs when LOG_FORWARD_LEVEL is unset", async () => {
+    delete process.env.LOG_FORWARD_LEVEL;
+    const log = createLogger("test");
+
+    log.info("beta detail");
+
+    await new Promise((r) => setTimeout(r, 50));
+    expect(loggerInfo).not.toHaveBeenCalled();
   });
 });
