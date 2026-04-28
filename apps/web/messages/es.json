@@ -935,6 +935,7 @@
     "importComplete": "Importación completada",
     "goToEntity": "Ir a {entity}",
     "committing": "Importando…",
+    "reviewSampleHint": "Mostrando las primeras {shown} de {total} filas. Se importarán todas.",
     "ai": {
       "lookingForMatches": "Buscando coincidencias con IA…",
       "autoMatched": "IA emparejó",

@@ -270,7 +270,15 @@ export function ImportWizard({ entityKey, entityLabel, fields }: WizardProps) {
             aiLoading={state.aiLoading}
             aiSuggestions={state.aiSuggestions}
           />
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 space-y-2">
+            {state.parsed.rowCount > state.parsed.sample.length && (
+              <p className="text-xs text-on-surface-variant">
+                {t("reviewSampleHint", {
+                  shown: state.parsed.sample.length,
+                  total: state.parsed.rowCount,
+                })}
+              </p>
+            )}
             <ReviewList
               entityKey={entityKey}
               rows={state.parsed.sample}

@@ -130,9 +130,11 @@ describe("uploadImportCsv", () => {
 describe("commitImport — missing storage object", () => {
   it("returns ok=false 'Import session expired' when the file isn't in storage", async () => {
     // No upload happened first — pretend the cleanup processor swept the file.
+    // The id passes the importId regex (valid uuid-v4 shape) so the request
+    // reaches the storage check rather than the input validator.
     const result = await commitImport({
       entityKey: "contacts",
-      importId: "tmp_does_not_exist",
+      importId: "tmp_00000000-0000-4000-8000-000000000000",
       mapping: {},
       skippedByUser: [],
       autoCreateToggles: {},

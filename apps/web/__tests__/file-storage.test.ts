@@ -120,8 +120,20 @@ describe("file-storage (S3 mode)", () => {
     expect(mockSend).toHaveBeenCalledTimes(2);
   });
 
-  it("deleteTempFile does not throw on failure", async () => {
-    mockSend.mockRejectedValueOnce(new Error("NoSuchKey"));
+  it("deleteTempFile is idempotent on missing keys (NoSuchKey)", async () => {
+    // Shape matches AWS SDK v3 thrown errors: structured `name` field
+    // rather than a message-string regex. The earlier "swallow if message
+    // matches /NoSuchKey/" path was dropped because it produced false
+    // positives on unrelated errors whose messages happen to contain
+    // "NotFound" or "NoSuchKey".
+    const sdkErr = Object.assign(
+      new Error("The specified key does not exist."),
+      {
+        name: "NoSuchKey",
+        $metadata: { httpStatusCode: 404 },
+      },
+    );
+    mockSend.mockRejectedValueOnce(sdkErr);
     const { deleteTempFile } = await import("../lib/expenses/file-storage");
 
     await expect(

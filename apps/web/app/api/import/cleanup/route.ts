@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { deleteTempFile } from "@/lib/expenses/file-storage";
+import { isValidImportId } from "@/app/(app)/import/[entity]/actions";
 
 // Accepts the navigator.sendBeacon POST that the import wizard fires
 // on beforeunload. Server Actions can't accept beacon POSTs (they
@@ -9,6 +10,9 @@ import { deleteTempFile } from "@/lib/expenses/file-storage";
 export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ ok: false }, { status: 401 });
+  if (session.role !== "owner" && session.role !== "admin") {
+    return NextResponse.json({ ok: false }, { status: 403 });
+  }
 
   let body: { importId?: string };
   try {
@@ -16,7 +20,7 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ ok: false }, { status: 400 });
   }
-  if (!body.importId || typeof body.importId !== "string") {
+  if (!isValidImportId(body.importId)) {
     return NextResponse.json({ ok: false }, { status: 400 });
   }
 

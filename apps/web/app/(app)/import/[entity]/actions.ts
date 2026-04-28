@@ -9,6 +9,7 @@ import {
   storeImportTempFile,
   getImportTempFile,
   deleteTempFile,
+  isMissingFileError,
 } from "@/lib/expenses/file-storage";
 import { parseCsv } from "@/lib/import/core/parser";
 import {
@@ -61,6 +62,18 @@ export interface ParsedSummary {
 }
 
 const SAMPLE_ROW_CAP = 50;
+
+// `tmp_<uuid-v4>` — minted server-side in uploadImportCsv via
+// `tmp_${randomUUID()}`. Validated wherever the wizard hands an
+// importId back to the server (commit / cleanup) so a malicious
+// caller can't sneak path-traversal segments through the storage-key
+// interpolation on the local-FS backend.
+const IMPORT_ID_REGEX =
+  /^tmp_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
+export function isValidImportId(id: unknown): id is string {
+  return typeof id === "string" && IMPORT_ID_REGEX.test(id);
+}
 
 export async function uploadImportCsv(
   formData: FormData,
@@ -202,6 +215,18 @@ export async function commitImport(args: CommitArgs) {
   const orgId = session.org.id;
   const importer = getImporter(args.entityKey);
 
+  if (!isValidImportId(args.importId)) {
+    return {
+      created: 0,
+      skippedDup: 0,
+      skippedByUser: 0,
+      failed: 0,
+      errorCsv: null,
+      ok: false as const,
+      error: "Invalid import session — please re-upload the file.",
+    };
+  }
+
   const storageKey = `${orgId}/imports/tmp/${args.importId}.csv`;
 
   let buffer: Buffer;
@@ -210,20 +235,9 @@ export async function commitImport(args: CommitArgs) {
   } catch (err) {
     // Narrow to "file is genuinely missing" — TTL sweep, abandoned
     // wizard, idempotent double-commit. Anything else (S3 5xx, IAM
-    // denial, network blip, malformed key) should propagate as a 500
-    // so it surfaces in logs instead of being mislabelled as session
-    // expiry.
-    const code = (err as NodeJS.ErrnoException).code;
-    const name = (err as { name?: string }).name;
-    const status = (err as { $metadata?: { httpStatusCode?: number } })
-      .$metadata?.httpStatusCode;
-    const isMissing =
-      code === "ENOENT" ||
-      name === "NoSuchKey" ||
-      name === "NotFound" ||
-      status === 404 ||
-      (err instanceof Error && /NoSuchKey|NotFound/i.test(err.message));
-    if (!isMissing) throw err;
+    // denial, network blip, malformed key) propagates as a 500 so it
+    // surfaces in logs instead of being mislabelled as session expiry.
+    if (!isMissingFileError(err)) throw err;
     return {
       created: 0,
       skippedDup: 0,
@@ -333,6 +347,13 @@ export async function commitImport(args: CommitArgs) {
 export async function cleanupImport(args: { importId: string }) {
   const session = await getSession();
   if (!session) return { ok: false };
+  // Match the role posture of the other import actions — bounded blast
+  // radius (operates only on `${session.org.id}/imports/tmp/`) but
+  // reserved to owners/admins for consistency.
+  if (session.role !== "owner" && session.role !== "admin") {
+    return { ok: false };
+  }
+  if (!isValidImportId(args.importId)) return { ok: false };
   const key = `${session.org.id}/imports/tmp/${args.importId}.csv`;
   await deleteTempFile(key);
   return { ok: true };

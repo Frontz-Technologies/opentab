@@ -65,7 +65,8 @@ async function commitFromRows(
   fakeFileBuffer.current = Buffer.from(rowsToCsv(rows));
   return commitImport({
     entityKey: args.entityKey,
-    importId: "tmp_test",
+    // Valid uuid-v4-shaped importId — passes the action's input validator.
+    importId: "tmp_00000000-0000-4000-8000-000000000000",
     mapping: args.mapping,
     skippedByUser: args.skippedByUser ?? [],
     autoCreateToggles: args.autoCreateToggles ?? {},

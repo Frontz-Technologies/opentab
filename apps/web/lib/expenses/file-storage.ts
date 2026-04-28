@@ -233,6 +233,27 @@ export async function moveTempToExpense(
   return finalKey;
 }
 
+// Detects "the file isn't there" across both backends without falling back
+// to message-string regex. Local FS throws NodeJS.ErrnoException with
+// `code === "ENOENT"`; AWS SDK v3 throws errors with `name === "NoSuchKey"`
+// or `"NotFound"` and `$metadata.httpStatusCode === 404`. All four are
+// structured fields that the SDKs reliably set — the prior regex on
+// `err.message` was paranoia layered on top of the proper checks and is
+// dropped to avoid false positives on unrelated errors whose messages
+// happen to contain "NotFound".
+export function isMissingFileError(err: unknown): boolean {
+  const code = (err as NodeJS.ErrnoException).code;
+  const name = (err as { name?: string }).name;
+  const status = (err as { $metadata?: { httpStatusCode?: number } }).$metadata
+    ?.httpStatusCode;
+  return (
+    code === "ENOENT" ||
+    name === "NoSuchKey" ||
+    name === "NotFound" ||
+    status === 404
+  );
+}
+
 export async function deleteTempFile(key: string): Promise<void> {
   const backend = useS3 ? "s3" : "local";
 
@@ -248,12 +269,7 @@ export async function deleteTempFile(key: string): Promise<void> {
     }
     log.debug("temp file deleted", { key, backend });
   } catch (err) {
-    // Idempotent: missing key (already cleaned by another path) is fine.
-    const code = (err as NodeJS.ErrnoException).code;
-    if (code === "ENOENT") return;
-    if (err instanceof Error && /NoSuchKey|NotFound/i.test(err.message)) {
-      return;
-    }
+    if (isMissingFileError(err)) return;
     throw err;
   }
 }

@@ -935,6 +935,7 @@
     "importComplete": "Import complete",
     "goToEntity": "Go to {entity}",
     "committing": "Importing…",
+    "reviewSampleHint": "Showing the first {shown} of {total} rows. All will be imported.",
     "ai": {
       "lookingForMatches": "Looking for column matches with AI…",
       "autoMatched": "AI auto-matched",
