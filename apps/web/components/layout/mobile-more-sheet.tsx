@@ -4,6 +4,15 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
+import {
+  BarChart3,
+  FileText,
+  MoreHorizontal,
+  RefreshCw,
+  Settings,
+  Undo2,
+  type LucideIcon,
+} from "lucide-react";
 import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
 
 interface IntegrationNavEntry {
@@ -13,14 +22,14 @@ interface IntegrationNavEntry {
 }
 
 type MoreItem =
-  | { icon: string; labelKey: string; href: string }
-  | { icon: string; literalLabel: string; href: string };
+  | { icon: LucideIcon; labelKey: string; href: string }
+  | { icon: LucideIcon; literalLabel: string; href: string };
 
 const baseItems: MoreItem[] = [
-  { icon: "undo", labelKey: "creditNotes", href: "/credit-notes" },
-  { icon: "request_quote", labelKey: "quotes", href: "/quotes" },
-  { icon: "bar_chart", labelKey: "reports", href: "/reports" },
-  { icon: "settings", labelKey: "settings", href: "/settings" },
+  { icon: Undo2, labelKey: "creditNotes", href: "/credit-notes" },
+  { icon: FileText, labelKey: "quotes", href: "/quotes" },
+  { icon: BarChart3, labelKey: "reports", href: "/reports" },
+  { icon: Settings, labelKey: "settings", href: "/settings" },
 ];
 
 interface MobileMoreSheetProps {
@@ -36,7 +45,7 @@ export function MobileMoreSheet({ integrationNav }: MobileMoreSheetProps) {
   if (integrationNav) {
     for (const entry of integrationNav) {
       items.push({
-        icon: "cloud_sync",
+        icon: RefreshCw,
         literalLabel: entry.label,
         href: `/integrations/${entry.slug}`,
       });
@@ -56,9 +65,7 @@ export function MobileMoreSheet({ integrationNav }: MobileMoreSheetProps) {
             : "text-on-surface/40 hover:text-on-surface/70"
         }`}
       >
-        <span className="material-symbols-outlined text-[22px] leading-none">
-          more_horiz
-        </span>
+        <MoreHorizontal className="h-[22px] w-[22px]" />
         <span
           className={`font-label text-[10px] uppercase tracking-widest leading-none ${
             isActive ? "font-bold" : ""
@@ -78,6 +85,7 @@ export function MobileMoreSheet({ integrationNav }: MobileMoreSheetProps) {
               pathname === item.href || pathname.startsWith(item.href + "/");
             const label =
               "labelKey" in item ? t(item.labelKey) : item.literalLabel;
+            const Icon = item.icon;
             return (
               <Link
                 key={item.href}
@@ -89,9 +97,7 @@ export function MobileMoreSheet({ integrationNav }: MobileMoreSheetProps) {
                     : "text-on-surface/60 hover:text-on-surface hover:bg-surface-container-high/30"
                 }`}
               >
-                <span className="material-symbols-outlined text-[22px] leading-none">
-                  {item.icon}
-                </span>
+                <Icon className="h-[22px] w-[22px]" />
                 <span className="font-label text-sm">{label}</span>
               </Link>
             );

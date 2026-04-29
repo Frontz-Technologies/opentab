@@ -3,6 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
+import {
+  Contact,
+  LayoutDashboard,
+  Package,
+  ReceiptText,
+  Wallet,
+  type LucideIcon,
+} from "lucide-react";
 import { MobileMoreSheet } from "./mobile-more-sheet";
 
 interface IntegrationNavEntry {
@@ -11,12 +19,18 @@ interface IntegrationNavEntry {
   slug: string;
 }
 
-const navItems = [
-  { icon: "dashboard", labelKey: "dashboard", href: "/dashboard" },
-  { icon: "receipt_long", labelKey: "invoices", href: "/invoices" },
-  { icon: "account_balance_wallet", labelKey: "expenses", href: "/expenses" },
-  { icon: "contacts", labelKey: "contacts", href: "/contacts" },
-  { icon: "inventory_2", labelKey: "products", href: "/products" },
+interface MobileNavItem {
+  icon: LucideIcon;
+  labelKey: string;
+  href: string;
+}
+
+const navItems: readonly MobileNavItem[] = [
+  { icon: LayoutDashboard, labelKey: "dashboard", href: "/dashboard" },
+  { icon: ReceiptText, labelKey: "invoices", href: "/invoices" },
+  { icon: Wallet, labelKey: "expenses", href: "/expenses" },
+  { icon: Contact, labelKey: "contacts", href: "/contacts" },
+  { icon: Package, labelKey: "products", href: "/products" },
 ] as const;
 
 export function MobileNav({
@@ -34,6 +48,7 @@ export function MobileNav({
           const isActive =
             pathname === item.href ||
             (item.href !== "/dashboard" && pathname.startsWith(item.href));
+          const Icon = item.icon;
           return (
             <Link
               key={item.href}
@@ -44,9 +59,7 @@ export function MobileNav({
                   : "text-on-surface/40 hover:text-on-surface/70"
               }`}
             >
-              <span className="material-symbols-outlined text-[22px] leading-none">
-                {item.icon}
-              </span>
+              <Icon className="h-[22px] w-[22px]" />
               <span
                 className={`font-label text-[10px] uppercase tracking-widest leading-none ${
                   isActive ? "font-bold" : ""

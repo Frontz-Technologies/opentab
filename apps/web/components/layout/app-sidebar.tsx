@@ -4,6 +4,21 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
+  BarChart3,
+  ChevronLeft,
+  ChevronRight,
+  Contact,
+  LayoutDashboard,
+  Package,
+  ReceiptText,
+  RefreshCw,
+  Settings,
+  Wallet,
+  Undo2,
+  FileText,
+  type LucideIcon,
+} from "lucide-react";
+import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -28,7 +43,7 @@ interface AppSidebarProps {
 }
 
 interface NavItem {
-  icon: string;
+  icon: LucideIcon;
   labelKey?: string;
   label?: string;
   href: string;
@@ -42,31 +57,31 @@ interface NavGroup {
 
 const navGroups: NavGroup[] = [
   {
-    items: [{ icon: "dashboard", labelKey: "dashboard", href: "/dashboard" }],
+    items: [{ icon: LayoutDashboard, labelKey: "dashboard", href: "/dashboard" }],
   },
   {
     labelKey: "sales",
     items: [
-      { icon: "receipt_long", labelKey: "invoices", href: "/invoices" },
-      { icon: "undo", labelKey: "creditNotes", href: "/credit-notes" },
-      { icon: "request_quote", labelKey: "quotes", href: "/quotes" },
+      { icon: ReceiptText, labelKey: "invoices", href: "/invoices" },
+      { icon: Undo2, labelKey: "creditNotes", href: "/credit-notes" },
+      { icon: FileText, labelKey: "quotes", href: "/quotes" },
     ],
   },
   {
     labelKey: "records",
     items: [
       {
-        icon: "account_balance_wallet",
+        icon: Wallet,
         labelKey: "expenses",
         href: "/expenses",
       },
-      { icon: "contacts", labelKey: "contacts", href: "/contacts" },
-      { icon: "inventory_2", labelKey: "products", href: "/products" },
+      { icon: Contact, labelKey: "contacts", href: "/contacts" },
+      { icon: Package, labelKey: "products", href: "/products" },
     ],
   },
   {
     labelKey: "insights",
-    items: [{ icon: "bar_chart", labelKey: "reports", href: "/reports" }],
+    items: [{ icon: BarChart3, labelKey: "reports", href: "/reports" }],
   },
 ];
 
@@ -81,7 +96,7 @@ export function AppSidebar({ orgName, integrationNav }: AppSidebarProps) {
     groups.push({
       labelKey: "integrations",
       items: integrationNav.map((entry) => ({
-        icon: "cloud_sync",
+        icon: RefreshCw,
         label: entry.label,
         href: `/integrations/${entry.slug}`,
       })),
@@ -138,6 +153,7 @@ export function AppSidebar({ orgName, integrationNav }: AppSidebarProps) {
                     const itemLabel = item.labelKey
                       ? t(item.labelKey)
                       : (item.label ?? "");
+                    const Icon = item.icon;
                     return (
                       <SidebarMenuItem key={item.href}>
                         <SidebarMenuButton
@@ -150,9 +166,7 @@ export function AppSidebar({ orgName, integrationNav }: AppSidebarProps) {
                               : "text-on-surface/60 hover:text-on-surface hover:bg-surface-container-low"
                           }
                         >
-                          <span className="material-symbols-outlined text-[20px] leading-none">
-                            {item.icon}
-                          </span>
+                          <Icon className="h-5 w-5" />
                           <span className="font-label text-sm">
                             {itemLabel}
                           </span>
@@ -180,9 +194,7 @@ export function AppSidebar({ orgName, integrationNav }: AppSidebarProps) {
                   : "text-on-surface/60 hover:text-on-surface hover:bg-surface-container-low"
               }
             >
-              <span className="material-symbols-outlined text-[20px] leading-none">
-                settings
-              </span>
+              <Settings className="h-5 w-5" />
               <span className="font-label text-sm">{t("settings")}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -192,9 +204,11 @@ export function AppSidebar({ orgName, integrationNav }: AppSidebarProps) {
               onClick={toggleSidebar}
               className="text-on-surface/60 hover:text-on-surface hover:bg-surface-container-low"
             >
-              <span className="material-symbols-outlined text-[20px] leading-none">
-                {isCollapsed ? "chevron_right" : "chevron_left"}
-              </span>
+              {isCollapsed ? (
+                <ChevronRight className="h-5 w-5" />
+              ) : (
+                <ChevronLeft className="h-5 w-5" />
+              )}
               <span className="font-label text-sm">{t("collapse")}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
