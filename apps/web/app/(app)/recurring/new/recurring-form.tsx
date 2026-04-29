@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { format, parseISO } from "date-fns";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import type { Contact, Product } from "@opentab/db/schema";
 import { FREQUENCY } from "@opentab/db/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
   SelectContent,
@@ -164,20 +166,20 @@ export function RecurringForm({
             <label className="block text-sm font-label text-on-surface/60 mb-1">
               {t("startDate")}
             </label>
-            <Input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
+            <DatePicker
+              value={startDate ? parseISO(startDate) : undefined}
+              onChange={(d) => setStartDate(d ? format(d, "yyyy-MM-dd") : "")}
+              ariaLabel={t("startDate")}
             />
           </div>
           <div>
             <label className="block text-sm font-label text-on-surface/60 mb-1">
               {t("endDate")}
             </label>
-            <Input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
+            <DatePicker
+              value={endDate ? parseISO(endDate) : undefined}
+              onChange={(d) => setEndDate(d ? format(d, "yyyy-MM-dd") : "")}
+              ariaLabel={t("endDate")}
             />
             <p className="text-xs text-on-surface/40 mt-1">
               {t("endDateHelp")}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import { format, parseISO } from "date-fns";
 import { UnsavedChangesGuard } from "@/components/forms/unsaved-changes-guard";
 import { EmptyEntityHint } from "@/components/forms/empty-entity-hint";
 import { useRouter } from "next/navigation";
@@ -12,6 +13,7 @@ import type {
 } from "@opentab/db/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
   SelectContent,
@@ -631,14 +633,13 @@ export function ExpenseForm({
               {t("expenseDate")} <span className="text-tertiary">*</span>
             </label>
             <div className={fieldWrapperClass("expenseDate")}>
-              <Input
-                type="date"
-                value={expenseDate}
-                onChange={(e) => {
+              <DatePicker
+                value={expenseDate ? parseISO(expenseDate) : undefined}
+                onChange={(d) => {
                   handleExitFieldPreview("expenseDate");
-                  setExpenseDate(e.target.value);
+                  setExpenseDate(d ? format(d, "yyyy-MM-dd") : "");
                 }}
-                onFocus={() => handleExitFieldPreview("expenseDate")}
+                ariaLabel={t("expenseDate")}
               />
             </div>
           </div>
@@ -646,10 +647,10 @@ export function ExpenseForm({
             <label className="block text-sm font-label text-on-surface/60 mb-1">
               {t("paymentDate")}
             </label>
-            <Input
-              type="date"
-              value={paymentDate}
-              onChange={(e) => setPaymentDate(e.target.value)}
+            <DatePicker
+              value={paymentDate ? parseISO(paymentDate) : undefined}
+              onChange={(d) => setPaymentDate(d ? format(d, "yyyy-MM-dd") : "")}
+              ariaLabel={t("paymentDate")}
             />
           </div>
           <div>
