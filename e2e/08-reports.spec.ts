@@ -139,4 +139,20 @@ test.describe("Reports", () => {
     // Reset for any subsequent tests in this file.
     await page.setViewportSize({ width: 1280, height: 720 });
   });
+
+  test('active Reports tab carries aria-current="page"', async () => {
+    await page.setViewportSize({ width: 1200, height: 800 });
+    await page.goto("/reports/pnl");
+    // The active link in the Reports tab strip is the one with
+    // aria-current="page". AnimatedFilterBar in link mode sets this on
+    // the active item only, so exactly one match should exist.
+    const activeTab = page.locator('a[aria-current="page"]').first();
+    await expect(activeTab).toBeVisible();
+    // The accessible name should be the P&L label in the active locale.
+    const text = (await activeTab.textContent())?.trim();
+    expect(text).toMatch(/Profit & Loss|Έσοδα & Έξοδα|Ganancias y pérdidas/);
+
+    // Reset for any subsequent tests in this file.
+    await page.setViewportSize({ width: 1280, height: 720 });
+  });
 });

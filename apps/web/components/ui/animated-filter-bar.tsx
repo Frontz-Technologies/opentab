@@ -75,6 +75,7 @@ export function AnimatedFilterBar<T extends string = string>({
           <button
             key={item.value}
             type="button"
+            aria-pressed={isActive}
             disabled={item.disabled}
             onClick={
               onValueChange && !item.disabled
