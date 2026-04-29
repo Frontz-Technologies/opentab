@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { SettingsSection } from "@/components/settings/settings-section";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -33,6 +34,12 @@ export function GeneralForm({ initialData }: GeneralFormProps) {
   const [dateFormat, setDateFormat] = useState<string>(initialData.dateFormat);
   const [numberFormat, setNumberFormat] = useState<string>(
     initialData.numberFormat,
+  );
+  const [notifyInvoicePaid, setNotifyInvoicePaid] = useState<boolean>(
+    initialData.notifyInvoicePaid,
+  );
+  const [notifyExpenseApproved, setNotifyExpenseApproved] = useState<boolean>(
+    initialData.notifyExpenseApproved,
   );
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -98,24 +105,38 @@ export function GeneralForm({ initialData }: GeneralFormProps) {
 
       <SettingsSection title={t("notifications")}>
         <div className="space-y-3">
-          <label className="flex items-center gap-3 rounded-xl bg-surface-container-high px-4 py-3 text-sm text-on-surface cursor-pointer">
-            <input
-              name="notifyInvoicePaid"
-              type="checkbox"
-              defaultChecked={initialData.notifyInvoicePaid}
-              className="accent-primary"
+          <label
+            htmlFor="notifyInvoicePaid"
+            className="flex items-center gap-3 rounded-xl bg-surface-container-high px-4 py-3 text-sm text-on-surface cursor-pointer"
+          >
+            <Checkbox
+              id="notifyInvoicePaid"
+              checked={notifyInvoicePaid}
+              onCheckedChange={(v) => setNotifyInvoicePaid(v === true)}
             />
             {t("notifyInvoicePaid")}
           </label>
-          <label className="flex items-center gap-3 rounded-xl bg-surface-container-high px-4 py-3 text-sm text-on-surface cursor-pointer">
-            <input
-              name="notifyExpenseApproved"
-              type="checkbox"
-              defaultChecked={initialData.notifyExpenseApproved}
-              className="accent-primary"
+          <input
+            type="hidden"
+            name="notifyInvoicePaid"
+            value={notifyInvoicePaid ? "on" : ""}
+          />
+          <label
+            htmlFor="notifyExpenseApproved"
+            className="flex items-center gap-3 rounded-xl bg-surface-container-high px-4 py-3 text-sm text-on-surface cursor-pointer"
+          >
+            <Checkbox
+              id="notifyExpenseApproved"
+              checked={notifyExpenseApproved}
+              onCheckedChange={(v) => setNotifyExpenseApproved(v === true)}
             />
             {t("notifyExpenseApproved")}
           </label>
+          <input
+            type="hidden"
+            name="notifyExpenseApproved"
+            value={notifyExpenseApproved ? "on" : ""}
+          />
         </div>
       </SettingsSection>
 

@@ -10,6 +10,7 @@ import {
   type ModelCapabilities,
 } from "@/lib/actions/ai-settings";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -83,6 +84,9 @@ export function AiSettingsForm({
     initialCapabilities ?? null,
   );
   const [isLoadingCaps, setIsLoadingCaps] = useState(false);
+  const [enabled, setEnabled] = useState<boolean>(initialData.enabled);
+  const [receiptExtractionEnabled, setReceiptExtractionEnabled] =
+    useState<boolean>(initialData.receiptExtractionEnabled);
 
   const fetchCapabilities = useCallback((model: string) => {
     if (!model.trim()) return;
@@ -143,15 +147,18 @@ export function AiSettingsForm({
         >
           {t("enabled")}
         </Label>
-        <label className="flex items-center gap-3 rounded-xl bg-surface-container-high px-4 py-3 text-sm text-on-surface">
-          <input
+        <label
+          htmlFor="enabled"
+          className="flex items-center gap-3 rounded-xl bg-surface-container-high px-4 py-3 text-sm text-on-surface"
+        >
+          <Checkbox
             id="enabled"
-            name="enabled"
-            type="checkbox"
-            defaultChecked={initialData.enabled}
+            checked={enabled}
+            onCheckedChange={(v) => setEnabled(v === true)}
           />
           {t("enabledHelp")}
         </label>
+        <input type="hidden" name="enabled" value={enabled ? "on" : ""} />
       </div>
 
       <section className="space-y-3">
@@ -260,15 +267,22 @@ export function AiSettingsForm({
         >
           {t("receiptExtraction")}
         </Label>
-        <label className="flex items-center gap-3 rounded-xl bg-surface-container-high px-4 py-3 text-sm text-on-surface">
-          <input
+        <label
+          htmlFor="receiptExtractionEnabled"
+          className="flex items-center gap-3 rounded-xl bg-surface-container-high px-4 py-3 text-sm text-on-surface"
+        >
+          <Checkbox
             id="receiptExtractionEnabled"
-            name="receiptExtractionEnabled"
-            type="checkbox"
-            defaultChecked={initialData.receiptExtractionEnabled}
+            checked={receiptExtractionEnabled}
+            onCheckedChange={(v) => setReceiptExtractionEnabled(v === true)}
           />
           {t("receiptExtractionHelp")}
         </label>
+        <input
+          type="hidden"
+          name="receiptExtractionEnabled"
+          value={receiptExtractionEnabled ? "on" : ""}
+        />
       </div>
 
       {status && (
