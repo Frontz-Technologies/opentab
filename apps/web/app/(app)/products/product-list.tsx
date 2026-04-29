@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import type { Product } from "@opentab/db/schema";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 
 interface ProductListProps {
@@ -41,12 +42,14 @@ export function ProductList({ products }: ProductListProps) {
           onChange={(e) => setSearch(e.target.value)}
           className="max-w-sm"
         />
-        <label className="flex items-center gap-2 text-sm text-on-surface/60 cursor-pointer">
-          <input
-            type="checkbox"
+        <label
+          htmlFor="showInactive"
+          className="flex items-center gap-2 text-sm text-on-surface/60 cursor-pointer"
+        >
+          <Checkbox
+            id="showInactive"
             checked={showInactive}
-            onChange={(e) => setShowInactive(e.target.checked)}
-            className="rounded"
+            onCheckedChange={(v) => setShowInactive(v === true)}
           />
           {t("showInactive")}
         </label>

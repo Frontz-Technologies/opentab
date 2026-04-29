@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import type { Product } from "@opentab/db/schema";
 import type { VatRate } from "@/lib/country";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -64,6 +65,7 @@ export function ProductForm({ product, vatRates }: ProductFormProps) {
     product?.taxCategory ?? "standard",
   );
   const [vatRate, setVatRate] = useState<string>(product?.vatRate ?? "");
+  const [active, setActive] = useState<boolean>(product?.active ?? true);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -224,13 +226,10 @@ export function ProductForm({ product, vatRates }: ProductFormProps) {
         {/* Status */}
         <section className="bg-surface-container rounded-2xl p-6 space-y-5">
           <div className="flex items-center gap-3">
-            <input
-              type="checkbox"
-              name="active"
-              value="true"
-              defaultChecked={product?.active ?? true}
-              className="rounded"
+            <Checkbox
               id="active-toggle"
+              checked={active}
+              onCheckedChange={(v) => setActive(v === true)}
             />
             <label
               htmlFor="active-toggle"
@@ -238,6 +237,11 @@ export function ProductForm({ product, vatRates }: ProductFormProps) {
             >
               {t("active")}
             </label>
+            <input
+              type="hidden"
+              name="active"
+              value={active ? "true" : "false"}
+            />
           </div>
         </section>
 
