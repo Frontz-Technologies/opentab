@@ -10,7 +10,7 @@ import {
   type ModelCapabilities,
 } from "@/lib/actions/ai-settings";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { FormCheckbox } from "@/components/ui/form-checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -151,14 +151,14 @@ export function AiSettingsForm({
           htmlFor="enabled"
           className="flex items-center gap-3 rounded-xl bg-surface-container-high px-4 py-3 text-sm text-on-surface"
         >
-          <Checkbox
+          <FormCheckbox
             id="enabled"
+            name="enabled"
             checked={enabled}
-            onCheckedChange={(v) => setEnabled(v === true)}
+            onCheckedChange={setEnabled}
           />
           {t("enabledHelp")}
         </label>
-        <input type="hidden" name="enabled" value={enabled ? "on" : ""} />
       </div>
 
       <section className="space-y-3">
@@ -271,18 +271,14 @@ export function AiSettingsForm({
           htmlFor="receiptExtractionEnabled"
           className="flex items-center gap-3 rounded-xl bg-surface-container-high px-4 py-3 text-sm text-on-surface"
         >
-          <Checkbox
+          <FormCheckbox
             id="receiptExtractionEnabled"
+            name="receiptExtractionEnabled"
             checked={receiptExtractionEnabled}
-            onCheckedChange={(v) => setReceiptExtractionEnabled(v === true)}
+            onCheckedChange={setReceiptExtractionEnabled}
           />
           {t("receiptExtractionHelp")}
         </label>
-        <input
-          type="hidden"
-          name="receiptExtractionEnabled"
-          value={receiptExtractionEnabled ? "on" : ""}
-        />
       </div>
 
       {status && (

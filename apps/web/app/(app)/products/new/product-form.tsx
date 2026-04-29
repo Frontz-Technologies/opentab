@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import type { Product } from "@opentab/db/schema";
 import type { VatRate } from "@/lib/country";
-import { Checkbox } from "@/components/ui/checkbox";
+import { FormCheckbox } from "@/components/ui/form-checkbox";
 import {
   Select,
   SelectContent,
@@ -226,10 +226,13 @@ export function ProductForm({ product, vatRates }: ProductFormProps) {
         {/* Status */}
         <section className="bg-surface-container rounded-2xl p-6 space-y-5">
           <div className="flex items-center gap-3">
-            <Checkbox
+            <FormCheckbox
               id="active-toggle"
+              name="active"
+              checkedValue="true"
+              uncheckedValue="false"
               checked={active}
-              onCheckedChange={(v) => setActive(v === true)}
+              onCheckedChange={setActive}
             />
             <label
               htmlFor="active-toggle"
@@ -237,11 +240,6 @@ export function ProductForm({ product, vatRates }: ProductFormProps) {
             >
               {t("active")}
             </label>
-            <input
-              type="hidden"
-              name="active"
-              value={active ? "true" : "false"}
-            />
           </div>
         </section>
 

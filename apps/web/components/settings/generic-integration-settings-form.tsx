@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { FormCheckbox } from "@/components/ui/form-checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -77,14 +77,13 @@ function BooleanField({
 }) {
   const [checked, setChecked] = useState<boolean>(defaultChecked);
   return (
-    <>
-      <Checkbox
-        id={name}
-        checked={checked}
-        onCheckedChange={(v) => setChecked(v === true)}
-      />
-      <input type="hidden" name={name} value={checked ? "true" : ""} />
-    </>
+    <FormCheckbox
+      id={name}
+      name={name}
+      checkedValue="true"
+      checked={checked}
+      onCheckedChange={setChecked}
+    />
   );
 }
 

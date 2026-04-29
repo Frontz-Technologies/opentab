@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { SettingsSection } from "@/components/settings/settings-section";
-import { Checkbox } from "@/components/ui/checkbox";
+import { FormCheckbox } from "@/components/ui/form-checkbox";
 import {
   Select,
   SelectContent,
@@ -109,34 +109,26 @@ export function GeneralForm({ initialData }: GeneralFormProps) {
             htmlFor="notifyInvoicePaid"
             className="flex items-center gap-3 rounded-xl bg-surface-container-high px-4 py-3 text-sm text-on-surface cursor-pointer"
           >
-            <Checkbox
+            <FormCheckbox
               id="notifyInvoicePaid"
+              name="notifyInvoicePaid"
               checked={notifyInvoicePaid}
-              onCheckedChange={(v) => setNotifyInvoicePaid(v === true)}
+              onCheckedChange={setNotifyInvoicePaid}
             />
             {t("notifyInvoicePaid")}
           </label>
-          <input
-            type="hidden"
-            name="notifyInvoicePaid"
-            value={notifyInvoicePaid ? "on" : ""}
-          />
           <label
             htmlFor="notifyExpenseApproved"
             className="flex items-center gap-3 rounded-xl bg-surface-container-high px-4 py-3 text-sm text-on-surface cursor-pointer"
           >
-            <Checkbox
+            <FormCheckbox
               id="notifyExpenseApproved"
+              name="notifyExpenseApproved"
               checked={notifyExpenseApproved}
-              onCheckedChange={(v) => setNotifyExpenseApproved(v === true)}
+              onCheckedChange={setNotifyExpenseApproved}
             />
             {t("notifyExpenseApproved")}
           </label>
-          <input
-            type="hidden"
-            name="notifyExpenseApproved"
-            value={notifyExpenseApproved ? "on" : ""}
-          />
         </div>
       </SettingsSection>
 
