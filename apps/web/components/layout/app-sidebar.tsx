@@ -79,7 +79,7 @@ export function AppSidebar({ orgName, integrationNav }: AppSidebarProps) {
   const groups: NavGroup[] = [...navGroups];
   if (integrationNav && integrationNav.length > 0) {
     groups.push({
-      literalLabel: "Integrations",
+      labelKey: "integrations",
       items: integrationNav.map((entry) => ({
         icon: "cloud_sync",
         label: entry.label,
