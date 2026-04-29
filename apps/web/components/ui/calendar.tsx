@@ -11,6 +11,11 @@ import { useLocale } from "next-intl";
 import { el, es, enUS } from "date-fns/locale";
 
 import { cn } from "@/lib/utils";
+
+// Map app-locale ids (next-intl) to the matching date-fns locale used by
+// react-day-picker for weekday/month rendering. Module-scope so the lookup
+// isn't reallocated per render.
+const DATE_FNS_LOCALES = { en: enUS, el, es } as const;
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   ChevronLeftIcon,
@@ -34,7 +39,9 @@ function Calendar({
   const defaultClassNames = getDefaultClassNames();
   const intlLocale = useLocale();
   const dfnsLocale =
-    locale ?? (intlLocale === "el" ? el : intlLocale === "es" ? es : enUS);
+    locale ??
+    DATE_FNS_LOCALES[intlLocale as keyof typeof DATE_FNS_LOCALES] ??
+    enUS;
 
   return (
     <DayPicker
