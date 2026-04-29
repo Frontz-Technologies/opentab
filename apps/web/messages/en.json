@@ -677,6 +677,8 @@
     "supplierNamePlaceholder": "e.g. Coffee shop, Parking, Office supplies",
     "category": "Category",
     "selectCategory": "Select a category",
+    "searchCategory": "Search category…",
+    "noCategoryFound": "No category found",
     "categories": "Categories",
     "categoriesTitle": "Expense Categories",
     "expenseDate": "Expense date",

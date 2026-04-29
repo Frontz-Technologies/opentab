@@ -15,12 +15,11 @@ import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CategoryCombobox } from "./category-combobox";
 import {
   Dialog,
   DialogContent,
@@ -280,12 +279,6 @@ export function ExpenseForm({
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   }
-
-  // Group categories by expense group for optgroup display
-  const groupedCategories = groups.map((group) => ({
-    group,
-    items: categories.filter((c) => c.groupCode === group.code),
-  }));
 
   // Group names are stored per-locale on the expense_group table
   // (nameEn notNull, nameEl/nameEs/nameDe nullable). Use the active
@@ -598,33 +591,28 @@ export function ExpenseForm({
               />
             ) : (
               <div className={fieldWrapperClass("categoryId")}>
-                <Select
+                <CategoryCombobox
                   value={categoryId || undefined}
-                  onValueChange={(v) => {
+                  onChange={(v) => {
                     handleExitFieldPreview("categoryId");
                     handleCategoryChange(v);
                   }}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder={t("selectCategory")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {groupedCategories
-                      .filter((g) => g.items.length > 0)
-                      .map((g) => (
-                        <SelectGroup key={g.group.code}>
-                          <SelectLabel>
-                            {`${GROUP_TYPE_MARKER[g.group.type]} ${groupNameForLocale(g.group)}`}
-                          </SelectLabel>
-                          {g.items.map((c) => (
-                            <SelectItem key={c.id} value={c.id}>
-                              {c.name}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      ))}
-                  </SelectContent>
-                </Select>
+                  categories={categories.map((c) => ({
+                    id: c.id,
+                    name: c.name,
+                    groupCode: c.groupCode,
+                  }))}
+                  groupNameForLocale={(code) => {
+                    const g = groups.find((gr) => gr.code === code);
+                    if (!g) return code;
+                    return `${GROUP_TYPE_MARKER[g.type]} ${groupNameForLocale(g)}`;
+                  }}
+                />
+                <input
+                  type="hidden"
+                  name="categoryId"
+                  value={categoryId ?? ""}
+                />
               </div>
             )}
           </div>

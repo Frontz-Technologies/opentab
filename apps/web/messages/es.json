@@ -677,6 +677,8 @@
     "supplierNamePlaceholder": "ej. Cafetería, Estacionamiento, Suministros",
     "category": "Categoría",
     "selectCategory": "Seleccionar una categoría",
+    "searchCategory": "Buscar categoría…",
+    "noCategoryFound": "No se encontró categoría",
     "categories": "Categorías",
     "categoriesTitle": "Categorías de gastos",
     "expenseDate": "Fecha del gasto",

@@ -677,6 +677,8 @@
     "supplierNamePlaceholder": "π.χ. Καφετέρια, Πάρκινγκ, Γραφική ύλη",
     "category": "Κατηγορία",
     "selectCategory": "Επιλέξτε κατηγορία",
+    "searchCategory": "Αναζήτηση κατηγορίας…",
+    "noCategoryFound": "Δεν βρέθηκε κατηγορία",
     "categories": "Κατηγορίες",
     "categoriesTitle": "Κατηγορίες Δαπανών",
     "expenseDate": "Ημερομηνία δαπάνης",
