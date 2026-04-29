@@ -1,8 +1,11 @@
 "use client";
 
 import { useState, useTransition, useEffect } from "react";
+import { format, parseISO } from "date-fns";
 import { useTranslations } from "next-intl";
+import { type DateRange } from "react-day-picker";
 import type { VatReportData } from "@/lib/reports/types";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { getVatReport } from "../actions";
 
 type Preset = "month" | "lastMonth" | "quarter" | "year";
@@ -61,10 +64,18 @@ export function VatClient({
     setEndDate(e.toISOString().slice(0, 10));
   };
 
-  const handleDateChange = (setter: (v: string) => void, value: string) => {
+  const handleRangeChange = (r: DateRange | undefined) => {
     setActivePreset(null);
-    setter(value);
+    if (r?.from) setStartDate(format(r.from, "yyyy-MM-dd"));
+    if (r?.to) setEndDate(format(r.to, "yyyy-MM-dd"));
   };
+
+  const range: DateRange | undefined = startDate
+    ? {
+        from: parseISO(startDate),
+        to: endDate ? parseISO(endDate) : undefined,
+      }
+    : undefined;
 
   const presets: { key: Preset; label: string }[] = [
     { key: "month", label: t("periodMonth") },
@@ -76,19 +87,13 @@ export function VatClient({
   return (
     <div>
       <div className="flex flex-wrap items-center gap-3 mb-8">
-        <input
-          type="date"
-          value={startDate}
-          onChange={(e) => handleDateChange(setStartDate, e.target.value)}
-          className="bg-surface-container-lowest rounded-lg px-3 py-2 text-sm text-on-surface"
-        />
-        <span className="text-on-surface-variant text-sm">{t("dateTo")}</span>
-        <input
-          type="date"
-          value={endDate}
-          onChange={(e) => handleDateChange(setEndDate, e.target.value)}
-          className="bg-surface-container-lowest rounded-lg px-3 py-2 text-sm text-on-surface"
-        />
+        <div className="w-72">
+          <DateRangePicker
+            value={range}
+            onChange={handleRangeChange}
+            ariaLabel={t("dateRange")}
+          />
+        </div>
         <div className="flex gap-1 ml-auto">
           {presets.map(({ key, label }) => {
             const active = activePreset === key;

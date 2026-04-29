@@ -10,7 +10,8 @@
     "loading": "Cargando...",
     "saving": "Guardando...",
     "comingSoon": "Próximamente",
-    "soonBadge": "Pronto"
+    "soonBadge": "Pronto",
+    "pickRange": "Selecciona rango"
   },
   "nav": {
     "ai": "IA",
@@ -776,6 +777,7 @@
     "apply": "Aplicar",
     "loading": "Cargando...",
     "dateTo": "hasta",
+    "dateRange": "Rango de fechas",
     "pnlEmptyTitle": "Aún nada que reportar",
     "pnlEmptySubtext": "Tu informe de Pérdidas y Ganancias tomará forma en cuanto añadas una factura o un gasto para el período seleccionado.",
     "createInvoiceCta": "Crear factura",

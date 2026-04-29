@@ -10,7 +10,8 @@
     "loading": "Loading...",
     "saving": "Saving...",
     "comingSoon": "Coming soon",
-    "soonBadge": "Soon"
+    "soonBadge": "Soon",
+    "pickRange": "Pick a range"
   },
   "nav": {
     "ai": "AI",
@@ -776,6 +777,7 @@
     "apply": "Apply",
     "loading": "Loading...",
     "dateTo": "to",
+    "dateRange": "Date range",
     "pnlEmptyTitle": "Nothing to report yet",
     "pnlEmptySubtext": "Your P&L report will take shape as soon as you add an invoice or an expense for the selected period.",
     "createInvoiceCta": "Create invoice",
