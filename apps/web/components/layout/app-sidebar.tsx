@@ -53,6 +53,7 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
+    labelKey: "records",
     items: [
       {
         icon: "account_balance_wallet",
@@ -61,9 +62,11 @@ const navGroups: NavGroup[] = [
       },
       { icon: "contacts", labelKey: "contacts", href: "/contacts" },
       { icon: "inventory_2", labelKey: "products", href: "/products" },
-      { icon: "bar_chart", labelKey: "reports", href: "/reports" },
-      { icon: "settings", labelKey: "settings", href: "/settings" },
     ],
+  },
+  {
+    labelKey: "insights",
+    items: [{ icon: "bar_chart", labelKey: "reports", href: "/reports" }],
   },
 ];
 
@@ -168,14 +171,31 @@ export function AppSidebar({ orgName, integrationNav }: AppSidebarProps) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
-              tooltip={isCollapsed ? "Expand" : undefined}
+              isActive={pathname.startsWith("/settings")}
+              tooltip={isCollapsed ? t("settings") : undefined}
+              render={<Link href="/settings" />}
+              className={
+                pathname.startsWith("/settings")
+                  ? "bg-surface-container-low text-primary font-semibold"
+                  : "text-on-surface/60 hover:text-on-surface hover:bg-surface-container-low"
+              }
+            >
+              <span className="material-symbols-outlined text-[20px] leading-none">
+                settings
+              </span>
+              <span className="font-label text-sm">{t("settings")}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip={isCollapsed ? t("expand") : undefined}
               onClick={toggleSidebar}
               className="text-on-surface/60 hover:text-on-surface hover:bg-surface-container-low"
             >
               <span className="material-symbols-outlined text-[20px] leading-none">
                 {isCollapsed ? "chevron_right" : "chevron_left"}
               </span>
-              <span className="font-label text-sm">Collapse</span>
+              <span className="font-label text-sm">{t("collapse")}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
