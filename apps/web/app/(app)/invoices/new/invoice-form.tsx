@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { format, parseISO } from "date-fns";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { Plus } from "lucide-react";
 import type { Contact, Product } from "@opentab/db/schema";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -203,7 +204,7 @@ export function InvoiceForm({
               title={t("createContact")}
               className="shrink-0 inline-flex h-auto w-10 items-center justify-center rounded-lg bg-surface-container-low border border-on-surface/10 text-on-surface hover:bg-surface-container hover:text-primary transition-colors"
             >
-              <span className="material-symbols-outlined text-[20px]">add</span>
+              <Plus className="h-5 w-5" />
             </button>
           </div>
         )}

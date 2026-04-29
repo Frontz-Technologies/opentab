@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { eq, and, desc, inArray } from "drizzle-orm";
+import { Plus, UserPlus } from "lucide-react";
 import { getSession } from "@/lib/session";
 import { db } from "@/lib/db";
 import { contacts, invoices } from "@opentab/db/schema";
@@ -57,9 +58,7 @@ export default async function NewCreditNotePage({
     return (
       <div className="p-6">
         <div className="bg-surface-container rounded-xl p-10 flex flex-col items-center text-center">
-          <span className="material-symbols-outlined text-5xl text-on-surface-variant mb-4 block">
-            person_add
-          </span>
+          <UserPlus className="h-12 w-12 text-on-surface-variant mb-4" />
           <h1 className="font-headline text-xl font-semibold text-on-surface mb-2">
             {t("noContactsTitle")}
           </h1>
@@ -70,7 +69,7 @@ export default async function NewCreditNotePage({
             href="/contacts/new?return=/credit-notes/new"
             className="inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-5 font-label text-sm font-medium text-on-primary transition-colors hover:bg-primary/90"
           >
-            <span className="material-symbols-outlined text-[18px]">add</span>
+            <Plus className="h-[18px] w-[18px]" />
             {t("addFirstContact")}
           </Link>
         </div>

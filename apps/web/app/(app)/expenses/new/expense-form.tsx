@@ -6,6 +6,7 @@ import { UnsavedChangesGuard } from "@/components/forms/unsaved-changes-guard";
 import { EmptyEntityHint } from "@/components/forms/empty-entity-hint";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
+import { Hourglass, Upload, Paperclip, X, Info, Sparkles } from "lucide-react";
 import type {
   Contact,
   ExpenseCategory,
@@ -398,9 +399,11 @@ export function ExpenseForm({
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
             >
-              <span className="material-symbols-outlined text-[18px] mr-1">
-                {isUploading ? "hourglass_empty" : "upload_file"}
-              </span>
+              {isUploading ? (
+                <Hourglass className="h-[18px] w-[18px] mr-1" />
+              ) : (
+                <Upload className="h-[18px] w-[18px] mr-1" />
+              )}
               {isUploading
                 ? aiExtractionAvailable
                   ? t("analyzingReceipt")
@@ -417,9 +420,7 @@ export function ExpenseForm({
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[18px] text-primary">
-                  attach_file
-                </span>
+                <Paperclip className="h-[18px] w-[18px] text-primary" />
                 <span className="text-sm text-on-surface font-medium">
                   {uploadedFile.fileName}
                 </span>
@@ -433,9 +434,7 @@ export function ExpenseForm({
                 type="button"
                 onClick={handleRemoveAttachment}
               >
-                <span className="material-symbols-outlined text-[16px]">
-                  close
-                </span>
+                <X className="h-4 w-4" />
                 {t("removeAttachment")}
               </Button>
             </div>
@@ -445,12 +444,10 @@ export function ExpenseForm({
                 role="status"
                 className="flex items-start gap-3 rounded-lg bg-surface-container-high px-4 py-3"
               >
-                <span
+                <Info
                   aria-hidden="true"
-                  className="material-symbols-outlined text-on-surface-variant text-[20px]"
-                >
-                  info
-                </span>
+                  className="h-5 w-5 text-on-surface-variant"
+                />
                 <div className="flex-1 space-y-1">
                   <p className="text-sm text-on-surface font-medium">
                     {t("receiptNoDataTitle")}
@@ -466,21 +463,14 @@ export function ExpenseForm({
                   aria-label={t("dismiss")}
                   onClick={() => setShowNoDataNotice(false)}
                 >
-                  <span
-                    aria-hidden="true"
-                    className="material-symbols-outlined text-[16px]"
-                  >
-                    close
-                  </span>
+                  <X aria-hidden="true" className="h-4 w-4" />
                 </Button>
               </div>
             )}
 
             {showAutofillPrompt && (
               <div className="flex items-center gap-3 rounded-lg bg-primary/10 px-4 py-3">
-                <span className="material-symbols-outlined text-primary text-[20px]">
-                  auto_fix_high
-                </span>
+                <Sparkles className="h-5 w-5 text-primary" />
                 <span className="text-sm text-on-surface flex-1">
                   {t("autofillPrompt")}
                 </span>

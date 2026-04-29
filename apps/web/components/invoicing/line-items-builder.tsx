@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
+import { ArrowDown, ArrowUp, Package, Plus, X } from "lucide-react";
 import type { Product } from "@opentab/db/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -183,16 +184,12 @@ export function LineItemsBuilder({
             size="sm"
             onClick={() => setShowProductPicker(!showProductPicker)}
           >
-            <span className="material-symbols-outlined text-[16px] mr-1">
-              inventory_2
-            </span>
+            <Package className="h-4 w-4 mr-1" />
             {t("addFromCatalogue")}
           </Button>
         )}
         <Button type="button" variant="outline" size="sm" onClick={addItem}>
-          <span className="material-symbols-outlined text-[16px] mr-1">
-            add
-          </span>
+          <Plus className="h-4 w-4 mr-1" />
           {t("addItem")}
         </Button>
       </div>
@@ -300,18 +297,14 @@ export function LineItemsBuilder({
                   className="text-on-surface/40 hover:text-on-surface text-xs leading-none"
                   disabled={index === 0}
                 >
-                  <span className="material-symbols-outlined text-[14px]">
-                    arrow_upward
-                  </span>
+                  <ArrowUp className="h-3.5 w-3.5" />
                 </button>
                 <button
                   type="button"
                   onClick={() => removeItem(index)}
                   className="text-tertiary/60 hover:text-tertiary text-xs leading-none"
                 >
-                  <span className="material-symbols-outlined text-[14px]">
-                    close
-                  </span>
+                  <X className="h-3.5 w-3.5" />
                 </button>
                 <button
                   type="button"
@@ -319,9 +312,7 @@ export function LineItemsBuilder({
                   className="text-on-surface/40 hover:text-on-surface text-xs leading-none"
                   disabled={index === items.length - 1}
                 >
-                  <span className="material-symbols-outlined text-[14px]">
-                    arrow_downward
-                  </span>
+                  <ArrowDown className="h-3.5 w-3.5" />
                 </button>
               </div>
             </div>
