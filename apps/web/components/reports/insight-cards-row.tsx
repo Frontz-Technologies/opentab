@@ -25,6 +25,7 @@ export function InsightCardsRow({ insights }: { insights: InsightCard[] }) {
       {insights.map((card) => (
         <div
           key={card.id}
+          data-testid="insight-card"
           className={`bg-surface-container-low/60 backdrop-blur-sm rounded-2xl p-4 border ${borderByType[card.type]}`}
         >
           <div className="flex items-center gap-2 mb-2">
