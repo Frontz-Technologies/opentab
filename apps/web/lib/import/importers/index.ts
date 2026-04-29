@@ -4,7 +4,6 @@ import { invoicesImporter } from "./invoices";
 import { creditNotesImporter } from "./credit-notes";
 import type { ImporterDescriptor } from "../core/types";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const IMPORTERS: Record<string, ImporterDescriptor<any>> = {
   contacts: contactsImporter,
   expenses: expensesImporter,

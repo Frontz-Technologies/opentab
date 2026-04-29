@@ -71,7 +71,6 @@ export async function runImport<T extends Record<string, unknown>>(
     // (orgId, importIdempotencyKey) catches duplicates from prior
     // runs. The `returning()` count tells us how many actually
     // landed; the difference is the dedup count.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const inserted = (await (db as any)
       .insert(table)
       .values(values)
