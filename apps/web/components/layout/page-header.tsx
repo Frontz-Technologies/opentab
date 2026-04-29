@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ArrowLeft } from "lucide-react";
 import { UserMenu } from "@/components/layout/user-menu";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -50,9 +51,7 @@ export function PageHeader({
               onClick={onBack}
               className="size-8 text-on-surface-variant hover:text-on-surface"
             >
-              <span className="material-symbols-outlined text-[20px]">
-                arrow_back
-              </span>
+              <ArrowLeft className="h-5 w-5" />
             </Button>
           )}
 
