@@ -167,4 +167,46 @@ test.describe("Invoices", () => {
 
     await page.screenshot({ path: "e2e/screenshots/invoice-detail-paid.png" });
   });
+
+  test("new-invoice form action row stacks vertically at 360px", async () => {
+    await page.setViewportSize({ width: 360, height: 900 });
+    await page.goto("/invoices/new");
+    const draftBtn = page.getByRole("button", {
+      name: /save draft|αποθήκευση πρόχειρου|guardar borrador/i,
+    });
+    const publishBtn = page.getByRole("button", {
+      name: /^publish$|^δημοσίευση$|^publicar$/i,
+    });
+    await expect(draftBtn).toBeVisible();
+    await expect(publishBtn).toBeVisible();
+    const draftBox = await draftBtn.boundingBox();
+    const publishBox = await publishBtn.boundingBox();
+    if (!draftBox || !publishBox) throw new Error("CTA buttons not measurable");
+    // Publish (primary) renders above Save draft on mobile.
+    expect(publishBox.y).toBeLessThan(draftBox.y);
+    expect(draftBox.width).toBeGreaterThan(360 - 64);
+    expect(publishBox.width).toBeGreaterThan(360 - 64);
+    await page.setViewportSize({ width: 1280, height: 720 });
+  });
+
+  test("new-invoice form: inclusive-tax toggle lives in the line-items section header", async () => {
+    await page.goto("/invoices/new");
+    const toggleLabel = page.getByText(
+      /Prices include VAT|Οι τιμές περιλαμβάνουν ΦΠΑ|Los precios incluyen IVA/i,
+    );
+    await expect(toggleLabel).toBeVisible();
+    // The toggle must NOT live in the form's top section near the currency selector.
+    // Verify it sits inside the same scrollable region as the line-items table by
+    // confirming it's vertically below the line-items heading.
+    const itemsHeading = page
+      .getByRole("heading", { level: 2 })
+      .filter({ hasText: /items|προϊόντα|líneas/i })
+      .first();
+    const headingBox = await itemsHeading.boundingBox();
+    const toggleBox = await toggleLabel.boundingBox();
+    if (!headingBox || !toggleBox)
+      throw new Error("can't measure heading/toggle");
+    // Same row OR below the heading — never above it.
+    expect(toggleBox.y).toBeGreaterThanOrEqual(headingBox.y - 4);
+  });
 });

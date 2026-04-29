@@ -680,28 +680,28 @@ export function ExpenseForm({
               />
             </div>
           </div>
-          <div className="flex items-end">
-            <label className="flex items-center gap-2 text-sm text-on-surface">
-              <input
-                type="checkbox"
-                checked={usesInclusiveTax}
-                onChange={(e) => setUsesInclusiveTax(e.target.checked)}
-                className="rounded"
-              />
-              {t("inclusiveTax")}
-            </label>
-          </div>
         </div>
       </div>
 
       <div className="bg-surface-container rounded-xl p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <h2 className="font-headline text-lg font-semibold text-on-surface">
-            {t("lineItems")} <span className="text-tertiary">*</span>
-          </h2>
-          {items.length === 0 && (
-            <p className="text-sm text-on-surface/50">{t("itemRequired")}</p>
-          )}
+        <div className="flex items-center justify-between gap-2 mb-4 flex-wrap">
+          <div className="flex items-center gap-2">
+            <h2 className="font-headline text-lg font-semibold text-on-surface">
+              {t("lineItems")} <span className="text-tertiary">*</span>
+            </h2>
+            {items.length === 0 && (
+              <p className="text-sm text-on-surface/50">{t("itemRequired")}</p>
+            )}
+          </div>
+          <label className="flex items-center gap-2 text-sm text-on-surface-variant">
+            <input
+              type="checkbox"
+              checked={usesInclusiveTax}
+              onChange={(e) => setUsesInclusiveTax(e.target.checked)}
+              className="rounded"
+            />
+            {t("inclusiveTax")}
+          </label>
         </div>
         <LineItemsBuilder
           items={items}
