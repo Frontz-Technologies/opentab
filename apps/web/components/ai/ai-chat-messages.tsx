@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { MessagesSquare } from "lucide-react";
 import { AiMessage } from "@/components/ai/ai-message";
 import { useAiChatStore } from "@/hooks/use-ai-chat-store";
 
@@ -15,9 +16,7 @@ export function AiChatMessages() {
       <div className="flex flex-1 items-center justify-center px-6 py-8 text-center">
         <div className="max-w-xs space-y-3">
           <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-            <span className="material-symbols-outlined text-[24px] leading-none">
-              forum
-            </span>
+            <MessagesSquare className="h-6 w-6" />
           </div>
           <p className="text-sm font-medium text-on-surface">
             {t("emptyTitle")}

@@ -57,7 +57,9 @@ interface NavGroup {
 
 const navGroups: NavGroup[] = [
   {
-    items: [{ icon: LayoutDashboard, labelKey: "dashboard", href: "/dashboard" }],
+    items: [
+      { icon: LayoutDashboard, labelKey: "dashboard", href: "/dashboard" },
+    ],
   },
   {
     labelKey: "sales",

@@ -4,6 +4,7 @@ import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { Landmark } from "lucide-react";
 import { signIn } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -86,9 +87,7 @@ export function LoginForm({ legalFooter }: LoginFormProps) {
       {/* Mobile logo — hidden on desktop */}
       <div className="flex lg:hidden items-center gap-3 mb-8">
         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center">
-          <span className="material-symbols-outlined text-on-primary text-lg">
-            account_balance
-          </span>
+          <Landmark className="h-5 w-5 text-on-primary" />
         </div>
         <span className="font-headline text-xl font-bold text-on-surface">
           OpenTab

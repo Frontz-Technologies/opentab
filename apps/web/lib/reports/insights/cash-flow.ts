@@ -1,3 +1,4 @@
+import { Landmark } from "lucide-react";
 import type { InsightCard, InsightContext } from "./types";
 
 export function cashFlowInsight(ctx: InsightContext): InsightCard | null {
@@ -12,7 +13,7 @@ export function cashFlowInsight(ctx: InsightContext): InsightCard | null {
   return {
     id: "cash-flow",
     type: up ? "success" : "risk",
-    icon: "account_balance",
+    icon: Landmark,
     title: up ? "Cash flow improving" : "Cash flow declining",
     description: `Revenue ${up ? "increased" : "decreased"} by ${Math.abs(change).toFixed(1)}% vs previous period.`,
   };

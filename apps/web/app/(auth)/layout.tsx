@@ -1,3 +1,4 @@
+import { Landmark } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 export default async function AuthLayout({
@@ -16,9 +17,7 @@ export default async function AuthLayout({
         <div className="relative z-10 max-w-md">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center">
-              <span className="material-symbols-outlined text-on-primary text-xl">
-                account_balance
-              </span>
+              <Landmark className="h-6 w-6 text-on-primary" />
             </div>
             <span className="font-headline text-2xl font-bold text-on-surface">
               OpenTab

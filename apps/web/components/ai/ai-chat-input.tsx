@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { Hourglass, Send } from "lucide-react";
 import { useAiChatStore } from "@/hooks/use-ai-chat-store";
 
 export function AiChatInput() {
@@ -42,9 +43,11 @@ export function AiChatInput() {
           className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground transition-colors hover:bg-primary/90"
           aria-label={t("send")}
         >
-          <span className="material-symbols-outlined text-[18px] leading-none">
-            {isStreaming ? "hourglass_top" : "send"}
-          </span>
+          {isStreaming ? (
+            <Hourglass className="h-[18px] w-[18px]" />
+          ) : (
+            <Send className="h-[18px] w-[18px]" />
+          )}
         </button>
       </div>
     </form>

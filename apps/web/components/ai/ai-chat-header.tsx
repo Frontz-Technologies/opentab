@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { Bot } from "lucide-react";
 import { useAiChatStore } from "@/hooks/use-ai-chat-store";
 
 export function AiChatHeader() {
@@ -11,9 +12,7 @@ export function AiChatHeader() {
     <div className="border-b border-on-surface/10 px-5 py-4">
       <div className="flex items-center gap-3">
         <div className="flex size-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-          <span className="material-symbols-outlined text-[20px] leading-none">
-            smart_toy
-          </span>
+          <Bot className="h-5 w-5" />
         </div>
         <div>
           <h2 className="font-headline text-base font-semibold text-on-surface">

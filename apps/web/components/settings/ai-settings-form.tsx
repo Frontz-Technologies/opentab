@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useCallback } from "react";
 import { useTranslations } from "next-intl";
+import { CheckCircle2, Lock, XCircle } from "lucide-react";
 import {
   updateAiSettings,
   testAiConnection,
@@ -45,9 +46,11 @@ function CapabilityBadge({
           : "bg-on-surface/5 text-on-surface/30"
       }`}
     >
-      <span className="material-symbols-outlined text-[14px]">
-        {supported ? "check_circle" : "cancel"}
-      </span>
+      {supported ? (
+        <CheckCircle2 className="h-3.5 w-3.5" />
+      ) : (
+        <XCircle className="h-3.5 w-3.5" />
+      )}
       {label}
     </span>
   );
@@ -64,7 +67,7 @@ function DeploymentPill({
   return (
     <div className="space-y-2">
       <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-sm text-primary">
-        <span className="material-symbols-outlined text-[16px]">lock</span>
+        <Lock className="h-4 w-4" />
         {t(labelKey)}
       </div>
       <p className="text-xs text-on-surface/50">{t(helpKey)}</p>

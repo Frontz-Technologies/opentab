@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { ArrowLeft } from "lucide-react";
 import { SettingsNav } from "./settings-nav";
 
 export function SettingsMobileLayout({
@@ -42,9 +43,7 @@ export function SettingsMobileLayout({
           href="/settings"
           className="flex items-center gap-1 text-on-surface/60 hover:text-on-surface transition-colors"
         >
-          <span className="material-symbols-outlined text-[20px]">
-            arrow_back
-          </span>
+          <ArrowLeft className="h-5 w-5" />
         </Link>
         <h2 className="font-headline text-lg font-semibold text-on-surface">
           {label}

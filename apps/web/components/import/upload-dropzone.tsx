@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useTranslations } from "next-intl";
+import { FileUp, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -52,16 +53,12 @@ export function UploadDropzone({
       >
         {parsing ? (
           <div className="flex flex-col items-center gap-3">
-            <span className="material-symbols-outlined animate-spin text-3xl text-primary">
-              progress_activity
-            </span>
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
             <p className="text-on-surface-variant">{t("parsing")}</p>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-2">
-            <span className="material-symbols-outlined text-4xl text-on-surface/40">
-              upload_file
-            </span>
+            <FileUp className="h-10 w-10 text-on-surface/40" />
             <p className="text-on-surface font-medium">{t("dropPrompt")}</p>
             <p className="text-on-surface-variant text-sm">
               {t("dropSubprompt")}

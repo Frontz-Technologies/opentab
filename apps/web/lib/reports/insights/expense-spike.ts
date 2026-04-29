@@ -1,3 +1,4 @@
+import { TrendingUp } from "lucide-react";
 import type { InsightCard, InsightContext } from "./types";
 
 export function expenseSpikeInsight(ctx: InsightContext): InsightCard | null {
@@ -10,7 +11,7 @@ export function expenseSpikeInsight(ctx: InsightContext): InsightCard | null {
   return {
     id: "expense-spike",
     type: "risk",
-    icon: "trending_up",
+    icon: TrendingUp,
     title: `Expense spike: ${spike.category}`,
     description: `${spike.category} is ${(spike.total / avg).toFixed(1)}x the average category spend.`,
   };

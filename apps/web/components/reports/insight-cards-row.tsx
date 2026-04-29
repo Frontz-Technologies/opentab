@@ -27,9 +27,7 @@ export function InsightCardsRow({ insights }: { insights: InsightCard[] }) {
           className={`bg-surface-container-low/60 backdrop-blur-sm rounded-2xl p-4 border ${borderByType[card.type]}`}
         >
           <div className="flex items-center gap-2 mb-2">
-            <span className="material-symbols-outlined text-lg text-on-surface-variant">
-              {card.icon}
-            </span>
+            <card.icon className="h-[18px] w-[18px] text-on-surface-variant" />
             <p className="font-bold text-sm text-on-surface">{card.title}</p>
           </div>
           <p className="text-sm text-on-surface-variant">{card.description}</p>

@@ -1,3 +1,4 @@
+import { PiggyBank } from "lucide-react";
 import type { InsightCard, InsightContext } from "./types";
 import { getCountryProvider } from "@/lib/country";
 
@@ -9,7 +10,7 @@ export function taxSetAsideInsight(ctx: InsightContext): InsightCard | null {
   return {
     id: "tax-set-aside",
     type: "info",
-    icon: "savings",
+    icon: PiggyBank,
     title: "Tax reserve suggestion",
     description: `Set aside ~\u20AC${monthlyReserve.toLocaleString("en")}/month for taxes (~35% effective rate).`,
   };

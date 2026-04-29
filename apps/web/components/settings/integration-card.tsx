@@ -1,7 +1,8 @@
 import Link from "next/link";
+import { ChevronRight, type LucideIcon } from "lucide-react";
 
 interface IntegrationCardProps {
-  icon: string;
+  icon: LucideIcon;
   name: string;
   description: string;
   href: string;
@@ -10,7 +11,7 @@ interface IntegrationCardProps {
 }
 
 export function IntegrationCard({
-  icon,
+  icon: Icon,
   name,
   description,
   href,
@@ -23,9 +24,7 @@ export function IntegrationCard({
       className="group flex items-center gap-4 p-5 rounded-xl bg-surface-container hover:bg-surface-container-high transition-colors duration-200"
     >
       <div className="flex-shrink-0 size-10 rounded-lg bg-surface-container-high flex items-center justify-center">
-        <span className="material-symbols-outlined text-[22px] text-on-surface-variant">
-          {icon}
-        </span>
+        <Icon className="h-[22px] w-[22px] text-on-surface-variant" />
       </div>
       <div className="flex-1 min-w-0">
         <p className="font-label text-sm font-semibold text-on-surface">
@@ -46,9 +45,7 @@ export function IntegrationCard({
           ? statusLabels.connected
           : statusLabels.notConfigured}
       </span>
-      <span className="material-symbols-outlined text-[18px] text-on-surface-variant group-hover:translate-x-0.5 transition-transform duration-200">
-        chevron_right
-      </span>
+      <ChevronRight className="h-[18px] w-[18px] text-on-surface-variant group-hover:translate-x-0.5 transition-transform duration-200" />
     </Link>
   );
 }

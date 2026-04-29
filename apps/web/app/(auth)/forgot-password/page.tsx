@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { Landmark, MailCheck } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,9 +42,7 @@ export default function ForgotPasswordPage() {
       {/* Mobile logo — hidden on desktop */}
       <div className="flex lg:hidden items-center gap-3 mb-8">
         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center">
-          <span className="material-symbols-outlined text-on-primary text-lg">
-            account_balance
-          </span>
+          <Landmark className="h-5 w-5 text-on-primary" />
         </div>
         <span className="font-headline text-xl font-bold text-on-surface">
           OpenTab
@@ -53,9 +52,7 @@ export default function ForgotPasswordPage() {
       {submitted ? (
         <div>
           <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-6">
-            <span className="material-symbols-outlined text-primary text-2xl">
-              mark_email_read
-            </span>
+            <MailCheck className="h-6 w-6 text-primary" />
           </div>
           <h1 className="font-headline text-3xl font-bold text-on-surface mb-2">
             {t("forgotSuccessTitle")}

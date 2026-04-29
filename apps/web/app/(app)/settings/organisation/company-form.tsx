@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
+import { ImageIcon } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -358,7 +359,7 @@ export function CompanyForm({ initialData }: CompanyFormProps) {
         <section className="bg-surface-container-low rounded-2xl p-6 border border-outline-variant/10">
           <SectionHeading>{t("branding")}</SectionHeading>
           <div className="flex flex-col items-center justify-center min-h-[120px] rounded-xl bg-surface-container-lowest text-on-surface/30 gap-2">
-            <span className="material-symbols-outlined text-3xl">image</span>
+            <ImageIcon className="h-8 w-8" />
             <p className="text-sm font-medium">{t("logoPlaceholder")}</p>
           </div>
         </section>

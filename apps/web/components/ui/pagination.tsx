@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface PaginationProps {
@@ -62,9 +63,7 @@ export function Pagination({
         aria-disabled={currentPage <= 1}
         tabIndex={currentPage <= 1 ? -1 : undefined}
       >
-        <span className="material-symbols-outlined text-[18px]">
-          chevron_left
-        </span>
+        <ChevronLeft className="h-[18px] w-[18px]" />
       </Link>
 
       {pages.map((page, i) =>
@@ -103,9 +102,7 @@ export function Pagination({
         aria-disabled={currentPage >= totalPages}
         tabIndex={currentPage >= totalPages ? -1 : undefined}
       >
-        <span className="material-symbols-outlined text-[18px]">
-          chevron_right
-        </span>
+        <ChevronRight className="h-[18px] w-[18px]" />
       </Link>
 
       <span className="ml-3 text-xs text-on-surface/40">

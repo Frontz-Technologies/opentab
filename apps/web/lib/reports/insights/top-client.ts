@@ -1,3 +1,4 @@
+import { User } from "lucide-react";
 import type { InsightCard, InsightContext } from "./types";
 
 export function topClientInsight(ctx: InsightContext): InsightCard | null {
@@ -8,7 +9,7 @@ export function topClientInsight(ctx: InsightContext): InsightCard | null {
   return {
     id: "top-client",
     type: "info",
-    icon: "person",
+    icon: User,
     title: "High client concentration",
     description: `${top.displayName} accounts for ${pct.toFixed(0)}% of your revenue.`,
   };

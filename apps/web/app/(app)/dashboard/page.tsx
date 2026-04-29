@@ -1,4 +1,4 @@
-import { BarChart3 } from "lucide-react";
+import { BarChart3, Clock, CreditCard, TrendingUp } from "lucide-react";
 import { getSession } from "@/lib/session";
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/layout/page-header";
@@ -45,11 +45,11 @@ export default async function DashboardPage({
                 {[
                   {
                     label: t("revenue"),
-                    icon: "trending_up",
+                    icon: TrendingUp,
                     variant: "hero" as const,
                   },
-                  { label: t("outstanding"), icon: "schedule" },
-                  { label: t("expenses"), icon: "payments" },
+                  { label: t("outstanding"), icon: Clock },
+                  { label: t("expenses"), icon: CreditCard },
                 ].map((kpi) => (
                   <KpiCard
                     key={kpi.label}

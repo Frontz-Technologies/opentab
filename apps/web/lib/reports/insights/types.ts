@@ -1,3 +1,4 @@
+import type { LucideIcon } from "lucide-react";
 import type {
   ExpenseByCategoryRow,
   RevenueByCientRow,
@@ -7,7 +8,7 @@ import type {
 export interface InsightCard {
   id: string;
   type: "info" | "risk" | "success";
-  icon: string;
+  icon: LucideIcon;
   title: string;
   description: string;
   action?: { label: string; href: string };
