@@ -4,6 +4,15 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import {
+  AlertCircle,
+  CheckCircle2,
+  Plus,
+  ReceiptText,
+  RefreshCw,
+  SearchX,
+  XCircle,
+} from "lucide-react";
 import type { Invoice } from "@opentab/db/schema";
 import {
   INVOICE_STATUS,
@@ -64,12 +73,10 @@ function MyDataStatusIcon({ status }: { status: number | null }) {
   if (status === null) return null;
   if (status === COUNTRY_INTEGRATION_SUBMISSION_STATUS.CONFIRMED) {
     return (
-      <span
-        className="material-symbols-outlined text-[16px] text-primary"
-        title="myDATA confirmed"
-      >
-        check_circle
-      </span>
+      <CheckCircle2
+        className="inline-block h-4 w-4 text-primary"
+        aria-label="myDATA confirmed"
+      />
     );
   }
   if (
@@ -78,31 +85,25 @@ function MyDataStatusIcon({ status }: { status: number | null }) {
     status === COUNTRY_INTEGRATION_SUBMISSION_STATUS.RETRY_SCHEDULED
   ) {
     return (
-      <span
-        className="material-symbols-outlined text-[16px] text-on-surface-variant animate-spin"
-        title="myDATA pending"
-      >
-        sync
-      </span>
+      <RefreshCw
+        className="inline-block h-4 w-4 text-on-surface-variant animate-spin"
+        aria-label="myDATA pending"
+      />
     );
   }
   if (status === COUNTRY_INTEGRATION_SUBMISSION_STATUS.CANCELLED) {
     return (
-      <span
-        className="material-symbols-outlined text-[16px] text-on-surface-variant"
-        title="myDATA cancelled"
-      >
-        cancel
-      </span>
+      <XCircle
+        className="inline-block h-4 w-4 text-on-surface-variant"
+        aria-label="myDATA cancelled"
+      />
     );
   }
   return (
-    <span
-      className="material-symbols-outlined text-[16px] text-tertiary"
-      title="myDATA failed"
-    >
-      error
-    </span>
+    <AlertCircle
+      className="inline-block h-4 w-4 text-tertiary"
+      aria-label="myDATA failed"
+    />
   );
 }
 
@@ -162,9 +163,7 @@ export function InvoiceList({
       {filtered.length === 0 ? (
         invoices.length === 0 ? (
           <div className="flex flex-col items-center text-center py-16 px-6">
-            <span className="material-symbols-outlined text-5xl text-on-surface-variant mb-4 block">
-              receipt_long
-            </span>
+            <ReceiptText className="h-12 w-12 text-on-surface-variant mb-4" />
             <h3 className="font-headline text-xl font-semibold text-on-surface mb-2">
               {t("noInvoices")}
             </h3>
@@ -175,15 +174,13 @@ export function InvoiceList({
               href="/invoices/new"
               className="inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-5 font-label text-sm font-medium text-on-primary transition-colors hover:bg-primary/90"
             >
-              <span className="material-symbols-outlined text-[18px]">add</span>
+              <Plus className="h-[18px] w-[18px]" />
               {t("addInvoice")}
             </Link>
           </div>
         ) : (
           <div className="text-center py-12 text-on-surface-variant">
-            <span className="material-symbols-outlined text-4xl mb-2 block">
-              search_off
-            </span>
+            <SearchX className="h-9 w-9 mx-auto mb-2" />
             <p className="text-sm">{t("noResultsMatch")}</p>
           </div>
         )

@@ -1,3 +1,4 @@
+import { BarChart3 } from "lucide-react";
 import { getSession } from "@/lib/session";
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/layout/page-header";
@@ -62,9 +63,7 @@ export default async function DashboardPage({
                 ))}
               </div>
               <div className="bg-surface-container-low rounded-2xl p-8 min-h-[300px] flex flex-col items-center justify-center">
-                <span className="material-symbols-outlined text-4xl text-on-surface/20 mb-4">
-                  bar_chart
-                </span>
+                <BarChart3 className="h-9 w-9 text-on-surface/20 mb-4" />
                 <p className="text-on-surface-variant text-sm">{t("noData")}</p>
               </div>
             </div>

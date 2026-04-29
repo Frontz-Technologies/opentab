@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { Repeat } from "lucide-react";
 import type { RecurringExpense } from "@opentab/db/schema";
 import {
   RECURRING_EXPENSE_STATUS,
@@ -78,9 +79,7 @@ export function RecurringExpenseList({ items }: RecurringExpenseListProps) {
 
       {filtered.length === 0 ? (
         <div className="text-center py-12 text-on-surface/50">
-          <span className="material-symbols-outlined text-4xl mb-2 block">
-            repeat
-          </span>
+          <Repeat className="h-9 w-9 mx-auto mb-2" />
           <p className="font-label">{t("noRecurring")}</p>
           <p className="text-sm mt-1">{t("noRecurringDescription")}</p>
         </div>

@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
+import { AlertCircle, ArrowLeft } from "lucide-react";
 import { getSession } from "@/lib/session";
 import { db } from "@/lib/db";
 import {
@@ -101,7 +102,7 @@ export default async function InvoiceDetailPage({
             href="/invoices"
             className="text-on-surface/50 hover:text-on-surface transition-colors"
           >
-            <span className="material-symbols-outlined">arrow_back</span>
+            <ArrowLeft className="h-6 w-6" />
           </Link>
           <h1 className="font-headline text-2xl font-bold text-on-surface">
             {invoice.invoiceNumber ?? t("draftHeading")}
@@ -308,9 +309,7 @@ export default async function InvoiceDetailPage({
                 role="alert"
                 className="rounded-lg bg-error/10 px-3 py-2 text-xs text-error flex items-start gap-2"
               >
-                <span className="material-symbols-outlined text-[16px] leading-none">
-                  error
-                </span>
+                <AlertCircle className="h-4 w-4" />
                 <span>{t("mydataFailedTooltip", { error: mydataError })}</span>
               </div>
             )}

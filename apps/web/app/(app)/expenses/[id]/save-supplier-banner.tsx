@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createContact } from "../../contacts/actions";
 
@@ -41,9 +42,7 @@ export function SaveSupplierBanner({
   return (
     <div className="bg-secondary-container/30 border border-on-secondary-container/20 rounded-xl p-4 flex items-center justify-between">
       <div className="flex items-center gap-3">
-        <span className="material-symbols-outlined text-on-secondary-container text-[20px]">
-          person_add
-        </span>
+        <UserPlus className="h-5 w-5 text-on-secondary-container" />
         <div>
           <p className="text-sm font-medium text-on-surface">
             {t("saveSupplierPrompt")}

@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { Plus } from "lucide-react";
 import { getSession } from "@/lib/session";
 import { PageHeader } from "@/components/layout/page-header";
 import { db } from "@/lib/db";
@@ -51,9 +52,7 @@ export default async function RecurringPage({
             href="/recurring/new"
             className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-primary text-on-primary font-medium text-sm hover:bg-primary/80 transition-colors"
           >
-            <span className="material-symbols-outlined text-[18px] leading-none">
-              add
-            </span>
+            <Plus className="h-[18px] w-[18px]" />
             {t("addRecurring")}
           </Link>
         }

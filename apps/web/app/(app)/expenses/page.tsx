@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { FolderTree, Plus, Upload } from "lucide-react";
 import { getSession } from "@/lib/session";
 import { PageHeader } from "@/components/layout/page-header";
 import { db } from "@/lib/db";
@@ -53,9 +54,7 @@ export default async function ExpensesPage({
               aria-label={t("categories")}
               className="inline-flex items-center gap-1.5 h-8 px-2 sm:px-3 rounded-lg border border-on-surface/10 text-on-surface/60 font-medium text-sm hover:bg-surface-container-low transition-colors"
             >
-              <span className="material-symbols-outlined text-[18px] leading-none">
-                category
-              </span>
+              <FolderTree className="h-[18px] w-[18px]" />
               <span className="hidden sm:inline">{t("categories")}</span>
             </Link>
             <Link
@@ -63,9 +62,7 @@ export default async function ExpensesPage({
               aria-label={t("import")}
               className="inline-flex items-center gap-1.5 h-8 px-2 sm:px-3 rounded-lg border border-on-surface/20 text-on-surface font-medium text-sm hover:bg-surface-container-low transition-colors"
             >
-              <span className="material-symbols-outlined text-[18px] leading-none">
-                upload
-              </span>
+              <Upload className="h-[18px] w-[18px]" />
               <span className="hidden sm:inline">{t("import")}</span>
             </Link>
             <Link
@@ -73,9 +70,7 @@ export default async function ExpensesPage({
               aria-label={t("addExpense")}
               className="inline-flex items-center gap-1.5 h-8 px-2 sm:px-3 rounded-lg bg-primary text-on-primary font-medium text-sm hover:bg-primary/80 transition-colors"
             >
-              <span className="material-symbols-outlined text-[18px] leading-none">
-                add
-              </span>
+              <Plus className="h-[18px] w-[18px]" />
               <span className="hidden sm:inline">{t("addExpense")}</span>
             </Link>
           </div>

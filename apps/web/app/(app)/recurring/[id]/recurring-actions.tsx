@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { Pause, Play, Trash2 } from "lucide-react";
 import type { RecurringInvoice } from "@opentab/db/schema";
 import { RECURRING_STATUS } from "@opentab/db/schema";
 import { Button } from "@/components/ui/button";
@@ -42,9 +43,7 @@ export function RecurringActions({ recurring }: RecurringActionsProps) {
           }
           disabled={isPending}
         >
-          <span className="material-symbols-outlined text-[16px] mr-1">
-            pause
-          </span>
+          <Pause className="h-4 w-4 mr-1" />
           {t("pause")}
         </Button>
       )}
@@ -56,9 +55,7 @@ export function RecurringActions({ recurring }: RecurringActionsProps) {
           }
           disabled={isPending}
         >
-          <span className="material-symbols-outlined text-[16px] mr-1">
-            play_arrow
-          </span>
+          <Play className="h-4 w-4 mr-1" />
           {t("resume")}
         </Button>
       )}
@@ -70,9 +67,7 @@ export function RecurringActions({ recurring }: RecurringActionsProps) {
         }
         disabled={isPending}
       >
-        <span className="material-symbols-outlined text-[16px] mr-1">
-          delete
-        </span>
+        <Trash2 className="h-4 w-4 mr-1" />
         {t("delete")}
       </Button>
     </div>

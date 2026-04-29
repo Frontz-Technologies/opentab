@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { eq, desc } from "drizzle-orm";
+import { Plus, ReceiptText, Upload } from "lucide-react";
 import { getSession } from "@/lib/session";
 import { db } from "@/lib/db";
 import { creditNotes, CREDIT_NOTE_STATUS } from "@opentab/db/schema";
@@ -50,9 +51,7 @@ export default async function CreditNotesPage() {
               aria-label={t("import")}
               className="inline-flex items-center gap-1.5 h-8 px-2 sm:px-3 rounded-lg border border-on-surface/20 text-on-surface font-medium text-sm hover:bg-surface-container-low transition-colors"
             >
-              <span className="material-symbols-outlined text-[18px] leading-none">
-                upload
-              </span>
+              <Upload className="h-[18px] w-[18px]" />
               <span className="hidden sm:inline">{t("import")}</span>
             </Link>
             <Link
@@ -60,9 +59,7 @@ export default async function CreditNotesPage() {
               aria-label={t("addCreditNote")}
               className="inline-flex items-center gap-1.5 h-8 px-2 sm:px-3 rounded-lg bg-primary text-on-primary font-medium text-sm hover:bg-primary/80 transition-colors"
             >
-              <span className="material-symbols-outlined text-[18px] leading-none">
-                add
-              </span>
+              <Plus className="h-[18px] w-[18px]" />
               <span className="hidden sm:inline">{t("addCreditNote")}</span>
             </Link>
           </div>
@@ -71,9 +68,7 @@ export default async function CreditNotesPage() {
       <div className="px-6 py-6 space-y-6">
         {rows.length === 0 ? (
           <div className="flex flex-col items-center text-center py-16 px-6">
-            <span className="material-symbols-outlined text-5xl text-on-surface-variant mb-4 block">
-              receipt_long
-            </span>
+            <ReceiptText className="h-12 w-12 text-on-surface-variant mb-4" />
             <h3 className="font-headline text-xl font-semibold text-on-surface mb-2">
               {t("noCreditNotes")}
             </h3>
@@ -84,7 +79,7 @@ export default async function CreditNotesPage() {
               href="/credit-notes/new"
               className="inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-5 font-label text-sm font-medium text-on-primary transition-colors hover:bg-primary/90"
             >
-              <span className="material-symbols-outlined text-[18px]">add</span>
+              <Plus className="h-[18px] w-[18px]" />
               {t("addCreditNote")}
             </Link>
           </div>

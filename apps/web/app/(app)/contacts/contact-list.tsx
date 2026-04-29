@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { Contact as ContactIcon, Plus, SearchX } from "lucide-react";
 import type { Contact } from "@opentab/db/schema";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -83,9 +84,7 @@ export function ContactList({ contacts }: ContactListProps) {
       {filtered.length === 0 ? (
         contacts.length === 0 ? (
           <div className="flex flex-col items-center text-center py-16 px-6">
-            <span className="material-symbols-outlined text-5xl text-on-surface-variant mb-4 block">
-              contacts
-            </span>
+            <ContactIcon className="h-12 w-12 text-on-surface-variant mb-4" />
             <h3 className="font-headline text-xl font-semibold text-on-surface mb-2">
               {t("noContacts")}
             </h3>
@@ -96,15 +95,13 @@ export function ContactList({ contacts }: ContactListProps) {
               href="/contacts/new"
               className="inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-5 font-label text-sm font-medium text-on-primary transition-colors hover:bg-primary/90"
             >
-              <span className="material-symbols-outlined text-[18px]">add</span>
+              <Plus className="h-[18px] w-[18px]" />
               {t("addContact")}
             </Link>
           </div>
         ) : (
           <div className="text-center py-12 text-on-surface-variant">
-            <span className="material-symbols-outlined text-4xl mb-2 block">
-              search_off
-            </span>
+            <SearchX className="h-9 w-9 mx-auto mb-2" />
             <p className="text-sm">{t("noResultsMatch")}</p>
           </div>
         )

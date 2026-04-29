@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { Trash2 } from "lucide-react";
 import type { RecurringExpense } from "@opentab/db/schema";
 import { RECURRING_EXPENSE_STATUS } from "@opentab/db/schema";
 import { Button } from "@/components/ui/button";
@@ -75,9 +76,7 @@ export function RecurringExpenseActions({
         }
         disabled={isPending}
       >
-        <span className="material-symbols-outlined text-[16px] mr-1">
-          delete
-        </span>
+        <Trash2 className="h-4 w-4 mr-1" />
         {t("delete")}
       </Button>
     </div>

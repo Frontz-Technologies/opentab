@@ -4,6 +4,7 @@ import { useState, useTransition, useEffect } from "react";
 import { format, parseISO } from "date-fns";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { LineChart, Plus } from "lucide-react";
 import { type DateRange } from "react-day-picker";
 import type { PnlReportData } from "@/lib/reports/types";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
@@ -153,9 +154,7 @@ export function PnlClient({
 
       {isEmpty && (
         <div className="bg-surface-container-low rounded-2xl p-12 flex flex-col items-center text-center">
-          <span className="material-symbols-outlined text-5xl text-on-surface-variant mb-4 block">
-            monitoring
-          </span>
+          <LineChart className="h-12 w-12 text-on-surface-variant mb-4" />
           <h3 className="font-headline text-xl font-semibold text-on-surface mb-2">
             {t("pnlEmptyTitle")}
           </h3>
@@ -167,14 +166,14 @@ export function PnlClient({
               href="/invoices/new"
               className="inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-5 font-label text-sm font-medium text-on-primary transition-colors hover:bg-primary/90"
             >
-              <span className="material-symbols-outlined text-[18px]">add</span>
+              <Plus className="h-[18px] w-[18px]" />
               {t("createInvoiceCta")}
             </Link>
             <Link
               href="/expenses/new"
               className="inline-flex h-10 items-center gap-2 rounded-lg bg-surface-container-high px-5 font-label text-sm font-medium text-on-surface transition-colors hover:bg-surface-container-highest"
             >
-              <span className="material-symbols-outlined text-[18px]">add</span>
+              <Plus className="h-[18px] w-[18px]" />
               {t("recordExpenseCta")}
             </Link>
           </div>

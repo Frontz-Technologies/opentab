@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { getSession } from "@/lib/session";
 import { db } from "@/lib/db";
 import {
@@ -85,7 +86,7 @@ export default async function RecurringDetailPage({
             href="/recurring"
             className="text-on-surface/50 hover:text-on-surface transition-colors"
           >
-            <span className="material-symbols-outlined">arrow_back</span>
+            <ArrowLeft className="h-6 w-6" />
           </Link>
           <h1 className="font-headline text-2xl font-bold text-on-surface">
             {t("editRecurring")}
