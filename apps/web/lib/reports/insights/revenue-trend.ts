@@ -1,4 +1,3 @@
-import { TrendingDown, TrendingUp } from "lucide-react";
 import type { InsightCard, InsightContext } from "./types";
 
 export function revenueTrendInsight(ctx: InsightContext): InsightCard | null {
@@ -13,7 +12,7 @@ export function revenueTrendInsight(ctx: InsightContext): InsightCard | null {
   return {
     id: "revenue-trend",
     type: up ? "success" : "risk",
-    icon: up ? TrendingUp : TrendingDown,
+    icon: up ? "TrendingUp" : "TrendingDown",
     title: up ? "Revenue is up" : "Revenue is down",
     description: `Revenue changed by ${change > 0 ? "+" : ""}${change.toFixed(1)}% compared to the previous period.`,
   };
