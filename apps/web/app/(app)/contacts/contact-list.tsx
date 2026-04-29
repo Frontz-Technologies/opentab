@@ -56,7 +56,7 @@ export function ContactList({ contacts }: ContactListProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
         <Input
           placeholder={t("searchPlaceholder")}
           value={search}
@@ -64,7 +64,7 @@ export function ContactList({ contacts }: ContactListProps) {
             setSearch(e.target.value);
             resetPageIfNeeded();
           }}
-          className="max-w-sm"
+          className="w-full md:max-w-sm"
         />
         <AnimatedFilterBar
           items={[

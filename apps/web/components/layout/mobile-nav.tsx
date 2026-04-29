@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { MobileMoreSheet } from "./mobile-more-sheet";
 
 interface IntegrationNavEntry {
@@ -11,11 +12,11 @@ interface IntegrationNavEntry {
 }
 
 const navItems = [
-  { icon: "dashboard", label: "Dashboard", href: "/dashboard" },
-  { icon: "receipt_long", label: "Invoices", href: "/invoices" },
-  { icon: "account_balance_wallet", label: "Expenses", href: "/expenses" },
-  { icon: "contacts", label: "Contacts", href: "/contacts" },
-  { icon: "inventory_2", label: "Products", href: "/products" },
+  { icon: "dashboard", labelKey: "dashboard", href: "/dashboard" },
+  { icon: "receipt_long", labelKey: "invoices", href: "/invoices" },
+  { icon: "account_balance_wallet", labelKey: "expenses", href: "/expenses" },
+  { icon: "contacts", labelKey: "contacts", href: "/contacts" },
+  { icon: "inventory_2", labelKey: "products", href: "/products" },
 ] as const;
 
 export function MobileNav({
@@ -24,6 +25,7 @@ export function MobileNav({
   integrationNav?: IntegrationNavEntry[];
 }) {
   const pathname = usePathname();
+  const t = useTranslations("nav");
 
   return (
     <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-surface-dim/90 glass-effect border-t border-on-surface/10">
@@ -50,7 +52,7 @@ export function MobileNav({
                   isActive ? "font-bold" : ""
                 }`}
               >
-                {item.label}
+                {t(item.labelKey)}
               </span>
             </Link>
           );

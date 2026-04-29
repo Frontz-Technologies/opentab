@@ -62,12 +62,12 @@ export function RecurringExpenseList({ items }: RecurringExpenseListProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
         <Input
           placeholder={t("searchPlaceholder")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="max-w-sm"
+          className="w-full md:max-w-sm"
         />
         <AnimatedFilterBar
           items={filters.map((f) => ({ value: f.key, label: f.label }))}
