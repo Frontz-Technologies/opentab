@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import type { Product } from "@opentab/db/schema";
 import { Button } from "@/components/ui/button";
@@ -136,6 +136,29 @@ export function LineItemsBuilder({
   );
 
   const [showProductPicker, setShowProductPicker] = useState(false);
+
+  // When the inclusive-tax toggle flips, recompute taxAmount/lineTotal for
+  // every existing row. Without this, rows added before the flip keep stale
+  // values until the user manually edits them.
+  useEffect(() => {
+    let dirty = false;
+    const updated = items.map((item) => {
+      const recalced = recalcItem(item, usesInclusiveTax);
+      if (
+        recalced.taxAmount !== item.taxAmount ||
+        recalced.lineTotal !== item.lineTotal
+      ) {
+        dirty = true;
+        return recalced;
+      }
+      return item;
+    });
+    if (dirty) onChange(updated);
+    // We intentionally only depend on the toggle. Including `items` would
+    // make every normal edit re-trigger this effect (and recalcItem already
+    // runs inside updateItem/addFromProduct for the row being edited).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [usesInclusiveTax]);
 
   // Calculate totals
   const subtotal = items.reduce((sum, item) => {
