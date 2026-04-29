@@ -119,4 +119,40 @@ test.describe("Reports", () => {
       expect(url).toMatch(/\/reports$/);
     }
   });
+
+  test("Reports tab strip does not wrap labels on a 360px viewport", async () => {
+    await page.setViewportSize({ width: 360, height: 800 });
+    await page.goto("/reports/pnl");
+
+    const tabs = page.locator("a, button").filter({
+      hasText:
+        /^(Profit|VAT|Tax|Έσοδα|ΦΠΑ|Φορολογική|Ganancias|IVA|Proyección)/,
+    });
+    const heights = await tabs.evaluateAll((els) =>
+      els.map((el) => el.getBoundingClientRect().height),
+    );
+    for (const h of heights) {
+      // h-8 (32px) + py-1.5 padding = ~40px max single-line; wrapped ~52+.
+      expect(h).toBeLessThan(44);
+    }
+
+    // Reset for any subsequent tests in this file.
+    await page.setViewportSize({ width: 1280, height: 720 });
+  });
+
+  test('active Reports tab carries aria-current="page"', async () => {
+    await page.setViewportSize({ width: 1200, height: 800 });
+    await page.goto("/reports/pnl");
+    // The active link in the Reports tab strip is the one with
+    // aria-current="page". AnimatedFilterBar in link mode sets this on
+    // the active item only, so exactly one match should exist.
+    const activeTab = page.locator('a[aria-current="page"]').first();
+    await expect(activeTab).toBeVisible();
+    // The accessible name should be the P&L label in the active locale.
+    const text = (await activeTab.textContent())?.trim();
+    expect(text).toMatch(/Profit & Loss|Έσοδα & Έξοδα|Ganancias y pérdidas/);
+
+    // Reset for any subsequent tests in this file.
+    await page.setViewportSize({ width: 1280, height: 720 });
+  });
 });
