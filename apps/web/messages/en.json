@@ -756,7 +756,7 @@
     "title": "Reports",
     "pnl": "Profit & Loss",
     "pnlDescription": "Revenue, expenses, and profit breakdown",
-    "vat": "VAT Report",
+    "vat": "VAT",
     "vatDescription": "Output vs input VAT by rate",
     "taxProjection": "Tax Projection",
     "taxProjectionDescription": "Estimated tax obligations",

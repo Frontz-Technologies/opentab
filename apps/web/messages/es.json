@@ -756,7 +756,7 @@
     "title": "Informes",
     "pnl": "Ganancias y pérdidas",
     "pnlDescription": "Desglose de ingresos, gastos y ganancias",
-    "vat": "Informe de IVA",
+    "vat": "IVA",
     "vatDescription": "IVA repercutido vs. soportado por tasa",
     "taxProjection": "Proyección fiscal",
     "taxProjectionDescription": "Obligaciones fiscales estimadas",

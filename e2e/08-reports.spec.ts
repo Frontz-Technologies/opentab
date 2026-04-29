@@ -119,4 +119,24 @@ test.describe("Reports", () => {
       expect(url).toMatch(/\/reports$/);
     }
   });
+
+  test("Reports tab strip does not wrap labels on a 360px viewport", async () => {
+    await page.setViewportSize({ width: 360, height: 800 });
+    await page.goto("/reports/pnl");
+
+    const tabs = page.locator("a, button").filter({
+      hasText:
+        /^(Profit|VAT|Tax|Έσοδα|ΦΠΑ|Φορολογική|Ganancias|IVA|Proyección)/,
+    });
+    const heights = await tabs.evaluateAll((els) =>
+      els.map((el) => el.getBoundingClientRect().height),
+    );
+    for (const h of heights) {
+      // h-8 (32px) + py-1.5 padding = ~40px max single-line; wrapped ~52+.
+      expect(h).toBeLessThan(44);
+    }
+
+    // Reset for any subsequent tests in this file.
+    await page.setViewportSize({ width: 1280, height: 720 });
+  });
 });

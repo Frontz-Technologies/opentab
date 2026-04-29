@@ -167,4 +167,29 @@ test.describe("Invoices", () => {
 
     await page.screenshot({ path: "e2e/screenshots/invoice-detail-paid.png" });
   });
+
+  test("invoice list toolbar stacks search above filter chips at 360px", async () => {
+    await page.setViewportSize({ width: 360, height: 800 });
+    await page.goto("/invoices");
+
+    // The search input — shadcn input or plain html input — gets a placeholder.
+    const search = page.getByPlaceholder(/search|αναζήτη|buscar/i).first();
+    // The filter bar is the rounded-full strip containing All / Όλα / Todo.
+    const filterBar = page
+      .locator("[class*='rounded-full']")
+      .filter({ hasText: /All|Όλα|Todo/i })
+      .first();
+
+    await expect(search).toBeVisible();
+    await expect(filterBar).toBeVisible();
+
+    const sBox = await search.boundingBox();
+    const fBox = await filterBar.boundingBox();
+    if (!sBox || !fBox) throw new Error("toolbar elements not measurable");
+    // Search sits above the filter bar on mobile.
+    expect(sBox.y + sBox.height).toBeLessThanOrEqual(fBox.y + 4);
+
+    // Reset for any subsequent tests in this file.
+    await page.setViewportSize({ width: 1280, height: 720 });
+  });
 });
