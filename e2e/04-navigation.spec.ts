@@ -143,3 +143,45 @@ test.describe("Navigation", () => {
     ).toBeVisible();
   });
 });
+
+test.describe("Sidebar / nav i18n + IA (PR-B)", () => {
+  test.describe.configure({ mode: "serial" });
+  let page: Page;
+
+  test.beforeAll(async ({ browser }) => {
+    page = await browser.newPage();
+    try {
+      await registerTestUser(page);
+    } catch {
+      await loginTestUser(page);
+    }
+    // Expand the sidebar so group labels and the footer Settings label
+    // are in the accessible name tree.
+    await page
+      .context()
+      .addCookies([{ name: "sidebar_state", value: "true", url: page.url() }]);
+  });
+
+  test.afterAll(async () => {
+    await page.close();
+  });
+
+  test("desktop sidebar shows Sales / Records / Insights labels", async () => {
+    await page.goto("/dashboard");
+    const sidebar = page.locator("aside, [data-slot='sidebar']").first();
+    await expect(sidebar.getByText(/^SALES$/i)).toBeVisible();
+    await expect(sidebar.getByText(/^RECORDS$/i)).toBeVisible();
+    await expect(sidebar.getByText(/^INSIGHTS$/i)).toBeVisible();
+  });
+
+  test("settings link lives in the sidebar footer area", async () => {
+    await page.goto("/dashboard");
+    const sidebar = page.locator("aside, [data-slot='sidebar']").first();
+    const settingsLink = sidebar.getByRole("link", { name: /^Settings$/i });
+    await expect(settingsLink).toBeVisible();
+    // Settings href must navigate.
+    await settingsLink.click();
+    await page.waitForURL("**/settings/**");
+    expect(page.url()).toContain("/settings");
+  });
+});
