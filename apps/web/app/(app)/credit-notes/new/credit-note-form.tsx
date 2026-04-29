@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { format, parseISO } from "date-fns";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import type { Invoice } from "@opentab/db/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
   SelectContent,
@@ -169,12 +171,11 @@ export function CreditNoteForm({
           >
             {t("issueDate")}
           </label>
-          <Input
-            id="cn-issueDate"
-            type="date"
-            value={issueDate}
-            onChange={(e) => setIssueDate(e.target.value)}
-            required
+          <DatePicker
+            value={issueDate ? parseISO(issueDate) : undefined}
+            onChange={(d) => setIssueDate(d ? format(d, "yyyy-MM-dd") : "")}
+            name="issueDate"
+            ariaLabel={t("issueDate")}
           />
         </div>
       </div>

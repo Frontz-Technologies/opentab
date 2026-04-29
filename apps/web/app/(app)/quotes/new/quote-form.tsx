@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { format, parseISO } from "date-fns";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import type { Contact, Product } from "@opentab/db/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
   SelectContent,
@@ -151,20 +153,22 @@ export function QuoteForm({
             <label className="block text-sm font-label text-on-surface/60 mb-1">
               {t("issueDate")} <span className="text-tertiary">*</span>
             </label>
-            <Input
-              type="date"
-              value={issueDate}
-              onChange={(e) => setIssueDate(e.target.value)}
+            <DatePicker
+              value={issueDate ? parseISO(issueDate) : undefined}
+              onChange={(d) => setIssueDate(d ? format(d, "yyyy-MM-dd") : "")}
+              name="issueDate"
+              ariaLabel={t("issueDate")}
             />
           </div>
           <div>
             <label className="block text-sm font-label text-on-surface/60 mb-1">
               {t("validUntil")}
             </label>
-            <Input
-              type="date"
-              value={validUntil}
-              onChange={(e) => setValidUntil(e.target.value)}
+            <DatePicker
+              value={validUntil ? parseISO(validUntil) : undefined}
+              onChange={(d) => setValidUntil(d ? format(d, "yyyy-MM-dd") : "")}
+              name="validUntil"
+              ariaLabel={t("validUntil")}
             />
           </div>
           <div>
