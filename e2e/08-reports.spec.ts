@@ -66,8 +66,10 @@ test.describe("Reports", () => {
 
   test("P&L report page loads", async () => {
     await page.goto("/reports/pnl");
-    // PnlClient renders date inputs and a generate button
-    await expect(page.locator('input[type="date"]').first()).toBeVisible({
+    // PnlClient renders a DateRangePicker (button trigger) and presets.
+    await expect(
+      page.getByRole("button", { name: /date range/i }).first(),
+    ).toBeVisible({
       timeout: 10000,
     });
     await page.screenshot({ path: "e2e/screenshots/reports-pnl.png" });
@@ -92,8 +94,10 @@ test.describe("Reports", () => {
     // For GR orgs, it shows the VAT report with date inputs
     const url = page.url();
     if (url.includes("/reports/vat")) {
-      // GR org — verify date inputs render
-      await expect(page.locator('input[type="date"]').first()).toBeVisible();
+      // GR org — verify the DateRangePicker trigger renders
+      await expect(
+        page.getByRole("button", { name: /date range/i }).first(),
+      ).toBeVisible();
       // Quarter buttons Q1-Q4
       await expect(
         page.locator("button").filter({ hasText: "Q1" }),

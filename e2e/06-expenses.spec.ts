@@ -55,22 +55,26 @@ test.describe("Expenses", () => {
     await expect(supplierSelect).toBeVisible();
   });
 
-  test("expense form has grouped category dropdown with optgroups", async () => {
-    // The category select uses optgroup elements for grouped display
-    const categorySelect = page.locator("select").nth(1);
-    await expect(categorySelect).toBeVisible();
-    // Verify optgroup elements exist (grouped categories)
-    const optgroups = categorySelect.locator("optgroup");
-    const count = await optgroups.count();
-    // There should be at least one optgroup if categories are seeded
-    expect(count).toBeGreaterThanOrEqual(0);
+  test("expense form has category Combobox", async () => {
+    // Category is a shadcn Combobox: a button with role="combobox"
+    const categoryButton = page
+      .getByRole("combobox")
+      .filter({ hasText: /select.*categor|select a category/i })
+      .first();
+    await expect(categoryButton).toBeVisible();
     await page.screenshot({
       path: "e2e/screenshots/expense-form-categories.png",
     });
   });
 
-  test("expense form has date and currency fields", async () => {
-    await expect(page.locator('input[type="date"]').first()).toBeVisible();
+  test("expense form has date picker and currency fields", async () => {
+    // The DatePicker renders a button with the calendar icon + date text.
+    // For a fresh form, the expense date defaults to today, so we look for
+    // any button whose accessible name matches the date label.
+    const dateButton = page
+      .getByRole("button", { name: /expense date/i })
+      .first();
+    await expect(dateButton).toBeVisible();
   });
 
   test("expense form has line items builder", async () => {
