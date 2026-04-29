@@ -139,6 +139,8 @@
     "taxId": "VAT / Tax ID number",
     "taxAuthority": "Tax authority",
     "country": "Country",
+    "selectCountry": "Select country…",
+    "searchCountry": "Search country…",
     "addressLine1": "Address line 1",
     "addressLine2": "Address line 2",
     "city": "City",

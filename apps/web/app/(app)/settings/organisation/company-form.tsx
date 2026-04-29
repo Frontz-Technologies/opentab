@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { detectCountryFromTaxId } from "@/lib/utils";
 import { updateCompanySettings } from "./actions";
 
@@ -270,21 +271,17 @@ export function CompanyForm({ initialData }: CompanyFormProps) {
           <SectionHeading>{t("address")}</SectionHeading>
           <div className="grid grid-cols-1 gap-5">
             <Field label={t("country")}>
-              <Select
+              <Combobox
+                options={EU_COUNTRIES.map((c) => ({
+                  value: c.code,
+                  label: c.name,
+                }))}
                 value={detectedCountry ?? undefined}
-                onValueChange={(v) => setDetectedCountry(v ? v : null)}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select country…" />
-                </SelectTrigger>
-                <SelectContent>
-                  {EU_COUNTRIES.map((c) => (
-                    <SelectItem key={c.code} value={c.code}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={(code) => setDetectedCountry(code || null)}
+                placeholder={t("selectCountry")}
+                searchPlaceholder={t("searchCountry")}
+                ariaLabel={t("country")}
+              />
               <input
                 type="hidden"
                 name="country"

@@ -139,6 +139,8 @@
     "taxId": "ΑΦΜ",
     "taxAuthority": "ΔΟΥ",
     "country": "Χώρα",
+    "selectCountry": "Επιλέξτε χώρα…",
+    "searchCountry": "Αναζήτηση χώρας…",
     "addressLine1": "Διεύθυνση γραμμή 1",
     "addressLine2": "Διεύθυνση γραμμή 2",
     "city": "Πόλη",
