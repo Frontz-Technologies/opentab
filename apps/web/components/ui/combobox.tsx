@@ -84,7 +84,7 @@ export function Combobox<T extends string = string>({
           <Button
             type="button"
             variant="outline"
-            role="combobox"
+            aria-haspopup="listbox"
             aria-expanded={open}
             aria-label={ariaLabel}
             disabled={disabled}

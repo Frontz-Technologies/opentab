@@ -56,9 +56,10 @@ test.describe("Expenses", () => {
   });
 
   test("expense form has category Combobox", async () => {
-    // Category is a shadcn Combobox: a button with role="combobox"
+    // Category is a shadcn Combobox trigger: a button that opens a listbox
+    // popover. Use aria-haspopup="listbox" to disambiguate from other buttons.
     const categoryButton = page
-      .getByRole("combobox")
+      .locator('button[aria-haspopup="listbox"]')
       .filter({ hasText: /select.*categor|select a category/i })
       .first();
     await expect(categoryButton).toBeVisible();
