@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { TrendingUp } from "lucide-react";
 import type { InsightContext } from "../lib/reports/insights/types";
 import { revenueTrendInsight } from "../lib/reports/insights/revenue-trend";
 import { overdueInvoicesInsight } from "../lib/reports/insights/overdue-invoices";
@@ -29,7 +30,7 @@ describe("revenueTrendInsight", () => {
     );
     expect(card).not.toBeNull();
     expect(card!.type).toBe("success");
-    expect(card!.icon).toBe("trending_up");
+    expect(card!.icon).toBe(TrendingUp);
   });
 
   it("returns warning card when revenue down 12%", () => {
