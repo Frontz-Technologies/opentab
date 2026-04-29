@@ -24,14 +24,20 @@ export default getRequestConfig(async () => {
     : undefined;
 
   if (!resolved) {
-    const session = await getSession();
-    if (session?.user?.id) {
-      const rows = await db
-        .select({ locale: userPreferences.locale })
-        .from(userPreferences)
-        .where(eq(userPreferences.userId, session.user.id));
-      const dbLocale = rows[0]?.locale;
-      if (isValid(dbLocale)) resolved = dbLocale;
+    try {
+      const session = await getSession();
+      if (session?.user?.id) {
+        const rows = await db
+          .select({ locale: userPreferences.locale })
+          .from(userPreferences)
+          .where(eq(userPreferences.userId, session.user.id));
+        const dbLocale = rows[0]?.locale;
+        if (isValid(dbLocale)) resolved = dbLocale;
+      }
+    } catch (err) {
+      // i18n resolution should not be load-bearing for availability —
+      // fall through to "en" if the DB lookup fails for any reason.
+      console.warn("[i18n] locale fallback DB lookup failed", err);
     }
   }
 

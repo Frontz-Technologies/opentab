@@ -111,4 +111,57 @@ describe("i18n/request locale resolution (#264)", () => {
 
     expect(result.locale).toBe("en");
   });
+
+  it("returns 'en' when cookie absent, session present, but no userPreferences row exists", async () => {
+    cookieGet.mockReturnValue(undefined);
+    getSessionMock.mockResolvedValue({ user: { id: "user-1" } });
+    mockDbReturning([]);
+
+    const handler = await loadHandler();
+    const result = await handler();
+
+    expect(result.locale).toBe("en");
+    expect(getSessionMock).toHaveBeenCalledTimes(1);
+    expect(dbSelectMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns 'en' when cookie absent and DB returns an invalid/legacy locale", async () => {
+    cookieGet.mockReturnValue(undefined);
+    getSessionMock.mockResolvedValue({ user: { id: "user-1" } });
+    mockDbReturning([{ locale: "de" }]);
+
+    const handler = await loadHandler();
+    const result = await handler();
+
+    expect(result.locale).toBe("en");
+    expect(getSessionMock).toHaveBeenCalledTimes(1);
+    expect(dbSelectMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns 'en' when cookie absent and the DB query rejects", async () => {
+    cookieGet.mockReturnValue(undefined);
+    getSessionMock.mockResolvedValue({ user: { id: "user-1" } });
+    function mockDbRejecting() {
+      dbSelectMock.mockReturnValue({
+        from: () => ({
+          where: () => Promise.reject(new Error("boom")),
+        }),
+      });
+    }
+    mockDbRejecting();
+    // The implementation logs a warning via console.warn — silence it for
+    // this test only so vitest's reporter stays clean.
+    const warnSpy = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
+
+    const handler = await loadHandler();
+    const result = await handler();
+
+    expect(result.locale).toBe("en");
+    expect(warnSpy).toHaveBeenCalledWith(
+      "[i18n] locale fallback DB lookup failed",
+      expect.any(Error),
+    );
+  });
 });
