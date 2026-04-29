@@ -237,7 +237,7 @@ export function RecurringForm({
 
       <div className="flex justify-end">
         <Button onClick={handleSubmit} disabled={isPending}>
-          {isPending ? "Saving..." : t("save")}
+          {isPending ? t("saving") : t("save")}
         </Button>
       </div>
     </div>

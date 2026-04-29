@@ -236,7 +236,7 @@ export function QuoteForm({
 
       <div className="flex justify-end">
         <Button onClick={handleSubmit} disabled={isPending}>
-          {isPending ? "Saving..." : t("saveAsDraft")}
+          {isPending ? t("saving") : t("saveAsDraft")}
         </Button>
       </div>
     </div>

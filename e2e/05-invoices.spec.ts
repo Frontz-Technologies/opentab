@@ -179,6 +179,13 @@ test.describe("Invoices", () => {
     });
     await expect(draftBtn).toBeVisible();
     await expect(publishBtn).toBeVisible();
+    // Lock down the locale-specific copy so a rename trips the test.
+    const publishName = await publishBtn.textContent();
+    expect(publishName?.trim()).toMatch(/^(Publish|Δημοσίευση|Publicar)$/);
+    const draftName = await draftBtn.textContent();
+    expect(draftName?.trim()).toMatch(
+      /^(Save draft|Αποθήκευση πρόχειρου|Guardar borrador)$/,
+    );
     const draftBox = await draftBtn.boundingBox();
     const publishBox = await publishBtn.boundingBox();
     if (!draftBox || !publishBox) throw new Error("CTA buttons not measurable");
@@ -195,6 +202,10 @@ test.describe("Invoices", () => {
       /Prices include VAT|Οι τιμές περιλαμβάνουν ΦΠΑ|Los precios incluyen IVA/i,
     );
     await expect(toggleLabel).toBeVisible();
+    const toggleText = await toggleLabel.textContent();
+    expect(toggleText?.trim()).toMatch(
+      /^(Prices include VAT|Οι τιμές περιλαμβάνουν ΦΠΑ|Los precios incluyen IVA)$/,
+    );
     // The toggle must NOT live in the form's top section near the currency selector.
     // Verify it sits inside the same scrollable region as the line-items table by
     // confirming it's vertically below the line-items heading.

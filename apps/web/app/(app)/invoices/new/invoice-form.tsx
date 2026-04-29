@@ -419,14 +419,14 @@ export function InvoiceForm({
           disabled={isPending}
           className="w-full sm:w-auto"
         >
-          {isPending ? "Saving..." : t("saveAsDraft")}
+          {isPending ? t("saving") : t("saveAsDraft")}
         </Button>
         <Button
           onClick={() => handleSubmit(true)}
           disabled={isPending}
           className="w-full sm:w-auto"
         >
-          {isPending ? "Saving..." : t("saveAndPublish")}
+          {isPending ? t("saving") : t("saveAndPublish")}
         </Button>
       </div>
     </div>
