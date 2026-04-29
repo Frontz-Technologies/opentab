@@ -448,7 +448,7 @@ export function ContactForm({
             className="h-12 px-8 rounded-xl btn-gradient text-on-primary font-bold text-sm transition-transform active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {isPending
-              ? "Saving..."
+              ? tCommon("saving")
               : contact
                 ? tCommon("save")
                 : t("addContact")}
