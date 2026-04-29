@@ -7,6 +7,8 @@ import {
   type DayButton,
   type Locale,
 } from "react-day-picker";
+import { useLocale } from "next-intl";
+import { el, es, enUS } from "date-fns/locale";
 
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -30,6 +32,9 @@ function Calendar({
   buttonVariant?: React.ComponentProps<typeof Button>["variant"];
 }) {
   const defaultClassNames = getDefaultClassNames();
+  const intlLocale = useLocale();
+  const dfnsLocale =
+    locale ?? (intlLocale === "el" ? el : intlLocale === "es" ? es : enUS);
 
   return (
     <DayPicker
@@ -41,10 +46,10 @@ function Calendar({
         className,
       )}
       captionLayout={captionLayout}
-      locale={locale}
+      locale={dfnsLocale}
       formatters={{
         formatMonthDropdown: (date) =>
-          date.toLocaleString(locale?.code, { month: "short" }),
+          date.toLocaleString(dfnsLocale?.code, { month: "short" }),
         ...formatters,
       }}
       classNames={{
@@ -169,7 +174,7 @@ function Calendar({
           );
         },
         DayButton: ({ ...props }) => (
-          <CalendarDayButton locale={locale} {...props} />
+          <CalendarDayButton locale={dfnsLocale} {...props} />
         ),
         WeekNumber: ({ children, ...props }) => {
           return (
