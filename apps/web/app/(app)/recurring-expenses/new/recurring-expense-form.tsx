@@ -10,6 +10,7 @@ import type {
   ExpenseGroup,
 } from "@opentab/db/schema";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
@@ -250,12 +251,14 @@ export function RecurringExpenseForm({
             />
           </div>
           <div className="flex items-end">
-            <label className="flex items-center gap-2 text-sm text-on-surface">
-              <input
-                type="checkbox"
+            <label
+              htmlFor="autoConfirm"
+              className="flex items-center gap-2 text-sm text-on-surface"
+            >
+              <Checkbox
+                id="autoConfirm"
                 checked={autoConfirm}
-                onChange={(e) => setAutoConfirm(e.target.checked)}
-                className="rounded"
+                onCheckedChange={(v) => setAutoConfirm(v === true)}
               />
               {t("autoConfirm")}
             </label>
@@ -268,12 +271,14 @@ export function RecurringExpenseForm({
           <h2 className="font-headline text-lg font-semibold text-on-surface">
             {tExp("lineItems")} <span className="text-tertiary">*</span>
           </h2>
-          <label className="flex items-center gap-2 text-sm text-on-surface-variant">
-            <input
-              type="checkbox"
+          <label
+            htmlFor="usesInclusiveTax"
+            className="flex items-center gap-2 text-sm text-on-surface-variant"
+          >
+            <Checkbox
+              id="usesInclusiveTax"
               checked={usesInclusiveTax}
-              onChange={(e) => setUsesInclusiveTax(e.target.checked)}
-              className="rounded"
+              onCheckedChange={(v) => setUsesInclusiveTax(v === true)}
             />
             {tExp("inclusiveTax")}
           </label>

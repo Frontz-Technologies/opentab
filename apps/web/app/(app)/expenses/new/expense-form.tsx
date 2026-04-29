@@ -12,6 +12,7 @@ import type {
   ExpenseGroup,
 } from "@opentab/db/schema";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
@@ -682,12 +683,14 @@ export function ExpenseForm({
               <p className="text-sm text-on-surface/50">{t("itemRequired")}</p>
             )}
           </div>
-          <label className="flex items-center gap-2 text-sm text-on-surface-variant">
-            <input
-              type="checkbox"
+          <label
+            htmlFor="usesInclusiveTax"
+            className="flex items-center gap-2 text-sm text-on-surface-variant"
+          >
+            <Checkbox
+              id="usesInclusiveTax"
               checked={usesInclusiveTax}
-              onChange={(e) => setUsesInclusiveTax(e.target.checked)}
-              className="rounded"
+              onCheckedChange={(v) => setUsesInclusiveTax(v === true)}
             />
             {t("inclusiveTax")}
           </label>
