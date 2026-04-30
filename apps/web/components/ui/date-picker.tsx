@@ -3,6 +3,7 @@
 import * as React from "react";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -28,13 +29,15 @@ export interface DatePickerProps {
 export function DatePicker({
   value,
   onChange,
-  placeholder = "Pick a date",
+  placeholder,
   displayFormat = "yyyy-MM-dd",
   disabled,
   triggerClassName,
   ariaLabel,
   name,
 }: DatePickerProps) {
+  const t = useTranslations("common");
+  const resolvedPlaceholder = placeholder ?? t("pickDate");
   const [open, setOpen] = React.useState(false);
 
   return (
@@ -64,7 +67,7 @@ export function DatePicker({
               {value ? (
                 format(value, displayFormat)
               ) : (
-                <span>{placeholder}</span>
+                <span>{resolvedPlaceholder}</span>
               )}
             </Button>
           }

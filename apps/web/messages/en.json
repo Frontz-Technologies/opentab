@@ -11,7 +11,8 @@
     "saving": "Saving...",
     "comingSoon": "Coming soon",
     "soonBadge": "Soon",
-    "pickRange": "Pick a range"
+    "pickRange": "Pick a range",
+    "pickDate": "Pick a date"
   },
   "nav": {
     "ai": "AI",
@@ -417,6 +418,7 @@
     "internalNotesHelp": "Not visible to the client",
     "lineItems": "Line Items",
     "addItem": "Add item",
+    "noLineItems": "No line items yet. Click \"{action}\" to get started.",
     "addFromCatalogue": "Add from catalogue",
     "itemName": "Item",
     "itemDescription": "Description",

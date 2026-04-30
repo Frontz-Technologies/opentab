@@ -11,7 +11,8 @@
     "saving": "Αποθήκευση...",
     "comingSoon": "Σύντομα διαθέσιμο",
     "soonBadge": "Σύντομα",
-    "pickRange": "Επιλέξτε εύρος"
+    "pickRange": "Επιλέξτε εύρος",
+    "pickDate": "Επιλέξτε ημερομηνία"
   },
   "nav": {
     "ai": "AI",
@@ -417,6 +418,7 @@
     "internalNotesHelp": "Δεν είναι ορατές στον πελάτη",
     "lineItems": "Γραμμές Ειδών",
     "addItem": "Προσθήκη είδους",
+    "noLineItems": "Δεν υπάρχουν γραμμές ακόμη. Πατήστε «{action}» για να ξεκινήσετε.",
     "addFromCatalogue": "Προσθήκη από κατάλογο",
     "itemName": "Είδος",
     "itemDescription": "Περιγραφή",

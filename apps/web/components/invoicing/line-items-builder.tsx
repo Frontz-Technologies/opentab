@@ -221,7 +221,7 @@ export function LineItemsBuilder({
 
       {items.length === 0 ? (
         <div className="text-center py-8 text-on-surface/50 text-sm">
-          No line items yet. Click &quot;Add item&quot; to get started.
+          {t("noLineItems", { action: t("addItem") })}
         </div>
       ) : (
         <div className="space-y-2">
