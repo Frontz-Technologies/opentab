@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
+import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -9,6 +10,8 @@ import type { Contact, Product } from "@opentab/db/schema";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { CurrencyCombobox } from "@/components/ui/currency-combobox";
+import type { SupportedCurrencyCode } from "@/lib/currency/supported";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
@@ -45,6 +48,7 @@ export function InvoiceForm({
   defaultTaxRate,
 }: InvoiceFormProps) {
   const t = useTranslations("invoices");
+  const tCommon = useTranslations("common");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -71,6 +75,35 @@ export function InvoiceForm({
   const [error, setError] = useState<string | null>(null);
 
   const selectedContact = allContacts.find((c) => c.id === contactId);
+
+  const [rateInfo, setRateInfo] = useState<{
+    rate: number;
+    effectiveDate: string;
+    staleFallback: boolean;
+  } | null>(null);
+
+  useEffect(() => {
+    if (currencyCode === defaultCurrency || !issueDate) {
+      return;
+    }
+    const ctrl = new AbortController();
+    const timer = setTimeout(async () => {
+      try {
+        const r = await fetch(
+          `/api/fx/preview?date=${encodeURIComponent(issueDate)}&from=${encodeURIComponent(currencyCode)}&to=${encodeURIComponent(defaultCurrency)}`,
+          { signal: ctrl.signal },
+        );
+        if (r.ok) setRateInfo(await r.json());
+        else setRateInfo(null);
+      } catch {
+        setRateInfo(null);
+      }
+    }, 300);
+    return () => {
+      ctrl.abort();
+      clearTimeout(timer);
+    };
+  }, [currencyCode, issueDate, defaultCurrency]);
 
   function resetCreateContactForm() {
     setNewContactClassification("business");
@@ -139,11 +172,19 @@ export function InvoiceForm({
     if (publish) formData.set("publish", "true");
 
     startTransition(async () => {
-      const result = await createInvoice(formData);
-      if (result.success) {
-        router.push("/invoices");
-      } else {
-        setError(JSON.stringify(result.error));
+      try {
+        const result = await createInvoice(formData);
+        if (result.success) {
+          router.push("/invoices");
+        } else {
+          setError(JSON.stringify(result.error));
+        }
+      } catch (err) {
+        if (err instanceof Error && /no rate available/i.test(err.message)) {
+          toast.error(tCommon("rateUnavailable", { currency: currencyCode }));
+          return;
+        }
+        throw err;
       }
     });
   }
@@ -341,11 +382,29 @@ export function InvoiceForm({
             <label className="block text-sm font-label text-on-surface/60 mb-1">
               {t("currency")}
             </label>
-            <Input
-              value={currencyCode}
-              onChange={(e) => setCurrencyCode(e.target.value)}
-              maxLength={3}
+            <CurrencyCombobox
+              value={currencyCode as SupportedCurrencyCode}
+              onChange={(v) => setCurrencyCode(v)}
+              name="currencyCode"
+              defaultCurrency={defaultCurrency as SupportedCurrencyCode}
             />
+            {currencyCode !== defaultCurrency &&
+              rateInfo &&
+              !rateInfo.staleFallback && (
+                <p className="text-on-surface-variant text-xs mt-1">
+                  {tCommon("rateHint", {
+                    from: currencyCode,
+                    to: defaultCurrency,
+                    rate: rateInfo.rate.toFixed(4),
+                    date: rateInfo.effectiveDate,
+                  })}
+                </p>
+              )}
+            {currencyCode !== defaultCurrency && rateInfo?.staleFallback && (
+              <p className="text-warning text-xs mt-1">
+                {tCommon("rateHintStale", { date: rateInfo.effectiveDate })}
+              </p>
+            )}
           </div>
         </div>
       </div>

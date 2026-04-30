@@ -11,7 +11,14 @@
     "saving": "Guardando...",
     "comingSoon": "Próximamente",
     "soonBadge": "Pronto",
-    "pickRange": "Selecciona rango"
+    "pickRange": "Selecciona rango",
+    "pickDate": "Selecciona fecha",
+    "currencyPlaceholder": "Seleccionar moneda",
+    "currencySearchPlaceholder": "Buscar monedas…",
+    "currencyEmpty": "Ninguna moneda coincide",
+    "rateHint": "1 {from} ≈ {rate} {to} (tasa de {date}, BCE)",
+    "rateHintStale": "Usando la tasa de {date} (fuente en vivo no disponible)",
+    "rateUnavailable": "No se pudo obtener la tasa para {currency}. Vuelve a intentarlo en breve o cambia la moneda."
   },
   "nav": {
     "ai": "IA",
@@ -269,6 +276,13 @@
     "densityCompact": "Compacto",
     "densityCompactDesc": "Espaciado reducido para más contenido en pantalla",
     "saved": "Apariencia guardada"
+  },
+  "settingsFx": {
+    "title": "Proveedor de cambio",
+    "provider": "Proveedor",
+    "hosting": "Alojamiento",
+    "description": "Tasas de referencia diarias del Banco Central Europeo, gratuitas, sin clave de API.",
+    "comingSoon": "Más proveedores próximamente."
   },
   "settingsIntegrations": {
     "title": "Integraciones",

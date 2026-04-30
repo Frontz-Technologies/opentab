@@ -10,6 +10,12 @@
     "loading": "Loading...",
     "saving": "Saving...",
     "comingSoon": "Coming soon",
+    "currencyEmpty": "No currency matches",
+    "currencyPlaceholder": "Select currency",
+    "currencySearchPlaceholder": "Search currencies…",
+    "rateHint": "1 {from} ≈ {rate} {to} (rate of {date}, ECB)",
+    "rateHintStale": "Using {date}'s rate (live source unavailable)",
+    "rateUnavailable": "Couldn't fetch the exchange rate for {currency}. Try again shortly, or change the currency.",
     "soonBadge": "Soon",
     "pickRange": "Pick a range",
     "pickDate": "Pick a date"
@@ -270,6 +276,13 @@
     "densityCompact": "Compact",
     "densityCompactDesc": "Tighter spacing for more content on screen",
     "saved": "Appearance saved"
+  },
+  "settingsFx": {
+    "title": "FX provider",
+    "provider": "Provider",
+    "hosting": "Hosting",
+    "description": "Daily reference rates from the European Central Bank, free, no API key required.",
+    "comingSoon": "More providers coming soon."
   },
   "settingsIntegrations": {
     "title": "Integrations",

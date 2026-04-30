@@ -13,6 +13,7 @@ import {
 } from "@opentab/db/schema";
 import { eq, and, asc, desc } from "drizzle-orm";
 import { Badge } from "@/components/ui/badge";
+import { MoneyWithBase } from "@/components/ui/money-with-base";
 import { InvoiceActions } from "./invoice-actions";
 import { MYDATA_DOCUMENT_TYPES } from "@/lib/country/providers/gr/integrations/mydata/document-types";
 import { getCountryProvider } from "@/lib/country";
@@ -237,9 +238,13 @@ export default async function InvoiceDetailPage({
             </div>
             <div className="flex justify-between text-on-surface font-semibold border-t border-on-surface/10 pt-1">
               <span>{t("totalAmount")}</span>
-              <span className="font-mono">
-                {invoice.currencyCode} {invoice.total}
-              </span>
+              <MoneyWithBase
+                amount={invoice.total}
+                currencyCode={invoice.currencyCode}
+                exchangeRate={invoice.exchangeRate}
+                baseCurrency={session.org.defaultCurrency}
+                className="font-mono"
+              />
             </div>
           </div>
         </div>

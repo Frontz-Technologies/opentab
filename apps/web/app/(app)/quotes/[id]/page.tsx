@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { quotes, quoteItems, QUOTE_STATUS } from "@opentab/db/schema";
 import { eq, and, asc } from "drizzle-orm";
 import { Badge } from "@/components/ui/badge";
+import { MoneyWithBase } from "@/components/ui/money-with-base";
 import { QuoteActions } from "./quote-actions";
 
 // Unified with the list-view map in ../quote-list.tsx — same states,
@@ -170,9 +171,13 @@ export default async function QuoteDetailPage({
             </div>
             <div className="flex justify-between text-on-surface font-semibold border-t border-on-surface/10 pt-1">
               <span>Total</span>
-              <span className="font-mono">
-                {quote.currencyCode} {quote.total}
-              </span>
+              <MoneyWithBase
+                amount={quote.total}
+                currencyCode={quote.currencyCode}
+                exchangeRate={quote.exchangeRate}
+                baseCurrency={session.org.defaultCurrency}
+                className="font-mono"
+              />
             </div>
           </div>
         </div>

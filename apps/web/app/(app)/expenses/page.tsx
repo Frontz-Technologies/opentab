@@ -77,7 +77,10 @@ export default async function ExpensesPage({
         }
       />
       <div className="px-6 py-6">
-        <ExpenseList expenses={allExpenses} />
+        <ExpenseList
+          expenses={allExpenses}
+          baseCurrency={session.org.defaultCurrency}
+        />
         <Pagination
           totalItems={total}
           pageSize={DEFAULT_PAGE_SIZE}

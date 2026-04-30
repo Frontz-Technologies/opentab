@@ -12,6 +12,7 @@ import {
   CREDIT_NOTE_STATUS,
 } from "@opentab/db/schema";
 import { Badge } from "@/components/ui/badge";
+import { MoneyWithBase } from "@/components/ui/money-with-base";
 import { CreditNoteActions } from "./credit-note-actions";
 
 const statusColors: Record<number, string> = {
@@ -211,7 +212,13 @@ export default async function CreditNoteDetailPage({
                   {t("creditTotal")}
                 </td>
                 <td className="text-right font-mono font-bold py-2 text-tertiary">
-                  -{cn.total}
+                  <MoneyWithBase
+                    amount={cn.total}
+                    currencyCode={cn.currencyCode}
+                    exchangeRate={cn.exchangeRate}
+                    baseCurrency={session.org.defaultCurrency}
+                    negate
+                  />
                 </td>
               </tr>
             </tbody>

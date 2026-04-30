@@ -1,7 +1,8 @@
 // Worker entrypoint — run as a separate Node process via
 // `pnpm --filter @opentab/web worker` (dev) or in the docker-compose
 // worker service (prod). Connects to Redis, registers the repeatable
-// cleanup job idempotently, and processes both queues.
+// jobs (cleanup, backup, fx-prewarm, fx-prune) idempotently, and
+// processes the queue workers.
 
 import { config } from "dotenv";
 config({ path: ".env.local" });
@@ -13,6 +14,8 @@ import { getRedisConnection, getRegisteredQueues } from "./lib/jobs/queues";
 import { processCleanupTempFiles } from "./lib/jobs/processors/cleanup-temp-files";
 import { processDeleteExpenseFiles } from "./lib/jobs/processors/delete-expense-files";
 import { processBackup } from "./lib/jobs/processors/backup";
+import { processFxPrewarmRates } from "./lib/jobs/processors/fx-prewarm-rates";
+import { processFxPruneCache } from "./lib/jobs/processors/fx-prune-cache";
 import { createLogger } from "./lib/logging/logger";
 
 const log = createLogger("worker");
@@ -53,6 +56,36 @@ async function registerRepeatables() {
   } else {
     log.info("skipping backup registration — BACKUP_AGE_PUBLIC_KEY unset");
   }
+
+  const fxPrewarm = new Queue(QUEUE.FX_PREWARM_RATES, {
+    connection: getRedisConnection(),
+  });
+  await fxPrewarm.add(
+    QUEUE.FX_PREWARM_RATES,
+    {},
+    {
+      repeat: { pattern: "0 17 * * *", tz: "UTC" }, // 17:00 UTC ≈ 19:00 CET — after ECB ~16:00 CET publish
+      jobId: "fx-prewarm-rates-daily",
+      attempts: 3,
+      backoff: { type: "exponential", delay: 60_000 },
+    },
+  );
+  log.info("registered repeatable fx-prewarm-rates (daily 17:00 UTC)");
+
+  const fxPrune = new Queue(QUEUE.FX_PRUNE_CACHE, {
+    connection: getRedisConnection(),
+  });
+  await fxPrune.add(
+    QUEUE.FX_PRUNE_CACHE,
+    { olderThanDays: 90 },
+    {
+      repeat: { pattern: "0 3 * * 0", tz: "UTC" }, // Sundays 03:00 UTC
+      jobId: "fx-prune-cache-weekly",
+      attempts: 3,
+      backoff: { type: "exponential", delay: 60_000 },
+    },
+  );
+  log.info("registered repeatable fx-prune-cache (Sundays 03:00 UTC)");
 }
 
 async function main() {
@@ -71,6 +104,14 @@ async function main() {
     new Worker(
       QUEUE.DELETE_EXPENSE_FILES,
       async (job) => processDeleteExpenseFiles(job.data),
+      { connection: getRedisConnection() },
+    ),
+    new Worker(QUEUE.FX_PREWARM_RATES, async () => processFxPrewarmRates({}), {
+      connection: getRedisConnection(),
+    }),
+    new Worker(
+      QUEUE.FX_PRUNE_CACHE,
+      async (job) => processFxPruneCache(job.data),
       { connection: getRedisConnection() },
     ),
     ...(process.env.BACKUP_AGE_PUBLIC_KEY

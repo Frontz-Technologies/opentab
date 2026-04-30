@@ -21,9 +21,11 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { AnimatedFilterBar } from "@/components/ui/animated-filter-bar";
+import { MoneyWithBase } from "@/components/ui/money-with-base";
 
 interface InvoiceListProps {
   invoices: Invoice[];
+  baseCurrency: string;
   showMyData?: boolean;
   mydataStatusByInvoice?: Record<string, number | null>;
 }
@@ -109,6 +111,7 @@ function MyDataStatusIcon({ status }: { status: number | null }) {
 
 export function InvoiceList({
   invoices,
+  baseCurrency,
   showMyData,
   mydataStatusByInvoice,
 }: InvoiceListProps) {
@@ -241,7 +244,12 @@ export function InvoiceList({
                         {invoice.dueDate || "\u2014"}
                       </td>
                       <td className="px-4 py-3 text-on-surface text-sm text-right font-mono">
-                        {invoice.currencyCode} {invoice.total}
+                        <MoneyWithBase
+                          amount={invoice.total}
+                          currencyCode={invoice.currencyCode}
+                          exchangeRate={invoice.exchangeRate}
+                          baseCurrency={baseCurrency}
+                        />
                       </td>
                       <td className="px-4 py-3">
                         <Badge
@@ -276,9 +284,13 @@ export function InvoiceList({
                   <span className="font-mono text-sm text-on-surface">
                     {invoice.invoiceNumber ?? t("numberPlaceholderDraft")}
                   </span>
-                  <span className="font-label text-lg font-bold text-on-surface">
-                    {invoice.currencyCode} {invoice.total}
-                  </span>
+                  <MoneyWithBase
+                    amount={invoice.total}
+                    currencyCode={invoice.currencyCode}
+                    exchangeRate={invoice.exchangeRate}
+                    baseCurrency={baseCurrency}
+                    className="font-label text-lg font-bold text-on-surface"
+                  />
                 </div>
                 <p className="text-sm text-on-surface mb-2">
                   {invoice.contactName}

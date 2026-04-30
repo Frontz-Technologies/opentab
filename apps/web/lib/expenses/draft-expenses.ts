@@ -5,6 +5,7 @@ import {
   expenses,
   expenseItems,
   invoiceSequences,
+  organisations,
 } from "@opentab/db/schema";
 import { db } from "@/lib/db";
 import { formatInvoiceNumber } from "@/lib/invoicing/numbering";
@@ -12,6 +13,11 @@ import {
   calculateInvoiceTotals,
   calculateLineTotal,
 } from "@/lib/invoicing/calculations";
+import { getFxRate } from "@/lib/fx/get-rate";
+import {
+  isSupportedCurrency,
+  type SupportedCurrencyCode,
+} from "@/lib/currency/supported";
 
 const draftExpenseItemSchema = z.object({
   sortOrder: z.coerce.number().int().min(0).default(0),
@@ -124,6 +130,34 @@ export async function createDraftExpense(
     data.usesInclusiveTax,
   );
 
+  const resolvedCurrency =
+    data.currencyCode || contact?.defaultCurrency || "EUR";
+
+  // Snapshot the FX rate at save time so historical reports stay
+  // stable even if ECB later revises a published rate. When the
+  // expense currency matches the org default currency, getFxRate's
+  // identity branch returns 1 — kept explicit so the fallthrough is
+  // obvious to future readers.
+  const [org] = await db
+    .select({ defaultCurrency: organisations.defaultCurrency })
+    .from(organisations)
+    .where(eq(organisations.id, orgId))
+    .limit(1);
+  const orgDefaultCurrency = org?.defaultCurrency ?? "EUR";
+
+  let exchangeRate = "1.000000";
+  if (
+    isSupportedCurrency(resolvedCurrency) &&
+    isSupportedCurrency(orgDefaultCurrency)
+  ) {
+    const fx = await getFxRate(
+      new Date(`${data.expenseDate}T00:00:00Z`),
+      resolvedCurrency as SupportedCurrencyCode,
+      orgDefaultCurrency as SupportedCurrencyCode,
+    );
+    exchangeRate = fx.rate.toFixed(6);
+  }
+
   const expenseNumber = await generateExpenseNumber(orgId);
   const [expense] = await db
     .insert(expenses)
@@ -134,7 +168,8 @@ export async function createDraftExpense(
       expenseNumber,
       expenseDate: data.expenseDate,
       paymentDate: data.paymentDate || null,
-      currencyCode: data.currencyCode || contact?.defaultCurrency || "EUR",
+      currencyCode: resolvedCurrency,
+      exchangeRate,
       usesInclusiveTax: data.usesInclusiveTax,
       subtotal: totals.subtotal,
       taxAmount: totals.taxAmount,

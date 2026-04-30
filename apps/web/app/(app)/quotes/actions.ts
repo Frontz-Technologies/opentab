@@ -18,6 +18,11 @@ import {
   calculateLineTotal,
   calculateInvoiceTotals,
 } from "@/lib/invoicing/calculations";
+import { getFxRate } from "@/lib/fx/get-rate";
+import {
+  isSupportedCurrency,
+  type SupportedCurrencyCode,
+} from "@/lib/currency/supported";
 
 const lineItemSchema = z.object({
   productId: z.string().uuid().optional().or(z.literal("")),
@@ -145,6 +150,24 @@ export async function createQuote(formData: FormData) {
     data.usesInclusiveTax,
   );
 
+  // Snapshot the FX rate at save time so historical reports stay
+  // stable even if ECB later revises a published rate. When the
+  // quote currency matches the org default currency, getFxRate's
+  // identity branch returns 1 — kept explicit so the fallthrough is
+  // obvious to future readers.
+  let exchangeRate = "1.000000";
+  if (
+    isSupportedCurrency(data.currencyCode) &&
+    isSupportedCurrency(session.org.defaultCurrency)
+  ) {
+    const fx = await getFxRate(
+      new Date(`${data.issueDate}T00:00:00Z`),
+      data.currencyCode as SupportedCurrencyCode,
+      session.org.defaultCurrency as SupportedCurrencyCode,
+    );
+    exchangeRate = fx.rate.toFixed(6);
+  }
+
   const quoteNumber = await generateNextNumber(session.org.id, "quote");
 
   const [quote] = await db
@@ -156,6 +179,7 @@ export async function createQuote(formData: FormData) {
       issueDate: data.issueDate,
       validUntil: data.validUntil || null,
       currencyCode: data.currencyCode,
+      exchangeRate,
       usesInclusiveTax: data.usesInclusiveTax,
       subtotal: totals.subtotal,
       taxAmount: totals.taxAmount,
@@ -248,6 +272,25 @@ export async function updateQuote(id: string, formData: FormData) {
     data.usesInclusiveTax,
   );
 
+  // Refresh the FX snapshot only when currency or issue date changed
+  // since the previous version. Otherwise keep the original rate so
+  // historical reports stay deterministic for unrelated edits.
+  let nextExchangeRate = existing.exchangeRate;
+  const currencyChanged = data.currencyCode !== existing.currencyCode;
+  const dateChanged = data.issueDate !== existing.issueDate;
+  if (
+    (currencyChanged || dateChanged) &&
+    isSupportedCurrency(data.currencyCode) &&
+    isSupportedCurrency(session.org.defaultCurrency)
+  ) {
+    const fx = await getFxRate(
+      new Date(`${data.issueDate}T00:00:00Z`),
+      data.currencyCode as SupportedCurrencyCode,
+      session.org.defaultCurrency as SupportedCurrencyCode,
+    );
+    nextExchangeRate = fx.rate.toFixed(6);
+  }
+
   await db
     .update(quotes)
     .set({
@@ -255,6 +298,7 @@ export async function updateQuote(id: string, formData: FormData) {
       issueDate: data.issueDate,
       validUntil: data.validUntil || null,
       currencyCode: data.currencyCode,
+      exchangeRate: nextExchangeRate,
       usesInclusiveTax: data.usesInclusiveTax,
       subtotal: totals.subtotal,
       taxAmount: totals.taxAmount,

@@ -21,6 +21,11 @@ import {
   calculateInvoiceTotals,
   calculateLineTotal,
 } from "@/lib/invoicing/calculations";
+import { getFxRate } from "@/lib/fx/get-rate";
+import {
+  isSupportedCurrency,
+  type SupportedCurrencyCode,
+} from "@/lib/currency/supported";
 import { assignCreditNoteNumberIfMissing } from "@/lib/invoicing/credit-note-numbering";
 import { recordActivity } from "@/lib/activities/record";
 import { submitCreditNoteThroughPlugins } from "@/lib/country/submit-credit-note";
@@ -81,6 +86,24 @@ export async function createCreditNote(formData: FormData) {
     return { success: false, error: { contactId: ["Contact not found"] } };
   }
 
+  // Snapshot the FX rate at save time so historical reports stay
+  // stable even if ECB later revises a published rate. When the
+  // credit-note currency matches the org default currency, getFxRate's
+  // identity branch returns 1 — kept explicit so the fallthrough is
+  // obvious to future readers.
+  let exchangeRate = "1.000000";
+  if (
+    isSupportedCurrency(data.currencyCode) &&
+    isSupportedCurrency(session.org.defaultCurrency)
+  ) {
+    const fx = await getFxRate(
+      new Date(`${data.issueDate}T00:00:00Z`),
+      data.currencyCode as SupportedCurrencyCode,
+      session.org.defaultCurrency as SupportedCurrencyCode,
+    );
+    exchangeRate = fx.rate.toFixed(6);
+  }
+
   // Header + N item rows in a single transaction (PR #211 lesson) so a
   // mid-loop failure (e.g. numeric overflow on an item) rolls back the
   // header and the user is not left with a half-built credit note.
@@ -93,6 +116,7 @@ export async function createCreditNote(formData: FormData) {
         invoiceId: data.invoiceId || null,
         issueDate: data.issueDate,
         currencyCode: data.currencyCode,
+        exchangeRate,
         usesInclusiveTax: data.usesInclusiveTax,
         subtotal: totals.subtotal,
         taxAmount: totals.taxAmount,
@@ -215,6 +239,25 @@ export async function updateCreditNote(id: string, formData: FormData) {
     data.usesInclusiveTax,
   );
 
+  // Refresh the FX snapshot only when currency or issue date changed
+  // since the previous version. Otherwise keep the original rate so
+  // historical reports stay deterministic for unrelated edits.
+  let nextExchangeRate = existing.exchangeRate;
+  const currencyChanged = data.currencyCode !== existing.currencyCode;
+  const dateChanged = data.issueDate !== existing.issueDate;
+  if (
+    (currencyChanged || dateChanged) &&
+    isSupportedCurrency(data.currencyCode) &&
+    isSupportedCurrency(session.org.defaultCurrency)
+  ) {
+    const fx = await getFxRate(
+      new Date(`${data.issueDate}T00:00:00Z`),
+      data.currencyCode as SupportedCurrencyCode,
+      session.org.defaultCurrency as SupportedCurrencyCode,
+    );
+    nextExchangeRate = fx.rate.toFixed(6);
+  }
+
   // Wrap header update + delete-then-reinsert items in one transaction so a
   // mid-loop failure cannot leave the credit note with the old items deleted
   // and only a prefix of the new items inserted (PR #211 lesson, applied to
@@ -228,6 +271,7 @@ export async function updateCreditNote(id: string, formData: FormData) {
         invoiceId: data.invoiceId || null,
         issueDate: data.issueDate,
         currencyCode: data.currencyCode,
+        exchangeRate: nextExchangeRate,
         usesInclusiveTax: data.usesInclusiveTax,
         subtotal: totals.subtotal,
         taxAmount: totals.taxAmount,

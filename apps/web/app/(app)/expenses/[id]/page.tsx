@@ -12,6 +12,7 @@ import {
 } from "@opentab/db/schema";
 import { eq, and, asc } from "drizzle-orm";
 import { Badge } from "@/components/ui/badge";
+import { MoneyWithBase } from "@/components/ui/money-with-base";
 import { ExpenseActions } from "./expense-actions";
 import { SaveSupplierBanner } from "./save-supplier-banner";
 
@@ -211,9 +212,13 @@ export default async function ExpenseDetailPage({
               </div>
               <div className="flex justify-between text-on-surface font-semibold border-t border-on-surface/10 pt-1">
                 <span>{t("total")}</span>
-                <span className="font-mono">
-                  {expense.currencyCode} {expense.total}
-                </span>
+                <MoneyWithBase
+                  amount={expense.total}
+                  currencyCode={expense.currencyCode}
+                  exchangeRate={expense.exchangeRate}
+                  baseCurrency={session.org.defaultCurrency}
+                  className="font-mono"
+                />
               </div>
             </div>
           </div>
