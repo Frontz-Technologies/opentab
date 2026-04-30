@@ -66,8 +66,7 @@ async function findRecentFallback(
   from: SupportedCurrencyCode,
   to: SupportedCurrencyCode,
 ): Promise<{ rate: number; date: Date; source: string } | null> {
-  const since = new Date(date);
-  since.setDate(since.getDate() - FALLBACK_WINDOW_DAYS);
+  const since = new Date(date.getTime() - FALLBACK_WINDOW_DAYS * 86_400_000);
   const rows = await db
     .select()
     .from(fxRateCache)
@@ -129,6 +128,10 @@ export async function getFxRate(
   const provider = getActiveFxProvider();
   try {
     const lookup = await provider.getRate(date, from, to);
+    // Lazy-fetch is the only writer to fx_rate_cache (cron pre-warm uses
+    // the same path). Concurrent fetches for the same (date, from, to) all
+    // resolve to the same provider rate, so silently dropping the duplicate
+    // is safe. If a manual seed pre-exists, the seed wins — that's intentional.
     await dbInstance
       .insert(fxRateCache)
       .values({
