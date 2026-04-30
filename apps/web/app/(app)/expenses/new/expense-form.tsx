@@ -279,6 +279,17 @@ export function ExpenseForm({
     try {
       const result = await uploadAndExtractReceipt(formData);
       if (!result.success) {
+        if (result.error === "duplicate" && result.duplicateExpenseId) {
+          const duplicateId = result.duplicateExpenseId;
+          toast.error(t("duplicateReceiptTitle"), {
+            action: {
+              label: t("duplicateReceiptOpen"),
+              onClick: () => router.push(`/expenses/${duplicateId}`),
+            },
+          });
+          setIsUploading(false);
+          return;
+        }
         setError(result.error ?? "Upload failed");
         setIsUploading(false);
         return;

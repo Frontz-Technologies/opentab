@@ -678,6 +678,8 @@
     "autofillAlways": "Always apply",
     "receiptNoDataTitle": "Couldn't read this receipt",
     "receiptNoDataBody": "The file was saved but the AI couldn't extract any fields. Fill the form manually.",
+    "duplicateReceiptTitle": "This receipt was already uploaded.",
+    "duplicateReceiptOpen": "Open existing expense",
     "dismiss": "Dismiss",
     "removeAttachment": "Remove",
     "editExpense": "Edit Expense",

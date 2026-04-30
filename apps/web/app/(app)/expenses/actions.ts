@@ -171,6 +171,7 @@ export interface UploadedFileInfo {
 export interface UploadReceiptResult {
   success: boolean;
   error?: string;
+  duplicateExpenseId?: string;
   fileInfo?: UploadedFileInfo;
   extractedData?: {
     vendorName: string | null;
@@ -224,7 +225,11 @@ export async function uploadAndExtractReceipt(
       orgId: session.org.id,
       fileHash: hash,
     });
-    return { success: false, error: "This file has already been uploaded" };
+    return {
+      success: false as const,
+      error: "duplicate" as const,
+      duplicateExpenseId: duplicate.expenseId,
+    };
   }
 
   // Store file immediately

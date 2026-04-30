@@ -677,6 +677,8 @@
     "autofillAlways": "Siempre aplicar",
     "receiptNoDataTitle": "No se pudo leer este recibo",
     "receiptNoDataBody": "El archivo se guardó, pero la IA no pudo extraer ningún campo. Rellene el formulario manualmente.",
+    "duplicateReceiptTitle": "Este recibo ya fue subido.",
+    "duplicateReceiptOpen": "Abrir gasto existente",
     "dismiss": "Cerrar",
     "removeAttachment": "Eliminar",
     "editExpense": "Editar gasto",
