@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { Bot, RefreshCw } from "lucide-react";
+import { Bot, Coins, RefreshCw } from "lucide-react";
 import { getSession } from "@/lib/session";
 import { PageHeader } from "@/components/layout/page-header";
 import { IntegrationCard } from "@/components/settings/integration-card";
@@ -15,6 +15,7 @@ export default async function IntegrationsPage() {
   if (!session) redirect("/login");
 
   const t = await getTranslations("settingsIntegrations");
+  const tFx = await getTranslations("settingsFx");
   const tNav = await getTranslations("nav");
   const isOwnerOrAdmin = session.role === "owner" || session.role === "admin";
 
@@ -95,6 +96,14 @@ export default async function IntegrationsPage() {
               statusLabels={statusLabels}
             />
           )}
+          <IntegrationCard
+            icon={Coins}
+            name={tFx("title")}
+            description={tFx("comingSoon")}
+            href="/settings/integrations/fx"
+            status="connected"
+            statusLabels={statusLabels}
+          />
         </div>
       </main>
     </>

@@ -277,6 +277,13 @@
     "densityCompactDesc": "Tighter spacing for more content on screen",
     "saved": "Appearance saved"
   },
+  "settingsFx": {
+    "title": "FX provider",
+    "provider": "Provider",
+    "hosting": "Hosting",
+    "description": "Daily reference rates from the European Central Bank, free, no API key required.",
+    "comingSoon": "More providers coming soon."
+  },
   "settingsIntegrations": {
     "title": "Integrations",
     "description": "Connect external services to your organisation.",
