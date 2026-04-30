@@ -212,11 +212,20 @@ export async function uploadAndExtractReceipt(
   const buffer = Buffer.from(await file.arrayBuffer());
   const hash = computeFileHash(buffer);
 
-  // Check for duplicates
+  // Check for duplicates — scope by orgId so a hash collision in
+  // another org doesn't leak existence (and isn't blocked here).
+  // expenseAttachments has no orgId column, so we JOIN through
+  // expenses, which carries orgId.
   const [duplicate] = await db
-    .select()
+    .select({ id: expenseAttachments.id })
     .from(expenseAttachments)
-    .where(eq(expenseAttachments.fileHash, hash))
+    .innerJoin(expenses, eq(expenses.id, expenseAttachments.expenseId))
+    .where(
+      and(
+        eq(expenseAttachments.fileHash, hash),
+        eq(expenses.orgId, session.org.id),
+      ),
+    )
     .limit(1);
 
   if (duplicate) {
