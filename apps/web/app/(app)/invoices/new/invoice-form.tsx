@@ -84,7 +84,6 @@ export function InvoiceForm({
 
   useEffect(() => {
     if (currencyCode === defaultCurrency || !issueDate) {
-      setRateInfo(null);
       return;
     }
     const ctrl = new AbortController();

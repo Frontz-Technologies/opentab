@@ -86,7 +86,6 @@ export function CreditNoteForm({
 
   useEffect(() => {
     if (currencyCode === defaultCurrency || !issueDate) {
-      setRateInfo(null);
       return;
     }
     const ctrl = new AbortController();

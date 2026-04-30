@@ -66,7 +66,6 @@ export function QuoteForm({
 
   useEffect(() => {
     if (currencyCode === defaultCurrency || !issueDate) {
-      setRateInfo(null);
       return;
     }
     const ctrl = new AbortController();

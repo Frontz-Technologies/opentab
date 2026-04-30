@@ -137,7 +137,6 @@ export function ExpenseForm({
 
   useEffect(() => {
     if (currencyCode === defaultCurrency || !expenseDate) {
-      setRateInfo(null);
       return;
     }
     const ctrl = new AbortController();
