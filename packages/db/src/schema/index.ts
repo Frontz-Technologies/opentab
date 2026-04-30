@@ -124,3 +124,8 @@ export {
   type CreditNoteItem,
   type NewCreditNoteItem,
 } from "./credit-notes";
+export {
+  fxRateCache,
+  type FxRateCacheRow,
+  type NewFxRateCacheRow,
+} from "./fx-rate-cache";

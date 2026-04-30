@@ -603,6 +603,16 @@ async function pushSchema(pglite: PGlite) {
 
     `CREATE INDEX "activities_entity_idx" ON "activities" ("entity_type", "entity_id", "created_at")`,
     `CREATE INDEX "activities_org_idx" ON "activities" ("org_id", "created_at")`,
+
+    `CREATE TABLE IF NOT EXISTS "fx_rate_cache" (
+      "date" date NOT NULL,
+      "from_currency" varchar(3) NOT NULL,
+      "to_currency" varchar(3) NOT NULL,
+      "rate" numeric(18,9) NOT NULL,
+      "source" varchar(64) NOT NULL,
+      "fetched_at" timestamp with time zone NOT NULL DEFAULT now(),
+      PRIMARY KEY ("date", "from_currency", "to_currency")
+    )`,
   ];
 
   for (const sql of statements) {
