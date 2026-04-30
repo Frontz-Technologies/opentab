@@ -373,6 +373,10 @@ export function ExpenseForm({
   }
 
   function handleSubmit() {
+    if (!categoryId) {
+      setError(t("categoryRequired"));
+      return;
+    }
     if (items.length === 0) {
       setError(t("itemRequired"));
       return;
@@ -614,7 +618,7 @@ export function ExpenseForm({
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-label text-on-surface/60 mb-1">
-              {t("category")}
+              {t("category")} <span className="text-tertiary">*</span>
             </label>
             {categories.length === 0 ? (
               <EmptyEntityHint
@@ -750,6 +754,7 @@ export function ExpenseForm({
           usesInclusiveTax={usesInclusiveTax}
           previewIds={previewLineItems}
           onItemEdit={handleExitItemPreview}
+          showDescription={false}
         />
       </div>
 
