@@ -81,7 +81,9 @@ export async function assignCreditNoteNumberIfMissing(
     await tx
       .update(creditNotes)
       .set({ creditNoteNumber: number, updatedAt: new Date() })
-      .where(eq(creditNotes.id, creditNoteId));
+      .where(
+        and(eq(creditNotes.id, creditNoteId), eq(creditNotes.orgId, orgId)),
+      );
 
     return number;
   });

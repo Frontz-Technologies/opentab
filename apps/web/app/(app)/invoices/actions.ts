@@ -86,7 +86,7 @@ export async function createInvoice(formData: FormData) {
       await tx
         .update(invoices)
         .set({ status: INVOICE_STATUS.PUBLISHED, updatedAt: new Date() })
-        .where(eq(invoices.id, invoice.id));
+        .where(and(eq(invoices.id, invoice.id), eq(invoices.orgId, orgId)));
       return assignInvoiceNumberIfMissing(invoice.id, orgId, tx);
     });
   }
@@ -242,7 +242,9 @@ export async function updateInvoice(id: string, formData: FormData) {
     })
     .where(and(eq(invoices.id, id), eq(invoices.orgId, session.org.id)));
 
-  // Replace all line items
+  // Replace all line items. invoiceId is session-verified by the L141
+  // pre-check (eq(orgId, session.org.id)); invoice_item has no orgId
+  // column so the scope flows through the parent.
   await db.delete(invoiceItems).where(eq(invoiceItems.invoiceId, id));
 
   for (const item of data.items) {
@@ -333,7 +335,7 @@ export async function sendInvoice(id: string) {
         sentAt: new Date(),
         updatedAt: new Date(),
       })
-      .where(eq(invoices.id, id));
+      .where(and(eq(invoices.id, id), eq(invoices.orgId, orgId)));
     await assignInvoiceNumberIfMissing(id, orgId, tx);
   });
 
@@ -420,7 +422,7 @@ export async function publishInvoice(id: string) {
         status: INVOICE_STATUS.PUBLISHED,
         updatedAt: new Date(),
       })
-      .where(eq(invoices.id, id));
+      .where(and(eq(invoices.id, id), eq(invoices.orgId, orgId)));
     await assignInvoiceNumberIfMissing(id, orgId, tx);
   });
 
@@ -479,7 +481,7 @@ export async function markAsPaid(id: string) {
       paidAt: new Date(),
       updatedAt: new Date(),
     })
-    .where(eq(invoices.id, id));
+    .where(and(eq(invoices.id, id), eq(invoices.orgId, orgId)));
 
   log.info("invoice marked as paid", { orgId, invoiceId: id });
 
@@ -528,7 +530,7 @@ export async function cancelInvoice(id: string) {
       status: INVOICE_STATUS.CANCELLED,
       updatedAt: new Date(),
     })
-    .where(eq(invoices.id, id));
+    .where(and(eq(invoices.id, id), eq(invoices.orgId, orgId)));
 
   const cancellations = await cancelInvoiceOnPlugins(id, {
     id: session.org.id,

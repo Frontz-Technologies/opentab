@@ -453,7 +453,7 @@ export async function convertToInvoice(id: string) {
       invoiceId: invoice.id,
       updatedAt: new Date(),
     })
-    .where(eq(quotes.id, id));
+    .where(and(eq(quotes.id, id), eq(quotes.orgId, session.org.id)));
 
   revalidatePath("/quotes");
   revalidatePath("/invoices");

@@ -286,8 +286,11 @@ export async function updateCreditNote(id: string, formData: FormData) {
         terms: data.terms || null,
         updatedAt: new Date(),
       })
-      .where(eq(creditNotes.id, id));
+      .where(and(eq(creditNotes.id, id), eq(creditNotes.orgId, orgId)));
 
+    // creditNoteItems has no orgId column. The L195 pre-check
+    // verified orgId, so creditNoteId is session-verified; scope flows
+    // through the parent.
     await tx
       .delete(creditNoteItems)
       .where(eq(creditNoteItems.creditNoteId, id));
@@ -344,7 +347,7 @@ export async function publishCreditNote(id: string) {
         status: CREDIT_NOTE_STATUS.PUBLISHED,
         updatedAt: new Date(),
       })
-      .where(eq(creditNotes.id, id));
+      .where(and(eq(creditNotes.id, id), eq(creditNotes.orgId, orgId)));
     await assignCreditNoteNumberIfMissing(id, orgId, tx);
   });
 
@@ -393,7 +396,7 @@ export async function sendCreditNote(id: string) {
         sentAt: new Date(),
         updatedAt: new Date(),
       })
-      .where(eq(creditNotes.id, id));
+      .where(and(eq(creditNotes.id, id), eq(creditNotes.orgId, orgId)));
     await assignCreditNoteNumberIfMissing(id, orgId, tx);
   });
 
@@ -442,7 +445,7 @@ export async function cancelCreditNote(id: string) {
   await db
     .update(creditNotes)
     .set({ status: CREDIT_NOTE_STATUS.CANCELLED, updatedAt: new Date() })
-    .where(eq(creditNotes.id, id));
+    .where(and(eq(creditNotes.id, id), eq(creditNotes.orgId, orgId)));
 
   await recordActivity({
     orgId,
@@ -486,7 +489,9 @@ export async function deleteCreditNote(id: string) {
           eq(activities.entityId, id),
         ),
       );
-    await tx.delete(creditNotes).where(eq(creditNotes.id, id));
+    await tx
+      .delete(creditNotes)
+      .where(and(eq(creditNotes.id, id), eq(creditNotes.orgId, orgId)));
   });
 
   await recordActivity({

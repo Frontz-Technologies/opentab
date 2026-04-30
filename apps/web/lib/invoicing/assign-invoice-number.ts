@@ -93,7 +93,7 @@ export async function assignInvoiceNumberIfMissing(
     await tx
       .update(invoices)
       .set({ invoiceNumber: number, updatedAt: new Date() })
-      .where(eq(invoices.id, invoiceId));
+      .where(and(eq(invoices.id, invoiceId), eq(invoices.orgId, orgId)));
 
     return number;
   });
