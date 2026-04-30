@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -122,11 +123,19 @@ export function QuoteForm({
     formData.set("items", JSON.stringify(items));
 
     startTransition(async () => {
-      const result = await createQuote(formData);
-      if (result.success) {
-        router.push("/quotes");
-      } else {
-        setError(JSON.stringify(result.error));
+      try {
+        const result = await createQuote(formData);
+        if (result.success) {
+          router.push("/quotes");
+        } else {
+          setError(JSON.stringify(result.error));
+        }
+      } catch (err) {
+        if (err instanceof Error && /no rate available/i.test(err.message)) {
+          toast.error(tCommon("rateUnavailable", { currency: currencyCode }));
+          return;
+        }
+        throw err;
       }
     });
   }

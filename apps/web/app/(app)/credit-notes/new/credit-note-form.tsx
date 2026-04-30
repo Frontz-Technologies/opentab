@@ -142,12 +142,20 @@ export function CreditNoteForm({
     formData.set("items", JSON.stringify(items));
 
     startTransition(async () => {
-      const result = await createCreditNote(formData);
-      if (result.success && result.creditNote) {
-        toast.success(t("created"));
-        router.push(`/credit-notes/${result.creditNote.id}`);
-      } else {
-        toast.error(t("validationFailed"));
+      try {
+        const result = await createCreditNote(formData);
+        if (result.success && result.creditNote) {
+          toast.success(t("created"));
+          router.push(`/credit-notes/${result.creditNote.id}`);
+        } else {
+          toast.error(t("validationFailed"));
+        }
+      } catch (err) {
+        if (err instanceof Error && /no rate available/i.test(err.message)) {
+          toast.error(tCommon("rateUnavailable", { currency: currencyCode }));
+          return;
+        }
+        throw err;
       }
     });
   }

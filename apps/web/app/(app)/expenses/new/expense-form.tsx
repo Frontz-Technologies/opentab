@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
 import { UnsavedChangesGuard } from "@/components/forms/unsaved-changes-guard";
 import { EmptyEntityHint } from "@/components/forms/empty-entity-hint";
@@ -399,12 +400,20 @@ export function ExpenseForm({
     }
 
     startTransition(async () => {
-      const result = await createExpense(formData);
-      if (result.success) {
-        submittedRef.current = true;
-        router.push("/expenses");
-      } else {
-        setError(JSON.stringify(result.error));
+      try {
+        const result = await createExpense(formData);
+        if (result.success) {
+          submittedRef.current = true;
+          router.push("/expenses");
+        } else {
+          setError(JSON.stringify(result.error));
+        }
+      } catch (err) {
+        if (err instanceof Error && /no rate available/i.test(err.message)) {
+          toast.error(tCommon("rateUnavailable", { currency: currencyCode }));
+          return;
+        }
+        throw err;
       }
     });
   }
