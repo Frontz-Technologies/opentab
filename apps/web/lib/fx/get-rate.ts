@@ -2,10 +2,10 @@ import { and, desc, eq, gte, lte } from "drizzle-orm";
 import { db as defaultDb } from "@/lib/db";
 import { fxRateCache } from "@opentab/db/schema";
 import { getActiveFxProvider } from "./registry";
+import { FX_PIVOT } from "./constants";
 import type { SupportedCurrencyCode } from "@/lib/currency/supported";
 
 const FALLBACK_WINDOW_DAYS = 7;
-const PIVOT: SupportedCurrencyCode = "EUR";
 
 type Db = typeof defaultDb;
 
@@ -50,9 +50,9 @@ async function tryCrossRate(
   from: SupportedCurrencyCode,
   to: SupportedCurrencyCode,
 ): Promise<{ rate: number; source: string } | null> {
-  if (from === PIVOT || to === PIVOT) return null;
-  const eurFrom = await readCache(db, date, PIVOT, from);
-  const eurTo = await readCache(db, date, PIVOT, to);
+  if (from === FX_PIVOT || to === FX_PIVOT) return null;
+  const eurFrom = await readCache(db, date, FX_PIVOT, from);
+  const eurTo = await readCache(db, date, FX_PIVOT, to);
   if (!eurFrom || !eurTo) return null;
   return {
     rate: eurTo.rate / eurFrom.rate,

@@ -1,12 +1,12 @@
 import { db as defaultDb } from "@/lib/db";
 import { fxRateCache } from "@opentab/db/schema";
 import { getActiveFxProvider } from "@/lib/fx/registry";
+import { FX_PIVOT } from "@/lib/fx/constants";
 import { createLogger } from "@/lib/logging/logger";
 import type { JobPayload } from "../types";
 import { QUEUE } from "../types";
 
 const log = createLogger("fx-prewarm-rates");
-const PIVOT = "EUR" as const;
 
 type Db = typeof defaultDb;
 
@@ -20,19 +20,20 @@ export async function processFxPrewarmRates(
 ): Promise<void> {
   const provider = getActiveFxProvider();
   const today = new Date();
-  const lookup = await provider.getRatesAgainstBase(today, PIVOT);
+  const lookup = await provider.getRatesAgainstBase(today, FX_PIVOT);
 
   const rows = Object.entries(lookup.rates).map(([toCurrency, rate]) => ({
     date: fmtDate(lookup.effectiveDate),
-    fromCurrency: PIVOT,
+    fromCurrency: FX_PIVOT,
     toCurrency,
     rate: rate.toFixed(9),
     source: provider.id,
   }));
 
   if (rows.length === 0) {
-    log.warn("provider returned no rates", { provider: provider.id });
-    return;
+    throw new Error(
+      `fx-prewarm-rates: provider ${provider.id} returned no rates`,
+    );
   }
 
   await dbInstance.insert(fxRateCache).values(rows).onConflictDoNothing();

@@ -1,7 +1,8 @@
 // Worker entrypoint — run as a separate Node process via
 // `pnpm --filter @opentab/web worker` (dev) or in the docker-compose
 // worker service (prod). Connects to Redis, registers the repeatable
-// cleanup job idempotently, and processes both queues.
+// jobs (cleanup, backup, fx-prewarm, fx-prune) idempotently, and
+// processes the queue workers.
 
 import { config } from "dotenv";
 config({ path: ".env.local" });
@@ -63,11 +64,13 @@ async function registerRepeatables() {
     QUEUE.FX_PREWARM_RATES,
     {},
     {
-      repeat: { pattern: "0 17 * * *" }, // 17:00 daily — after ECB publishes
+      repeat: { pattern: "0 17 * * *", tz: "UTC" }, // 17:00 UTC ≈ 19:00 CET — after ECB ~16:00 CET publish
       jobId: "fx-prewarm-rates-daily",
+      attempts: 3,
+      backoff: { type: "exponential", delay: 60_000 },
     },
   );
-  log.info("registered repeatable fx-prewarm-rates (daily 17:00)");
+  log.info("registered repeatable fx-prewarm-rates (daily 17:00 UTC)");
 
   const fxPrune = new Queue(QUEUE.FX_PRUNE_CACHE, {
     connection: getRedisConnection(),
@@ -76,8 +79,10 @@ async function registerRepeatables() {
     QUEUE.FX_PRUNE_CACHE,
     { olderThanDays: 90 },
     {
-      repeat: { pattern: "0 3 * * 0" }, // Sundays 03:00 UTC
+      repeat: { pattern: "0 3 * * 0", tz: "UTC" }, // Sundays 03:00 UTC
       jobId: "fx-prune-cache-weekly",
+      attempts: 3,
+      backoff: { type: "exponential", delay: 60_000 },
     },
   );
   log.info("registered repeatable fx-prune-cache (Sundays 03:00 UTC)");
