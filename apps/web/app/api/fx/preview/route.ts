@@ -5,7 +5,8 @@ import { isSupportedCurrency } from "@/lib/currency/supported";
 
 export async function GET(req: Request) {
   const session = await getSession();
-  if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!session)
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const url = new URL(req.url);
   const dateStr = url.searchParams.get("date");
