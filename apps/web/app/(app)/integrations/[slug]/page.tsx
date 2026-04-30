@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
+import { KeyRound, LineChart } from "lucide-react";
 import { getSession } from "@/lib/session";
 import { getCountryProvider } from "@/lib/country";
 import { PageHeader } from "@/components/layout/page-header";
@@ -39,9 +40,7 @@ export default async function IntegrationDashboardPage({ params }: Props) {
         )}
         <div className="bg-surface-container rounded-xl px-6 py-16 flex flex-col items-center text-center">
           <div className="flex size-12 items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant mb-4">
-            <span className="material-symbols-outlined text-[24px]">
-              insights
-            </span>
+            <LineChart className="h-6 w-6" />
           </div>
           <h2 className="font-headline text-lg font-semibold text-on-surface mb-2">
             Dashboard coming soon
@@ -55,9 +54,7 @@ export default async function IntegrationDashboardPage({ params }: Props) {
             href={`/settings/integrations/${slug}`}
             className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-primary text-on-primary font-medium text-sm hover:bg-primary/80 transition-colors"
           >
-            <span className="material-symbols-outlined text-[18px] leading-none">
-              key
-            </span>
+            <KeyRound className="h-[18px] w-[18px]" />
             Manage credentials
           </Link>
         </div>

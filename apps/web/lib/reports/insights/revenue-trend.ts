@@ -12,7 +12,7 @@ export function revenueTrendInsight(ctx: InsightContext): InsightCard | null {
   return {
     id: "revenue-trend",
     type: up ? "success" : "risk",
-    icon: up ? "trending_up" : "trending_down",
+    icon: up ? "TrendingUp" : "TrendingDown",
     title: up ? "Revenue is up" : "Revenue is down",
     description: `Revenue changed by ${change > 0 ? "+" : ""}${change.toFixed(1)}% compared to the previous period.`,
   };

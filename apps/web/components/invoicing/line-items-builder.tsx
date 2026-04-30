@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
+import { ArrowDown, ArrowUp, Package, Plus, X } from "lucide-react";
 import type { Product } from "@opentab/db/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -137,6 +138,29 @@ export function LineItemsBuilder({
 
   const [showProductPicker, setShowProductPicker] = useState(false);
 
+  // When the inclusive-tax toggle flips, recompute taxAmount/lineTotal for
+  // every existing row. Without this, rows added before the flip keep stale
+  // values until the user manually edits them.
+  useEffect(() => {
+    let dirty = false;
+    const updated = items.map((item) => {
+      const recalced = recalcItem(item, usesInclusiveTax);
+      if (
+        recalced.taxAmount !== item.taxAmount ||
+        recalced.lineTotal !== item.lineTotal
+      ) {
+        dirty = true;
+        return recalced;
+      }
+      return item;
+    });
+    if (dirty) onChange(updated);
+    // We intentionally only depend on the toggle. Including `items` would
+    // make every normal edit re-trigger this effect (and recalcItem already
+    // runs inside updateItem/addFromProduct for the row being edited).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [usesInclusiveTax]);
+
   // Calculate totals
   const subtotal = items.reduce((sum, item) => {
     const net = usesInclusiveTax
@@ -160,16 +184,12 @@ export function LineItemsBuilder({
             size="sm"
             onClick={() => setShowProductPicker(!showProductPicker)}
           >
-            <span className="material-symbols-outlined text-[16px] mr-1">
-              inventory_2
-            </span>
+            <Package className="h-4 w-4 mr-1" />
             {t("addFromCatalogue")}
           </Button>
         )}
         <Button type="button" variant="outline" size="sm" onClick={addItem}>
-          <span className="material-symbols-outlined text-[16px] mr-1">
-            add
-          </span>
+          <Plus className="h-4 w-4 mr-1" />
           {t("addItem")}
         </Button>
       </div>
@@ -201,7 +221,7 @@ export function LineItemsBuilder({
 
       {items.length === 0 ? (
         <div className="text-center py-8 text-on-surface/50 text-sm">
-          No line items yet. Click &quot;Add item&quot; to get started.
+          {t("noLineItems", { action: t("addItem") })}
         </div>
       ) : (
         <div className="space-y-2">
@@ -277,18 +297,14 @@ export function LineItemsBuilder({
                   className="text-on-surface/40 hover:text-on-surface text-xs leading-none"
                   disabled={index === 0}
                 >
-                  <span className="material-symbols-outlined text-[14px]">
-                    arrow_upward
-                  </span>
+                  <ArrowUp className="h-3.5 w-3.5" />
                 </button>
                 <button
                   type="button"
                   onClick={() => removeItem(index)}
                   className="text-tertiary/60 hover:text-tertiary text-xs leading-none"
                 >
-                  <span className="material-symbols-outlined text-[14px]">
-                    close
-                  </span>
+                  <X className="h-3.5 w-3.5" />
                 </button>
                 <button
                   type="button"
@@ -296,9 +312,7 @@ export function LineItemsBuilder({
                   className="text-on-surface/40 hover:text-on-surface text-xs leading-none"
                   disabled={index === items.length - 1}
                 >
-                  <span className="material-symbols-outlined text-[14px]">
-                    arrow_downward
-                  </span>
+                  <ArrowDown className="h-3.5 w-3.5" />
                 </button>
               </div>
             </div>

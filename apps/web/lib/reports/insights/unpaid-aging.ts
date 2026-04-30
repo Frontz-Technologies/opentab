@@ -5,7 +5,7 @@ export function unpaidAgingInsight(ctx: InsightContext): InsightCard | null {
   return {
     id: "unpaid-aging",
     type: "risk",
-    icon: "hourglass_top",
+    icon: "Hourglass",
     title: "Aging receivables",
     description: `\u20AC${ctx.outstanding.overdueTotal.toLocaleString("en", { minimumFractionDigits: 2 })} in overdue invoices needs attention.`,
     action: { label: "View invoices", href: "/invoices" },

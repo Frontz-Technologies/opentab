@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { Trash2 } from "lucide-react";
 import type { ExpenseCategory, ExpenseGroup } from "@opentab/db/schema";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -90,9 +91,7 @@ export function CategoryList({ groups, categories }: CategoryListProps) {
                         onClick={() => handleDelete(cat.id)}
                         disabled={isPending}
                       >
-                        <span className="material-symbols-outlined text-[16px]">
-                          delete
-                        </span>
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     )}
                   </div>

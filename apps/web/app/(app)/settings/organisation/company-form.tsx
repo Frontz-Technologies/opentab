@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
+import { ImageIcon } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -9,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { detectCountryFromTaxId } from "@/lib/utils";
 import { updateCompanySettings } from "./actions";
 
@@ -270,21 +272,17 @@ export function CompanyForm({ initialData }: CompanyFormProps) {
           <SectionHeading>{t("address")}</SectionHeading>
           <div className="grid grid-cols-1 gap-5">
             <Field label={t("country")}>
-              <Select
+              <Combobox
+                options={EU_COUNTRIES.map((c) => ({
+                  value: c.code,
+                  label: c.name,
+                }))}
                 value={detectedCountry ?? undefined}
-                onValueChange={(v) => setDetectedCountry(v ? v : null)}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select country…" />
-                </SelectTrigger>
-                <SelectContent>
-                  {EU_COUNTRIES.map((c) => (
-                    <SelectItem key={c.code} value={c.code}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={(code) => setDetectedCountry(code || null)}
+                placeholder={t("selectCountry")}
+                searchPlaceholder={t("searchCountry")}
+                ariaLabel={t("country")}
+              />
               <input
                 type="hidden"
                 name="country"
@@ -361,7 +359,7 @@ export function CompanyForm({ initialData }: CompanyFormProps) {
         <section className="bg-surface-container-low rounded-2xl p-6 border border-outline-variant/10">
           <SectionHeading>{t("branding")}</SectionHeading>
           <div className="flex flex-col items-center justify-center min-h-[120px] rounded-xl bg-surface-container-lowest text-on-surface/30 gap-2">
-            <span className="material-symbols-outlined text-3xl">image</span>
+            <ImageIcon className="h-8 w-8" />
             <p className="text-sm font-medium">{t("logoPlaceholder")}</p>
           </div>
         </section>

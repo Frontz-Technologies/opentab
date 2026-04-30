@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -113,11 +114,14 @@ export function NumberingForm({ initial }: { initial: InitialState }) {
           </p>
         </div>
 
-        <label className="flex items-center gap-2 text-sm text-on-surface">
-          <input
-            type="checkbox"
+        <label
+          htmlFor="includeYear"
+          className="flex items-center gap-2 text-sm text-on-surface"
+        >
+          <Checkbox
+            id="includeYear"
             checked={includeYear}
-            onChange={(e) => setIncludeYear(e.target.checked)}
+            onCheckedChange={(v) => setIncludeYear(v === true)}
             disabled={pattern.length > 0}
           />
           {t("includeYear")}

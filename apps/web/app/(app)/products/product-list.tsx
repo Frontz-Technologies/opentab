@@ -3,8 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { Package, Plus, SearchX } from "lucide-react";
 import type { Product } from "@opentab/db/schema";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 
 interface ProductListProps {
@@ -41,12 +43,14 @@ export function ProductList({ products }: ProductListProps) {
           onChange={(e) => setSearch(e.target.value)}
           className="max-w-sm"
         />
-        <label className="flex items-center gap-2 text-sm text-on-surface/60 cursor-pointer">
-          <input
-            type="checkbox"
+        <label
+          htmlFor="showInactive"
+          className="flex items-center gap-2 text-sm text-on-surface/60 cursor-pointer"
+        >
+          <Checkbox
+            id="showInactive"
             checked={showInactive}
-            onChange={(e) => setShowInactive(e.target.checked)}
-            className="rounded"
+            onCheckedChange={(v) => setShowInactive(v === true)}
           />
           {t("showInactive")}
         </label>
@@ -55,9 +59,7 @@ export function ProductList({ products }: ProductListProps) {
       {filtered.length === 0 ? (
         products.length === 0 ? (
           <div className="flex flex-col items-center text-center py-16 px-6">
-            <span className="material-symbols-outlined text-5xl text-on-surface-variant mb-4 block">
-              inventory_2
-            </span>
+            <Package className="h-12 w-12 text-on-surface-variant mb-4" />
             <h3 className="font-headline text-xl font-semibold text-on-surface mb-2">
               {t("noProducts")}
             </h3>
@@ -68,15 +70,13 @@ export function ProductList({ products }: ProductListProps) {
               href="/products/new"
               className="inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-5 font-label text-sm font-medium text-on-primary transition-colors hover:bg-primary/90"
             >
-              <span className="material-symbols-outlined text-[18px]">add</span>
+              <Plus className="h-[18px] w-[18px]" />
               {t("addProduct")}
             </Link>
           </div>
         ) : (
           <div className="text-center py-12 text-on-surface-variant">
-            <span className="material-symbols-outlined text-4xl mb-2 block">
-              search_off
-            </span>
+            <SearchX className="h-9 w-9 mx-auto mb-2" />
             <p className="text-sm">{t("noResultsMatch")}</p>
           </div>
         )

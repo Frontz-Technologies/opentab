@@ -1,3 +1,4 @@
+import { Clock } from "lucide-react";
 import { getSession } from "@/lib/session";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
@@ -27,9 +28,7 @@ export default async function TaxProjectionPage() {
       <main className="px-8 py-8 max-w-7xl mx-auto">
         <ReportsTabs active="taxProjection" provider={provider} />
         <div className="bg-surface-container-low rounded-2xl p-12 flex flex-col items-center text-center">
-          <span className="material-symbols-outlined text-5xl text-on-surface-variant mb-4 block">
-            schedule
-          </span>
+          <Clock className="h-12 w-12 text-on-surface-variant mb-4" />
           <h3 className="font-headline text-xl font-semibold text-on-surface mb-2">
             {t("comingSoonTitle")}
           </h3>

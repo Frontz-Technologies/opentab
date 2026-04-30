@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { Bot, RefreshCw } from "lucide-react";
 import { getSession } from "@/lib/session";
 import { PageHeader } from "@/components/layout/page-header";
 import { IntegrationCard } from "@/components/settings/integration-card";
@@ -68,7 +69,7 @@ export default async function IntegrationsPage() {
           {configurableIntegrations.map((integration) => (
             <IntegrationCard
               key={integration.kind}
-              icon="cloud_sync"
+              icon={RefreshCw}
               name={integration.label}
               description={integration.description ?? ""}
               href={`/settings/integrations/${integration.settingsPage!.slug}`}
@@ -82,7 +83,7 @@ export default async function IntegrationsPage() {
           ))}
           {isOwnerOrAdmin && (
             <IntegrationCard
-              icon="smart_toy"
+              icon={Bot}
               name={t("aiName")}
               description={t("aiDescription")}
               href="/settings/integrations/ai"

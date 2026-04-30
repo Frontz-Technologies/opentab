@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useCallback } from "react";
 import { useTranslations } from "next-intl";
+import { CheckCircle2, Lock, XCircle } from "lucide-react";
 import {
   updateAiSettings,
   testAiConnection,
@@ -10,6 +11,7 @@ import {
   type ModelCapabilities,
 } from "@/lib/actions/ai-settings";
 import { Button } from "@/components/ui/button";
+import { FormCheckbox } from "@/components/ui/form-checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -44,9 +46,11 @@ function CapabilityBadge({
           : "bg-on-surface/5 text-on-surface/30"
       }`}
     >
-      <span className="material-symbols-outlined text-[14px]">
-        {supported ? "check_circle" : "cancel"}
-      </span>
+      {supported ? (
+        <CheckCircle2 className="h-3.5 w-3.5" />
+      ) : (
+        <XCircle className="h-3.5 w-3.5" />
+      )}
       {label}
     </span>
   );
@@ -63,7 +67,7 @@ function DeploymentPill({
   return (
     <div className="space-y-2">
       <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-sm text-primary">
-        <span className="material-symbols-outlined text-[16px]">lock</span>
+        <Lock className="h-4 w-4" />
         {t(labelKey)}
       </div>
       <p className="text-xs text-on-surface/50">{t(helpKey)}</p>
@@ -83,6 +87,9 @@ export function AiSettingsForm({
     initialCapabilities ?? null,
   );
   const [isLoadingCaps, setIsLoadingCaps] = useState(false);
+  const [enabled, setEnabled] = useState<boolean>(initialData.enabled);
+  const [receiptExtractionEnabled, setReceiptExtractionEnabled] =
+    useState<boolean>(initialData.receiptExtractionEnabled);
 
   const fetchCapabilities = useCallback((model: string) => {
     if (!model.trim()) return;
@@ -143,12 +150,15 @@ export function AiSettingsForm({
         >
           {t("enabled")}
         </Label>
-        <label className="flex items-center gap-3 rounded-xl bg-surface-container-high px-4 py-3 text-sm text-on-surface">
-          <input
+        <label
+          htmlFor="enabled"
+          className="flex items-center gap-3 rounded-xl bg-surface-container-high px-4 py-3 text-sm text-on-surface"
+        >
+          <FormCheckbox
             id="enabled"
             name="enabled"
-            type="checkbox"
-            defaultChecked={initialData.enabled}
+            checked={enabled}
+            onCheckedChange={setEnabled}
           />
           {t("enabledHelp")}
         </label>
@@ -260,12 +270,15 @@ export function AiSettingsForm({
         >
           {t("receiptExtraction")}
         </Label>
-        <label className="flex items-center gap-3 rounded-xl bg-surface-container-high px-4 py-3 text-sm text-on-surface">
-          <input
+        <label
+          htmlFor="receiptExtractionEnabled"
+          className="flex items-center gap-3 rounded-xl bg-surface-container-high px-4 py-3 text-sm text-on-surface"
+        >
+          <FormCheckbox
             id="receiptExtractionEnabled"
             name="receiptExtractionEnabled"
-            type="checkbox"
-            defaultChecked={initialData.receiptExtractionEnabled}
+            checked={receiptExtractionEnabled}
+            onCheckedChange={setReceiptExtractionEnabled}
           />
           {t("receiptExtractionHelp")}
         </label>

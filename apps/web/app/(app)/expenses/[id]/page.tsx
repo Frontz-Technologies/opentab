@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
+import { ArrowLeft, Paperclip } from "lucide-react";
 import { getSession } from "@/lib/session";
 import { db } from "@/lib/db";
 import {
@@ -60,7 +61,7 @@ export default async function ExpenseDetailPage({
             href="/expenses"
             className="text-on-surface/50 hover:text-on-surface transition-colors"
           >
-            <span className="material-symbols-outlined">arrow_back</span>
+            <ArrowLeft className="h-6 w-6" />
           </Link>
           <h1 className="font-headline text-2xl font-bold text-on-surface">
             {expense.expenseNumber}
@@ -231,9 +232,7 @@ export default async function ExpenseDetailPage({
                 className="flex items-center justify-between p-3 rounded-lg bg-surface-container-low"
               >
                 <div className="flex items-center gap-3">
-                  <span className="material-symbols-outlined text-on-surface/60">
-                    attach_file
-                  </span>
+                  <Paperclip className="h-6 w-6 text-on-surface/60" />
                   <div>
                     <p className="text-on-surface text-sm font-medium">
                       {att.fileName}

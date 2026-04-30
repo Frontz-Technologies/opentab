@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { RefreshCw } from "lucide-react";
 import type { RecurringInvoice } from "@opentab/db/schema";
 import { RECURRING_STATUS, FREQUENCY } from "@opentab/db/schema";
 import { Badge } from "@/components/ui/badge";
@@ -63,12 +64,12 @@ export function RecurringList({ items }: RecurringListProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
+      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-3">
         <Input
           placeholder={t("searchPlaceholder")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full md:max-w-sm"
+          className="w-full md:flex-1 md:max-w-md"
         />
         <AnimatedFilterBar
           items={filters.map((f) => ({ value: f.key, label: f.label }))}
@@ -79,9 +80,7 @@ export function RecurringList({ items }: RecurringListProps) {
 
       {filtered.length === 0 ? (
         <div className="text-center py-12 text-on-surface/50">
-          <span className="material-symbols-outlined text-4xl mb-2 block">
-            autorenew
-          </span>
+          <RefreshCw className="h-9 w-9 mx-auto mb-2" />
           <p className="font-label">{t("noRecurring")}</p>
           <p className="text-sm mt-1">{t("noRecurringDescription")}</p>
         </div>

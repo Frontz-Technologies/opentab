@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
+import { UserCircle2 } from "lucide-react";
 import { SettingsSection } from "@/components/settings/settings-section";
 import { updateProfile, changePassword } from "./actions";
 
@@ -106,9 +107,7 @@ export function AccountForm({ initialData }: AccountFormProps) {
               {t("avatar")}
             </label>
             <div className="flex flex-col items-center justify-center min-h-[100px] rounded-xl bg-surface-container-lowest text-on-surface/30 gap-2">
-              <span className="material-symbols-outlined text-3xl">
-                account_circle
-              </span>
+              <UserCircle2 className="h-8 w-8" />
               <p className="text-sm font-medium">{t("avatarPlaceholder")}</p>
             </div>
           </div>

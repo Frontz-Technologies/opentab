@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { Lock } from "lucide-react";
 import { useId } from "react";
 
 interface FilterItem<T extends string = string> {
@@ -32,7 +33,7 @@ export function AnimatedFilterBar<T extends string = string>({
   return (
     <div
       className={cn(
-        "flex items-center gap-0.5 rounded-full bg-surface-container p-1 overflow-x-auto max-w-full whitespace-nowrap [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
+        "inline-flex w-fit items-center gap-0.5 rounded-full bg-surface-container p-1 overflow-x-auto max-w-full whitespace-nowrap [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
         className,
       )}
     >
@@ -40,10 +41,11 @@ export function AnimatedFilterBar<T extends string = string>({
         const isActive = value === item.value;
         const baseClasses = cn(
           "relative shrink-0 rounded-full px-3 py-1.5 font-label text-sm transition-colors duration-200 whitespace-nowrap",
-          isActive
-            ? "text-on-surface"
-            : "text-on-surface-variant hover:text-on-surface/80",
-          item.disabled && "opacity-50 pointer-events-none",
+          item.disabled
+            ? "text-on-surface/30 cursor-not-allowed pointer-events-none"
+            : isActive
+              ? "text-on-surface"
+              : "text-on-surface-variant hover:text-on-surface/80",
         );
 
         const activeIndicator = isActive ? (
@@ -55,7 +57,14 @@ export function AnimatedFilterBar<T extends string = string>({
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
           />
         ) : null;
-        const labelSpan = <span className="relative z-10">{item.label}</span>;
+        const labelSpan = (
+          <span className="relative z-10 inline-flex items-center gap-1.5">
+            {item.label}
+            {item.disabled && (
+              <Lock className="h-3 w-3 opacity-70" aria-hidden="true" />
+            )}
+          </span>
+        );
 
         if (item.href && !item.disabled) {
           return (

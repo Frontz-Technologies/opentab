@@ -1,26 +1,29 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import { format, parseISO } from "date-fns";
 import { UnsavedChangesGuard } from "@/components/forms/unsaved-changes-guard";
 import { EmptyEntityHint } from "@/components/forms/empty-entity-hint";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
+import { Hourglass, Upload, Paperclip, X, Info, Sparkles } from "lucide-react";
 import type {
   Contact,
   ExpenseCategory,
   ExpenseGroup,
 } from "@opentab/db/schema";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CategoryCombobox } from "./category-combobox";
 import {
   Dialog,
   DialogContent,
@@ -281,12 +284,6 @@ export function ExpenseForm({
     }
   }
 
-  // Group categories by expense group for optgroup display
-  const groupedCategories = groups.map((group) => ({
-    group,
-    items: categories.filter((c) => c.groupCode === group.code),
-  }));
-
   // Group names are stored per-locale on the expense_group table
   // (nameEn notNull, nameEl/nameEs/nameDe nullable). Use the active
   // locale's field, fall back to nameEn. Previously the optgroup
@@ -402,9 +399,11 @@ export function ExpenseForm({
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
             >
-              <span className="material-symbols-outlined text-[18px] mr-1">
-                {isUploading ? "hourglass_empty" : "upload_file"}
-              </span>
+              {isUploading ? (
+                <Hourglass className="h-[18px] w-[18px] mr-1" />
+              ) : (
+                <Upload className="h-[18px] w-[18px] mr-1" />
+              )}
               {isUploading
                 ? aiExtractionAvailable
                   ? t("analyzingReceipt")
@@ -421,9 +420,7 @@ export function ExpenseForm({
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[18px] text-primary">
-                  attach_file
-                </span>
+                <Paperclip className="h-[18px] w-[18px] text-primary" />
                 <span className="text-sm text-on-surface font-medium">
                   {uploadedFile.fileName}
                 </span>
@@ -437,9 +434,7 @@ export function ExpenseForm({
                 type="button"
                 onClick={handleRemoveAttachment}
               >
-                <span className="material-symbols-outlined text-[16px]">
-                  close
-                </span>
+                <X className="h-4 w-4" />
                 {t("removeAttachment")}
               </Button>
             </div>
@@ -449,12 +444,10 @@ export function ExpenseForm({
                 role="status"
                 className="flex items-start gap-3 rounded-lg bg-surface-container-high px-4 py-3"
               >
-                <span
+                <Info
                   aria-hidden="true"
-                  className="material-symbols-outlined text-on-surface-variant text-[20px]"
-                >
-                  info
-                </span>
+                  className="h-5 w-5 text-on-surface-variant"
+                />
                 <div className="flex-1 space-y-1">
                   <p className="text-sm text-on-surface font-medium">
                     {t("receiptNoDataTitle")}
@@ -470,21 +463,14 @@ export function ExpenseForm({
                   aria-label={t("dismiss")}
                   onClick={() => setShowNoDataNotice(false)}
                 >
-                  <span
-                    aria-hidden="true"
-                    className="material-symbols-outlined text-[16px]"
-                  >
-                    close
-                  </span>
+                  <X aria-hidden="true" className="h-4 w-4" />
                 </Button>
               </div>
             )}
 
             {showAutofillPrompt && (
               <div className="flex items-center gap-3 rounded-lg bg-primary/10 px-4 py-3">
-                <span className="material-symbols-outlined text-primary text-[20px]">
-                  auto_fix_high
-                </span>
+                <Sparkles className="h-5 w-5 text-primary" />
                 <span className="text-sm text-on-surface flex-1">
                   {t("autofillPrompt")}
                 </span>
@@ -598,33 +584,28 @@ export function ExpenseForm({
               />
             ) : (
               <div className={fieldWrapperClass("categoryId")}>
-                <Select
+                <CategoryCombobox
                   value={categoryId || undefined}
-                  onValueChange={(v) => {
+                  onChange={(v) => {
                     handleExitFieldPreview("categoryId");
                     handleCategoryChange(v);
                   }}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder={t("selectCategory")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {groupedCategories
-                      .filter((g) => g.items.length > 0)
-                      .map((g) => (
-                        <SelectGroup key={g.group.code}>
-                          <SelectLabel>
-                            {`${GROUP_TYPE_MARKER[g.group.type]} ${groupNameForLocale(g.group)}`}
-                          </SelectLabel>
-                          {g.items.map((c) => (
-                            <SelectItem key={c.id} value={c.id}>
-                              {c.name}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      ))}
-                  </SelectContent>
-                </Select>
+                  categories={categories.map((c) => ({
+                    id: c.id,
+                    name: c.name,
+                    groupCode: c.groupCode,
+                  }))}
+                  groupNameForLocale={(code) => {
+                    const g = groups.find((gr) => gr.code === code);
+                    if (!g) return code;
+                    return `${GROUP_TYPE_MARKER[g.type]} ${groupNameForLocale(g)}`;
+                  }}
+                />
+                <input
+                  type="hidden"
+                  name="categoryId"
+                  value={categoryId ?? ""}
+                />
               </div>
             )}
           </div>
@@ -643,14 +624,13 @@ export function ExpenseForm({
               {t("expenseDate")} <span className="text-tertiary">*</span>
             </label>
             <div className={fieldWrapperClass("expenseDate")}>
-              <Input
-                type="date"
-                value={expenseDate}
-                onChange={(e) => {
+              <DatePicker
+                value={expenseDate ? parseISO(expenseDate) : undefined}
+                onChange={(d) => {
                   handleExitFieldPreview("expenseDate");
-                  setExpenseDate(e.target.value);
+                  setExpenseDate(d ? format(d, "yyyy-MM-dd") : "");
                 }}
-                onFocus={() => handleExitFieldPreview("expenseDate")}
+                ariaLabel={t("expenseDate")}
               />
             </div>
           </div>
@@ -658,10 +638,10 @@ export function ExpenseForm({
             <label className="block text-sm font-label text-on-surface/60 mb-1">
               {t("paymentDate")}
             </label>
-            <Input
-              type="date"
-              value={paymentDate}
-              onChange={(e) => setPaymentDate(e.target.value)}
+            <DatePicker
+              value={paymentDate ? parseISO(paymentDate) : undefined}
+              onChange={(d) => setPaymentDate(d ? format(d, "yyyy-MM-dd") : "")}
+              ariaLabel={t("paymentDate")}
             />
           </div>
           <div>
@@ -693,12 +673,14 @@ export function ExpenseForm({
               <p className="text-sm text-on-surface/50">{t("itemRequired")}</p>
             )}
           </div>
-          <label className="flex items-center gap-2 text-sm text-on-surface-variant">
-            <input
-              type="checkbox"
+          <label
+            htmlFor="usesInclusiveTax"
+            className="flex items-center gap-2 text-sm text-on-surface-variant"
+          >
+            <Checkbox
+              id="usesInclusiveTax"
               checked={usesInclusiveTax}
-              onChange={(e) => setUsesInclusiveTax(e.target.checked)}
-              className="rounded"
+              onCheckedChange={(v) => setUsesInclusiveTax(v === true)}
             />
             {t("inclusiveTax")}
           </label>

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
+import { Contrast, Moon, Sun } from "lucide-react";
 import { SettingsSection } from "@/components/settings/settings-section";
 import { resolveTheme, type ThemePreference } from "@/lib/theme";
 import { updateAppearanceSettings } from "./actions";
@@ -46,13 +47,13 @@ function ThemeCard({
           {comingSoonLabel}
         </span>
       )}
-      <span className="material-symbols-outlined text-[28px] text-on-surface-variant">
-        {name === "dark"
-          ? "dark_mode"
-          : name === "light"
-            ? "light_mode"
-            : "contrast"}
-      </span>
+      {name === "dark" ? (
+        <Moon className="h-7 w-7 text-on-surface-variant" />
+      ) : name === "light" ? (
+        <Sun className="h-7 w-7 text-on-surface-variant" />
+      ) : (
+        <Contrast className="h-7 w-7 text-on-surface-variant" />
+      )}
       <span className="font-label text-sm text-on-surface">{label}</span>
     </button>
   );

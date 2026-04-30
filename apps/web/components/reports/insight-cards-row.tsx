@@ -1,5 +1,6 @@
 import type { InsightCard } from "@/lib/reports/insights/types";
 import Link from "next/link";
+import { IconByName } from "@/components/icons/icon-by-name";
 
 // Semantic-token borders per insight type. `risk` maps to `tertiary`
 // (hard-danger) — the surface signals an actionable risk (overdue
@@ -24,12 +25,14 @@ export function InsightCardsRow({ insights }: { insights: InsightCard[] }) {
       {insights.map((card) => (
         <div
           key={card.id}
+          data-testid="insight-card"
           className={`bg-surface-container-low/60 backdrop-blur-sm rounded-2xl p-4 border ${borderByType[card.type]}`}
         >
           <div className="flex items-center gap-2 mb-2">
-            <span className="material-symbols-outlined text-lg text-on-surface-variant">
-              {card.icon}
-            </span>
+            <IconByName
+              name={card.icon}
+              className="h-[18px] w-[18px] text-on-surface-variant"
+            />
             <p className="font-bold text-sm text-on-surface">{card.title}</p>
           </div>
           <p className="text-sm text-on-surface-variant">{card.description}</p>

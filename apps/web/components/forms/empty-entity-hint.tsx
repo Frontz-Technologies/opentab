@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Plus } from "lucide-react";
 
 interface EmptyEntityHintProps {
   /** Localised message — e.g. "No clients yet". */
@@ -34,16 +35,12 @@ export function EmptyEntityHint({
       <span className="min-w-0 truncate">{message}</span>
       {ctaOnClick ? (
         <button type="button" onClick={ctaOnClick} className={buttonClass}>
-          <span className="material-symbols-outlined text-[18px] leading-none">
-            add
-          </span>
+          <Plus className="h-[18px] w-[18px]" />
           {ctaLabel}
         </button>
       ) : ctaHref ? (
         <Link href={ctaHref} className={buttonClass}>
-          <span className="material-symbols-outlined text-[18px] leading-none">
-            add
-          </span>
+          <Plus className="h-[18px] w-[18px]" />
           {ctaLabel}
         </Link>
       ) : null}

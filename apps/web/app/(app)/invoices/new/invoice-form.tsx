@@ -1,11 +1,15 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { format, parseISO } from "date-fns";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { Plus } from "lucide-react";
 import type { Contact, Product } from "@opentab/db/schema";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
   SelectContent,
@@ -200,7 +204,7 @@ export function InvoiceForm({
               title={t("createContact")}
               className="shrink-0 inline-flex h-auto w-10 items-center justify-center rounded-lg bg-surface-container-low border border-on-surface/10 text-on-surface hover:bg-surface-container hover:text-primary transition-colors"
             >
-              <span className="material-symbols-outlined text-[20px]">add</span>
+              <Plus className="h-5 w-5" />
             </button>
           </div>
         )}
@@ -315,20 +319,22 @@ export function InvoiceForm({
             <label className="block text-sm font-label text-on-surface/60 mb-1">
               {t("issueDate")} <span className="text-tertiary">*</span>
             </label>
-            <Input
-              type="date"
-              value={issueDate}
-              onChange={(e) => setIssueDate(e.target.value)}
+            <DatePicker
+              value={issueDate ? parseISO(issueDate) : undefined}
+              onChange={(d) => setIssueDate(d ? format(d, "yyyy-MM-dd") : "")}
+              name="issueDate"
+              ariaLabel={t("issueDate")}
             />
           </div>
           <div>
             <label className="block text-sm font-label text-on-surface/60 mb-1">
               {t("dueDate")}
             </label>
-            <Input
-              type="date"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
+            <DatePicker
+              value={dueDate ? parseISO(dueDate) : undefined}
+              onChange={(d) => setDueDate(d ? format(d, "yyyy-MM-dd") : "")}
+              name="dueDate"
+              ariaLabel={t("dueDate")}
             />
           </div>
           <div>
@@ -354,12 +360,14 @@ export function InvoiceForm({
               <p className="text-sm text-on-surface/50">{t("itemRequired")}</p>
             )}
           </div>
-          <label className="flex items-center gap-2 text-sm text-on-surface-variant">
-            <input
-              type="checkbox"
+          <label
+            htmlFor="usesInclusiveTax"
+            className="flex items-center gap-2 text-sm text-on-surface-variant"
+          >
+            <Checkbox
+              id="usesInclusiveTax"
               checked={usesInclusiveTax}
-              onChange={(e) => setUsesInclusiveTax(e.target.checked)}
-              className="rounded"
+              onCheckedChange={(v) => setUsesInclusiveTax(v === true)}
             />
             {t("inclusiveTax")}
           </label>

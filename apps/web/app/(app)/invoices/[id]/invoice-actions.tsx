@@ -4,6 +4,16 @@ import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
+import {
+  CheckCircle2,
+  Download,
+  FileCheck2,
+  History,
+  RefreshCw,
+  Send,
+  Trash2,
+  Undo2,
+} from "lucide-react";
 import type { Invoice } from "@opentab/db/schema";
 import {
   INVOICE_STATUS,
@@ -55,9 +65,7 @@ export function InvoiceActions({ invoice, mydataStatus }: InvoiceActionsProps) {
             onClick={() => handleAction(publishInvoice, t("publishConfirm"))}
             disabled={isPending}
           >
-            <span className="material-symbols-outlined text-[16px] mr-1">
-              publish
-            </span>
+            <FileCheck2 className="h-4 w-4 mr-1" />
             {t("publish")}
           </Button>
           <Button
@@ -68,9 +76,7 @@ export function InvoiceActions({ invoice, mydataStatus }: InvoiceActionsProps) {
             }
             disabled={isPending}
           >
-            <span className="material-symbols-outlined text-[16px] mr-1">
-              delete
-            </span>
+            <Trash2 className="h-4 w-4 mr-1" />
             {t("delete")}
           </Button>
         </>
@@ -82,9 +88,7 @@ export function InvoiceActions({ invoice, mydataStatus }: InvoiceActionsProps) {
             onClick={() => handleAction(sendInvoice, t("sendConfirm"))}
             disabled={isPending}
           >
-            <span className="material-symbols-outlined text-[16px] mr-1">
-              send
-            </span>
+            <Send className="h-4 w-4 mr-1" />
             {t("send")}
           </Button>
           <Button
@@ -105,9 +109,7 @@ export function InvoiceActions({ invoice, mydataStatus }: InvoiceActionsProps) {
             onClick={() => handleAction(markAsPaid, t("paidConfirm"))}
             disabled={isPending}
           >
-            <span className="material-symbols-outlined text-[16px] mr-1">
-              check_circle
-            </span>
+            <CheckCircle2 className="h-4 w-4 mr-1" />
             {t("markAsPaid")}
           </Button>
           <Button
@@ -125,9 +127,7 @@ export function InvoiceActions({ invoice, mydataStatus }: InvoiceActionsProps) {
         size="sm"
         onClick={() => window.open(`/api/invoices/${invoice.id}/pdf`, "_blank")}
       >
-        <span className="material-symbols-outlined text-[16px] mr-1">
-          download
-        </span>
+        <Download className="h-4 w-4 mr-1" />
         {t("downloadPdf")}
       </Button>
       <Button
@@ -137,9 +137,7 @@ export function InvoiceActions({ invoice, mydataStatus }: InvoiceActionsProps) {
           window.open(`/api/invoices/${invoice.id}/activity.csv`, "_blank")
         }
       >
-        <span className="material-symbols-outlined text-[16px] mr-1">
-          history
-        </span>
+        <History className="h-4 w-4 mr-1" />
         {t("downloadActivityCsv")}
       </Button>
       {(invoice.status === INVOICE_STATUS.SENT ||
@@ -153,9 +151,7 @@ export function InvoiceActions({ invoice, mydataStatus }: InvoiceActionsProps) {
             router.push(`/credit-notes/new?invoiceId=${invoice.id}`)
           }
         >
-          <span className="material-symbols-outlined text-[16px] mr-1">
-            undo
-          </span>
+          <Undo2 className="h-4 w-4 mr-1" />
           {t("issueCreditNote")}
         </Button>
       )}
@@ -180,9 +176,7 @@ export function InvoiceActions({ invoice, mydataStatus }: InvoiceActionsProps) {
             }}
             disabled={isPending}
           >
-            <span className="material-symbols-outlined text-[16px] mr-1">
-              refresh
-            </span>
+            <RefreshCw className="h-4 w-4 mr-1" />
             {t("mydataRetry")}
           </Button>
         )}

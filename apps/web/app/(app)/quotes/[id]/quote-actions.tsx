@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { Receipt, Send, Trash2 } from "lucide-react";
 import type { Quote } from "@opentab/db/schema";
 import { QUOTE_STATUS } from "@opentab/db/schema";
 import { Button } from "@/components/ui/button";
@@ -57,9 +58,7 @@ export function QuoteActions({ quote }: QuoteActionsProps) {
             }
             disabled={isPending}
           >
-            <span className="material-symbols-outlined text-[16px] mr-1">
-              send
-            </span>
+            <Send className="h-4 w-4 mr-1" />
             {t("send")}
           </Button>
           <Button
@@ -70,9 +69,7 @@ export function QuoteActions({ quote }: QuoteActionsProps) {
             }
             disabled={isPending}
           >
-            <span className="material-symbols-outlined text-[16px] mr-1">
-              delete
-            </span>
+            <Trash2 className="h-4 w-4 mr-1" />
             {t("delete")}
           </Button>
         </>
@@ -102,9 +99,7 @@ export function QuoteActions({ quote }: QuoteActionsProps) {
           onClick={() => handleAction(convertToInvoice, t("convertConfirm"))}
           disabled={isPending}
         >
-          <span className="material-symbols-outlined text-[16px] mr-1">
-            receipt
-          </span>
+          <Receipt className="h-4 w-4 mr-1" />
           {t("convertToInvoice")}
         </Button>
       )}

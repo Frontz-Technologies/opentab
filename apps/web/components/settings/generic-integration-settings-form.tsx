@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { FormCheckbox } from "@/components/ui/form-checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -64,6 +65,25 @@ function EnumField({
       </Select>
       <input type="hidden" name={name} value={value} />
     </>
+  );
+}
+
+function BooleanField({
+  name,
+  defaultChecked,
+}: {
+  name: string;
+  defaultChecked: boolean;
+}) {
+  const [checked, setChecked] = useState<boolean>(defaultChecked);
+  return (
+    <FormCheckbox
+      id={name}
+      name={name}
+      checkedValue="true"
+      checked={checked}
+      onCheckedChange={setChecked}
+    />
   );
 }
 
@@ -208,12 +228,9 @@ export function GenericIntegrationSettingsForm({
             return (
               <div key={field.name} className="space-y-2">
                 <Label htmlFor={field.name}>{labelText}</Label>
-                <input
-                  type="checkbox"
-                  id={field.name}
+                <BooleanField
                   name={field.name}
                   defaultChecked={existingValue === true}
-                  value="true"
                 />
               </div>
             );

@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useEffect, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { Clock, CreditCard, PiggyBank, TrendingUp } from "lucide-react";
 import type { DashboardData, PeriodKey } from "@/lib/reports/types";
 import type { InsightCard } from "@/lib/reports/insights/types";
 import { PeriodSelector } from "@/components/reports/period-selector";
@@ -111,7 +112,7 @@ export function DashboardClient({
         <KpiCard
           label={t("revenue")}
           value={formatCurrencyCompact(data.revenue.value, "EUR")}
-          icon="trending_up"
+          icon={TrendingUp}
           changePercent={data.revenue.changePercent}
           secondary={data.revenue.secondary}
           variant="hero"
@@ -119,21 +120,21 @@ export function DashboardClient({
         <KpiCard
           label={t("outstanding")}
           value={formatCurrencyCompact(data.outstanding.value, "EUR")}
-          icon="schedule"
+          icon={Clock}
           changePercent={data.outstanding.changePercent}
           secondary={data.outstanding.secondary}
         />
         <KpiCard
           label={t("expenses")}
           value={formatCurrencyCompact(data.expenses.value, "EUR")}
-          icon="payments"
+          icon={CreditCard}
           changePercent={data.expenses.changePercent}
           secondary={data.expenses.secondary}
         />
         <KpiCard
           label={t("netProfit")}
           value={formatCurrencyCompact(data.netProfit.value, "EUR")}
-          icon="savings"
+          icon={PiggyBank}
           changePercent={data.netProfit.changePercent}
           secondary={data.netProfit.secondary}
         />

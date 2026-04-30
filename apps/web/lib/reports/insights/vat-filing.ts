@@ -16,7 +16,7 @@ export function vatFilingInsight(ctx: InsightContext): InsightCard | null {
   return {
     id: "vat-filing",
     type: "info",
-    icon: "event",
+    icon: "Calendar",
     title: "VAT filing deadline approaching",
     description: `${daysUntil} day${daysUntil !== 1 ? "s" : ""} until quarter end. Prepare your VAT report.`,
     action: { label: "View VAT report", href: "/reports/vat" },

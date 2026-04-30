@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { LogOut, Settings } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -64,9 +65,7 @@ export function UserMenu({ name, email }: UserMenuProps) {
           render={<Link href="/settings/account" />}
           className="flex items-center gap-2 cursor-pointer"
         >
-          <span className="material-symbols-outlined text-[16px] leading-none">
-            settings
-          </span>
+          <Settings className="h-4 w-4" />
           {t("settings")}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
@@ -74,9 +73,7 @@ export function UserMenu({ name, email }: UserMenuProps) {
           onClick={handleLogout}
           className="flex items-center gap-2 cursor-pointer text-tertiary focus:text-tertiary"
         >
-          <span className="material-symbols-outlined text-[16px] leading-none">
-            logout
-          </span>
+          <LogOut className="h-4 w-4" />
           {t("logout")}
         </DropdownMenuItem>
       </DropdownMenuContent>

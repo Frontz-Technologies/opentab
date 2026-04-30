@@ -1,12 +1,15 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { format, parseISO } from "date-fns";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import type { Contact, Product } from "@opentab/db/schema";
 import { FREQUENCY } from "@opentab/db/schema";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
   SelectContent,
@@ -164,20 +167,20 @@ export function RecurringForm({
             <label className="block text-sm font-label text-on-surface/60 mb-1">
               {t("startDate")}
             </label>
-            <Input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
+            <DatePicker
+              value={startDate ? parseISO(startDate) : undefined}
+              onChange={(d) => setStartDate(d ? format(d, "yyyy-MM-dd") : "")}
+              ariaLabel={t("startDate")}
             />
           </div>
           <div>
             <label className="block text-sm font-label text-on-surface/60 mb-1">
               {t("endDate")}
             </label>
-            <Input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
+            <DatePicker
+              value={endDate ? parseISO(endDate) : undefined}
+              onChange={(d) => setEndDate(d ? format(d, "yyyy-MM-dd") : "")}
+              ariaLabel={t("endDate")}
             />
             <p className="text-xs text-on-surface/40 mt-1">
               {t("endDateHelp")}
@@ -198,12 +201,14 @@ export function RecurringForm({
             </p>
           </div>
           <div className="flex items-end">
-            <label className="flex items-center gap-2 text-sm text-on-surface">
-              <input
-                type="checkbox"
+            <label
+              htmlFor="autoSend"
+              className="flex items-center gap-2 text-sm text-on-surface"
+            >
+              <Checkbox
+                id="autoSend"
                 checked={autoSend}
-                onChange={(e) => setAutoSend(e.target.checked)}
-                className="rounded"
+                onCheckedChange={(v) => setAutoSend(v === true)}
               />
               {t("autoSend")}
             </label>
@@ -216,12 +221,14 @@ export function RecurringForm({
           <h2 className="font-headline text-lg font-semibold text-on-surface">
             {t("lineItems")} <span className="text-tertiary">*</span>
           </h2>
-          <label className="flex items-center gap-2 text-sm text-on-surface-variant">
-            <input
-              type="checkbox"
+          <label
+            htmlFor="usesInclusiveTax"
+            className="flex items-center gap-2 text-sm text-on-surface-variant"
+          >
+            <Checkbox
+              id="usesInclusiveTax"
               checked={usesInclusiveTax}
-              onChange={(e) => setUsesInclusiveTax(e.target.checked)}
-              className="rounded"
+              onCheckedChange={(v) => setUsesInclusiveTax(v === true)}
             />
             {tInv("inclusiveTax")}
           </label>

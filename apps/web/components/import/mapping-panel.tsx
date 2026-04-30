@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -93,9 +94,11 @@ export function MappingPanel({
           <span className="font-label text-on-surface">
             {t("mappedCounter", { mapped: mappedCount, total: headers.length })}
           </span>
-          <span className="material-symbols-outlined text-on-surface/60">
-            {open ? "expand_less" : "expand_more"}
-          </span>
+          {open ? (
+            <ChevronUp className="h-5 w-5 text-on-surface/60" />
+          ) : (
+            <ChevronDown className="h-5 w-5 text-on-surface/60" />
+          )}
         </CollapsibleTrigger>
         <CollapsibleContent className="md:!block">
           <div className="bg-surface-container rounded-xl p-4 space-y-3">
@@ -113,9 +116,7 @@ export function MappingPanel({
 
             {aiLoading && (
               <div className="flex items-center gap-2 text-sm text-on-surface-variant">
-                <span className="material-symbols-outlined animate-spin text-base">
-                  progress_activity
-                </span>
+                <Loader2 className="h-4 w-4 animate-spin" />
                 {t("ai.lookingForMatches")}
               </div>
             )}

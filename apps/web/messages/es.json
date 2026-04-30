@@ -10,7 +10,8 @@
     "loading": "Cargando...",
     "saving": "Guardando...",
     "comingSoon": "Próximamente",
-    "soonBadge": "Pronto"
+    "soonBadge": "Pronto",
+    "pickRange": "Selecciona rango"
   },
   "nav": {
     "ai": "IA",
@@ -139,6 +140,8 @@
     "taxId": "Número de IVA / ID fiscal",
     "taxAuthority": "Autoridad fiscal",
     "country": "País",
+    "selectCountry": "Seleccionar país…",
+    "searchCountry": "Buscar país…",
     "addressLine1": "Dirección línea 1",
     "addressLine2": "Dirección línea 2",
     "city": "Ciudad",
@@ -677,6 +680,8 @@
     "supplierNamePlaceholder": "ej. Cafetería, Estacionamiento, Suministros",
     "category": "Categoría",
     "selectCategory": "Seleccionar una categoría",
+    "searchCategory": "Buscar categoría…",
+    "noCategoryFound": "No se encontró categoría",
     "categories": "Categorías",
     "categoriesTitle": "Categorías de gastos",
     "expenseDate": "Fecha del gasto",
@@ -772,6 +777,7 @@
     "apply": "Aplicar",
     "loading": "Cargando...",
     "dateTo": "hasta",
+    "dateRange": "Rango de fechas",
     "pnlEmptyTitle": "Aún nada que reportar",
     "pnlEmptySubtext": "Tu informe de Pérdidas y Ganancias tomará forma en cuanto añadas una factura o un gasto para el período seleccionado.",
     "createInvoiceCta": "Crear factura",

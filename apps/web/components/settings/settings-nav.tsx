@@ -3,10 +3,20 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
+import {
+  Building2,
+  ChevronRight,
+  Palette,
+  Puzzle,
+  SlidersHorizontal,
+  Tag,
+  User,
+  type LucideIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface NavItem {
-  icon: string;
+  icon: LucideIcon;
   labelKey: string;
   subtitleKey: string;
   href: string;
@@ -22,13 +32,13 @@ const sections: NavSection[] = [
     titleKey: "sectionOrganisation",
     items: [
       {
-        icon: "business",
+        icon: Building2,
         labelKey: "organisation",
         subtitleKey: "organisationSubtitle",
         href: "/settings/organisation",
       },
       {
-        icon: "tag",
+        icon: Tag,
         labelKey: "numbering",
         subtitleKey: "numberingSubtitle",
         href: "/settings/numbering",
@@ -39,25 +49,25 @@ const sections: NavSection[] = [
     titleKey: "sectionUser",
     items: [
       {
-        icon: "tune",
+        icon: SlidersHorizontal,
         labelKey: "general",
         subtitleKey: "generalSubtitle",
         href: "/settings/general",
       },
       {
-        icon: "person",
+        icon: User,
         labelKey: "account",
         subtitleKey: "accountSubtitle",
         href: "/settings/account",
       },
       {
-        icon: "palette",
+        icon: Palette,
         labelKey: "appearance",
         subtitleKey: "appearanceSubtitle",
         href: "/settings/appearance",
       },
       {
-        icon: "extension",
+        icon: Puzzle,
         labelKey: "integrations",
         subtitleKey: "integrationsSubtitle",
         href: "/settings/integrations",
@@ -65,8 +75,6 @@ const sections: NavSection[] = [
     ],
   },
 ];
-
-const allItems = sections.flatMap((s) => s.items);
 
 export function SettingsNav() {
   const pathname = usePathname();
@@ -91,6 +99,7 @@ export function SettingsNav() {
             <ul className="space-y-0.5">
               {section.items.map((item) => {
                 const active = isActive(item.href);
+                const Icon = item.icon;
                 return (
                   <li key={item.href}>
                     <Link
@@ -102,9 +111,7 @@ export function SettingsNav() {
                           : "text-on-surface/60 hover:text-on-surface hover:bg-surface-container-high/50",
                       )}
                     >
-                      <span className="material-symbols-outlined text-[20px] leading-none">
-                        {item.icon}
-                      </span>
+                      <Icon className="h-5 w-5" />
                       <span className="font-label">{t(item.labelKey)}</span>
                     </Link>
                   </li>
@@ -125,6 +132,7 @@ export function SettingsNav() {
             <div className="bg-surface-container rounded-2xl overflow-hidden divide-y divide-outline-variant/10">
               {section.items.map((item) => {
                 const active = isActive(item.href);
+                const Icon = item.icon;
                 return (
                   <Link
                     key={item.href}
@@ -136,9 +144,7 @@ export function SettingsNav() {
                         : "hover:bg-surface-container-high/50",
                     )}
                   >
-                    <span className="material-symbols-outlined text-[20px] text-on-surface-variant leading-none">
-                      {item.icon}
-                    </span>
+                    <Icon className="h-5 w-5 text-on-surface-variant" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-on-surface">
                         {t(item.labelKey)}
@@ -147,9 +153,7 @@ export function SettingsNav() {
                         {t(item.subtitleKey)}
                       </p>
                     </div>
-                    <span className="material-symbols-outlined text-[18px] text-on-surface-variant leading-none">
-                      chevron_right
-                    </span>
+                    <ChevronRight className="h-[18px] w-[18px] text-on-surface-variant" />
                   </Link>
                 );
               })}

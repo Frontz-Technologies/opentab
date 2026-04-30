@@ -343,6 +343,7 @@ Two icon systems, each for a distinct context:
 
 - Inline icons inside buttons, inputs, table cells
 - Stroke-based, pairs cleanly with Inter at small sizes
+- Sizes: `size-5` (20px) for sidebar / nav, `size-4` (16px) for inline action icons. The `SidebarMenuButton` cva pins descendant SVGs to `size-5`; do not rely on `h-5 w-5` on the `<Icon />` itself, since the descendant selector wins on specificity.
 
 Never mix the two systems within a single UI region. Navigation uses Material; inline UI uses Lucide.
 
@@ -403,3 +404,28 @@ Danger:          #B3261E (text) / #F9DEDC (container)
 Ghost border:    rgba(194, 207, 198, 0.10)
 Glass:           85% opacity, blur(16px)
 ```
+
+## Form primitives (post-2026-04-29 sweep)
+
+The application uses shadcn/ui primitives for every interactive form control. Native HTML form elements (`<select>`, `<input type="date">`, `<input type="checkbox">`) are only acceptable when:
+
+- they are hidden (`type="hidden"`), used to round-trip values to FormData / server actions;
+- they are part of a third-party widget being integrated; or
+- they are intentionally rendered for accessibility-tree reasons inside a styled wrapper that is the user-facing element.
+
+In every other case, use the wrappers in `apps/web/components/ui/`:
+
+| Need                                               | Use                                                         |
+| -------------------------------------------------- | ----------------------------------------------------------- |
+| Pick from up to ~7 short options, no search needed | `<Select>` (shadcn Select)                                  |
+| Pick from a long list, search is helpful           | `<Combobox>` (`components/ui/combobox.tsx`)                 |
+| Action menu / non-form dropdown                    | `<DropdownMenu>`                                            |
+| Single date                                        | `<DatePicker>` (`components/ui/date-picker.tsx`)            |
+| Date range                                         | `<DateRangePicker>` (`components/ui/date-range-picker.tsx`) |
+| Boolean toggle (form field)                        | `<Checkbox>` (`components/ui/checkbox.tsx`)                 |
+| Boolean toggle (settings)                          | `<Switch>`                                                  |
+| Toast / transient feedback                         | `<Sonner>` (`components/ui/sonner.tsx`)                     |
+
+The Combobox and date pickers always render a hidden `<input>` mirror with the configured `name` so server actions reading `FormData` continue to work without changes. The Checkbox uses `onCheckedChange` (returning `boolean | "indeterminate"`); when binding to a `boolean` setter, coerce via `=== true`.
+
+When a long-list `<Select>` is hard to scan (countries, categories, large enums), prefer `<Combobox>`. New code should not introduce native `<select>` / `<input type="date">` / `<input type="checkbox">`. Lint rules in a follow-up will enforce this once the codebase is fully migrated.

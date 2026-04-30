@@ -2,43 +2,61 @@
 
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import {
+  Building2,
+  Check,
+  ChevronRight,
+  ImageIcon,
+  ReceiptText,
+  RefreshCw,
+  UserPlus,
+  type LucideIcon,
+} from "lucide-react";
 
 interface QuickSetupProps {
   completedSteps: string[];
 }
 
-const steps = [
+interface SetupStep {
+  id: string;
+  icon: LucideIcon;
+  labelKey: string;
+  href: string;
+  enabled: boolean;
+}
+
+const steps: SetupStep[] = [
   {
     id: "company_info",
-    icon: "business",
+    icon: Building2,
     labelKey: "companyInfo",
     href: "/settings/company",
     enabled: true,
   },
   {
     id: "vat_number",
-    icon: "receipt_long",
+    icon: ReceiptText,
     labelKey: "vatNumber",
     href: "/settings/company",
     enabled: true,
   },
   {
     id: "upload_logo",
-    icon: "image",
+    icon: ImageIcon,
     labelKey: "uploadLogo",
     href: "#",
     enabled: false,
   },
   {
     id: "connect_mydata",
-    icon: "cloud_sync",
+    icon: RefreshCw,
     labelKey: "connectMydata",
     href: "#",
     enabled: false,
   },
   {
     id: "invite_team",
-    icon: "group_add",
+    icon: UserPlus,
     labelKey: "inviteTeam",
     href: "#",
     enabled: false,
@@ -90,15 +108,14 @@ export function QuickSetup({ completedSteps }: QuickSetupProps) {
                   }`}
                   aria-hidden
                 >
-                  {isCompleted && (
-                    <span className="material-symbols-outlined text-[14px] font-bold">
-                      check
-                    </span>
-                  )}
+                  {isCompleted && <Check className="h-3.5 w-3.5" />}
                 </span>
-                <span className="material-symbols-outlined text-lg text-on-surface-variant shrink-0">
-                  {step.icon}
-                </span>
+                {(() => {
+                  const Icon = step.icon;
+                  return (
+                    <Icon className="h-[18px] w-[18px] text-on-surface-variant shrink-0" />
+                  );
+                })()}
                 <span
                   className={`font-medium text-sm min-w-0 flex-1 ${
                     isCompleted
@@ -108,12 +125,10 @@ export function QuickSetup({ completedSteps }: QuickSetupProps) {
                 >
                   {t(step.labelKey)}
                 </span>
-                <span
-                  className="material-symbols-outlined text-[18px] text-on-surface-variant opacity-0 transition-opacity group-hover:opacity-100 shrink-0"
+                <ChevronRight
+                  className="h-[18px] w-[18px] text-on-surface-variant opacity-0 transition-opacity group-hover:opacity-100 shrink-0"
                   aria-hidden
-                >
-                  chevron_right
-                </span>
+                />
               </Link>
             );
           }
@@ -126,9 +141,12 @@ export function QuickSetup({ completedSteps }: QuickSetupProps) {
                 className="flex size-5 shrink-0 items-center justify-center rounded-full border border-outline-variant/20 bg-surface-container-low"
                 aria-hidden
               />
-              <span className="material-symbols-outlined text-lg text-on-surface-variant shrink-0">
-                {step.icon}
-              </span>
+              {(() => {
+                const Icon = step.icon;
+                return (
+                  <Icon className="h-[18px] w-[18px] text-on-surface-variant shrink-0" />
+                );
+              })()}
               <span className="font-medium text-sm text-on-surface/70 min-w-0 flex-1">
                 {t(step.labelKey)}
               </span>

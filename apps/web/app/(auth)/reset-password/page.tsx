@@ -4,6 +4,7 @@ import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { Landmark, Loader2 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,9 +66,7 @@ function ResetPasswordForm() {
         {/* Mobile logo — hidden on desktop */}
         <div className="flex lg:hidden items-center gap-3 mb-8">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center">
-            <span className="material-symbols-outlined text-on-primary text-lg">
-              account_balance
-            </span>
+            <Landmark className="h-5 w-5 text-on-primary" />
           </div>
           <span className="font-headline text-xl font-bold text-on-surface">
             OpenTab
@@ -92,9 +91,7 @@ function ResetPasswordForm() {
       {/* Mobile logo — hidden on desktop */}
       <div className="flex lg:hidden items-center gap-3 mb-8">
         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center">
-          <span className="material-symbols-outlined text-on-primary text-lg">
-            account_balance
-          </span>
+          <Landmark className="h-5 w-5 text-on-primary" />
         </div>
         <span className="font-headline text-xl font-bold text-on-surface">
           OpenTab
@@ -165,9 +162,7 @@ export default function ResetPasswordPage() {
     <Suspense
       fallback={
         <div className="bg-surface-container-low rounded-2xl p-8 flex items-center justify-center h-48">
-          <span className="material-symbols-outlined text-on-surface-variant animate-spin">
-            progress_activity
-          </span>
+          <Loader2 className="h-6 w-6 text-on-surface-variant animate-spin" />
         </div>
       }
     >

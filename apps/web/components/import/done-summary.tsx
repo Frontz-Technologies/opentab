@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface DoneSummaryProps {
@@ -38,10 +39,8 @@ export function DoneSummary({
   const t = useTranslations("import");
   return (
     <div className="space-y-6">
-      <div className="text-center space-y-3">
-        <span className="material-symbols-outlined text-5xl text-primary">
-          check_circle
-        </span>
+      <div className="flex flex-col items-center text-center space-y-3">
+        <CheckCircle2 className="h-12 w-12 text-primary" />
         <h2 className="font-headline text-2xl font-bold text-on-surface">
           {t("importComplete")}
         </h2>

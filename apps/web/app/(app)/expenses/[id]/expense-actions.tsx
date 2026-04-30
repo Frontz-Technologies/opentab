@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { Trash2 } from "lucide-react";
 import type { Expense } from "@opentab/db/schema";
 import { Button } from "@/components/ui/button";
 import { deleteExpense } from "../actions";
@@ -32,9 +33,7 @@ export function ExpenseActions({ expense }: ExpenseActionsProps) {
         }}
         disabled={isPending}
       >
-        <span className="material-symbols-outlined text-[16px] mr-1">
-          delete
-        </span>
+        <Trash2 className="h-4 w-4 mr-1" />
         {t("delete")}
       </Button>
     </div>

@@ -1,7 +1,9 @@
+import { ArrowDown, ArrowUp, type LucideIcon } from "lucide-react";
+
 interface KpiCardProps {
   label: string;
   value: string;
-  icon: string;
+  icon: LucideIcon;
   changePercent: number | null;
   secondary: string;
   variant?: "default" | "hero";
@@ -10,7 +12,7 @@ interface KpiCardProps {
 export function KpiCard({
   label,
   value,
-  icon,
+  icon: Icon,
   changePercent,
   secondary,
   variant = "default",
@@ -23,9 +25,7 @@ export function KpiCard({
   return (
     <div className="bg-surface-container-low rounded-2xl p-6 min-w-0">
       <div className="flex items-center gap-2 mb-4 min-w-0">
-        <span className="material-symbols-outlined text-on-surface-variant text-lg shrink-0">
-          {icon}
-        </span>
+        <Icon className="h-[18px] w-[18px] text-on-surface-variant shrink-0" />
         <p className="font-label text-xs uppercase tracking-widest text-on-surface-variant truncate">
           {label}
         </p>
@@ -38,9 +38,11 @@ export function KpiCard({
               changePercent >= 0 ? "text-primary" : "text-tertiary"
             }`}
           >
-            <span className="material-symbols-outlined text-sm">
-              {changePercent >= 0 ? "arrow_upward" : "arrow_downward"}
-            </span>
+            {changePercent >= 0 ? (
+              <ArrowUp className="h-3.5 w-3.5" />
+            ) : (
+              <ArrowDown className="h-3.5 w-3.5" />
+            )}
             {Math.abs(changePercent).toFixed(1)}%
           </span>
         )}

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { FileText, Plus } from "lucide-react";
 import type { Quote } from "@opentab/db/schema";
 import { QUOTE_STATUS } from "@opentab/db/schema";
 import { Badge } from "@/components/ui/badge";
@@ -64,12 +65,12 @@ export function QuoteList({ quotes }: QuoteListProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
+      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-3">
         <Input
           placeholder={t("searchPlaceholder")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full md:max-w-sm"
+          className="w-full md:flex-1 md:max-w-md"
         />
         <AnimatedFilterBar
           items={filters.map((f) => ({ value: f.key, label: f.label }))}
@@ -81,9 +82,7 @@ export function QuoteList({ quotes }: QuoteListProps) {
       {filtered.length === 0 ? (
         quotes.length === 0 ? (
           <div className="flex flex-col items-center text-center py-16 px-6">
-            <span className="material-symbols-outlined text-5xl text-on-surface-variant mb-4 block">
-              description
-            </span>
+            <FileText className="h-12 w-12 text-on-surface-variant mb-4" />
             <h3 className="font-headline text-xl font-semibold text-on-surface mb-2">
               {t("noQuotes")}
             </h3>
@@ -94,15 +93,13 @@ export function QuoteList({ quotes }: QuoteListProps) {
               href="/quotes/new"
               className="inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-5 font-label text-sm font-medium text-on-primary transition-colors hover:bg-primary/90"
             >
-              <span className="material-symbols-outlined text-[18px]">add</span>
+              <Plus className="h-[18px] w-[18px]" />
               {t("addQuote")}
             </Link>
           </div>
         ) : (
           <div className="text-center py-12 text-on-surface-variant">
-            <span className="material-symbols-outlined text-4xl mb-2 block">
-              description
-            </span>
+            <FileText className="h-9 w-9 mx-auto mb-2" />
             <p className="font-label">{t("noQuotesMatch")}</p>
           </div>
         )

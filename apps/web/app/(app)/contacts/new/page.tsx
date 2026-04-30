@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
+import { ArrowRight, Check } from "lucide-react";
 import { getSession } from "@/lib/session";
 import { getCountryProvider } from "@/lib/country";
 import { db } from "@/lib/db";
@@ -46,21 +47,15 @@ export default async function NewContactPage() {
             </p>
             <ul className="space-y-2.5 text-sm text-on-surface">
               <li className="flex gap-2">
-                <span className="material-symbols-outlined text-[18px] text-primary mt-0.5">
-                  check
-                </span>
+                <Check className="h-[18px] w-[18px] text-primary mt-0.5 shrink-0" />
                 <span>{t("tipVat")}</span>
               </li>
               <li className="flex gap-2">
-                <span className="material-symbols-outlined text-[18px] text-primary mt-0.5">
-                  check
-                </span>
+                <Check className="h-[18px] w-[18px] text-primary mt-0.5 shrink-0" />
                 <span>{t("tipEmail")}</span>
               </li>
               <li className="flex gap-2">
-                <span className="material-symbols-outlined text-[18px] text-primary mt-0.5">
-                  check
-                </span>
+                <Check className="h-[18px] w-[18px] text-primary mt-0.5 shrink-0" />
                 <span>{t("tipAddress")}</span>
               </li>
             </ul>
@@ -95,9 +90,7 @@ export default async function NewContactPage() {
                 className="inline-flex items-center gap-1 text-xs font-label uppercase tracking-widest text-primary hover:underline"
               >
                 {t("viewAll")}
-                <span className="material-symbols-outlined text-[14px]">
-                  arrow_forward
-                </span>
+                <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </div>
           )}
