@@ -489,3 +489,293 @@ session's org before INSERT/UPDATE, returning a validation error
 otherwise. Recommended as a single follow-up issue
 (write-side FK same-org validation across contactId / productId /
 categoryId / invoiceId).
+
+# Phase D — recurring + integrations + ai + user prefs
+
+> Phase D scope: `recurring_invoice`, `recurring_invoice_item`,
+> `recurring_expense`, `recurring_expense_item`,
+> `country_integration_credential`,
+> `country_integration_submission`, `user_preferences`,
+> `ai_settings`, `inbound_document`. AI chat tables and
+> `imports` were named in the spec but DO NOT exist in the
+> schema (`packages/db/src/schema/index.ts`); both noted as
+> `(no schema)` and skipped.
+
+## recurring_invoice
+
+`recurring_invoice` carries `orgId` (NOT NULL, FK organisation, cascade).
+
+| File:line                                        | Status | Evidence / fix                                                                                                                                                                         |
+| ------------------------------------------------ | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/web/app/(app)/recurring/[id]/page.tsx:38`  | ✅     | `from(recurringInvoices).where(and(eq(id, …), eq(orgId, session.org.id)))` (L40)                                                                                                       |
+| `apps/web/app/(app)/recurring/page.tsx:33`       | ✅     | List query — `where(eq(orgId, session.org.id))` (L34)                                                                                                                                  |
+| `apps/web/app/(app)/recurring/page.tsx:40`       | ✅     | Count query — `where(eq(orgId, session.org.id))` (L41)                                                                                                                                 |
+| `apps/web/app/(app)/recurring/actions.ts:78`     | ✅     | `createRecurring` INSERT sets `orgId: session.org.id` (L80)                                                                                                                            |
+| `apps/web/app/(app)/recurring/actions.ts:154`    | ✅     | `updateRecurring` UPDATE — `where(and(eq(id, …), eq(orgId, session.org.id)))` (L171). Pre-check at L133 (added in commit `bc4942b`) gates the action before any line-item DELETE runs. |
+| `apps/web/app/(app)/recurring/actions.ts:212`    | ✅     | `pauseRecurring` UPDATE — `where(and(eq(id, …), eq(orgId, session.org.id)))` (L216)                                                                                                    |
+| `apps/web/app/(app)/recurring/actions.ts:231`    | ✅     | `resumeRecurring` UPDATE — `where(and(eq(id, …), eq(orgId, session.org.id)))` (L235)                                                                                                   |
+| `apps/web/app/(app)/recurring/actions.ts:250`    | ✅     | `deleteRecurring` DELETE — `where(and(eq(id, …), eq(orgId, session.org.id)))` (L254)                                                                                                   |
+| `apps/web/__tests__/cross-org/recurring.test.ts` | ✅     | New defence-in-depth test for `updateRecurring` line-item leak (Phase D commit `bc4942b`).                                                                                             |
+
+## recurring_invoice_item
+
+`recurring_invoice_item` has NO `orgId` column. Authorization flows
+through the FK to `recurring_invoice.id` (`onDelete: cascade`); the
+parent must be orgId-verified before any item-table mutation.
+
+| File:line                                       | Status  | Evidence / fix                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ----------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/web/app/(app)/recurring/[id]/page.tsx:50` | ✅      | Reads after the parent recurring invoice was fetched by `eq(orgId, session.org.id)` (L40); `recurringInvoiceId` is session-verified.                                                                                                                                                                                                                                                                                                                                    |
+| `apps/web/app/(app)/recurring/actions.ts:102`   | ✅      | INSERT runs after `createRecurring` inserted the parent with `orgId: session.org.id`; `recurringInvoiceId` carries authorisation via FK.                                                                                                                                                                                                                                                                                                                                |
+| `apps/web/app/(app)/recurring/actions.ts:177`   | ❌ → ✅ | DELETE used `eq(recurringInvoiceItems.recurringInvoiceId, id)` only. The preceding parent UPDATE was scoped (`and(eq(id, X), eq(orgId, session.org.id))`) and silently no-ops on a cross-org id, but the DELETE then wiped another org's items and the subsequent INSERT inserted the attacker's lines into the victim's recurring. Real cross-org leak — fixed in commit `bc4942b` by adding a pre-check that returns early when the parent is not in the session org. |
+| `apps/web/app/(app)/recurring/actions.ts:186`   | ✅      | Re-INSERT into the parent that the new pre-check just verified is same-org.                                                                                                                                                                                                                                                                                                                                                                                             |
+
+## recurring_expense
+
+`recurring_expense` carries `orgId` (NOT NULL, FK organisation, cascade).
+
+| File:line                                                 | Status | Evidence / fix                                                                                                                                                                      |
+| --------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/web/app/(app)/recurring-expenses/page.tsx:33`       | ✅     | List query — `where(eq(orgId, session.org.id))` (L34)                                                                                                                               |
+| `apps/web/app/(app)/recurring-expenses/page.tsx:40`       | ✅     | Count query — `where(eq(orgId, session.org.id))` (L41)                                                                                                                              |
+| `apps/web/app/(app)/recurring-expenses/[id]/page.tsx:47`  | ✅     | `from(recurringExpenses).where(and(eq(id, …), eq(orgId, session.org.id)))` (L49)                                                                                                    |
+| `apps/web/app/(app)/recurring-expenses/actions.ts:78`     | ✅     | `createRecurringExpense` INSERT sets `orgId: session.org.id` (L80)                                                                                                                  |
+| `apps/web/app/(app)/recurring-expenses/actions.ts:154`    | ✅     | `updateRecurringExpense` UPDATE — `where(and(eq(id, …), eq(orgId, session.org.id)))` (L172). Pre-check at L133 (added in commit `bc4942b`) gates the action before any item DELETE. |
+| `apps/web/app/(app)/recurring-expenses/actions.ts:211`    | ✅     | `pauseRecurringExpense` UPDATE — `where(and(eq(id, …), eq(orgId, session.org.id)))` (L218)                                                                                          |
+| `apps/web/app/(app)/recurring-expenses/actions.ts:233`    | ✅     | `resumeRecurringExpense` UPDATE — `where(and(eq(id, …), eq(orgId, session.org.id)))` (L240)                                                                                         |
+| `apps/web/app/(app)/recurring-expenses/actions.ts:255`    | ✅     | `deleteRecurringExpense` DELETE — `where(and(eq(id, …), eq(orgId, session.org.id)))` (L259)                                                                                         |
+| `apps/web/__tests__/cross-org/recurring-expenses.test.ts` | ✅     | New defence-in-depth test for `updateRecurringExpense` line-item leak (Phase D commit `bc4942b`).                                                                                   |
+
+## recurring_expense_item
+
+`recurring_expense_item` has NO `orgId` column. Same parent-FK
+shape as `recurring_invoice_item`.
+
+| File:line                                                | Status  | Evidence / fix                                                                                                                                                                                                                                                                                                                                                                                                |
+| -------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/web/app/(app)/recurring-expenses/[id]/page.tsx:59` | ✅      | Reads after the parent was fetched by `eq(orgId, session.org.id)` (L49); `recurringExpenseId` is session-verified.                                                                                                                                                                                                                                                                                            |
+| `apps/web/app/(app)/recurring-expenses/actions.ts:103`   | ✅      | INSERT runs after `createRecurringExpense` inserted the parent with `orgId: session.org.id`; FK carries authorisation.                                                                                                                                                                                                                                                                                        |
+| `apps/web/app/(app)/recurring-expenses/actions.ts:178`   | ❌ → ✅ | DELETE used `eq(recurringExpenseItems.recurringExpenseId, id)` only — same shape as the recurring-invoice leak above. Cross-org id no-ops the parent UPDATE but the DELETE wipes another org's line items and the subsequent INSERT inserts the attacker's into the victim's recurring expense. Fixed in commit `bc4942b` by adding a pre-check that returns early when the parent is not in the session org. |
+| `apps/web/app/(app)/recurring-expenses/actions.ts:188`   | ✅      | Re-INSERT into the parent that the pre-check just verified.                                                                                                                                                                                                                                                                                                                                                   |
+
+## country_integration_credential
+
+`country_integration_credential` carries `orgId` (NOT NULL, FK
+organisation, cascade) plus a `(orgId, countryCode, kind)` unique
+index — a row is unique per org per integration.
+
+| File:line                                                        | Status  | Evidence / fix                                                                                                                                                                                                                                                       |
+| ---------------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/web/app/(app)/settings/integrations/mydata/actions.ts:62`  | ✅      | `grMydataFilter(session.org.id)` selects with `eq(orgId, …)` (L33).                                                                                                                                                                                                  |
+| `apps/web/app/(app)/settings/integrations/mydata/actions.ts:73`  | ❌ → ✅ | UPDATE used `eq(id, existing.id)` only. SELECT was scoped (L62) so the row is session-safe by construction, but the mutation now also includes `eq(orgId, session.org.id)` as defence-in-depth (every mutation carries orgId). Fixed in commit `8cba508`.            |
+| `apps/web/app/(app)/settings/integrations/mydata/actions.ts:85`  | ✅      | INSERT sets `orgId: session.org.id` (L86).                                                                                                                                                                                                                           |
+| `apps/web/app/(app)/settings/integrations/mydata/actions.ts:112` | ✅      | `grMydataFilter(session.org.id)` selects with `eq(orgId, …)`.                                                                                                                                                                                                        |
+| `apps/web/app/(app)/settings/integrations/mydata/actions.ts:139` | ❌ → ✅ | UPDATE used `eq(id, cred.id)` only. Same DI shape as L73 — fixed in commit `8cba508`.                                                                                                                                                                                |
+| `apps/web/app/(app)/settings/integrations/mydata/actions.ts:160` | ✅      | DELETE — `grMydataFilter(session.org.id)` includes `eq(orgId, …)`.                                                                                                                                                                                                   |
+| `apps/web/app/(app)/settings/integrations/mydata/actions.ts:175` | ✅      | `grMydataFilter(session.org.id)` selects with `eq(orgId, …)`.                                                                                                                                                                                                        |
+| `apps/web/app/(app)/settings/integrations/[slug]/actions.ts:79`  | ✅      | `where(and(eq(orgId, session.org.id), eq(countryCode, …), eq(kind, …)))` (L82)                                                                                                                                                                                       |
+| `apps/web/app/(app)/settings/integrations/[slug]/actions.ts:90`  | ❌ → ✅ | UPDATE used `eq(id, existing.id)` only. Same DI shape as the mydata file — fixed in commit `8cba508`.                                                                                                                                                                |
+| `apps/web/app/(app)/settings/integrations/[slug]/actions.ts:104` | ✅      | INSERT sets `orgId: session.org.id`.                                                                                                                                                                                                                                 |
+| `apps/web/app/(app)/settings/integrations/[slug]/actions.ts:137` | ✅      | `where(and(eq(orgId, session.org.id), eq(countryCode, …), eq(kind, …)))` (L139)                                                                                                                                                                                      |
+| `apps/web/app/(app)/settings/integrations/[slug]/actions.ts:183` | ❌ → ✅ | UPDATE used `eq(id, cred.id)` only. Same DI shape — fixed in commit `8cba508`.                                                                                                                                                                                       |
+| `apps/web/app/(app)/settings/integrations/[slug]/actions.ts:205` | ✅      | DELETE — `where(and(eq(orgId, session.org.id), eq(countryCode, …), eq(kind, …)))` (L207)                                                                                                                                                                             |
+| `apps/web/app/(app)/settings/integrations/page.tsx:34`           | ✅      | `where(and(eq(orgId, session.org.id), eq(countryCode, provider.code)))` (L36)                                                                                                                                                                                        |
+| `apps/web/app/(app)/settings/integrations/[slug]/page.tsx:33`    | ✅      | `where(and(eq(orgId, session.org.id), eq(countryCode, …), eq(kind, …)))` (L35)                                                                                                                                                                                       |
+| `apps/web/app/(app)/invoices/page.tsx:61`                        | ✅      | `where(and(eq(orgId, session.org.id), eq(countryCode, …), eq(kind, "mydata"), eq(isActive, true)))` (L63)                                                                                                                                                            |
+| `apps/web/lib/country/submit-invoice.ts:39`                      | 🟡      | `loadCredentials(orgId, countryCode, kind)` — helper. Callers: `submitInvoiceThroughPlugins` (L93) and `cancelInvoiceOnPlugins` (L368) both pass `orgCtx.id`. `orgCtx` originates from `app/(app)/invoices/actions.ts` callers that derive id from `session.org.id`. |
+| `apps/web/lib/country/submit-invoice.ts:283`                     | 🟡      | UPDATE on `cred.id` returned by the scoped `loadCredentials` helper above. Inside an internal lib called only with verified `orgCtx`. Same shape as a Phase B helper — DI not added because the surrounding code is already trusted-path internal.                   |
+| `apps/web/lib/country/submit-credit-note.ts:40`                  | 🟡      | `loadCredentials(orgId, countryCode, kind)` — same caller chain as the invoice variant.                                                                                                                                                                              |
+| `apps/web/__tests__/cross-org/country-integrations.test.ts`      | ✅      | New defence-in-depth test for the credential UPDATE WHERE shape (Phase D commit `8cba508`).                                                                                                                                                                          |
+
+## country_integration_submission
+
+`country_integration_submission` carries `orgId` (NOT NULL, FK
+organisation, cascade) plus optional FKs to invoice / expense /
+credit_note. Submissions are inserted by trusted internal lib code
+(`submit-invoice.ts`, `submit-credit-note.ts`) with `orgId` from the
+caller's `orgCtx`; subsequent UPDATEs reference rows just inserted in
+the same function call.
+
+| File:line                                                           | Status | Evidence / fix                                                                                                                                                                                                                                                      |
+| ------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/web/lib/country/submit-invoice.ts:189`                        | ✅     | INSERT sets `orgId: orgCtx.id` (L191).                                                                                                                                                                                                                              |
+| `apps/web/lib/country/submit-invoice.ts:228`                        | ✅     | UPDATE on `submission.id` returned by the scoped INSERT seven lines above. Internal lib, trusted path. Phase B notes: orgId-on-mutation policy is satisfied for INSERT-then-UPDATE on the same row in the same function with no untrusted call boundary in between. |
+| `apps/web/lib/country/submit-invoice.ts:269`                        | ✅     | Same shape — UPDATE on the just-inserted submission.                                                                                                                                                                                                                |
+| `apps/web/lib/country/submit-invoice.ts:303`                        | ✅     | Same shape — UPDATE on the just-inserted submission.                                                                                                                                                                                                                |
+| `apps/web/lib/country/submit-invoice.ts:354`                        | ✅     | `persistPreflightFailure` INSERT sets `orgId: input.orgId` from caller-supplied trusted ctx.                                                                                                                                                                        |
+| `apps/web/lib/country/submit-invoice.ts:380`                        | ✅     | `where(and(eq(orgId, orgCtx.id), eq(countryCode, …), eq(kind, …), eq(invoiceId, …), eq(status, CONFIRMED)))` (L382-L391)                                                                                                                                            |
+| `apps/web/lib/country/submit-invoice.ts:438`                        | ✅     | UPDATE on `latest.id` from the L378 scoped SELECT.                                                                                                                                                                                                                  |
+| `apps/web/lib/country/submit-credit-note.ts:166`                    | ✅     | INSERT sets `orgId: orgCtx.id` (L168).                                                                                                                                                                                                                              |
+| `apps/web/lib/country/submit-credit-note.ts:197`                    | ✅     | UPDATE on the just-inserted submission. Same trusted-path argument as `submit-invoice.ts:228`.                                                                                                                                                                      |
+| `apps/web/lib/country/submit-credit-note.ts:230`                    | ✅     | Same — UPDATE on just-inserted submission.                                                                                                                                                                                                                          |
+| `apps/web/lib/country/submit-credit-note.ts:258`                    | ✅     | Same — UPDATE on just-inserted submission.                                                                                                                                                                                                                          |
+| `apps/web/lib/country/providers/gr/integrations/mydata/index.ts:48` | ✅     | `findParentMark(orgId, parentInvoiceId)` — `where(and(eq(orgId, orgId), eq(invoiceId, …), eq(kind, "mydata"), eq(status, CONFIRMED)))` (L50). Caller (`submitCreditNoteThroughPlugins`) passes `input.orgId` from `orgCtx`.                                         |
+| `apps/web/app/(app)/invoices/[id]/page.tsx:69`                      | ✅     | Submission lookup runs after the parent invoice was fetched by `eq(orgId, session.org.id)` (L49); `invoiceId` is session-verified.                                                                                                                                  |
+| `apps/web/app/(app)/invoices/page.tsx:81`                           | ✅     | `where(and(eq(orgId, session.org.id), eq(countryCode, provider.code), eq(kind, "mydata"), inArray(invoiceId, …)))` (L83)                                                                                                                                            |
+| `apps/web/app/api/invoices/[id]/pdf/route.ts:66`                    | ✅     | Submission lookup runs after the parent invoice was fetched by `eq(orgId, session.org.id)` (L38); `invoiceId` is session-verified.                                                                                                                                  |
+| `apps/web/__tests__/submit-invoice-preflight.test.ts:77,114`        | ✅     | Test-only — isolated PGlite DB.                                                                                                                                                                                                                                     |
+| `apps/web/__tests__/submit-credit-note.test.ts:126,176`             | ✅     | Test-only — isolated PGlite DB.                                                                                                                                                                                                                                     |
+
+## user_preferences
+
+`user_preferences` is a per-user table — NO `orgId` column. The
+schema's unique index is `(userId)` only, so per-user rows are
+shared across every org the user is a member of (and every row's
+fields — locale, theme, density, notification toggles — are
+user-level UI preferences, not org data). Scoping requirement:
+`eq(userId, session.user.id)`.
+
+| File:line                                     | Status | Evidence / fix                                                                                                                                                                                                                      |
+| --------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/web/lib/actions/user-preferences.ts:14` | ✅     | `getUserPreferences` — `where(eq(userId, session.user.id))` (L15)                                                                                                                                                                   |
+| `apps/web/lib/actions/user-preferences.ts:36` | ✅     | `upsertUserPreferences` SELECT — `where(eq(userId, session.user.id))` (L37)                                                                                                                                                         |
+| `apps/web/lib/actions/user-preferences.ts:41` | ✅     | `upsertUserPreferences` UPDATE — `where(eq(userId, session.user.id))` (L43)                                                                                                                                                         |
+| `apps/web/lib/actions/user-preferences.ts:49` | ✅     | `upsertUserPreferences` INSERT sets `userId: session.user.id` (L50)                                                                                                                                                                 |
+| `apps/web/i18n/request.ts:32`                 | ✅     | i18n locale resolver — `where(eq(userId, session.user.id))` (L33). Read-only locale lookup with a hard-coded validation set ("en"/"el"/"es"); no cross-user surface even if the row leaked, but the WHERE is correctly user-scoped. |
+
+## ai_settings
+
+`ai_settings` carries `orgId` (NOT NULL, FK organisation, cascade)
+with a unique index on `orgId` — at most one row per org.
+
+| File:line                                          | Status  | Evidence / fix                                                                                                                                                                                                                                                                                                                            |
+| -------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/web/lib/actions/ai-settings.ts:60`           | ✅      | `getAiSettingsRow(orgId)` — `where(eq(orgId, orgId))` (L61). Helper takes `orgId` parameter.                                                                                                                                                                                                                                              |
+| `apps/web/lib/actions/ai-settings.ts:177`          | ❌ → ✅ | `updateAiSettings` UPDATE used `eq(id, existing.id)` only (`existing` was scoped, but the mutation should carry orgId). Fixed in commit `8cba508` to `where(and(eq(id, existing.id), eq(orgId, orgId)))` — same DI shape as the country-credential fixes.                                                                                 |
+| `apps/web/lib/actions/ai-settings.ts:190`          | ✅      | INSERT sets `orgId` from `session.org.id` (via the local `orgId` const, L123).                                                                                                                                                                                                                                                            |
+| `apps/web/lib/actions/ai-settings.ts:221`          | ❌ → ✅ | `deleteApiKey` previously used the opaque double-eq self-canceling WHERE `and(eq(orgId, caller.orgId), eq(orgId, session.org.id))` — technically safe but semantically obscure. Fixed in commit `8cba508` to throw `Forbidden` up front when `caller.orgId !== session.org.id` and run a single clear `eq(orgId, session.org.id)` UPDATE. |
+| `apps/web/__tests__/cross-org/ai-settings.test.ts` | ✅      | New cross-org test for `deleteApiKey` (Phase D commit `8cba508`).                                                                                                                                                                                                                                                                         |
+
+The `getAiSettingsRow` helper is called from `getAiSettings`,
+`getAiSettingsSecret`, `updateAiSettings`, `isReceiptExtractionEnabled`,
+and `isAiChatEnabled`. All callers pass either `session.org.id` directly
+or an `orgId` parameter that itself originates from the calling
+session — `app/(app)/settings/integrations/page.tsx:47` and the
+AI chat / extraction routes both authenticate through `getSession()`
+and pass the session-verified org id.
+
+## ai*chat*\*
+
+**No schema.** A grep for `aiChat` in `packages/db/src/schema/*.ts`
+returns no exports, and `packages/db/src/schema/index.ts` declares
+no chat-related tables. AI chat in this codebase is currently a
+streaming-only API (`apps/web/app/api/ai/chat/route.ts`) that does
+not persist conversation state — every request fetches the org's
+data live (via tools that scope by `session.org.id`) and streams
+the response without storing messages. No call sites; no surface.
+
+## imports
+
+**No schema.** A grep for `imports`-as-a-table returns nothing —
+the only `imports` mentions in `packages/db/src/schema/*.ts` are
+comments on per-org dedup-key columns added in #215 (CSV-import
+idempotency lives on the destination tables: `invoices.importHash`,
+`expenses.importHash`, `contacts.importHash`,
+`creditNotes.importHash`). The CSV-import flow lands rows directly
+into the destination tables — there is no separate `imports`
+staging table. No call sites; no surface.
+
+## inbound_document
+
+`inbound_document` carries `orgId` (NOT NULL, FK organisation,
+cascade) — designed for AADE / similar inbound document feeds. **No
+call sites in `apps/web` yet.** The `mydata/index.ts` `syncInbound`
+hook is a stub returning `{ fetched: 0 }`; Phase 3 of the country
+integrations work will populate this table. When it does, the
+shape must match the rest of Phase D (every mutation carries
+`orgId`, every read filters `eq(orgId, session.org.id)`).
+
+## Summary (Phase D)
+
+| Table                            | ✅     | ❌ (fixed) | 🟡    | Total  |
+| -------------------------------- | ------ | ---------- | ----- | ------ |
+| `recurring_invoice`              | 9      | 0          | 0     | 9      |
+| `recurring_invoice_item`         | 3      | 1          | 0     | 4      |
+| `recurring_expense`              | 9      | 0          | 0     | 9      |
+| `recurring_expense_item`         | 3      | 1          | 0     | 4      |
+| `country_integration_credential` | 12     | 4          | 3     | 19     |
+| `country_integration_submission` | 16     | 0          | 0     | 16     |
+| `user_preferences`               | 5      | 0          | 0     | 5      |
+| `ai_settings`                    | 3      | 2          | 0     | 5      |
+| `ai_chat_*`                      | —      | —          | —     | —      |
+| `imports`                        | —      | —          | —     | —      |
+| `inbound_document`               | —      | —          | —     | —      |
+| **Total**                        | **60** | **8**      | **3** | **71** |
+
+## Real leaks vs defence-in-depth (Phase D)
+
+**Real cross-org leaks (2):**
+
+1. `recurring/actions.ts:177` — `updateRecurring` deleted line items by
+   `recurringInvoiceId` only after a scoped-but-no-op parent UPDATE.
+   Cross-org id wiped the victim org's items and re-inserted the
+   attacker's. Fixed by pre-checking parent same-org before the
+   DELETE/INSERT block.
+2. `recurring-expenses/actions.ts:178` — same shape as #1 against
+   `recurring_expense_item`. Fixed the same way.
+
+**Defence-in-depth additions (6):**
+
+3. `mydata/actions.ts:73` — UPDATE credential by id, after scoped SELECT.
+4. `mydata/actions.ts:138` — UPDATE credential by id (lastValidatedAt).
+5. `[slug]/actions.ts:90` — UPDATE credential by id, after scoped SELECT.
+6. `[slug]/actions.ts:183` — UPDATE credential by id (lastValidatedAt).
+7. `ai-settings.ts:177` — UPDATE settings by id, after scoped SELECT.
+8. `ai-settings.ts:215` — `deleteApiKey` opaque self-canceling WHERE
+   replaced with explicit Forbidden guard + single-eq UPDATE.
+
+## Tables noted but not audited
+
+- `ai_chat_*` — no schema, no persistence layer in current design.
+- `imports` — no schema; CSV-import idempotency uses per-table
+  `importHash` columns instead of a staging table.
+- `inbound_document` — schema exists but no call sites in
+  `apps/web` yet (Phase 3 country-integration work).
+
+## Out-of-scope follow-ups (Phase D carry-overs)
+
+These follow the same write-side FK same-org validation pattern as
+the Phase A / B / C carry-overs.
+
+- **`recurringInvoices.contactId`** — `createRecurring`
+  (`recurring/actions.ts:78`) and `updateRecurring`
+  (`recurring/actions.ts:154`) write `contactId: data.contactId` from
+  the form without same-org validation. Mirror of the
+  `invoices.contactId` / `quotes.contactId` carry-overs from Phase
+  C. Read-side leak is bounded today (the `[id]/page.tsx`
+  detail-render snapshots fields off the recurring row, not the
+  joined contact), but the FK can still point at another org's
+  contact after an edit.
+
+- **`recurringExpenses.contactId` / `recurringExpenses.categoryId`** —
+  same shape. `createRecurringExpense` and `updateRecurringExpense`
+  write both from the form without same-org pre-checks. The
+  category carry-over mirrors Phase A's `expense.categoryId`.
+
+- **`recurringInvoiceItems.productId`** — same as Phase B's
+  `invoice_item.productId` / `quote_item.productId` /
+  `credit_note_item.productId` carry-overs. Line items take
+  `productId` from form data without validating same-org. No
+  read-side leak today (no `from(products)` join surfaces another
+  org's product through this FK), but the FK itself can be set
+  cross-org on insert/update.
+
+- **`countryIntegrationSubmissions.invoiceId` / `.expenseId` /
+  `.creditNoteId`** — submissions are written by trusted internal
+  lib code with `orgId: orgCtx.id`, so the row's `orgId` is
+  correct, but the FKs themselves are not validated as same-org
+  before the INSERT. Today the only callers of
+  `submitInvoiceThroughPlugins` / `submitCreditNoteThroughPlugins`
+  pass invoice/credit-note ids that were just fetched by
+  `eq(orgId, …)` in the calling action, so this is a trusted-path
+  invariant rather than an open hole — but the helper signature
+  doesn't enforce it. Lower priority than the contactId / categoryId
+  / productId carry-overs.
+
+- **`inbound_document.matchedExpenseId` / `.matchedInvoiceId`** —
+  same shape; will need same-org validation when Phase 3 of the
+  country-integration work lands the population path.
+
+All carry-overs share the same fix: a same-org pre-check before
+INSERT/UPDATE writes the FK. Recommended as a single follow-up
+issue covering Phase A/B/C/D carry-overs together.
