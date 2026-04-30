@@ -110,12 +110,18 @@ export async function submitCreditNoteThroughPlugins(
     return [{ kind: "unknown", ok: false, error: "Credit note not found" }];
   }
 
+  // #274: scope the parent-invoice lookup by orgId. cn.invoiceId is a
+  // foreign-key field that the create/update flow does not validate as
+  // same-org (the schema accepts any UUID). Without the orgId clause,
+  // an attacker who set cn.invoiceId to another org's invoice would
+  // leak that invoice's number through the country-plugin payload
+  // (myDATA, etc). Mirror of the credit-notes/[id]/page.tsx fix.
   let parentInvoice: { id: string; invoiceNumber: string | null } | null = null;
   if (cn.invoiceId) {
     const [inv] = await db
       .select({ id: invoices.id, invoiceNumber: invoices.invoiceNumber })
       .from(invoices)
-      .where(eq(invoices.id, cn.invoiceId));
+      .where(and(eq(invoices.id, cn.invoiceId), eq(invoices.orgId, orgCtx.id)));
     parentInvoice = inv ?? null;
   }
 
