@@ -343,6 +343,7 @@ Two icon systems, each for a distinct context:
 
 - Inline icons inside buttons, inputs, table cells
 - Stroke-based, pairs cleanly with Inter at small sizes
+- Sizes: `size-5` (20px) for sidebar / nav, `size-4` (16px) for inline action icons. The `SidebarMenuButton` cva pins descendant SVGs to `size-5`; do not rely on `h-5 w-5` on the `<Icon />` itself, since the descendant selector wins on specificity.
 
 Never mix the two systems within a single UI region. Navigation uses Material; inline UI uses Lucide.
 
