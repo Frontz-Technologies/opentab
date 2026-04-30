@@ -105,7 +105,53 @@ describe("FrankfurterProvider", () => {
     const p = new FrankfurterProvider();
     await expect(
       p.getRate(new Date("2026-01-15"), "USD", "EUR"),
-    ).rejects.toThrow(/missing rate for EUR/);
+    ).rejects.toThrow(/invalid rate for EUR/);
+  });
+
+  it.each([
+    ["Infinity", Number.POSITIVE_INFINITY],
+    ["NaN", Number.NaN],
+    ["negative", -1],
+    ["zero", 0],
+  ])(
+    "throws when the rate is %s (non-finite-positive guard)",
+    async (_label, badRate) => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({
+            amount: 1,
+            base: "USD",
+            date: "2026-01-15",
+            rates: { EUR: badRate },
+          }),
+        }),
+      );
+      const p = new FrankfurterProvider();
+      await expect(
+        p.getRate(new Date("2026-01-15"), "USD", "EUR"),
+      ).rejects.toThrow(/invalid rate for EUR/);
+    },
+  );
+
+  it("getRatesAgainstBase() throws when no rate is finite positive", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          amount: 1,
+          base: "EUR",
+          date: "2026-01-15",
+          rates: { USD: Number.NaN, GBP: -1, JPY: 0 },
+        }),
+      }),
+    );
+    const p = new FrankfurterProvider();
+    await expect(
+      p.getRatesAgainstBase(new Date("2026-01-15"), "EUR"),
+    ).rejects.toThrow(/no finite positive rate/);
   });
 
   it("getRatesAgainstBase() omits the base from the to= list", async () => {

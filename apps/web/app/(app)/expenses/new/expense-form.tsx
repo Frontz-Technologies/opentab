@@ -696,6 +696,7 @@ export function ExpenseForm({
                   setCurrencyCode(v);
                 }}
                 name="currencyCode"
+                defaultCurrency={defaultCurrency as SupportedCurrencyCode}
               />
             </div>
             {currencyCode !== defaultCurrency &&

@@ -50,4 +50,23 @@ describe("CurrencyCombobox", () => {
     fireEvent.click(usdOption);
     expect(onChange).toHaveBeenCalledWith("USD");
   });
+
+  it("pins defaultCurrency to the top of the option list", async () => {
+    render(
+      wrap(
+        <CurrencyCombobox
+          value="EUR"
+          onChange={() => {}}
+          defaultCurrency="USD"
+        />,
+      ),
+    );
+    fireEvent.click(getTrigger());
+    // First-time render of the listbox; wait for any USD label to appear.
+    await screen.findByText(/USD — US Dollar/);
+    // cmdk renders each item with role="option"; the button trigger is
+    // role="button" and is excluded. Take the first option's label.
+    const options = screen.getAllByRole("option");
+    expect(options[0].textContent).toMatch(/USD — US Dollar/);
+  });
 });

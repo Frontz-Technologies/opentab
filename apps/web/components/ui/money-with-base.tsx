@@ -41,12 +41,20 @@ export function MoneyWithBase({
   ...rest
 }: MoneyWithBaseProps) {
   const raw = typeof amount === "number" ? amount : parseFloat(amount);
-  const rate =
+  const rateNumber =
     typeof exchangeRate === "number" ? exchangeRate : parseFloat(exchangeRate);
+  const rateValid = Number.isFinite(rateNumber) && rateNumber > 0;
   const original = negate ? -raw : raw;
-  const base = original * (Number.isFinite(rate) ? rate : 1);
   const isForeign = currencyCode !== baseCurrency;
   const alignClass = align === "right" ? "text-right" : "text-left";
+
+  if (isForeign && !rateValid) {
+    // Once-per-mount warn so we don't spam a list with hundreds of rows.
+    console.warn(
+      "MoneyWithBase: non-finite exchangeRate, rendering placeholder",
+      { exchangeRate, currencyCode, baseCurrency },
+    );
+  }
 
   return (
     <span
@@ -59,7 +67,7 @@ export function MoneyWithBase({
       {isForeign && (
         <span className="text-on-surface-variant text-xs">
           {"≈ "}
-          {baseCurrency} {formatAmount(base)}
+          {baseCurrency} {rateValid ? formatAmount(original * rateNumber) : "—"}
         </span>
       )}
     </span>

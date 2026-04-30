@@ -220,6 +220,7 @@ export function QuoteForm({
               value={currencyCode as SupportedCurrencyCode}
               onChange={(v) => setCurrencyCode(v)}
               name="currencyCode"
+              defaultCurrency={defaultCurrency as SupportedCurrencyCode}
             />
             {currencyCode !== defaultCurrency &&
               rateInfo &&

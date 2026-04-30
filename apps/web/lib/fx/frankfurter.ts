@@ -45,8 +45,10 @@ export class FrankfurterProvider implements FxProvider {
       rates: Record<string, number>;
     };
     const rate = json.rates[to];
-    if (typeof rate !== "number") {
-      throw new Error(`Frankfurter response missing rate for ${to}`);
+    if (!Number.isFinite(rate) || rate <= 0) {
+      throw new Error(
+        `Frankfurter response invalid rate for ${to}: ${JSON.stringify(rate)}`,
+      );
     }
     return {
       requestedDate: date,
@@ -76,10 +78,24 @@ export class FrankfurterProvider implements FxProvider {
     if (typeof json.rates !== "object" || json.rates === null) {
       throw new Error("Frankfurter response missing rates object");
     }
+    if (!hasAtLeastOneFinitePositiveRate(json.rates)) {
+      throw new Error(
+        "Frankfurter response rates object has no finite positive rate",
+      );
+    }
     return {
       requestedDate: date,
       effectiveDate: new Date(`${json.date}T00:00:00Z`),
       rates: json.rates,
     };
   }
+}
+
+function hasAtLeastOneFinitePositiveRate(
+  rates: Record<string, unknown>,
+): boolean {
+  for (const v of Object.values(rates)) {
+    if (typeof v === "number" && Number.isFinite(v) && v > 0) return true;
+  }
+  return false;
 }

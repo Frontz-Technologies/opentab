@@ -187,6 +187,7 @@ export function CompanyForm({ initialData }: CompanyFormProps) {
                 value={defaultCurrency as SupportedCurrencyCode}
                 onChange={(v) => setDefaultCurrency(v)}
                 name="defaultCurrency"
+                defaultCurrency={defaultCurrency as SupportedCurrencyCode}
               />
             </Field>
             <Field label={t("fiscalYearStart")}>
