@@ -34,6 +34,9 @@ interface LineItemsBuilderProps {
   previewIds?: Set<string>;
   /** Fires the first time a previewed row's cell is edited. */
   onItemEdit?: (id: string) => void;
+  /** When false, the per-row Description <Input> is hidden. The
+   *  description column itself stays in the DB; this only affects render. */
+  showDescription?: boolean;
 }
 
 function createEmptyItem(sortOrder: number, defaultTaxRate: string): LineItem {
@@ -71,6 +74,7 @@ export function LineItemsBuilder({
   usesInclusiveTax,
   previewIds,
   onItemEdit,
+  showDescription = true,
 }: LineItemsBuilderProps) {
   const t = useTranslations("invoices");
 
@@ -251,14 +255,16 @@ export function LineItemsBuilder({
                   placeholder={t("itemName")}
                   className="h-8 text-sm"
                 />
-                <Input
-                  value={item.description}
-                  onChange={(e) =>
-                    updateItem(index, "description", e.target.value)
-                  }
-                  placeholder={t("itemDescription")}
-                  className="h-7 text-xs text-on-surface/60"
-                />
+                {showDescription && (
+                  <Input
+                    value={item.description}
+                    onChange={(e) =>
+                      updateItem(index, "description", e.target.value)
+                    }
+                    placeholder={t("itemDescription")}
+                    className="h-7 text-xs text-on-surface/60"
+                  />
+                )}
               </div>
               <Input
                 type="number"
