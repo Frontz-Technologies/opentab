@@ -24,6 +24,11 @@ import { computeFileHash } from "@/lib/expenses/duplicate-detection";
 import { matchSupplier } from "@/lib/expenses/supplier-matching";
 import { ensureCategoriesSeeded } from "@/lib/expenses/category-seed";
 import { createDraftExpense } from "@/lib/expenses/draft-expenses";
+import { getFxRate } from "@/lib/fx/get-rate";
+import {
+  isSupportedCurrency,
+  type SupportedCurrencyCode,
+} from "@/lib/currency/supported";
 import {
   generateTempId,
   storeTempFile,
@@ -405,6 +410,25 @@ export async function updateExpense(id: string, formData: FormData) {
     usesInclusiveTax,
   );
 
+  // Refresh the FX snapshot only when currency or expense date changed
+  // since the previous version. Otherwise keep the original rate so
+  // historical reports stay deterministic for unrelated edits.
+  let nextExchangeRate = existing.exchangeRate;
+  const currencyChanged = data.currencyCode !== existing.currencyCode;
+  const dateChanged = data.expenseDate !== existing.expenseDate;
+  if (
+    (currencyChanged || dateChanged) &&
+    isSupportedCurrency(data.currencyCode) &&
+    isSupportedCurrency(session.org.defaultCurrency)
+  ) {
+    const fx = await getFxRate(
+      new Date(`${data.expenseDate}T00:00:00Z`),
+      data.currencyCode as SupportedCurrencyCode,
+      session.org.defaultCurrency as SupportedCurrencyCode,
+    );
+    nextExchangeRate = fx.rate.toFixed(6);
+  }
+
   await db
     .update(expenses)
     .set({
@@ -413,6 +437,7 @@ export async function updateExpense(id: string, formData: FormData) {
       expenseDate: data.expenseDate,
       paymentDate: data.paymentDate || null,
       currencyCode: data.currencyCode,
+      exchangeRate: nextExchangeRate,
       usesInclusiveTax,
       subtotal: totals.subtotal,
       taxAmount: totals.taxAmount,

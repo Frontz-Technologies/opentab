@@ -13,6 +13,9 @@
     "currencyEmpty": "Δεν βρέθηκε νόμισμα",
     "currencyPlaceholder": "Επιλογή νομίσματος",
     "currencySearchPlaceholder": "Αναζήτηση νομισμάτων…",
+    "rateHint": "1 {from} ≈ {rate} {to} (συναλλαγματική ισοτιμία {date}, ECB)",
+    "rateHintStale": "Χρήση ισοτιμίας από {date} (η πηγή δεν είναι προσωρινά διαθέσιμη)",
+    "rateUnavailable": "Αδυναμία λήψης ισοτιμίας για {currency}. Δοκιμάστε ξανά σύντομα ή αλλάξτε νόμισμα.",
     "soonBadge": "Σύντομα",
     "pickRange": "Επιλέξτε εύρος",
     "pickDate": "Επιλέξτε ημερομηνία"

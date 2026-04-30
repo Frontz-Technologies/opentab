@@ -13,6 +13,9 @@
     "currencyEmpty": "No currency matches",
     "currencyPlaceholder": "Select currency",
     "currencySearchPlaceholder": "Search currencies…",
+    "rateHint": "1 {from} ≈ {rate} {to} (rate of {date}, ECB)",
+    "rateHintStale": "Using {date}'s rate (live source unavailable)",
+    "rateUnavailable": "Couldn't fetch the exchange rate for {currency}. Try again shortly, or change the currency.",
     "soonBadge": "Soon",
     "pickRange": "Pick a range",
     "pickDate": "Pick a date"
