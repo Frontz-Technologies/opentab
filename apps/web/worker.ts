@@ -14,6 +14,7 @@ import { processCleanupTempFiles } from "./lib/jobs/processors/cleanup-temp-file
 import { processDeleteExpenseFiles } from "./lib/jobs/processors/delete-expense-files";
 import { processBackup } from "./lib/jobs/processors/backup";
 import { processFxPrewarmRates } from "./lib/jobs/processors/fx-prewarm-rates";
+import { processFxPruneCache } from "./lib/jobs/processors/fx-prune-cache";
 import { createLogger } from "./lib/logging/logger";
 
 const log = createLogger("worker");
@@ -67,6 +68,19 @@ async function registerRepeatables() {
     },
   );
   log.info("registered repeatable fx-prewarm-rates (daily 17:00)");
+
+  const fxPrune = new Queue(QUEUE.FX_PRUNE_CACHE, {
+    connection: getRedisConnection(),
+  });
+  await fxPrune.add(
+    QUEUE.FX_PRUNE_CACHE,
+    { olderThanDays: 90 },
+    {
+      repeat: { pattern: "0 3 * * 0" }, // Sundays 03:00 UTC
+      jobId: "fx-prune-cache-weekly",
+    },
+  );
+  log.info("registered repeatable fx-prune-cache (Sundays 03:00 UTC)");
 }
 
 async function main() {
@@ -90,6 +104,11 @@ async function main() {
     new Worker(QUEUE.FX_PREWARM_RATES, async () => processFxPrewarmRates({}), {
       connection: getRedisConnection(),
     }),
+    new Worker(
+      QUEUE.FX_PRUNE_CACHE,
+      async (job) => processFxPruneCache(job.data),
+      { connection: getRedisConnection() },
+    ),
     ...(process.env.BACKUP_AGE_PUBLIC_KEY
       ? [
           new Worker(QUEUE.BACKUP, processBackup, {
