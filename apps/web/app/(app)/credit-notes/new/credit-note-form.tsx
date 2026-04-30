@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { format, parseISO } from "date-fns";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import type { Invoice } from "@opentab/db/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CurrencyCombobox } from "@/components/ui/currency-combobox";
+import type { SupportedCurrencyCode } from "@/lib/currency/supported";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
@@ -59,6 +61,7 @@ export function CreditNoteForm({
   prefilledInvoice,
 }: CreditNoteFormProps) {
   const t = useTranslations("creditNotes");
+  const tCommon = useTranslations("common");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -68,11 +71,42 @@ export function CreditNoteForm({
   const [issueDate, setIssueDate] = useState(
     new Date().toISOString().slice(0, 10),
   );
+  const [currencyCode, setCurrencyCode] = useState(defaultCurrency);
   const [reason, setReason] = useState<string>(CREDIT_NOTE_REASON.RETURN);
   const [reasonNote, setReasonNote] = useState("");
   const [items, setItems] = useState<LineItem[]>([newLine(0)]);
 
   const selectedContact = contacts.find((c) => c.id === contactId);
+
+  const [rateInfo, setRateInfo] = useState<{
+    rate: number;
+    effectiveDate: string;
+    staleFallback: boolean;
+  } | null>(null);
+
+  useEffect(() => {
+    if (currencyCode === defaultCurrency || !issueDate) {
+      setRateInfo(null);
+      return;
+    }
+    const ctrl = new AbortController();
+    const timer = setTimeout(async () => {
+      try {
+        const r = await fetch(
+          `/api/fx/preview?date=${encodeURIComponent(issueDate)}&from=${encodeURIComponent(currencyCode)}&to=${encodeURIComponent(defaultCurrency)}`,
+          { signal: ctrl.signal },
+        );
+        if (r.ok) setRateInfo(await r.json());
+        else setRateInfo(null);
+      } catch {
+        setRateInfo(null);
+      }
+    }, 300);
+    return () => {
+      ctrl.abort();
+      clearTimeout(timer);
+    };
+  }, [currencyCode, issueDate, defaultCurrency]);
 
   function updateItem(idx: number, patch: Partial<LineItem>) {
     setItems((prev) =>
@@ -98,7 +132,7 @@ export function CreditNoteForm({
     formData.set("contactId", contactId);
     if (prefilledInvoice) formData.set("invoiceId", prefilledInvoice.id);
     formData.set("issueDate", issueDate);
-    formData.set("currencyCode", defaultCurrency);
+    formData.set("currencyCode", currencyCode);
     formData.set("usesInclusiveTax", "false");
     formData.set("contactName", selectedContact.displayName);
     formData.set("contactEmail", selectedContact.email ?? "");
@@ -177,6 +211,33 @@ export function CreditNoteForm({
             name="issueDate"
             ariaLabel={t("issueDate")}
           />
+        </div>
+        <div>
+          <label className="block text-sm font-label text-on-surface mb-1">
+            {tCommon("currencyPlaceholder")}
+          </label>
+          <CurrencyCombobox
+            value={currencyCode as SupportedCurrencyCode}
+            onChange={(v) => setCurrencyCode(v)}
+            name="currencyCode"
+          />
+          {currencyCode !== defaultCurrency &&
+            rateInfo &&
+            !rateInfo.staleFallback && (
+              <p className="text-on-surface-variant text-xs mt-1">
+                {tCommon("rateHint", {
+                  from: currencyCode,
+                  to: defaultCurrency,
+                  rate: rateInfo.rate.toFixed(4),
+                  date: rateInfo.effectiveDate,
+                })}
+              </p>
+            )}
+          {currencyCode !== defaultCurrency && rateInfo?.staleFallback && (
+            <p className="text-warning text-xs mt-1">
+              {tCommon("rateHintStale", { date: rateInfo.effectiveDate })}
+            </p>
+          )}
         </div>
       </div>
 
