@@ -722,6 +722,7 @@
     "save": "Guardar",
     "saving": "Guardando...",
     "delete": "Eliminar",
+    "createLikeThis": "Crear similar",
     "deleteConfirm": "¿Está seguro de que desea eliminar este gasto?",
     "itemRequired": "Se requiere al menos una partida",
     "categoryRequired": "La categoría es obligatoria",

@@ -723,6 +723,7 @@
     "save": "Save",
     "saving": "Saving...",
     "delete": "Delete",
+    "createLikeThis": "Create like this",
     "deleteConfirm": "Are you sure you want to delete this expense?",
     "itemRequired": "At least one line item is required",
     "categoryRequired": "Category is required",
