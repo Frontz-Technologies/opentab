@@ -10,6 +10,9 @@
     "loading": "Loading...",
     "saving": "Saving...",
     "comingSoon": "Coming soon",
+    "currencyEmpty": "No currency matches",
+    "currencyPlaceholder": "Select currency",
+    "currencySearchPlaceholder": "Search currencies…",
     "soonBadge": "Soon",
     "pickRange": "Pick a range",
     "pickDate": "Pick a date"

@@ -10,6 +10,9 @@
     "loading": "Φόρτωση...",
     "saving": "Αποθήκευση...",
     "comingSoon": "Σύντομα διαθέσιμο",
+    "currencyEmpty": "Δεν βρέθηκε νόμισμα",
+    "currencyPlaceholder": "Επιλογή νομίσματος",
+    "currencySearchPlaceholder": "Αναζήτηση νομισμάτων…",
     "soonBadge": "Σύντομα",
     "pickRange": "Επιλέξτε εύρος",
     "pickDate": "Επιλέξτε ημερομηνία"
