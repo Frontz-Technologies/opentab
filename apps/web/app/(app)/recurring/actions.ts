@@ -123,6 +123,26 @@ export async function updateRecurring(id: string, formData: FormData) {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
 
+  // #274: pre-check the recurring invoice belongs to this org BEFORE
+  // touching its line items. Without this guard, a cross-org id would
+  // no-op the parent UPDATE (which is correctly scoped) but the
+  // subsequent `delete(recurringInvoiceItems).where(recurringInvoiceId
+  // = id)` would still wipe another org's items, since
+  // recurringInvoiceItems has no orgId column. Mirror of the
+  // updateInvoice / updateCreditNote pre-check shape.
+  const [existing] = await db
+    .select()
+    .from(recurringInvoices)
+    .where(
+      and(
+        eq(recurringInvoices.id, id),
+        eq(recurringInvoices.orgId, session.org.id),
+      ),
+    );
+  if (!existing) {
+    return { success: false, error: { _: ["Recurring invoice not found"] } };
+  }
+
   let rawItems: unknown;
   try {
     rawItems = JSON.parse((formData.get("items") as string) ?? "[]");
@@ -173,6 +193,8 @@ export async function updateRecurring(id: string, formData: FormData) {
       ),
     );
 
+  // recurringInvoiceItems has no orgId column; the L<pre-check> guard
+  // above ensures `id` is session-verified before this DELETE runs.
   await db
     .delete(recurringInvoiceItems)
     .where(eq(recurringInvoiceItems.recurringInvoiceId, id));
