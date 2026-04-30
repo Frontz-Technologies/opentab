@@ -27,6 +27,11 @@ function rowsOf(result: unknown): Record<string, unknown>[] {
 // for the same period. Invoices count when status IN (SENT=2, PARTIAL=3,
 // PAID=4); credit notes count when status IN (PUBLISHED=2, SENT=3) —
 // CANCELLED is excluded on both sides.
+//
+// Multi-currency: every monetary column is multiplied by the row's
+// snapshotted exchange_rate so foreign-currency entries land in the
+// org's base currency. Legacy single-currency rows have rate = 1, so
+// the multiplication is identity for them.
 export async function getRevenue(
   orgId: string,
   start: Date,
@@ -37,14 +42,14 @@ export async function getRevenue(
   const endDate = end.toISOString().slice(0, 10);
   const [invResult, cnResult] = await Promise.all([
     dbInstance.execute(sql`
-      SELECT COALESCE(SUM(total::numeric), 0) AS total, COUNT(*)::int AS count
+      SELECT COALESCE(SUM(total::numeric * exchange_rate::numeric), 0) AS total, COUNT(*)::int AS count
       FROM invoice
       WHERE org_id = ${orgId}
         AND status IN (2, 3, 4)
         AND issue_date BETWEEN ${startDate} AND ${endDate}
     `),
     dbInstance.execute(sql`
-      SELECT COALESCE(SUM(total::numeric), 0) AS credits
+      SELECT COALESCE(SUM(total::numeric * exchange_rate::numeric), 0) AS credits
       FROM credit_note
       WHERE org_id = ${orgId}
         AND status IN (2, 3)
@@ -63,13 +68,14 @@ export async function getRevenueByClient(
   orgId: string,
   start: Date,
   end: Date,
+  dbInstance: DbInstance = db,
 ): Promise<RevenueByCientRow[]> {
   const startDate = start.toISOString().slice(0, 10);
   const endDate = end.toISOString().slice(0, 10);
-  const result = await db.execute(sql`
+  const result = await dbInstance.execute(sql`
     WITH inv AS (
       SELECT contact_id, contact_name,
-        SUM(total::numeric) AS total, COUNT(*)::int AS invoice_count
+        SUM(total::numeric * exchange_rate::numeric) AS total, COUNT(*)::int AS invoice_count
       FROM invoice
       WHERE org_id = ${orgId}
         AND status IN (2, 3, 4)
@@ -77,7 +83,7 @@ export async function getRevenueByClient(
       GROUP BY contact_id, contact_name
     ),
     cn AS (
-      SELECT contact_id, SUM(total::numeric) AS credits
+      SELECT contact_id, SUM(total::numeric * exchange_rate::numeric) AS credits
       FROM credit_note
       WHERE org_id = ${orgId}
         AND status IN (2, 3)
@@ -92,7 +98,7 @@ export async function getRevenueByClient(
     ORDER BY (inv.total - COALESCE(cn.credits, 0)) DESC
     LIMIT 10
   `);
-  const rows = result as unknown as Record<string, unknown>[];
+  const rows = rowsOf(result);
   return rows.map(
     (r) =>
       ({
@@ -109,13 +115,14 @@ export async function getRevenueByPeriod(
   start: Date,
   end: Date,
   bucket: "day" | "week" | "month",
+  dbInstance: DbInstance = db,
 ): Promise<TimeBucketRow[]> {
   const startDate = start.toISOString().slice(0, 10);
   const endDate = end.toISOString().slice(0, 10);
-  const result = await db.execute(sql`
+  const result = await dbInstance.execute(sql`
     WITH inv AS (
       SELECT date_trunc(${bucket}, issue_date::timestamp) AS bucket,
-        SUM(total::numeric) AS total
+        SUM(total::numeric * exchange_rate::numeric) AS total
       FROM invoice
       WHERE org_id = ${orgId}
         AND status IN (2, 3, 4)
@@ -124,7 +131,7 @@ export async function getRevenueByPeriod(
     ),
     cn AS (
       SELECT date_trunc(${bucket}, issue_date::timestamp) AS bucket,
-        SUM(total::numeric) AS credits
+        SUM(total::numeric * exchange_rate::numeric) AS credits
       FROM credit_note
       WHERE org_id = ${orgId}
         AND status IN (2, 3)
@@ -137,7 +144,7 @@ export async function getRevenueByPeriod(
     FULL OUTER JOIN cn ON inv.bucket = cn.bucket
     ORDER BY bucket
   `);
-  const rows = result as unknown as Record<string, unknown>[];
+  const rows = rowsOf(result);
   return rows.map((r) => ({
     bucket: String(r.bucket).slice(0, 10),
     total: Number(r.total),
@@ -148,14 +155,15 @@ export async function getExpenseTotal(
   orgId: string,
   start: Date,
   end: Date,
+  dbInstance: DbInstance = db,
 ): Promise<{ total: number; count: number }> {
-  const result = await db.execute(sql`
-    SELECT COALESCE(SUM(total::numeric), 0) AS total, COUNT(*)::int AS count
+  const result = await dbInstance.execute(sql`
+    SELECT COALESCE(SUM(total::numeric * exchange_rate::numeric), 0) AS total, COUNT(*)::int AS count
     FROM expense
     WHERE org_id = ${orgId}
       AND expense_date BETWEEN ${start.toISOString().slice(0, 10)} AND ${end.toISOString().slice(0, 10)}
   `);
-  const row = (result as unknown as Record<string, unknown>[])[0];
+  const row = rowsOf(result)[0] ?? { total: 0, count: 0 };
   return { total: Number(row.total), count: Number(row.count) };
 }
 
@@ -163,20 +171,21 @@ export async function getExpensesByCategory(
   orgId: string,
   start: Date,
   end: Date,
+  dbInstance: DbInstance = db,
 ): Promise<ExpenseByCategoryRow[]> {
   const startDate = start.toISOString().slice(0, 10);
   const endDate = end.toISOString().slice(0, 10);
-  const result = await db.execute(sql`
+  const result = await dbInstance.execute(sql`
     SELECT e.category_id, COALESCE(ec.name, 'Uncategorized') AS category,
-      COALESCE(SUM(e.total::numeric), 0) AS total
+      COALESCE(SUM(e.total::numeric * e.exchange_rate::numeric), 0) AS total
     FROM expense e
     LEFT JOIN expense_category ec ON ec.id = e.category_id
     WHERE e.org_id = ${orgId}
       AND e.expense_date BETWEEN ${startDate} AND ${endDate}
     GROUP BY e.category_id, ec.name
-    ORDER BY SUM(e.total::numeric) DESC
+    ORDER BY SUM(e.total::numeric * e.exchange_rate::numeric) DESC
   `);
-  const rows = result as unknown as Array<Record<string, unknown>>;
+  const rows = rowsOf(result);
   const totalExpenses = rows.reduce((sum, r) => sum + Number(r.total), 0);
   return rows.map(
     (r) =>
@@ -192,24 +201,32 @@ export async function getExpensesByCategory(
   );
 }
 
-export async function getOutstanding(orgId: string): Promise<{
+export async function getOutstanding(
+  orgId: string,
+  dbInstance: DbInstance = db,
+): Promise<{
   total: number;
   overdueTotal: number;
   count: number;
   overdueCount: number;
 }> {
-  const result = await db.execute(sql`
+  const result = await dbInstance.execute(sql`
     SELECT
-      COALESCE(SUM(balance::numeric), 0) AS total,
+      COALESCE(SUM(balance::numeric * exchange_rate::numeric), 0) AS total,
       COUNT(*)::int AS count,
-      COALESCE(SUM(CASE WHEN due_date < CURRENT_DATE THEN balance::numeric ELSE 0 END), 0) AS overdue_total,
+      COALESCE(SUM(CASE WHEN due_date < CURRENT_DATE THEN balance::numeric * exchange_rate::numeric ELSE 0 END), 0) AS overdue_total,
       COALESCE(SUM(CASE WHEN due_date < CURRENT_DATE THEN 1 ELSE 0 END), 0)::int AS overdue_count
     FROM invoice
     WHERE org_id = ${orgId}
       AND status IN (2, 3)
       AND balance::numeric > 0
   `);
-  const row = (result as unknown as Record<string, unknown>[])[0];
+  const row = rowsOf(result)[0] ?? {
+    total: 0,
+    overdue_total: 0,
+    count: 0,
+    overdue_count: 0,
+  };
   return {
     total: Number(row.total),
     overdueTotal: Number(row.overdue_total),
@@ -222,11 +239,12 @@ export async function getOutputVat(
   orgId: string,
   start: Date,
   end: Date,
+  dbInstance: DbInstance = db,
 ): Promise<VatLineRow[]> {
-  const result = await db.execute(sql`
+  const result = await dbInstance.execute(sql`
     SELECT ii.tax_rate,
-      COALESCE(SUM(ii.quantity::numeric * ii.unit_price::numeric), 0) AS taxable_base,
-      COALESCE(SUM(ii.tax_amount::numeric), 0) AS vat_amount
+      COALESCE(SUM(ii.quantity::numeric * ii.unit_price::numeric * i.exchange_rate::numeric), 0) AS taxable_base,
+      COALESCE(SUM(ii.tax_amount::numeric * i.exchange_rate::numeric), 0) AS vat_amount
     FROM invoice_item ii
     JOIN invoice i ON i.id = ii.invoice_id
     WHERE i.org_id = ${orgId}
@@ -235,7 +253,7 @@ export async function getOutputVat(
     GROUP BY ii.tax_rate
     ORDER BY ii.tax_rate DESC
   `);
-  const rows = result as unknown as Record<string, unknown>[];
+  const rows = rowsOf(result);
   return rows.map((r) => ({
     rate: Number(r.tax_rate),
     label: `${Number(r.tax_rate)}%`,
@@ -248,11 +266,12 @@ export async function getInputVat(
   orgId: string,
   start: Date,
   end: Date,
+  dbInstance: DbInstance = db,
 ): Promise<VatLineRow[]> {
-  const result = await db.execute(sql`
+  const result = await dbInstance.execute(sql`
     SELECT ei.tax_rate,
-      COALESCE(SUM(ei.quantity::numeric * ei.unit_price::numeric), 0) AS taxable_base,
-      COALESCE(SUM(ei.tax_amount::numeric), 0) AS vat_amount
+      COALESCE(SUM(ei.quantity::numeric * ei.unit_price::numeric * e.exchange_rate::numeric), 0) AS taxable_base,
+      COALESCE(SUM(ei.tax_amount::numeric * e.exchange_rate::numeric), 0) AS vat_amount
     FROM expense_item ei
     JOIN expense e ON e.id = ei.expense_id
     WHERE e.org_id = ${orgId}
@@ -260,7 +279,7 @@ export async function getInputVat(
     GROUP BY ei.tax_rate
     ORDER BY ei.tax_rate DESC
   `);
-  const rows = result as unknown as Record<string, unknown>[];
+  const rows = rowsOf(result);
   return rows.map((r) => ({
     rate: Number(r.tax_rate),
     label: `${Number(r.tax_rate)}%`,
@@ -274,17 +293,18 @@ export async function getExpensesByPeriod(
   start: Date,
   end: Date,
   bucket: "day" | "week" | "month",
+  dbInstance: DbInstance = db,
 ): Promise<TimeBucketRow[]> {
-  const result = await db.execute(sql`
+  const result = await dbInstance.execute(sql`
     SELECT date_trunc(${bucket}, expense_date::timestamp) AS bucket,
-      COALESCE(SUM(total::numeric), 0) AS total
+      COALESCE(SUM(total::numeric * exchange_rate::numeric), 0) AS total
     FROM expense
     WHERE org_id = ${orgId}
       AND expense_date BETWEEN ${start.toISOString().slice(0, 10)} AND ${end.toISOString().slice(0, 10)}
     GROUP BY bucket
     ORDER BY bucket
   `);
-  const rows = result as unknown as Record<string, unknown>[];
+  const rows = rowsOf(result);
   return rows.map((r) => ({
     bucket: String(r.bucket).slice(0, 10),
     total: Number(r.total),
@@ -296,10 +316,11 @@ export async function getCashFlowData(
   start: Date,
   end: Date,
   bucket: "day" | "week" | "month" = "day",
+  dbInstance: DbInstance = db,
 ): Promise<{ revenue: TimeBucketRow[]; expenses: TimeBucketRow[] }> {
   const [revenue, expenses] = await Promise.all([
-    getRevenueByPeriod(orgId, start, end, bucket),
-    getExpensesByPeriod(orgId, start, end, bucket),
+    getRevenueByPeriod(orgId, start, end, bucket, dbInstance),
+    getExpensesByPeriod(orgId, start, end, bucket, dbInstance),
   ]);
   return { revenue, expenses };
 }
