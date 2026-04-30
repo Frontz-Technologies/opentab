@@ -84,6 +84,46 @@ describe("FrankfurterProvider", () => {
       }),
     );
     const p = new FrankfurterProvider();
-    await expect(p.getRate(new Date(), "USD", "EUR")).rejects.toThrow(/503/);
+    await expect(p.getRate(new Date(), "USD", "EUR")).rejects.toThrow(
+      /Frankfurter 503/,
+    );
+  });
+
+  it("throws when the response is missing the requested rate", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          amount: 1,
+          base: "USD",
+          date: "2026-01-15",
+          rates: {}, // missing EUR
+        }),
+      }),
+    );
+    const p = new FrankfurterProvider();
+    await expect(
+      p.getRate(new Date("2026-01-15"), "USD", "EUR"),
+    ).rejects.toThrow(/missing rate for EUR/);
+  });
+
+  it("getRatesAgainstBase() omits the base from the to= list", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        amount: 1,
+        base: "EUR",
+        date: "2026-01-15",
+        rates: { USD: 1.08 },
+      }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const p = new FrankfurterProvider();
+    await p.getRatesAgainstBase(new Date("2026-01-15"), "EUR");
+    const url = fetchMock.mock.calls[0][0] as string;
+    const toParam = new URL(url).searchParams.get("to") ?? "";
+    expect(toParam.split(",")).not.toContain("EUR");
+    expect(toParam.split(",")).toContain("USD");
   });
 });

@@ -10,6 +10,11 @@ import type {
 
 const BASE_URL = "https://api.frankfurter.dev/v1";
 
+/** Format a Date as YYYY-MM-DD in UTC. Callers must pass a Date that
+ *  represents the intended UTC midnight (typically constructed from a
+ *  YYYY-MM-DD string via `new Date("2026-01-15T00:00:00Z")`). Passing a
+ *  locally-constructed Date near midnight in a non-UTC zone will shift
+ *  the resulting URL date. */
 function fmtDate(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
@@ -39,10 +44,14 @@ export class FrankfurterProvider implements FxProvider {
       date: string;
       rates: Record<string, number>;
     };
+    const rate = json.rates[to];
+    if (typeof rate !== "number") {
+      throw new Error(`Frankfurter response missing rate for ${to}`);
+    }
     return {
       requestedDate: date,
       effectiveDate: new Date(`${json.date}T00:00:00Z`),
-      rate: json.rates[to],
+      rate,
     };
   }
 
@@ -64,6 +73,9 @@ export class FrankfurterProvider implements FxProvider {
       date: string;
       rates: Record<string, number>;
     };
+    if (typeof json.rates !== "object" || json.rates === null) {
+      throw new Error("Frankfurter response missing rates object");
+    }
     return {
       requestedDate: date,
       effectiveDate: new Date(`${json.date}T00:00:00Z`),
