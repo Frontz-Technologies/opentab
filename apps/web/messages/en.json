@@ -719,6 +719,7 @@
     "taxRate": "Tax %",
     "lineTotal": "Total",
     "attachments": "Attachments",
+    "attachmentDownload": "Download",
     "save": "Save",
     "saving": "Saving...",
     "delete": "Delete",

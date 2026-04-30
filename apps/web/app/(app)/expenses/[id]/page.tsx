@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Paperclip } from "lucide-react";
+import { ArrowLeft, Download, Paperclip } from "lucide-react";
 import { getSession } from "@/lib/session";
 import { db } from "@/lib/db";
 import {
@@ -11,7 +11,6 @@ import {
   expenseCategories,
 } from "@opentab/db/schema";
 import { eq, and, asc } from "drizzle-orm";
-import { Badge } from "@/components/ui/badge";
 import { MoneyWithBase } from "@/components/ui/money-with-base";
 import { ExpenseActions } from "./expense-actions";
 import { SaveSupplierBanner } from "./save-supplier-banner";
@@ -54,6 +53,8 @@ export default async function ExpenseDetailPage({
     categoryName = cat?.name ?? null;
   }
 
+  const supplier = expense.contactName ?? "—";
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -87,9 +88,7 @@ export default async function ExpenseDetailPage({
             <h3 className="font-label text-sm text-on-surface/60 mb-1">
               {t("supplier")}
             </h3>
-            <p className="text-on-surface font-medium">
-              {expense.contactName || "\u2014"}
-            </p>
+            <p className="text-on-surface font-medium">{supplier}</p>
             {expense.contactVatNumber && (
               <p className="text-on-surface/60 text-sm font-mono">
                 {expense.contactVatNumber}
@@ -247,18 +246,15 @@ export default async function ExpenseDetailPage({
                     </p>
                   </div>
                 </div>
-                <Badge
-                  className={
-                    att.aiStatus === "completed"
-                      ? "bg-primary text-on-primary"
-                      : att.aiStatus === "failed"
-                        ? "bg-tertiary-container/20 text-tertiary"
-                        : "bg-surface-container-high text-on-surface-variant"
-                  }
-                  variant="outline"
+                <a
+                  href={`/api/files/${att.filePath}`}
+                  download={att.fileName}
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-on-surface-variant hover:bg-surface-container-high"
+                  aria-label={t("attachmentDownload")}
+                  title={t("attachmentDownload")}
                 >
-                  {att.aiStatus}
-                </Badge>
+                  <Download className="h-4 w-4" />
+                </a>
               </div>
             ))}
           </div>

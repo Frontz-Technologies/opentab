@@ -718,6 +718,7 @@
     "taxRate": "IVA %",
     "lineTotal": "Total",
     "attachments": "Adjuntos",
+    "attachmentDownload": "Descargar",
     "save": "Guardar",
     "saving": "Guardando...",
     "delete": "Eliminar",
