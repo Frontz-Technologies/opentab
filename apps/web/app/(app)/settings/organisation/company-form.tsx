@@ -11,15 +11,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Combobox } from "@/components/ui/combobox";
+import { CurrencyCombobox } from "@/components/ui/currency-combobox";
+import type { SupportedCurrencyCode } from "@/lib/currency/supported";
 import { detectCountryFromTaxId } from "@/lib/utils";
 import { updateCompanySettings } from "./actions";
-
-const CURRENCIES = [
-  { code: "EUR", label: "Euro (€)" },
-  { code: "USD", label: "US Dollar ($)" },
-  { code: "GBP", label: "British Pound (£)" },
-  { code: "CHF", label: "Swiss Franc (CHF)" },
-];
 
 const MONTHS = [
   "January",
@@ -188,25 +183,10 @@ export function CompanyForm({ initialData }: CompanyFormProps) {
               />
             </Field>
             <Field label={t("defaultCurrency")}>
-              <Select
-                value={defaultCurrency}
-                onValueChange={(v) => setDefaultCurrency(v)}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CURRENCIES.map((c) => (
-                    <SelectItem key={c.code} value={c.code}>
-                      {c.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <input
-                type="hidden"
+              <CurrencyCombobox
+                value={defaultCurrency as SupportedCurrencyCode}
+                onChange={(v) => setDefaultCurrency(v)}
                 name="defaultCurrency"
-                value={defaultCurrency}
               />
             </Field>
             <Field label={t("fiscalYearStart")}>
