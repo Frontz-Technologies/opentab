@@ -21,22 +21,9 @@ export default async function FxProviderSettingsPage() {
         userEmail={session.user.email}
       />
       <main>
-        <div className="max-w-2xl space-y-6">
-          <div className="bg-surface-container-low rounded-xl p-6 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="font-medium">{t("provider")}</span>
-              <span>{provider.displayName}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="font-medium">{t("hosting")}</span>
-              <span>{provider.hosting}</span>
-            </div>
-            <p className="text-on-surface-variant text-sm">
-              {t("description")}
-            </p>
-            <p className="text-on-surface-variant text-xs italic">
-              {t("comingSoon")}
-            </p>
+        <div className="max-w-2xl">
+          <div className="bg-surface-container-low rounded-xl p-6">
+            <span className="font-medium">{provider.displayName}</span>
           </div>
         </div>
       </main>
