@@ -21,6 +21,11 @@ import {
 } from "@/lib/invoicing/calculations";
 import { createDraftInvoice } from "@/lib/invoicing/draft-invoices";
 import { assignInvoiceNumberIfMissing } from "@/lib/invoicing/assign-invoice-number";
+import { getFxRate } from "@/lib/fx/get-rate";
+import {
+  isSupportedCurrency,
+  type SupportedCurrencyCode,
+} from "@/lib/currency/supported";
 import { createLogger } from "@/lib/logging/logger";
 import { recordActivity } from "@/lib/activities/record";
 import {
@@ -194,6 +199,25 @@ export async function updateInvoice(id: string, formData: FormData) {
     usesInclusiveTax,
   );
 
+  // Refresh the FX snapshot only when currency or issue date changed
+  // since the previous version. Otherwise keep the original rate so
+  // historical reports stay deterministic for unrelated edits.
+  let nextExchangeRate = existing.exchangeRate;
+  const currencyChanged = data.currencyCode !== existing.currencyCode;
+  const dateChanged = data.issueDate !== existing.issueDate;
+  if (
+    (currencyChanged || dateChanged) &&
+    isSupportedCurrency(data.currencyCode) &&
+    isSupportedCurrency(session.org.defaultCurrency)
+  ) {
+    const fx = await getFxRate(
+      new Date(`${data.issueDate}T00:00:00Z`),
+      data.currencyCode as SupportedCurrencyCode,
+      session.org.defaultCurrency as SupportedCurrencyCode,
+    );
+    nextExchangeRate = fx.rate.toFixed(6);
+  }
+
   await db
     .update(invoices)
     .set({
@@ -201,6 +225,7 @@ export async function updateInvoice(id: string, formData: FormData) {
       issueDate: data.issueDate,
       dueDate: data.dueDate || null,
       currencyCode: data.currencyCode,
+      exchangeRate: nextExchangeRate,
       usesInclusiveTax,
       subtotal: totals.subtotal,
       taxAmount: totals.taxAmount,
