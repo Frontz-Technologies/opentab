@@ -5,7 +5,7 @@ import { FolderTree, Plus, Upload } from "lucide-react";
 import { getSession } from "@/lib/session";
 import { PageHeader } from "@/components/layout/page-header";
 import { db } from "@/lib/db";
-import { expenses } from "@opentab/db/schema";
+import { expenses, expenseCategories } from "@opentab/db/schema";
 import { eq, desc, count } from "drizzle-orm";
 import { ExpenseList } from "./expense-list";
 import { Pagination } from "@/components/ui/pagination";
@@ -29,8 +29,15 @@ export default async function ExpensesPage({
 
   const [allExpenses, [{ total }]] = await Promise.all([
     db
-      .select()
+      .select({
+        expense: expenses,
+        categoryName: expenseCategories.name,
+      })
       .from(expenses)
+      .leftJoin(
+        expenseCategories,
+        eq(expenseCategories.id, expenses.categoryId),
+      )
       .where(eq(expenses.orgId, session.org.id))
       .orderBy(desc(expenses.createdAt))
       .limit(DEFAULT_PAGE_SIZE)
@@ -40,6 +47,11 @@ export default async function ExpensesPage({
       .from(expenses)
       .where(eq(expenses.orgId, session.org.id)),
   ]);
+
+  const expenseRows = allExpenses.map(({ expense, categoryName }) => ({
+    ...expense,
+    categoryName,
+  }));
 
   return (
     <>
@@ -78,7 +90,7 @@ export default async function ExpensesPage({
       />
       <div className="px-6 py-6">
         <ExpenseList
-          expenses={allExpenses}
+          expenses={expenseRows}
           baseCurrency={session.org.defaultCurrency}
         />
         <Pagination
