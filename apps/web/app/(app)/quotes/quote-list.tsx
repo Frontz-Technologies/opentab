@@ -10,9 +10,11 @@ import { QUOTE_STATUS } from "@opentab/db/schema";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { AnimatedFilterBar } from "@/components/ui/animated-filter-bar";
+import { MoneyWithBase } from "@/components/ui/money-with-base";
 
 interface QuoteListProps {
   quotes: Quote[];
+  baseCurrency: string;
 }
 
 const statusColors: Record<number, string> = {
@@ -25,7 +27,7 @@ const statusColors: Record<number, string> = {
 
 type StatusFilter = "all" | "draft" | "sent" | "accepted";
 
-export function QuoteList({ quotes }: QuoteListProps) {
+export function QuoteList({ quotes, baseCurrency }: QuoteListProps) {
   const t = useTranslations("quotes");
   const router = useRouter();
   const [search, setSearch] = useState("");
@@ -155,7 +157,12 @@ export function QuoteList({ quotes }: QuoteListProps) {
                         {quote.validUntil || "\u2014"}
                       </td>
                       <td className="px-4 py-3 text-on-surface text-sm text-right font-mono">
-                        {quote.currencyCode} {quote.total}
+                        <MoneyWithBase
+                          amount={quote.total}
+                          currencyCode={quote.currencyCode}
+                          exchangeRate={quote.exchangeRate}
+                          baseCurrency={baseCurrency}
+                        />
                       </td>
                       <td className="px-4 py-3">
                         <Badge
@@ -183,9 +190,13 @@ export function QuoteList({ quotes }: QuoteListProps) {
                   <span className="font-mono text-sm text-on-surface">
                     {quote.quoteNumber}
                   </span>
-                  <span className="font-label text-lg font-bold text-on-surface">
-                    {quote.currencyCode} {quote.total}
-                  </span>
+                  <MoneyWithBase
+                    amount={quote.total}
+                    currencyCode={quote.currencyCode}
+                    exchangeRate={quote.exchangeRate}
+                    baseCurrency={baseCurrency}
+                    className="font-label text-lg font-bold text-on-surface"
+                  />
                 </div>
                 <p className="text-sm text-on-surface mb-2">
                   {quote.contactName}

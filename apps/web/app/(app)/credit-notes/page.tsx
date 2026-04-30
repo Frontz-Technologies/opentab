@@ -7,6 +7,7 @@ import { getSession } from "@/lib/session";
 import { db } from "@/lib/db";
 import { creditNotes, CREDIT_NOTE_STATUS } from "@opentab/db/schema";
 import { Badge } from "@/components/ui/badge";
+import { MoneyWithBase } from "@/components/ui/money-with-base";
 import { PageHeader } from "@/components/layout/page-header";
 
 const statusColors: Record<number, string> = {
@@ -126,7 +127,13 @@ export default async function CreditNotesPage() {
                       {cn.issueDate}
                     </td>
                     <td className="px-4 py-3 text-on-surface text-sm text-right font-mono">
-                      {cn.currencyCode} -{cn.total}
+                      <MoneyWithBase
+                        amount={cn.total}
+                        currencyCode={cn.currencyCode}
+                        exchangeRate={cn.exchangeRate}
+                        baseCurrency={session.org.defaultCurrency}
+                        negate
+                      />
                     </td>
                     <td className="px-4 py-3">
                       <Badge

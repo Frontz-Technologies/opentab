@@ -7,12 +7,14 @@ import { useTranslations } from "next-intl";
 import { Plus, SearchX, Wallet } from "lucide-react";
 import type { Expense } from "@opentab/db/schema";
 import { Input } from "@/components/ui/input";
+import { MoneyWithBase } from "@/components/ui/money-with-base";
 
 interface ExpenseListProps {
   expenses: Expense[];
+  baseCurrency: string;
 }
 
-export function ExpenseList({ expenses }: ExpenseListProps) {
+export function ExpenseList({ expenses, baseCurrency }: ExpenseListProps) {
   const t = useTranslations("expenses");
   const router = useRouter();
   const [search, setSearch] = useState("");
@@ -107,7 +109,12 @@ export function ExpenseList({ expenses }: ExpenseListProps) {
                         {expense.expenseDate}
                       </td>
                       <td className="px-4 py-3 text-on-surface text-sm text-right font-mono">
-                        {expense.currencyCode} {expense.total}
+                        <MoneyWithBase
+                          amount={expense.total}
+                          currencyCode={expense.currencyCode}
+                          exchangeRate={expense.exchangeRate}
+                          baseCurrency={baseCurrency}
+                        />
                       </td>
                       <td className="px-4 py-3 text-on-surface/60 text-sm capitalize">
                         {expense.source}
@@ -130,9 +137,13 @@ export function ExpenseList({ expenses }: ExpenseListProps) {
                   <span className="font-mono text-sm text-on-surface">
                     {expense.expenseNumber}
                   </span>
-                  <span className="font-label text-lg font-bold text-on-surface">
-                    {expense.currencyCode} {expense.total}
-                  </span>
+                  <MoneyWithBase
+                    amount={expense.total}
+                    currencyCode={expense.currencyCode}
+                    exchangeRate={expense.exchangeRate}
+                    baseCurrency={baseCurrency}
+                    className="font-label text-lg font-bold text-on-surface"
+                  />
                 </div>
                 <p className="text-sm text-on-surface mb-2">
                   {expense.contactName || expense.description || "\u2014"}

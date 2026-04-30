@@ -129,6 +129,7 @@ export default async function InvoicesPage({
       <div className="px-6 py-6">
         <InvoiceList
           invoices={allInvoices}
+          baseCurrency={session.org.defaultCurrency}
           showMyData={mydataConnected}
           mydataStatusByInvoice={mydataStatusByInvoice}
         />

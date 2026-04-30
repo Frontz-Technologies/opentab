@@ -59,7 +59,10 @@ export default async function QuotesPage({
         }
       />
       <div className="px-6 py-6">
-        <QuoteList quotes={allQuotes} />
+        <QuoteList
+          quotes={allQuotes}
+          baseCurrency={session.org.defaultCurrency}
+        />
         <Pagination
           totalItems={total}
           pageSize={DEFAULT_PAGE_SIZE}
