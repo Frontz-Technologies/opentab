@@ -351,3 +351,141 @@ already had the orgId clause. The two helpers
 (`assign-invoice-number` and `credit-note-numbering`) gained the
 same hardening on their internal UPDATE inside the FOR UPDATE
 transaction, for parity with the surrounding actions.
+
+---
+
+# Phase C — `contacts` + `products`
+
+> Phase C scope: `contacts`, `products`. Both tables carry a NOT NULL
+> `orgId` FK to `organisation`. Cascade on delete. ~30 call sites
+> total (contacts ~22 in app code, products ~8) — every read and
+> write passes through `eq(<table>.orgId, session.org.id)`.
+
+## contacts
+
+`contact` carries `orgId` (NOT NULL, FK organisation, cascade).
+
+| File:line                                               | Status | Evidence / fix                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/web/app/(app)/contacts/page.tsx:33`               | ✅     | List query — `where(eq(orgId, session.org.id))` (L34)                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `apps/web/app/(app)/contacts/page.tsx:40`               | ✅     | Count query — `where(eq(orgId, session.org.id))` (L41)                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `apps/web/app/(app)/contacts/[id]/page.tsx:24`          | ✅     | `from(contacts).where(and(eq(id, …), eq(orgId, session.org.id)))` (L25)                                                                                                                                                                                                                                                                                                                                                                                          |
+| `apps/web/app/(app)/contacts/new/page.tsx:25`           | ✅     | Recent-contacts sidebar — `where(eq(orgId, session.org.id))` (L26)                                                                                                                                                                                                                                                                                                                                                                                               |
+| `apps/web/app/(app)/contacts/actions.ts:88`             | ✅     | `createContact` INSERT sets `orgId: session.org.id` (L90)                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `apps/web/app/(app)/contacts/actions.ts:171`            | ✅     | `updateContact` UPDATE — `where(and(eq(id, …), eq(orgId, session.org.id)))` (L195)                                                                                                                                                                                                                                                                                                                                                                               |
+| `apps/web/app/(app)/contacts/actions.ts:211`            | ✅     | `deleteContact` DELETE — `where(and(eq(id, …), eq(orgId, session.org.id)))` (L212)                                                                                                                                                                                                                                                                                                                                                                               |
+| `apps/web/app/(app)/expenses/new/page.tsx:22`           | ✅     | Supplier dropdown — `where(eq(orgId, session.org.id))` (L23)                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `apps/web/app/(app)/recurring-expenses/new/page.tsx:21` | ✅     | Supplier dropdown — `where(eq(orgId, session.org.id))` (L22)                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `apps/web/app/(app)/invoices/new/page.tsx:18`           | ✅     | Client dropdown — `where(and(eq(orgId, session.org.id), inArray(type, …)))` (L19-24)                                                                                                                                                                                                                                                                                                                                                                             |
+| `apps/web/app/(app)/quotes/new/page.tsx:18`             | ✅     | Client dropdown — `where(and(eq(orgId, session.org.id), inArray(type, …)))` (L19-24)                                                                                                                                                                                                                                                                                                                                                                             |
+| `apps/web/app/(app)/credit-notes/new/page.tsx:28`       | ✅     | Client dropdown — `where(and(eq(orgId, session.org.id), inArray(type, …)))` (L29-34)                                                                                                                                                                                                                                                                                                                                                                             |
+| `apps/web/app/(app)/credit-notes/actions.ts:83`         | ✅     | `createCreditNote` contact lookup — `where(and(eq(id, …), eq(orgId, orgId)))` (L84). Validates the FK belongs to the session org before INSERT.                                                                                                                                                                                                                                                                                                                  |
+| `apps/web/app/(app)/recurring/new/page.tsx:18`          | ✅     | Client dropdown — `where(and(eq(orgId, session.org.id)))` (L19)                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `apps/web/app/(app)/import/[entity]/actions.ts:378`     | ✅     | `resolveInvoiceContactIds` — `where(and(eq(orgId, orgId), inArray(displayName, …)))` (L380). `orgId` derived from `session.org.id` at L204.                                                                                                                                                                                                                                                                                                                      |
+| `apps/web/app/(app)/import/[entity]/actions.ts:422`     | ✅     | Auto-create stub INSERT sets `orgId` from the same `orgId` parameter (L410).                                                                                                                                                                                                                                                                                                                                                                                     |
+| `apps/web/app/(app)/import/[entity]/actions.ts:427`     | ✅     | Re-query after auto-create — same `eq(orgId, orgId)` scope (L429).                                                                                                                                                                                                                                                                                                                                                                                               |
+| `apps/web/lib/expenses/draft-expenses.ts:119`           | 🟡     | `createDraftExpense(orgId, …)` contact lookup — `where(and(eq(id, …), eq(orgId, orgId)))` (L120). Same caller chain as Phase A's expenses INSERT — `app/(app)/expenses/actions.ts:135` passes `session.org.id`; AI tool path derives `orgId` from `session.org.id` at `app/api/ai/chat/route.ts:74`.                                                                                                                                                             |
+| `apps/web/lib/invoicing/draft-invoices.ts:81`           | 🟡     | `createDraftInvoice(orgId, …)` contact lookup — `where(and(eq(id, …), eq(orgId, orgId)))` (L82). Callers: `app/(app)/invoices/actions.ts:75` passes `session.org.id`; `lib/ai/tools/create-draft-invoice.ts:107` passes `orgId` from `createTools(orgId, …)` whose only runtime caller, `app/api/ai/chat/route.ts:74`, derives from session.                                                                                                                     |
+| `apps/web/lib/expenses/supplier-matching.ts:20,43`      | 🟡     | `matchSupplier(orgId, …)` — both branches scope by `eq(contacts.orgId, orgId)`. Sole caller `app/(app)/expenses/actions.ts:325,331` passes `session.org.id`.                                                                                                                                                                                                                                                                                                     |
+| `apps/web/lib/demo/populate.ts:214,232`                 | 🟡     | `seedContacts(db, orgId, _rng)` INSERTs set `orgId` from the parameter (via `clientRow(orgId, …)` / `supplierRow(orgId, …)`). Caller chain identical to Phase A's `populateOrgDemo` — `lib/demo/ensure.ts:79,97` derive `orgId` from `orgMemberships` for the just-authenticated demo user.                                                                                                                                                                      |
+| `apps/web/lib/demo/populate.ts:830`                     | 🟡     | Postcondition guard inside the same helper — `count(*).where(eq(orgId, orgId))` against the just-passed parameter.                                                                                                                                                                                                                                                                                                                                               |
+| `apps/web/__tests__/...` (10+ sites)                    | ✅     | Test-only — runs against an isolated PGlite DB; no security surface. Covers `cross-org/{contacts,products,invoices,quotes,credit-notes}.test.ts`, `import/v1-1-polish.test.ts`, `demo-populate.test.ts`, `submit-invoice-preflight.test.ts`, `credit-note-numbering.test.ts`, `revenue-credit-note-subtraction.test.ts`, `submit-credit-note.test.ts`, `invoicing-assign-number.test.ts`, `import/commit-line-items.test.ts`, `reports-fx-aggregations.test.ts`. |
+
+## products
+
+`product` carries `orgId` (NOT NULL, FK organisation, cascade).
+
+| File:line                                       | Status | Evidence / fix                                                                                                                         |
+| ----------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/web/app/(app)/products/page.tsx:33`       | ✅     | List query — `where(eq(orgId, session.org.id))` (L34)                                                                                  |
+| `apps/web/app/(app)/products/page.tsx:40`       | ✅     | Count query — `where(eq(orgId, session.org.id))` (L41)                                                                                 |
+| `apps/web/app/(app)/products/[id]/page.tsx:24`  | ✅     | `from(products).where(and(eq(id, …), eq(orgId, session.org.id)))` (L25)                                                                |
+| `apps/web/app/(app)/products/actions.ts:34`     | ✅     | `createProduct` INSERT sets `orgId: session.org.id` (L36)                                                                              |
+| `apps/web/app/(app)/products/actions.ts:72`     | ✅     | `updateProduct` UPDATE — `where(and(eq(id, …), eq(orgId, session.org.id)))` (L83)                                                      |
+| `apps/web/app/(app)/products/actions.ts:95`     | ✅     | `deleteProduct` DELETE — `where(and(eq(id, …), eq(orgId, session.org.id)))` (L96)                                                      |
+| `apps/web/app/(app)/invoices/new/page.tsx:29`   | ✅     | Active-products dropdown — `where(and(eq(orgId, session.org.id), eq(active, true)))` (L30)                                             |
+| `apps/web/app/(app)/quotes/new/page.tsx:29`     | ✅     | Active-products dropdown — `where(and(eq(orgId, session.org.id), eq(active, true)))` (L30)                                             |
+| `apps/web/app/(app)/recurring/new/page.tsx:24`  | ✅     | Active-products dropdown — `where(and(eq(orgId, session.org.id), eq(active, true)))` (L25)                                             |
+| `apps/web/lib/demo/populate.ts:293`             | 🟡     | `seedProducts(db, orgId)` INSERT sets `orgId` from the parameter (via `productRow(orgId, …)`). Same caller chain as Phase A demo seed. |
+| `apps/web/lib/demo/populate.ts:834`             | 🟡     | Postcondition guard — `count(*).where(eq(orgId, orgId))` against the just-passed parameter.                                            |
+| `apps/web/__tests__/demo-populate.test.ts:48`   | ✅     | Test-only — isolated PGlite DB.                                                                                                        |
+| `apps/web/__tests__/cross-org/products.test.ts` | ✅     | New defence-in-depth tests for `updateProduct` / `deleteProduct` (Phase C).                                                            |
+
+## Summary (Phase C)
+
+**Read-side leaks**: 0. Every `from(contacts)` and `from(products)`
+call site already pairs `eq(<table>.orgId, session.org.id)` (or
+verified `orgId` parameter) on its WHERE. Both tables carry direct
+`orgId` columns, so no JOIN-through-parent pattern was needed.
+
+**Write-side mutations**: every `insert/update/delete` against
+`contact` and `product` already includes the orgId clause. No
+defence-in-depth additions were necessary in this phase — the
+existing actions are uniformly scoped (unlike Phase A's
+`toggleCategory` and Phase B's invoice/credit-note/quote mutations).
+
+**New tests**: `apps/web/__tests__/cross-org/contacts.test.ts` and
+`apps/web/__tests__/cross-org/products.test.ts` freeze the
+`updateContact` / `deleteContact` / `updateProduct` / `deleteProduct`
+contracts so any future regression that drops the orgId WHERE clause
+surfaces here, not in production. Both verified red→green by
+stashing the orgId clause locally.
+
+## Out-of-scope follow-ups (Phase C carry-overs)
+
+These are write-side foreign-key validation gaps — not read-side
+leaks against `contacts` / `products`, but related cross-org
+data-integrity issues uncovered while reviewing the call graph.
+Same shape as Phase A's `expenses.categoryId` and Phase B's
+`creditNotes.invoiceId` carry-overs.
+
+- **`invoices.contactId`** — `createInvoice` validates the contact
+  via `createDraftInvoice`'s `eq(orgId, orgId)` lookup (good), but
+  `updateInvoice` (`apps/web/app/(app)/invoices/actions.ts:224`)
+  writes `contactId: data.contactId` from the form without
+  re-validating same-org. A user editing an Org A draft could
+  point its `contactId` at an Org B contact via crafted form
+  data. Read paths already filter by Org A's `invoices.orgId`, so
+  the only impact today is a stored FK pointing at an unowned
+  contact — but downstream renderers that JOIN `contacts` (e.g.
+  invoice detail pages, PDF rendering) would surface Org B's
+  contact details on Org A's invoice. Recommend adding the same
+  `eq(contacts.orgId, orgId)` pre-check on the update path.
+
+- **`quotes.contactId`** — same shape, both `createQuote`
+  (`quotes/actions.ts:177`) and `updateQuote`
+  (`quotes/actions.ts:297`) write `data.contactId` without
+  validating same-org. `createQuote` notably has no contact lookup
+  at all (unlike `createInvoice` / `createCreditNote`), so this is
+  the lowest-effort fix in the carry-over list.
+
+- **`creditNotes.contactId`** — `createCreditNote` does validate
+  (`credit-notes/actions.ts:83-87`), but `updateCreditNote`
+  (`credit-notes/actions.ts:270`) does not. Same pattern as
+  `updateInvoice`.
+
+- **`expenses.contactId`** — `createDraftExpense` validates the
+  contact via `eq(contacts.orgId, orgId)` lookup
+  (`draft-expenses.ts:119-122`); `updateExpense`
+  (`expenses/actions.ts:433`) writes `contactId: data.contactId`
+  from the form without re-validating same-org. Same shape as the
+  others. The expense detail page already scopes its display to
+  `expense.contactName` (snapshotted at create), so the read-side
+  leak is bounded — but the FK can still point at another org's
+  contact after an edit.
+
+- **`invoice_item.productId`, `credit_note_item.productId`,
+  `quote_item.productId`** — already noted in Phase B's carry-over
+  list. Phase C confirms: no `from(products)` read site joins
+  through `productId` to surface another org's product, so no
+  read-side leak. But the FK itself can be set to a foreign-org
+  product on insert/update (line items take `productId` from form
+  data without same-org validation). Out of scope here; folded
+  into the same write-side FK validation pass that the contactId
+  carry-overs need.
+
+These all share the same fix shape: pre-check the FK is in the
+session's org before INSERT/UPDATE, returning a validation error
+otherwise. Recommended as a single follow-up issue
+(write-side FK same-org validation across contactId / productId /
+categoryId / invoiceId).
