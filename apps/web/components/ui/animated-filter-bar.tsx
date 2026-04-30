@@ -32,7 +32,7 @@ export function AnimatedFilterBar<T extends string = string>({
   return (
     <div
       className={cn(
-        "flex items-center gap-0.5 rounded-full bg-surface-container p-1 overflow-x-auto max-w-full whitespace-nowrap [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
+        "inline-flex items-center gap-0.5 rounded-full bg-surface-container p-1 overflow-x-auto max-w-full whitespace-nowrap [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
         className,
       )}
     >
