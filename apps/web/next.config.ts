@@ -9,6 +9,12 @@ const devOrigins = appUrl ? [new URL(appUrl).hostname] : [];
 const nextConfig: NextConfig = {
   allowedDevOrigins: devOrigins,
   transpilePackages: ["@opentab/db"],
+  serverExternalPackages: [
+    "@sentry/node",
+    "@opentelemetry/instrumentation",
+    "require-in-the-middle",
+    "@fastify/otel",
+  ],
   async redirects() {
     return [
       {
