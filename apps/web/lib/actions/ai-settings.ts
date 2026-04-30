@@ -173,6 +173,10 @@ export async function updateAiSettings(input: unknown) {
     : (encryptedKey?.last4 ?? existing?.apiKeyLast4 ?? null);
 
   if (existing) {
+    // #274 defence-in-depth: pair the id check with orgId on the UPDATE
+    // WHERE. `existing` was just fetched by orgId via getAiSettingsRow,
+    // but the mutation itself should carry orgId so any future
+    // caller-shape change keeps the org scope.
     await db
       .update(aiSettings)
       .set({
@@ -185,7 +189,7 @@ export async function updateAiSettings(input: unknown) {
         apiKeyLast4: nextApiKeyLast4,
         updatedAt: new Date(),
       })
-      .where(eq(aiSettings.id, existing.id));
+      .where(and(eq(aiSettings.id, existing.id), eq(aiSettings.orgId, orgId)));
   } else {
     await db.insert(aiSettings).values({
       orgId,
@@ -216,6 +220,13 @@ export async function deleteApiKey(orgId: string) {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
   assertSettingsAdmin(session.role);
+  // #274: explicit cross-org guard. Previously the WHERE used
+  // `and(eq(orgId, orgId), eq(orgId, session.org.id))` which only
+  // matched when caller-supplied orgId equalled the session org —
+  // technically safe but semantically opaque. Reject the call up
+  // front so the intent is obvious to readers and the DB sees a
+  // single, clearly-scoped UPDATE.
+  if (orgId !== session.org.id) throw new Error("Forbidden");
 
   await db
     .update(aiSettings)
@@ -225,9 +236,7 @@ export async function deleteApiKey(orgId: string) {
       apiKeyLast4: null,
       updatedAt: new Date(),
     })
-    .where(
-      and(eq(aiSettings.orgId, orgId), eq(aiSettings.orgId, session.org.id)),
-    );
+    .where(eq(aiSettings.orgId, session.org.id));
 
   log.info("API key deleted", { orgId: session.org.id });
 

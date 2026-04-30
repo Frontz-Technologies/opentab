@@ -86,6 +86,9 @@ export async function saveIntegrationCredentials(
     );
 
   if (existing) {
+    // #274 defence-in-depth: pair the id check with orgId on the UPDATE
+    // WHERE — the preceding SELECT was scoped, but the mutation should
+    // carry orgId too so any future caller refactor keeps the scope.
     await db
       .update(countryIntegrationCredentials)
       .set({
@@ -94,7 +97,12 @@ export async function saveIntegrationCredentials(
         lastValidatedAt: null,
         updatedAt: new Date(),
       })
-      .where(eq(countryIntegrationCredentials.id, existing.id));
+      .where(
+        and(
+          eq(countryIntegrationCredentials.id, existing.id),
+          eq(countryIntegrationCredentials.orgId, session.org.id),
+        ),
+      );
     log.info("credentials updated", {
       orgId: session.org.id,
       countryCode,
@@ -179,10 +187,16 @@ export async function testIntegrationConnection(slug: string) {
   });
 
   if (result.ok) {
+    // #274 defence-in-depth: scope the lastValidatedAt update by orgId.
     await db
       .update(countryIntegrationCredentials)
       .set({ lastValidatedAt: new Date(), updatedAt: new Date() })
-      .where(eq(countryIntegrationCredentials.id, cred.id));
+      .where(
+        and(
+          eq(countryIntegrationCredentials.id, cred.id),
+          eq(countryIntegrationCredentials.orgId, session.org.id),
+        ),
+      );
     return { success: true };
   }
 
