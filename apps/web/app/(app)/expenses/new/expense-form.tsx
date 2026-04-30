@@ -40,6 +40,7 @@ import {
   type LineItem,
 } from "@/components/invoicing/line-items-builder";
 import { buildAutofilledLineItems } from "@/lib/expenses/autofill-line-items";
+import type { ExpenseSeed } from "@/lib/expenses/seed-from-source";
 import { GROUP_TYPE_MARKER } from "@/lib/expenses/group-type";
 import {
   acceptExtractionPreview,
@@ -64,6 +65,7 @@ interface ExpenseFormProps {
   defaultCurrency: string;
   defaultTaxRate: string;
   aiExtractionAvailable?: boolean;
+  seed?: ExpenseSeed | null;
 }
 
 export function ExpenseForm({
@@ -73,24 +75,30 @@ export function ExpenseForm({
   defaultCurrency,
   defaultTaxRate,
   aiExtractionAvailable = false,
+  seed = null,
 }: ExpenseFormProps) {
   const t = useTranslations("expenses");
   const locale = useLocale();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  const [contactId, setContactId] = useState("");
-  const [supplierName, setSupplierName] = useState("");
-  const [categoryId, setCategoryId] = useState("");
+  const [contactId, setContactId] = useState(seed?.contactId ?? "");
+  const [supplierName, setSupplierName] = useState(seed?.contactName ?? "");
+  const [categoryId, setCategoryId] = useState(seed?.categoryId ?? "");
+  // expenseDate intentionally NOT seeded — always defaults to today.
   const [expenseDate, setExpenseDate] = useState(
     new Date().toISOString().split("T")[0],
   );
   const [paymentDate, setPaymentDate] = useState("");
-  const [currencyCode, setCurrencyCode] = useState(defaultCurrency);
-  const [usesInclusiveTax, setUsesInclusiveTax] = useState(false);
+  const [currencyCode, setCurrencyCode] = useState(
+    seed?.currencyCode ?? defaultCurrency,
+  );
+  const [usesInclusiveTax, setUsesInclusiveTax] = useState(
+    seed?.usesInclusiveTax ?? false,
+  );
   const [supplierInvoiceNumber, setSupplierInvoiceNumber] = useState("");
-  const [description, setDescription] = useState("");
-  const [notes, setNotes] = useState("");
+  const [description, setDescription] = useState(seed?.description ?? "");
+  const [notes, setNotes] = useState(seed?.notes ?? "");
   const [items, setItems] = useState<LineItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [uploadedFile, setUploadedFile] = useState<UploadedFileInfo | null>(
