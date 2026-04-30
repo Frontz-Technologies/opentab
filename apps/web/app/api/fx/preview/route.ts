@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
+import { getSession } from "@/lib/session";
 import { getFxRate } from "@/lib/fx/get-rate";
 import { isSupportedCurrency } from "@/lib/currency/supported";
 
 export async function GET(req: Request) {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
   const url = new URL(req.url);
   const dateStr = url.searchParams.get("date");
   const from = url.searchParams.get("from");
