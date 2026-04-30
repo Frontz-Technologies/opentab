@@ -13,6 +13,7 @@ import { getRedisConnection, getRegisteredQueues } from "./lib/jobs/queues";
 import { processCleanupTempFiles } from "./lib/jobs/processors/cleanup-temp-files";
 import { processDeleteExpenseFiles } from "./lib/jobs/processors/delete-expense-files";
 import { processBackup } from "./lib/jobs/processors/backup";
+import { processFxPrewarmRates } from "./lib/jobs/processors/fx-prewarm-rates";
 import { createLogger } from "./lib/logging/logger";
 
 const log = createLogger("worker");
@@ -53,6 +54,19 @@ async function registerRepeatables() {
   } else {
     log.info("skipping backup registration — BACKUP_AGE_PUBLIC_KEY unset");
   }
+
+  const fxPrewarm = new Queue(QUEUE.FX_PREWARM_RATES, {
+    connection: getRedisConnection(),
+  });
+  await fxPrewarm.add(
+    QUEUE.FX_PREWARM_RATES,
+    {},
+    {
+      repeat: { pattern: "0 17 * * *" }, // 17:00 daily — after ECB publishes
+      jobId: "fx-prewarm-rates-daily",
+    },
+  );
+  log.info("registered repeatable fx-prewarm-rates (daily 17:00)");
 }
 
 async function main() {
@@ -73,6 +87,9 @@ async function main() {
       async (job) => processDeleteExpenseFiles(job.data),
       { connection: getRedisConnection() },
     ),
+    new Worker(QUEUE.FX_PREWARM_RATES, async () => processFxPrewarmRates({}), {
+      connection: getRedisConnection(),
+    }),
     ...(process.env.BACKUP_AGE_PUBLIC_KEY
       ? [
           new Worker(QUEUE.BACKUP, processBackup, {
