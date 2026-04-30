@@ -20,12 +20,12 @@ export function ExpenseActions({ expense }: ExpenseActionsProps) {
 
   return (
     <div className="flex gap-2">
-      <Button asChild variant="outline" size="sm">
-        <Link href={`/expenses/new?from=${expense.id}`}>
+      <Link href={`/expenses/new?from=${expense.id}`}>
+        <Button variant="outline" size="sm">
           <Copy className="h-4 w-4 mr-1" />
           {t("createLikeThis")}
-        </Link>
-      </Button>
+        </Button>
+      </Link>
       <Button
         variant="outline"
         size="sm"
