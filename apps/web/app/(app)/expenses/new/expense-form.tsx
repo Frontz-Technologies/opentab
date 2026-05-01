@@ -214,6 +214,7 @@ export function ExpenseForm({
       state: {
         contactId,
         supplierName,
+        supplierVat,
         expenseDate,
         currencyCode,
         description,
@@ -230,6 +231,7 @@ export function ExpenseForm({
 
     setContactId(accepted.nextState.contactId);
     setSupplierName(accepted.nextState.supplierName);
+    setSupplierVat(accepted.nextState.supplierVat);
     setExpenseDate(accepted.nextState.expenseDate);
     setCurrencyCode(accepted.nextState.currencyCode);
     setDescription(accepted.nextState.description);
@@ -253,6 +255,7 @@ export function ExpenseForm({
       state: {
         contactId,
         supplierName,
+        supplierVat,
         expenseDate,
         currencyCode,
         description,
@@ -265,6 +268,7 @@ export function ExpenseForm({
     });
     setContactId(result.nextState.contactId);
     setSupplierName(result.nextState.supplierName);
+    setSupplierVat(result.nextState.supplierVat);
     setExpenseDate(result.nextState.expenseDate);
     setCurrencyCode(result.nextState.currencyCode);
     setDescription(result.nextState.description);
@@ -683,10 +687,14 @@ export function ExpenseForm({
                   placeholder={t("supplierNamePlaceholder")}
                 />
               </div>
-              <div className="sm:w-[30%]">
+              <div className={`sm:w-[30%] ${fieldWrapperClass("supplierVat")}`}>
                 <Input
                   value={supplierVat}
-                  onChange={(e) => setSupplierVat(e.target.value)}
+                  onChange={(e) => {
+                    handleExitFieldPreview("supplierVat");
+                    setSupplierVat(e.target.value);
+                  }}
+                  onFocus={() => handleExitFieldPreview("supplierVat")}
                   placeholder={tContacts("vatNumber")}
                   inputMode="text"
                 />
