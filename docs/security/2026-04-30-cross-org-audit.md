@@ -884,3 +884,38 @@ New / extended tests freezing the contracts above:
   extended; duplicate branch returns
   `error: "duplicate", duplicateExpenseId` pointing at the
   in-org expense (proves the JOIN-through-`expenses` filter holds).
+
+## Phase F — ESLint guardrail
+
+Added the `cross-org-scope/no-unscoped-org-query` ESLint rule
+(`apps/web/eslint-rules/no-unscoped-org-query.cjs`, wired in
+`apps/web/eslint.config.mjs`). The rule fires on Drizzle
+`select / update / delete(<org-owned table>)` chains whose
+`.where(...)` contains `eq(<table>.id, …)` but no
+`eq(<table>.orgId, …)` — the exact bug pattern Phases A–D
+closed. `__tests__/**` is excluded since cross-org specs
+intentionally exercise unscoped queries.
+
+Closed N=13 additional defence-in-depth gaps surfaced by the
+rule. All were `update()` mutations inside transactions whose
+preceding SELECT was orgId-scoped, but whose UPDATE WHERE only
+matched by id — same TOCTOU shape as Phase A's `toggleCategory`
+hardening:
+
+- `apps/web/lib/invoicing/assign-invoice-number.ts` —
+  `invoiceSequences` UPDATE inside the FOR UPDATE transaction.
+- `apps/web/lib/invoicing/credit-note-numbering.ts` — same
+  pattern, credit-note sequence row.
+- `apps/web/app/(app)/expenses/actions.ts` and
+  `apps/web/app/(app)/quotes/actions.ts` and
+  `apps/web/lib/expenses/draft-expenses.ts` — three
+  `generateNumber` helpers, same shape.
+- `apps/web/lib/country/submit-invoice.ts` (×6) and
+  `apps/web/lib/country/submit-credit-note.ts` (×3) —
+  `countryIntegrationSubmissions` / `countryIntegrationCredentials`
+  status UPDATEs after the orgId-scoped SELECT-and-INSERT.
+
+Every fix adds `eq(<table>.orgId, <orgId-from-scope>)` to the
+WHERE so the mutation is the authority, not the pre-fetch.
+Lint reports 0 cross-org-scope errors after the fixes. No
+behavioural change for same-org callers.
