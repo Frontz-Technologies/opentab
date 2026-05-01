@@ -779,3 +779,108 @@ the Phase A / B / C carry-overs.
 All carry-overs share the same fix: a same-org pre-check before
 INSERT/UPDATE writes the FK. Recommended as a single follow-up
 issue covering Phase A/B/C/D carry-overs together.
+
+## Carry-over fixes (landed)
+
+The Phase A–D carry-overs in this section are now closed. A new
+helper module `apps/web/lib/security/assert-same-org.ts` exposes
+per-table guards (`assertContactInOrg`, `assertExpenseCategoryInOrg`,
+`assertInvoiceInOrg`) plus a batch variant
+(`assertProductsInOrg`) for line-item arrays. Each guard runs an
+orgId-scoped SELECT and throws `Error("cross-org-access")` when the
+referenced row does not belong to the session's org. Helper unit
+tests at `apps/web/__tests__/cross-org/assert-row-in-org.test.ts`.
+
+Convention: action layer wraps the guard in try/catch and maps
+`cross-org-access` to a structured `{ success: false, error: …}`
+result; library helpers (`createDraftExpense`, `createDraftInvoice`)
+let it propagate.
+
+| FK field                          | Action / helper                                          | Status                                                    |
+| --------------------------------- | -------------------------------------------------------- | --------------------------------------------------------- |
+| `expenses.categoryId`             | `createDraftExpense` (`lib/expenses/draft-expenses.ts`)  | ✅ guarded                                                |
+| `expenses.contactId`              | `createDraftExpense`                                     | ✅ already validated (existed pre-fix; SELECT-with-orgId) |
+| `expenses.contactId`              | `updateExpense` (`app/(app)/expenses/actions.ts`)        | ✅ guarded                                                |
+| `expenses.categoryId`             | `updateExpense`                                          | ✅ guarded                                                |
+| `invoices.contactId`              | `createDraftInvoice` (`lib/invoicing/draft-invoices.ts`) | ✅ already validated (SELECT-with-orgId pre-fix)          |
+| `invoice_item.productId`          | `createDraftInvoice`                                     | ✅ guarded (batch)                                        |
+| `invoices.contactId`              | `updateInvoice`                                          | ✅ guarded                                                |
+| `invoice_item.productId`          | `updateInvoice`                                          | ✅ guarded (batch)                                        |
+| `quotes.contactId`                | `createQuote`                                            | ✅ guarded                                                |
+| `quote_item.productId`            | `createQuote`                                            | ✅ guarded (batch)                                        |
+| `quotes.contactId`                | `updateQuote`                                            | ✅ guarded                                                |
+| `quote_item.productId`            | `updateQuote`                                            | ✅ guarded (batch)                                        |
+| `creditNotes.contactId`           | `createCreditNote`                                       | ✅ already validated (SELECT-with-orgId pre-fix)          |
+| `creditNotes.invoiceId`           | `createCreditNote`                                       | ✅ guarded                                                |
+| `credit_note_item.productId`      | `createCreditNote`                                       | ✅ guarded (batch)                                        |
+| `creditNotes.contactId`           | `updateCreditNote`                                       | ✅ guarded                                                |
+| `creditNotes.invoiceId`           | `updateCreditNote`                                       | ✅ guarded                                                |
+| `credit_note_item.productId`      | `updateCreditNote`                                       | ✅ guarded (batch)                                        |
+| `recurringInvoices.contactId`     | `createRecurring` / `updateRecurring`                    | ✅ guarded                                                |
+| `recurringInvoiceItems.productId` | `createRecurring` / `updateRecurring`                    | ✅ guarded (batch)                                        |
+| `recurringExpenses.contactId`     | `createRecurringExpense` / `updateRecurringExpense`      | ✅ guarded                                                |
+| `recurringExpenses.categoryId`    | `createRecurringExpense` / `updateRecurringExpense`      | ✅ guarded                                                |
+
+### Out of scope for this carry-over
+
+- **`countryIntegrationSubmissions.invoiceId` / `.expenseId` /
+  `.creditNoteId`** — re-confirmed already validated. Both
+  `submitInvoiceThroughPlugins` and `submitCreditNoteThroughPlugins`
+  do an orgId-scoped SELECT on the parent invoice / credit note
+  before inserting the submission row, so the FK on the
+  submission write is same-org by construction. No new helper call
+  needed.
+
+- **`inbound_document.matchedExpenseId` / `.matchedInvoiceId`** —
+  population path still not landed. Will adopt the helper when the
+  country-integration phase 3 work lands.
+
+### PR #276 unblocker — `uploadAndExtractReceipt` projects parent expenseId
+
+The duplicate-receipt branch in `uploadAndExtractReceipt`
+(`apps/web/app/(app)/expenses/actions.ts`) previously returned a
+text-only error (`error: "This file has already been uploaded"`).
+The SELECT now joins through `expenses` to enforce the same-org
+filter (Phase A read-side fix), so projecting the parent
+`expense_attachment.expense_id` is safe — the returned id is
+guaranteed same-org.
+
+Response shape on the duplicate branch is now:
+
+```ts
+{ success: false, error: "duplicate", duplicateExpenseId: string }
+```
+
+`UploadReceiptResult` is now a discriminated union; the success
+branch carries `extractedData` / `supplierMatch` / `fileInfo`. PR
+#276's Sonner "Open existing expense" toast can rebase on top of
+this with no further changes — it consumes
+`result.duplicateExpenseId` directly.
+
+### Test coverage
+
+New / extended tests freezing the contracts above:
+
+- `apps/web/__tests__/cross-org/assert-row-in-org.test.ts` — helper
+  unit tests (4 wrappers × happy + cross-org throw + batch with one
+  bad id, 10 cases).
+- `apps/web/__tests__/cross-org/expenses.test.ts` — new file;
+  `createExpense` cross-org categoryId throws, same-org categoryId
+  succeeds; `updateExpense` cross-org contactId / categoryId
+  refused.
+- `apps/web/__tests__/cross-org/invoices.test.ts` — extended;
+  `updateInvoice` cross-org contactId + line-item productId refused.
+- `apps/web/__tests__/cross-org/quotes.test.ts` — extended;
+  `createQuote` cross-org contactId + productId refused, same-org
+  succeeds.
+- `apps/web/__tests__/cross-org/credit-notes.test.ts` — extended;
+  `createCreditNote` cross-org invoiceId + productId refused.
+- `apps/web/__tests__/cross-org/recurring.test.ts` — extended;
+  `createRecurring` cross-org contactId + productId refused.
+- `apps/web/__tests__/cross-org/recurring-expenses.test.ts` —
+  extended; `createRecurringExpense` cross-org contactId +
+  categoryId refused.
+- `apps/web/__tests__/cross-org/expense-attachments.test.ts` —
+  extended; duplicate branch returns
+  `error: "duplicate", duplicateExpenseId` pointing at the
+  in-org expense (proves the JOIN-through-`expenses` filter holds).
