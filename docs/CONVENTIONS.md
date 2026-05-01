@@ -97,8 +97,10 @@ org is implied by `getSession()`.
 same-org on insert / update. The audit at #274 fixed read-path leaks
 caused by this gap; the write-side validation tracks separately.
 
-**Audit reference:** `docs/security/2026-04-30-cross-org-audit.md` and
-issue #274.
+**Enforcement:** the `no-unscoped-org-query` ESLint rule (added in #274)
+fails any new `db.select()` against an org-owned table that doesn't
+include `eq(<table>.orgId, …)` in the same call. See issue #274 for
+the audit history.
 
 ---
 
