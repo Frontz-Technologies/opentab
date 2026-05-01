@@ -99,7 +99,9 @@ async function generateExpenseNumber(orgId: string): Promise<string> {
     await tx
       .update(invoiceSequences)
       .set({ nextNumber: seq.nextNumber + 1 })
-      .where(eq(invoiceSequences.id, seq.id));
+      .where(
+        and(eq(invoiceSequences.id, seq.id), eq(invoiceSequences.orgId, orgId)),
+      );
 
     return number;
   });

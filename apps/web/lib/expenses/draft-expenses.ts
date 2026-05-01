@@ -102,7 +102,12 @@ async function generateExpenseNumber(orgId: string) {
     await tx
       .update(invoiceSequences)
       .set({ nextNumber: sequence.nextNumber + 1 })
-      .where(eq(invoiceSequences.id, sequence.id));
+      .where(
+        and(
+          eq(invoiceSequences.id, sequence.id),
+          eq(invoiceSequences.orgId, orgId),
+        ),
+      );
 
     return expenseNumber;
   });
