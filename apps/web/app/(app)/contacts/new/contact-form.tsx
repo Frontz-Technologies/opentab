@@ -13,6 +13,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createContact, updateContact, lookupVat } from "../actions";
+import { isCountrySupportedByAnySource } from "@/lib/business-lookup/registry";
+import { detectCountryFromTaxId } from "@/lib/utils";
 
 const inputClass =
   "w-full bg-surface-container-lowest border-none rounded-xl px-4 h-12 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:bg-surface-container-high transition-colors";
@@ -274,7 +276,9 @@ export function ContactForm({
                   value={vatValue}
                   onChange={(e) => setVatValue(e.target.value)}
                 />
-                {capabilities.companyLookup && (
+                {isCountrySupportedByAnySource(
+                  detectCountryFromTaxId(vatValue.trim()),
+                ) && (
                   <button
                     type="button"
                     onClick={handleLookup}
