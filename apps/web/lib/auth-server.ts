@@ -4,6 +4,9 @@ import * as schema from "@opentab/db/schema";
 import { generateUniqueSlug } from "./utils";
 import { db } from "./db";
 import { deriveTrustedOrigins } from "./auth-trusted-origins";
+import { createLogger } from "./logging/logger";
+
+const log = createLogger("auth");
 
 export const auth = betterAuth({
   // When unset, Better Auth derives the base URL from the incoming request
@@ -25,8 +28,12 @@ export const auth = betterAuth({
       // Self-hosters without SMTP configured: log the reset URL so they
       // can copy it into the user's chat. Never block the reset flow.
       if (!process.env.EMAIL_SMTP_HOST) {
-        console.warn(
-          `[auth] EMAIL_SMTP_HOST unset — password-reset URL for ${user.email}: ${url}`,
+        log.warn(
+          "EMAIL_SMTP_HOST unset — emitting password-reset URL to logs",
+          {
+            userEmail: user.email,
+            url,
+          },
         );
         return;
       }

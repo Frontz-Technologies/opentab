@@ -5,7 +5,6 @@ export const internationalProvider: CountryProvider = {
   name: "International",
 
   capabilities: {
-    companyLookup: false,
     taxOfficeList: false,
     eInvoicing: false,
     taxProjection: false,

@@ -50,7 +50,6 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
 interface ContactFormProps {
   contact?: Contact;
   capabilities: {
-    companyLookup: boolean;
     taxOfficeList: boolean;
     eInvoicing: boolean;
     taxProjection: boolean;

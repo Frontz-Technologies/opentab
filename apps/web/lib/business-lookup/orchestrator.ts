@@ -33,7 +33,11 @@ export async function lookupCompany(
   }
   candidates.sort((a, b) => a.priority - b.priority);
 
+  let attempted = 0;
+  let threwCount = 0;
+
   for (const source of candidates) {
+    attempted += 1;
     try {
       const result = await source.lookup(taxId, orgId);
       if (result) {
@@ -46,6 +50,7 @@ export async function lookupCompany(
         return { result, sourceUsed: source.id };
       }
     } catch (err) {
+      threwCount += 1;
       log.error("source threw", {
         orgId,
         country,
@@ -53,6 +58,15 @@ export async function lookupCompany(
         error: err instanceof Error ? err.message : String(err),
       });
     }
+  }
+
+  if (attempted > 0 && threwCount === attempted) {
+    log.warn("all sources threw for country", {
+      orgId,
+      country,
+      attempted,
+      ms: Date.now() - start,
+    });
   }
 
   log.info("lookup completed", {

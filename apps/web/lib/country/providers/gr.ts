@@ -202,7 +202,6 @@ export const greeceProvider: CountryProvider = {
   name: "Greece",
 
   capabilities: {
-    companyLookup: true,
     taxOfficeList: true,
     eInvoicing: true,
     taxProjection: true,

@@ -297,7 +297,6 @@ export interface CountryProvider {
   name: string;
 
   capabilities: {
-    companyLookup: boolean;
     taxOfficeList: boolean;
     eInvoicing: boolean;
     taxProjection: boolean;
