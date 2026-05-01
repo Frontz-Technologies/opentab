@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+export { lookupVat } from "../contacts/actions";
 import { getSession } from "@/lib/session";
 import {
   expenseAttachments,
