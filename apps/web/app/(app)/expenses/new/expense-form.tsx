@@ -163,8 +163,13 @@ export function ExpenseForm({
     if (!trimmed) return;
     if (contactId) return;
     if (vatMatchChecked === trimmed) return;
+    let cancelled = false;
     const handle = setTimeout(async () => {
       const match = await findContactByVat(trimmed);
+      // Drop the result if a newer effect run has fired since — a fast
+      // typist (or an AI-extraction setter race) can otherwise see a
+      // stale match overwrite fresh form state.
+      if (cancelled) return;
       setVatMatchChecked(trimmed);
       if (match) {
         setContactId(match.id);
@@ -175,7 +180,10 @@ export function ExpenseForm({
         setTimeout(() => setVatMatchToast(null), 4000);
       }
     }, 300);
-    return () => clearTimeout(handle);
+    return () => {
+      cancelled = true;
+      clearTimeout(handle);
+    };
   }, [supplierVat, contactId, vatMatchChecked]);
 
   // Track whether the form has unsaved data

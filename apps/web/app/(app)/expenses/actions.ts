@@ -15,8 +15,18 @@ export async function findContactByVat(vatNumber: string) {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
 
+  // Narrow projection — the form-side consumer only needs these fields
+  // (matches the SupplierContactOption shape + defaultCurrency for the
+  // currency-sync side-effect on auto-promote).
   const rows = await db
-    .select()
+    .select({
+      id: contacts.id,
+      displayName: contacts.displayName,
+      company: contacts.company,
+      vatNumber: contacts.vatNumber,
+      type: contacts.type,
+      defaultCurrency: contacts.defaultCurrency,
+    })
     .from(contacts)
     .where(
       and(eq(contacts.orgId, session.org.id), eq(contacts.vatNumber, cleaned)),
@@ -42,6 +52,35 @@ export async function createSupplierContact(input: {
   }
 
   const cleanedVat = input.supplierVat.trim().replace(/\s/g, "").toUpperCase();
+
+  // Pre-insert dedupe: if a contact with this VAT already exists,
+  // return it instead of creating a duplicate. Closes the race window
+  // where two users in the same org submit the dialog with the same
+  // VAT — the second writer gets the first writer's row instead of a
+  // duplicate. (The (orgId, vatNumber) index is non-unique today, so
+  // we can't rely on a 23505 catch.)
+  if (cleanedVat) {
+    const existing = await db
+      .select({
+        id: contacts.id,
+        displayName: contacts.displayName,
+        company: contacts.company,
+        vatNumber: contacts.vatNumber,
+        type: contacts.type,
+      })
+      .from(contacts)
+      .where(
+        and(
+          eq(contacts.orgId, session.org.id),
+          eq(contacts.vatNumber, cleanedVat),
+        ),
+      )
+      .limit(1);
+    if (existing[0]) {
+      return { success: true as const, contact: existing[0] };
+    }
+  }
+
   const detectedCountry = cleanedVat
     ? detectCountryFromTaxId(cleanedVat)
     : null;
