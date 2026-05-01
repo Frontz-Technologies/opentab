@@ -57,6 +57,8 @@ import {
   type UploadReceiptResult,
 } from "../actions";
 
+type UploadReceiptSuccess = Extract<UploadReceiptResult, { success: true }>;
+
 interface ExpenseFormProps {
   contacts: Contact[];
   groups: ExpenseGroup[];
@@ -97,7 +99,7 @@ export function ExpenseForm({
     null,
   );
   const [extractResult, setExtractResult] =
-    useState<UploadReceiptResult | null>(null);
+    useState<UploadReceiptSuccess | null>(null);
   const [showAutofillPrompt, setShowAutofillPrompt] = useState(false);
   const [showNoDataNotice, setShowNoDataNotice] = useState(false);
   const [previewFields, setPreviewFields] = useState<Set<PreviewableFieldName>>(
@@ -158,7 +160,7 @@ export function ExpenseForm({
     };
   }, [currencyCode, expenseDate, defaultCurrency]);
 
-  function applyAutofill(result: UploadReceiptResult) {
+  function applyAutofill(result: UploadReceiptSuccess) {
     const data = result.extractedData;
     if (!data) return;
 

@@ -173,27 +173,45 @@ export interface UploadedFileInfo {
   fileHash: string;
 }
 
-export interface UploadReceiptResult {
-  success: boolean;
-  error?: string;
-  fileInfo?: UploadedFileInfo;
-  extractedData?: {
-    vendorName: string | null;
-    vendorVat: string | null;
-    date: string | null;
-    totalAmount: string | null;
-    currency: string | null;
-    description: string | null;
-    categoryId: string | null;
-    lineItems: {
-      name: string;
-      quantity: string;
-      unitPrice: string;
-      taxRate: string;
-    }[];
-  } | null;
-  supplierMatch?: { contactId: string; displayName: string } | null;
-}
+export type ReceiptExtractedData = {
+  vendorName: string | null;
+  vendorVat: string | null;
+  date: string | null;
+  totalAmount: string | null;
+  currency: string | null;
+  description: string | null;
+  categoryId: string | null;
+  lineItems: {
+    name: string;
+    quantity: string;
+    unitPrice: string;
+    taxRate: string;
+  }[];
+};
+
+export type ReceiptSupplierMatch = {
+  contactId: string;
+  displayName: string;
+};
+
+export type UploadReceiptResult =
+  | {
+      success: true;
+      fileInfo: UploadedFileInfo;
+      extractedData: ReceiptExtractedData | null;
+      supplierMatch: ReceiptSupplierMatch | null;
+    }
+  | {
+      // PR #276 unblocker — Sonner "Open existing expense" toast
+      // needs the parent expenseId on the duplicate-receipt branch.
+      // Safe to project because the SELECT below joins through
+      // expense.orgId, so the matched expense is guaranteed
+      // same-org.
+      success: false;
+      error: "duplicate";
+      duplicateExpenseId: string;
+    }
+  | { success: false; error: string };
 
 export async function uploadAndExtractReceipt(
   formData: FormData,
@@ -220,9 +238,14 @@ export async function uploadAndExtractReceipt(
   // Check for duplicates — scope by orgId so a hash collision in
   // another org doesn't leak existence (and isn't blocked here).
   // expenseAttachments has no orgId column, so we JOIN through
-  // expenses, which carries orgId.
+  // expenses, which carries orgId. Project expenseId so the client
+  // can offer "open existing expense" UX (PR #276) — safe because
+  // the JOIN already filters to same-org rows.
   const [duplicate] = await db
-    .select({ id: expenseAttachments.id })
+    .select({
+      id: expenseAttachments.id,
+      expenseId: expenseAttachments.expenseId,
+    })
     .from(expenseAttachments)
     .innerJoin(expenses, eq(expenses.id, expenseAttachments.expenseId))
     .where(
@@ -237,8 +260,13 @@ export async function uploadAndExtractReceipt(
     log.info("duplicate receipt detected", {
       orgId: session.org.id,
       fileHash: hash,
+      duplicateExpenseId: duplicate.expenseId,
     });
-    return { success: false, error: "This file has already been uploaded" };
+    return {
+      success: false as const,
+      error: "duplicate" as const,
+      duplicateExpenseId: duplicate.expenseId,
+    };
   }
 
   // Store file immediately
@@ -262,8 +290,8 @@ export async function uploadAndExtractReceipt(
   };
 
   // Try AI extraction if enabled
-  let extractedData: UploadReceiptResult["extractedData"] = null;
-  let supplierMatch: UploadReceiptResult["supplierMatch"] = null;
+  let extractedData: ReceiptExtractedData | null = null;
+  let supplierMatch: ReceiptSupplierMatch | null = null;
 
   const extractionEnabled = await isReceiptExtractionEnabled(session.org.id);
   if (extractionEnabled) {

@@ -11,6 +11,7 @@ import {
 import { mkdtemp, rm } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
+import { eq } from "drizzle-orm";
 import { createTestDb } from "@opentab/db/test-utils";
 import {
   organisations,
@@ -171,9 +172,11 @@ describe("uploadAndExtractReceipt duplicate guard — cross-org isolation (#274)
     const result = await uploadAndExtractReceipt(makeFormData());
 
     expect(result.success).toBe(true);
-    expect(result.fileInfo?.fileHash).toBe(
-      "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
-    );
+    if (result.success) {
+      expect(result.fileInfo.fileHash).toBe(
+        "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+      );
+    }
   });
 
   it("DOES block Org B from re-uploading the same file (in-org dup guard still works)", async () => {
@@ -182,6 +185,61 @@ describe("uploadAndExtractReceipt duplicate guard — cross-org isolation (#274)
     const result = await uploadAndExtractReceipt(makeFormData());
 
     expect(result.success).toBe(false);
-    expect(result.error).toMatch(/already been uploaded/);
+    // PR #276 carry-over: duplicate-receipt branch now reports
+    // error="duplicate" with the parent expenseId so the client can
+    // offer "open existing expense" UX. Discriminate the union.
+    if (!result.success && result.error === "duplicate") {
+      expect(result.duplicateExpenseId).toBeDefined();
+      // The dup is expected to point at the previously-seeded Org B
+      // expense, which the test creates in beforeAll. The id matches
+      // because the JOIN-through-expenses filter already constrained
+      // the result to same-org rows.
+      const sameOrgExpenses = await dbHolder.current
+        .select()
+        .from(expenses)
+        .where(eq(expenses.id, result.duplicateExpenseId));
+      expect(sameOrgExpenses).toHaveLength(1);
+      expect(sameOrgExpenses[0].orgId).toBe(orgBId);
+    } else {
+      throw new Error(
+        `expected duplicate branch, got ${JSON.stringify(result)}`,
+      );
+    }
+  });
+
+  it("Org A reuploading their own file gets duplicate=true with their own expenseId", async () => {
+    // Seed an Org A expense + attachment with the same file hash.
+    const [orgAExpense] = await dbHolder.current
+      .insert(expenses)
+      .values({
+        orgId: orgAId,
+        expenseNumber: "EXP-A-DUP-0001",
+        expenseDate: "2026-04-01",
+        currencyCode: "EUR",
+      })
+      .returning();
+    await dbHolder.current.insert(expenseAttachments).values({
+      expenseId: orgAExpense.id,
+      filePath: `${orgAId}/expenses/${orgAExpense.id}.pdf`,
+      fileName: "receipt.pdf",
+      mimeType: "application/pdf",
+      fileSize: 5,
+      fileHash:
+        "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+    });
+
+    getSessionMock.mockResolvedValue(ownerSession(orgAId));
+    const result = await uploadAndExtractReceipt(makeFormData());
+
+    expect(result.success).toBe(false);
+    if (!result.success && result.error === "duplicate") {
+      // Critical: the projection must point at Org A's expense, not
+      // Org B's pre-seeded expense with the same file hash.
+      expect(result.duplicateExpenseId).toBe(orgAExpense.id);
+    } else {
+      throw new Error(
+        `expected duplicate branch, got ${JSON.stringify(result)}`,
+      );
+    }
   });
 });
