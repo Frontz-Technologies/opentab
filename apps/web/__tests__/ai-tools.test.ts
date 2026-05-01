@@ -237,4 +237,65 @@ describe("AI tools", () => {
       invoiceNumber: "INV-0001",
     });
   });
+
+  describe("createDraftExpense confirmation summary", () => {
+    const baseArgs = {
+      expenseDate: "2026-04-13",
+      items: [
+        {
+          name: "Office supplies",
+          quantity: 1,
+          unitPrice: 50,
+          taxRate: 24,
+        },
+      ],
+    };
+
+    it("renders 'Supplier ID: ...' when contactId is set", async () => {
+      const { createTools } = await import("@/lib/ai/tools");
+      const tools = createTools("org-1", { role: "owner" });
+
+      const result = (await (tools as any).createDraftExpense.execute(
+        {
+          ...baseArgs,
+          contactId: "22222222-2222-4222-8222-222222222222",
+        },
+        { toolCallId: "tool-x", messages: [] },
+      )) as { confirmation: true; summary: { details: string[] } };
+
+      expect(result.confirmation).toBe(true);
+      expect(result.summary.details).toContain(
+        "Supplier ID: 22222222-2222-4222-8222-222222222222",
+      );
+      expect(createDraftExpenseMock).not.toHaveBeenCalled();
+    });
+
+    it("renders 'Supplier: <name>' when only contactName is set (free-input)", async () => {
+      const { createTools } = await import("@/lib/ai/tools");
+      const tools = createTools("org-1", { role: "owner" });
+
+      const result = (await (tools as any).createDraftExpense.execute(
+        {
+          ...baseArgs,
+          contactName: "Acme Free-Input Co",
+        },
+        { toolCallId: "tool-x", messages: [] },
+      )) as { confirmation: true; summary: { details: string[] } };
+
+      expect(result.summary.details).toContain("Supplier: Acme Free-Input Co");
+      expect(result.summary.details).not.toContain("No supplier linked");
+    });
+
+    it("renders 'No supplier linked' when neither contactId nor contactName is set", async () => {
+      const { createTools } = await import("@/lib/ai/tools");
+      const tools = createTools("org-1", { role: "owner" });
+
+      const result = (await (tools as any).createDraftExpense.execute(
+        baseArgs,
+        { toolCallId: "tool-x", messages: [] },
+      )) as { confirmation: true; summary: { details: string[] } };
+
+      expect(result.summary.details).toContain("No supplier linked");
+    });
+  });
 });

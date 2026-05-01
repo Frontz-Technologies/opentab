@@ -19,6 +19,7 @@ import {
   type SupportedCurrencyCode,
 } from "@/lib/currency/supported";
 import { assertExpenseCategoryInOrg } from "@/lib/security/assert-same-org";
+import { createExpenseSchema } from "@/lib/entities/expense";
 
 const draftExpenseItemSchema = z.object({
   sortOrder: z.coerce.number().int().min(0).default(0),
@@ -29,20 +30,16 @@ const draftExpenseItemSchema = z.object({
   taxRate: z.string().regex(/^\d+(\.\d{1,2})?$/),
 });
 
-export const createDraftExpenseInputSchema = z.object({
-  contactId: z.string().uuid().optional().or(z.literal("")),
+// Derived from the action-layer `createExpenseSchema` so a future field
+// added there can't silently get stripped by this helper's `.parse()`.
+// Two fields are deliberately overridden:
+// - `categoryId`: optional here. Form callers pass it through the action
+//   schema (which requires it); non-form callers like the AI tool may
+//   omit it for early drafts.
+// - `items`: uses `draftExpenseItemSchema`, which defaults `sortOrder` to
+//   0 instead of requiring it (the form supplies sortOrder explicitly).
+export const createDraftExpenseInputSchema = createExpenseSchema.extend({
   categoryId: z.string().uuid().optional().or(z.literal("")),
-  expenseDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  paymentDate: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/)
-    .optional()
-    .or(z.literal("")),
-  currencyCode: z.string().length(3).default("EUR"),
-  usesInclusiveTax: z.coerce.boolean().default(false),
-  supplierInvoiceNumber: z.string().max(100).optional().default(""),
-  description: z.string().optional().default(""),
-  notes: z.string().optional().default(""),
   items: z.array(draftExpenseItemSchema).min(1),
 });
 
@@ -192,8 +189,11 @@ export async function createDraftExpense(
       taxAmount: totals.taxAmount,
       total: totals.total,
       supplierInvoiceNumber: data.supplierInvoiceNumber || null,
-      contactName: contact?.displayName || null,
-      contactVatNumber: contact?.vatNumber || null,
+      // Empty string is treated as "fall through to contact lookup",
+      // not "force NULL". Callers that want to clear a contact-derived
+      // name explicitly should pass " " or call updateExpense.
+      contactName: data.contactName || contact?.displayName || null,
+      contactVatNumber: data.contactVatNumber || contact?.vatNumber || null,
       description: data.description || null,
       notes: data.notes || null,
     })
