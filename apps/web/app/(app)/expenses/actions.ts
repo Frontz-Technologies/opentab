@@ -1,6 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { lookupVat as lookupVatAction } from "../contacts/actions";
+
+export async function lookupVat(vatNumber: string) {
+  return lookupVatAction(vatNumber);
+}
 import { getSession } from "@/lib/session";
 import {
   expenseAttachments,

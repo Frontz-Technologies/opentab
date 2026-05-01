@@ -54,9 +54,12 @@ import {
   createExpense,
   uploadAndExtractReceipt,
   cleanupTempAttachment,
+  lookupVat,
   type UploadedFileInfo,
   type UploadReceiptResult,
 } from "../actions";
+import { isCountrySupportedByAnySource } from "@/lib/business-lookup/registry";
+import { detectCountryFromTaxId } from "@/lib/utils";
 
 type UploadReceiptSuccess = Extract<UploadReceiptResult, { success: true }>;
 
@@ -101,12 +104,15 @@ export function ExpenseForm({
   seed = null,
 }: ExpenseFormProps) {
   const t = useTranslations("expenses");
+  const tContacts = useTranslations("contacts");
   const locale = useLocale();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   const [contactId, setContactId] = useState(seed?.contactId ?? "");
   const [supplierName, setSupplierName] = useState(seed?.contactName ?? "");
+  const [supplierVat, setSupplierVat] = useState("");
+  const [supplierLookupPending, setSupplierLookupPending] = useState(false);
   const [categoryId, setCategoryId] = useState(seed?.categoryId ?? "");
   // expenseDate intentionally NOT seeded — always defaults to today.
   const [expenseDate, setExpenseDate] = useState(
@@ -208,6 +214,7 @@ export function ExpenseForm({
       state: {
         contactId,
         supplierName,
+        supplierVat,
         expenseDate,
         currencyCode,
         description,
@@ -224,6 +231,7 @@ export function ExpenseForm({
 
     setContactId(accepted.nextState.contactId);
     setSupplierName(accepted.nextState.supplierName);
+    setSupplierVat(accepted.nextState.supplierVat);
     setExpenseDate(accepted.nextState.expenseDate);
     setCurrencyCode(accepted.nextState.currencyCode);
     setDescription(accepted.nextState.description);
@@ -247,6 +255,7 @@ export function ExpenseForm({
       state: {
         contactId,
         supplierName,
+        supplierVat,
         expenseDate,
         currencyCode,
         description,
@@ -259,6 +268,7 @@ export function ExpenseForm({
     });
     setContactId(result.nextState.contactId);
     setSupplierName(result.nextState.supplierName);
+    setSupplierVat(result.nextState.supplierVat);
     setExpenseDate(result.nextState.expenseDate);
     setCurrencyCode(result.nextState.currencyCode);
     setDescription(result.nextState.description);
@@ -390,12 +400,31 @@ export function ExpenseForm({
     });
   }
 
+  async function handleSupplierLookup() {
+    const trimmed = supplierVat.trim();
+    if (!trimmed) return;
+    setSupplierLookupPending(true);
+    try {
+      const result = await lookupVat(trimmed);
+      if (result.success && result.data?.name) {
+        setSupplierName(result.data.name);
+        toast.success(tContacts("vatLookupSuccess"));
+      } else {
+        toast.error(result.error || tContacts("vatLookupError"));
+      }
+    } catch {
+      toast.error(tContacts("vatLookupError"));
+    }
+    setSupplierLookupPending(false);
+  }
+
   async function handleClearAll() {
     if (uploadedFile) {
       await cleanupTempAttachment(uploadedFile.filePath);
     }
     setContactId("");
     setSupplierName("");
+    setSupplierVat("");
     setCategoryId("");
     setExpenseDate(new Date().toISOString().split("T")[0]);
     setPaymentDate("");
@@ -436,7 +465,10 @@ export function ExpenseForm({
       "contactName",
       selectedContact?.displayName ?? supplierName ?? "",
     );
-    formData.set("contactVatNumber", selectedContact?.vatNumber ?? "");
+    formData.set(
+      "contactVatNumber",
+      selectedContact?.vatNumber ?? supplierVat ?? "",
+    );
     formData.set("description", description);
     formData.set("notes", notes);
     formData.set("items", JSON.stringify(items));
@@ -613,7 +645,10 @@ export function ExpenseForm({
               handleExitFieldPreview("contactId");
               const next = v;
               setContactId(next);
-              if (next) setSupplierName("");
+              if (next) {
+                setSupplierName("");
+                setSupplierVat("");
+              }
               const contact = contacts.find((c) => c.id === next);
               if (contact?.defaultCurrency)
                 setCurrencyCode(contact.defaultCurrency);
@@ -638,16 +673,44 @@ export function ExpenseForm({
             <label className="block text-sm font-label text-on-surface/60 mb-1">
               {t("supplierNameFreeText")}
             </label>
-            <div className={fieldWrapperClass("supplierName")}>
-              <Input
-                value={supplierName}
-                onChange={(e) => {
-                  handleExitFieldPreview("supplierName");
-                  setSupplierName(e.target.value);
-                }}
-                onFocus={() => handleExitFieldPreview("supplierName")}
-                placeholder={t("supplierNamePlaceholder")}
-              />
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div
+                className={`sm:w-[60%] ${fieldWrapperClass("supplierName")}`}
+              >
+                <Input
+                  value={supplierName}
+                  onChange={(e) => {
+                    handleExitFieldPreview("supplierName");
+                    setSupplierName(e.target.value);
+                  }}
+                  onFocus={() => handleExitFieldPreview("supplierName")}
+                  placeholder={t("supplierNamePlaceholder")}
+                />
+              </div>
+              <div className={`sm:w-[30%] ${fieldWrapperClass("supplierVat")}`}>
+                <Input
+                  value={supplierVat}
+                  onChange={(e) => {
+                    handleExitFieldPreview("supplierVat");
+                    setSupplierVat(e.target.value);
+                  }}
+                  onFocus={() => handleExitFieldPreview("supplierVat")}
+                  placeholder={tContacts("vatNumber")}
+                  inputMode="text"
+                />
+              </div>
+              {isCountrySupportedByAnySource(
+                detectCountryFromTaxId(supplierVat.trim()),
+              ) && (
+                <button
+                  type="button"
+                  onClick={handleSupplierLookup}
+                  disabled={supplierLookupPending}
+                  className="sm:w-[10%] h-10 px-3 rounded-md bg-surface-container-high text-on-surface font-label text-sm hover:bg-surface-container-highest transition-colors disabled:opacity-60 whitespace-nowrap"
+                >
+                  {supplierLookupPending ? "..." : tContacts("vatLookup")}
+                </button>
+              )}
             </div>
           </div>
         )}

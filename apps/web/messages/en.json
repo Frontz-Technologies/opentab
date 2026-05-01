@@ -277,6 +277,14 @@
     "densityCompactDesc": "Tighter spacing for more content on screen",
     "saved": "Appearance saved"
   },
+  "settingsBusinessLookup": {
+    "title": "Business Lookup",
+    "cardDescription": "Auto-fills business info from VAT/tax IDs. Sources: VIES (EU), ΑΑΔΕ (Greece).",
+    "activeSources": "Active sources",
+    "anonymous": "Anonymous",
+    "filledViaSource": "Filled from {source}",
+    "noBusinessFound": "No business found for this tax ID"
+  },
   "settingsFx": {
     "title": "FX provider",
     "provider": "Provider",

@@ -277,6 +277,14 @@
     "densityCompactDesc": "Espaciado reducido para más contenido en pantalla",
     "saved": "Apariencia guardada"
   },
+  "settingsBusinessLookup": {
+    "title": "Búsqueda de empresa",
+    "cardDescription": "Rellena automáticamente la información empresarial a partir del NIF/IVA. Fuentes: VIES (UE), ΑΑΔΕ (Grecia).",
+    "activeSources": "Fuentes activas",
+    "anonymous": "Anónima",
+    "filledViaSource": "Rellenado desde {source}",
+    "noBusinessFound": "No se encontró empresa para este NIF"
+  },
   "settingsFx": {
     "title": "Proveedor de cambio",
     "provider": "Proveedor",

@@ -3,6 +3,7 @@ import type { LineItem } from "@/components/invoicing/line-items-builder";
 export interface CurrentFormState {
   contactId: string;
   supplierName: string;
+  supplierVat: string;
   expenseDate: string;
   currencyCode: string;
   description: string;
@@ -12,6 +13,7 @@ export interface CurrentFormState {
 
 export interface ExtractedData {
   vendorName: string | null;
+  vendorVat: string | null;
   date: string | null;
   currency: string | null;
   description: string | null;
@@ -23,6 +25,7 @@ export interface ExtractedData {
 export type PreviewableFieldName =
   | "contactId"
   | "supplierName"
+  | "supplierVat"
   | "expenseDate"
   | "currencyCode"
   | "description"
@@ -31,6 +34,7 @@ export type PreviewableFieldName =
 export type Snapshot = Partial<{
   contactId: string;
   supplierName: string;
+  supplierVat: string;
   expenseDate: string;
   currencyCode: string;
   description: string;
@@ -71,6 +75,12 @@ export function acceptExtractionPreview(input: AcceptInput): AcceptOutput {
     snapshot.supplierName = state.supplierName;
     next.supplierName = data.vendorName;
     previewFields.add("supplierName");
+  }
+
+  if (data.vendorVat && !state.contactId && !state.supplierVat) {
+    snapshot.supplierVat = state.supplierVat;
+    next.supplierVat = data.vendorVat;
+    previewFields.add("supplierVat");
   }
 
   if (data.date) {
@@ -128,6 +138,8 @@ export function discardPreview(input: DiscardInput): DiscardOutput {
       next.contactId = snapshot.contactId;
     } else if (name === "supplierName" && snapshot.supplierName !== undefined) {
       next.supplierName = snapshot.supplierName;
+    } else if (name === "supplierVat" && snapshot.supplierVat !== undefined) {
+      next.supplierVat = snapshot.supplierVat;
     } else if (name === "expenseDate" && snapshot.expenseDate !== undefined) {
       next.expenseDate = snapshot.expenseDate;
     } else if (name === "currencyCode" && snapshot.currencyCode !== undefined) {

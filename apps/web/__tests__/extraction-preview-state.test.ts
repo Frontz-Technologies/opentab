@@ -14,6 +14,7 @@ import type { LineItem } from "@/components/invoicing/line-items-builder";
 const baseState: CurrentFormState = {
   contactId: "",
   supplierName: "",
+  supplierVat: "",
   expenseDate: "2026-04-27",
   currencyCode: "EUR",
   description: "",
@@ -23,6 +24,7 @@ const baseState: CurrentFormState = {
 
 const baseExtraction: ExtractedData = {
   vendorName: null,
+  vendorVat: null,
   date: null,
   currency: null,
   description: null,
@@ -81,6 +83,52 @@ describe("acceptExtractionPreview", () => {
     expect(result.previewFields.has("supplierName")).toBe(false);
     expect(result.snapshot.contactId).toBe("");
     expect(result.nextState.contactId).toBe("contact-uuid-1");
+  });
+
+  it("previews supplierVat when vendorVat present and free-input mode", () => {
+    const result = acceptExtractionPreview({
+      state: baseState,
+      defaultCurrency: "EUR",
+      defaultTaxRate: "24.00",
+      usesInclusiveTax: false,
+      supplierMatch: null,
+      data: { ...baseExtraction, vendorVat: "EL094014233" },
+      builtItems: [],
+    });
+
+    expect(result.previewFields.has("supplierVat")).toBe(true);
+    expect(result.snapshot.supplierVat).toBe("");
+    expect(result.nextState.supplierVat).toBe("EL094014233");
+  });
+
+  it("does not preview vendorVat→supplierVat when contactId is set", () => {
+    const result = acceptExtractionPreview({
+      state: { ...baseState, contactId: "user-picked-uuid" },
+      defaultCurrency: "EUR",
+      defaultTaxRate: "24.00",
+      usesInclusiveTax: false,
+      supplierMatch: null,
+      data: { ...baseExtraction, vendorVat: "EL094014233" },
+      builtItems: [],
+    });
+
+    expect(result.previewFields.has("supplierVat")).toBe(false);
+    expect(result.nextState.supplierVat).toBe("");
+  });
+
+  it("does not preview vendorVat→supplierVat when user already typed one", () => {
+    const result = acceptExtractionPreview({
+      state: { ...baseState, supplierVat: "BE0000000000" },
+      defaultCurrency: "EUR",
+      defaultTaxRate: "24.00",
+      usesInclusiveTax: false,
+      supplierMatch: null,
+      data: { ...baseExtraction, vendorVat: "EL094014233" },
+      builtItems: [],
+    });
+
+    expect(result.previewFields.has("supplierVat")).toBe(false);
+    expect(result.nextState.supplierVat).toBe("BE0000000000");
   });
 
   it("does not preview vendorName→supplierName when contactId is already set", () => {

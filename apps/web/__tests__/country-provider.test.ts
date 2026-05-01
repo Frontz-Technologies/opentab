@@ -19,15 +19,13 @@ describe("getCountryProvider", () => {
     expect(provider.name).toBe("Greece");
   });
 
-  it("Greece provider has companyLookup capability", () => {
+  it("Greece provider has taxOfficeList capability", () => {
     const provider = getCountryProvider("GR");
-    expect(provider.capabilities.companyLookup).toBe(true);
     expect(provider.capabilities.taxOfficeList).toBe(true);
   });
 
   it("international provider has no special capabilities", () => {
     const provider = getCountryProvider(null);
-    expect(provider.capabilities.companyLookup).toBe(false);
     expect(provider.capabilities.taxOfficeList).toBe(false);
     expect(provider.capabilities.eInvoicing).toBe(false);
   });

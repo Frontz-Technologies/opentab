@@ -11,9 +11,8 @@ import { eq, and } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { detectCountryFromTaxId } from "@/lib/utils";
-import { getCountryProvider } from "@/lib/country";
-import { validateViesVat } from "@/lib/country/services/vies";
-import type { CompanyLookupResult } from "@/lib/country";
+import { lookupCompany } from "@/lib/business-lookup/orchestrator";
+import type { CompanyLookupResult } from "@/lib/business-lookup/source";
 import { createLogger } from "@/lib/logging/logger";
 
 const log = createLogger("contacts");
@@ -220,7 +219,7 @@ export async function deleteContact(id: string) {
 export async function lookupVat(vatNumber: string): Promise<{
   success: boolean;
   data?: CompanyLookupResult;
-  validated?: boolean;
+  sourceUsed?: string;
   error?: string;
 }> {
   const session = await getSession();
@@ -229,43 +228,9 @@ export async function lookupVat(vatNumber: string): Promise<{
   const cleaned = vatNumber.trim().replace(/\s/g, "");
   if (!cleaned) return { success: false, error: "VAT number is required" };
 
-  const detectedCountry = detectCountryFromTaxId(cleaned);
-  log.info("VAT lookup started", {
-    orgId: session.org.id,
-    detectedCountry: detectedCountry ?? "unknown",
-  });
-
-  if (detectedCountry) {
-    const provider = getCountryProvider(detectedCountry);
-    if (provider.lookupCompany) {
-      const done = log.time(`vat-lookup-${detectedCountry.toLowerCase()}`);
-      try {
-        const result = await provider.lookupCompany(cleaned);
-        done(`${detectedCountry} company lookup succeeded`);
-        return { success: true, data: result, validated: true };
-      } catch (err) {
-        done(`${detectedCountry} company lookup failed`);
-        // Fall through to VIES for EU VAT numbers
-      }
-    }
+  const { result, sourceUsed } = await lookupCompany(cleaned, session.org.id);
+  if (!result) {
+    return { success: false, error: "No business found for this tax ID" };
   }
-
-  if (detectedCountry && /^[A-Z]{2}/.test(cleaned)) {
-    const done = log.time("vat-lookup-vies");
-    const result = await validateViesVat(cleaned);
-    if (result.valid && result.company) {
-      done("VIES lookup succeeded", { country: detectedCountry });
-      return { success: true, data: result.company, validated: true };
-    }
-    done("VIES lookup failed", { country: detectedCountry });
-    return {
-      success: false,
-      error: result.valid
-        ? "VAT number is valid but no company details available"
-        : "Invalid EU VAT number",
-    };
-  }
-
-  log.warn("unsupported VAT format", { orgId: session.org.id });
-  return { success: false, error: "Unsupported VAT number format" };
+  return { success: true, data: result, sourceUsed: sourceUsed ?? undefined };
 }

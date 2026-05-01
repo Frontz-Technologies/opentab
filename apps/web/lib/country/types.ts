@@ -297,7 +297,6 @@ export interface CountryProvider {
   name: string;
 
   capabilities: {
-    companyLookup: boolean;
     taxOfficeList: boolean;
     eInvoicing: boolean;
     taxProjection: boolean;
@@ -310,8 +309,6 @@ export interface CountryProvider {
 
   validateTaxId(taxId: string): boolean;
   getDefaultVatRate(): number;
-
-  lookupCompany?(taxId: string): Promise<CompanyLookupResult>;
 
   // E-Invoicing (Phase 4)
   resolveDocumentType?(params: DocumentTypeParams): string;

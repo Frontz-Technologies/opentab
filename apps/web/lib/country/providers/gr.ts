@@ -1,7 +1,6 @@
 import type { CountryProvider, TaxOffice, TaxCodeMapping } from "../types";
 import { resolveDocumentType } from "./gr/integrations/mydata/document-types";
 import { resolveClassification } from "./gr/integrations/mydata/classification-codes";
-import { lookupGreekAfm } from "./gr/integrations/mydata/services/aade";
 import { calculateGreekTax } from "./gr/tax-calculator";
 import { MydataIntegration } from "./gr/integrations/mydata";
 
@@ -203,7 +202,6 @@ export const greeceProvider: CountryProvider = {
   name: "Greece",
 
   capabilities: {
-    companyLookup: true,
     taxOfficeList: true,
     eInvoicing: true,
     taxProjection: true,
@@ -227,12 +225,6 @@ export const greeceProvider: CountryProvider = {
 
   getDefaultVatRate(): number {
     return 24;
-  },
-
-  async lookupCompany(taxId: string) {
-    const result = await lookupGreekAfm(taxId);
-    if (!result) throw new Error("Company not found");
-    return result;
   },
 
   resolveDocumentType,
