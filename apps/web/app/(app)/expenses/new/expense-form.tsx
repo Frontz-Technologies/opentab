@@ -60,6 +60,27 @@ import {
 
 type UploadReceiptSuccess = Extract<UploadReceiptResult, { success: true }>;
 
+type FieldErrors = Record<string, string[] | undefined>;
+
+const KNOWN_ERROR_KEYS = ["categoryRequired"] as const;
+type KnownErrorKey = (typeof KNOWN_ERROR_KEYS)[number];
+
+function formatExpenseError(
+  error: FieldErrors | string | undefined,
+  t: (key: KnownErrorKey) => string,
+): string {
+  if (typeof error === "string") return error;
+  if (error) {
+    for (const messages of Object.values(error)) {
+      const first = messages?.[0];
+      if (first && (KNOWN_ERROR_KEYS as readonly string[]).includes(first)) {
+        return t(first as KnownErrorKey);
+      }
+    }
+  }
+  return JSON.stringify(error);
+}
+
 interface ExpenseFormProps {
   contacts: Contact[];
   groups: ExpenseGroup[];
@@ -430,7 +451,7 @@ export function ExpenseForm({
           submittedRef.current = true;
           router.push("/expenses");
         } else {
-          setError(JSON.stringify(result.error));
+          setError(formatExpenseError(result.error, t));
         }
       } catch (err) {
         if (err instanceof Error && /no rate available/i.test(err.message)) {

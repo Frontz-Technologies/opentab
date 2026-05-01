@@ -71,7 +71,9 @@ describe("loadSeedFromSource", () => {
     expect(seed!.currencyCode).toBe("USD");
     expect(seed!.description).toBe("Cloud subscription");
     expect(seed!.notes).toBe("First-month free");
-    // expenseDate is intentionally NOT in the seed.
+    // expenseDate, paymentDate, and attachments are intentionally NOT in the seed.
     expect(seed).not.toHaveProperty("expenseDate");
+    expect(seed).not.toHaveProperty("paymentDate");
+    expect(seed).not.toHaveProperty("attachments");
   });
 });
