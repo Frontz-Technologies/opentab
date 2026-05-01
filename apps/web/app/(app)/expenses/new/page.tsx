@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
+import { z } from "zod";
 import { getSession } from "@/lib/session";
 import { db } from "@/lib/db";
 import { contacts, expenseCategories, expenseGroups } from "@opentab/db/schema";
@@ -9,6 +10,8 @@ import { ensureCategoriesSeeded } from "@/lib/expenses/category-seed";
 import { loadSeedFromSource } from "@/lib/expenses/seed-from-source";
 import { ExpenseForm } from "./expense-form";
 import { isReceiptExtractionEnabled } from "@/lib/actions/ai-settings";
+
+const fromIdSchema = z.string().uuid();
 
 export default async function NewExpensePage({
   searchParams,
@@ -21,7 +24,8 @@ export default async function NewExpensePage({
   const t = await getTranslations("expenses");
 
   const params = await searchParams;
-  const fromId = typeof params.from === "string" ? params.from : null;
+  const rawFromId = typeof params.from === "string" ? params.from : null;
+  const fromId = rawFromId ? fromIdSchema.safeParse(rawFromId).data ?? null : null;
   const seed = await loadSeedFromSource(db, session.org.id, fromId);
 
   await ensureCategoriesSeeded(session.org.id, session.org.countryCode);

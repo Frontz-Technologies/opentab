@@ -4,6 +4,15 @@ import { expenses } from "@opentab/db/schema";
 
 type Db = typeof defaultDb;
 
+/**
+ * Seed payload for "Create like this" — clones the source expense's
+ * metadata (supplier, category, currency, etc.) into a new form.
+ *
+ * `expenseDate` and `paymentDate` are intentionally NOT in this shape.
+ * "Create like this" is a template, not a clone — the new entry should
+ * default to today, and the user can backdate explicitly if needed.
+ * Receipt attachments are also intentionally not carried over.
+ */
 export interface ExpenseSeed {
   contactId: string | null;
   contactName: string;
