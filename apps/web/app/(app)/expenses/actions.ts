@@ -24,6 +24,11 @@ import { computeFileHash } from "@/lib/expenses/duplicate-detection";
 import { matchSupplier } from "@/lib/expenses/supplier-matching";
 import { ensureCategoriesSeeded } from "@/lib/expenses/category-seed";
 import { createDraftExpense } from "@/lib/expenses/draft-expenses";
+import {
+  assertContactInOrg,
+  assertExpenseCategoryInOrg,
+  CROSS_ORG_ACCESS_ERROR,
+} from "@/lib/security/assert-same-org";
 import { getFxRate } from "@/lib/fx/get-rate";
 import {
   isSupportedCurrency,
@@ -409,6 +414,29 @@ export async function updateExpense(id: string, formData: FormData) {
 
   const data = parsed.data;
   const usesInclusiveTax = data.usesInclusiveTax;
+
+  // #274 carry-over: validate contactId / categoryId belong to the
+  // session org BEFORE the UPDATE. The Zod schema accepts any UUID;
+  // without this guard a cross-org id would either crash on the FK
+  // constraint (opaque error) or, if both contacts.id and the
+  // wrong-org row exist, silently link the expense to another org's
+  // row. Mirror of the createDraftExpense check.
+  try {
+    if (data.contactId) {
+      await assertContactInOrg(db, data.contactId, session.org.id);
+    }
+    if (data.categoryId) {
+      await assertExpenseCategoryInOrg(db, data.categoryId, session.org.id);
+    }
+  } catch (err) {
+    if (err instanceof Error && err.message === CROSS_ORG_ACCESS_ERROR) {
+      return {
+        success: false,
+        error: { _: ["Referenced contact or category not found"] },
+      };
+    }
+    throw err;
+  }
 
   const totals = calculateInvoiceTotals(
     data.items.map((i) => ({

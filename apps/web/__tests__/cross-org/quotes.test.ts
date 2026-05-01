@@ -12,6 +12,7 @@ import { createTestDb } from "@opentab/db/test-utils";
 import {
   organisations,
   contacts,
+  products,
   quotes,
   QUOTE_STATUS,
 } from "@opentab/db/schema";
@@ -45,7 +46,7 @@ vi.mock("@/lib/session", () => ({
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
-import { convertToInvoice } from "@/app/(app)/quotes/actions";
+import { convertToInvoice, createQuote } from "@/app/(app)/quotes/actions";
 
 describe("quotes actions — cross-org isolation (#274)", () => {
   let teardown: () => Promise<void>;
@@ -101,6 +102,122 @@ describe("quotes actions — cross-org isolation (#274)", () => {
       },
     };
   }
+
+  it("createQuote refuses an Org B contactId when called from Org A's session", async () => {
+    const [orgAContact] = await dbHolder.current
+      .insert(contacts)
+      .values({
+        orgId: orgAId,
+        type: "client",
+        classification: "business",
+        displayName: "Org A Client (FK guard)",
+      })
+      .returning();
+    const [orgBContact] = await dbHolder.current
+      .insert(contacts)
+      .values({
+        orgId: orgBId,
+        type: "client",
+        classification: "business",
+        displayName: "Org B Client (FK guard)",
+      })
+      .returning();
+
+    getSessionMock.mockResolvedValue(ownerSession(orgAId));
+
+    const fd = new FormData();
+    fd.set("contactId", orgBContact.id); // Cross-org FK
+    fd.set("issueDate", "2026-04-01");
+    fd.set("currencyCode", "EUR");
+    fd.set("contactName", "Spoofed Name");
+    fd.set(
+      "items",
+      JSON.stringify([
+        {
+          sortOrder: 0,
+          name: "Item",
+          quantity: "1",
+          unitPrice: "10.00",
+          taxRate: "0.00",
+        },
+      ]),
+    );
+
+    const result = await createQuote(fd);
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      // The FK guard maps cross-org-access to a top-level error.
+      expect(JSON.stringify(result.error)).toMatch(/not found/i);
+    }
+
+    // No quote was inserted into either org.
+    const allOrgA = await dbHolder.current
+      .select()
+      .from(quotes)
+      .where(eq(quotes.orgId, orgAId));
+    expect(allOrgA).toHaveLength(0);
+
+    // Sanity: same-org call succeeds.
+    const okFd = new FormData();
+    okFd.set("contactId", orgAContact.id);
+    okFd.set("issueDate", "2026-04-01");
+    okFd.set("currencyCode", "EUR");
+    okFd.set("contactName", "Org A Client");
+    okFd.set(
+      "items",
+      JSON.stringify([
+        {
+          sortOrder: 0,
+          name: "Item",
+          quantity: "1",
+          unitPrice: "10.00",
+          taxRate: "0.00",
+        },
+      ]),
+    );
+    const ok = await createQuote(okFd);
+    expect(ok.success).toBe(true);
+  });
+
+  it("createQuote refuses an Org B productId in line items when called from Org A's session", async () => {
+    const [orgAContact] = await dbHolder.current
+      .insert(contacts)
+      .values({
+        orgId: orgAId,
+        type: "client",
+        classification: "business",
+        displayName: "Org A Client (product FK)",
+      })
+      .returning();
+    const [orgBProduct] = await dbHolder.current
+      .insert(products)
+      .values({ orgId: orgBId, name: "Org B Product" })
+      .returning();
+
+    getSessionMock.mockResolvedValue(ownerSession(orgAId));
+
+    const fd = new FormData();
+    fd.set("contactId", orgAContact.id);
+    fd.set("issueDate", "2026-04-01");
+    fd.set("currencyCode", "EUR");
+    fd.set("contactName", "Org A Client");
+    fd.set(
+      "items",
+      JSON.stringify([
+        {
+          productId: orgBProduct.id, // Cross-org FK
+          sortOrder: 0,
+          name: "Item",
+          quantity: "1",
+          unitPrice: "10.00",
+          taxRate: "0.00",
+        },
+      ]),
+    );
+
+    const result = await createQuote(fd);
+    expect(result.success).toBe(false);
+  });
 
   it("convertToInvoice from Org A does not flip Org B's accepted quote to converted", async () => {
     const [orgBContact] = await dbHolder.current

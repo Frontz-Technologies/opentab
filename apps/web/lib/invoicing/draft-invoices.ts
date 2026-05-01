@@ -16,6 +16,7 @@ import {
   isSupportedCurrency,
   type SupportedCurrencyCode,
 } from "@/lib/currency/supported";
+import { assertProductsInOrg } from "@/lib/security/assert-same-org";
 
 const draftInvoiceItemSchema = z.object({
   productId: z.string().uuid().optional().or(z.literal("")),
@@ -85,6 +86,16 @@ export async function createDraftInvoice(
   if (!contact) {
     throw new Error("Contact not found");
   }
+
+  // #274 carry-over: validate every line-item productId belongs to
+  // the org. The Zod schema accepts any UUID for productId; without
+  // this batch check a cross-org id would either trip the FK
+  // constraint (opaque) or silently link the line to another org's
+  // product. Mirror of the updateInvoice carry-over.
+  const productIds = data.items
+    .map((i) => i.productId)
+    .filter((id): id is string => !!id);
+  await assertProductsInOrg(db, productIds, orgId);
 
   const dueDate =
     data.dueDate ||

@@ -18,6 +18,7 @@ import {
   isSupportedCurrency,
   type SupportedCurrencyCode,
 } from "@/lib/currency/supported";
+import { assertExpenseCategoryInOrg } from "@/lib/security/assert-same-org";
 
 const draftExpenseItemSchema = z.object({
   sortOrder: z.coerce.number().int().min(0).default(0),
@@ -120,6 +121,17 @@ export async function createDraftExpense(
         .where(and(eq(contacts.id, contactId), eq(contacts.orgId, orgId)))
         .limit(1)
     : [];
+
+  // #274 carry-over: validate categoryId belongs to the session org
+  // BEFORE the insert. Contact is already same-org-scoped above, so
+  // its FK is verified by the SELECT pattern. The schema accepts any
+  // UUID for categoryId — without this check a cross-org id would
+  // hit the FK constraint at write time (which throws an opaque DB
+  // error and leaves no audit trail) or, worse, silently succeed if
+  // the row exists.
+  if (data.categoryId) {
+    await assertExpenseCategoryInOrg(db, data.categoryId, orgId);
+  }
 
   const totals = calculateInvoiceTotals(
     data.items.map((item) => ({

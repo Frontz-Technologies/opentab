@@ -14,6 +14,7 @@ import {
   contacts,
   invoices,
   invoiceItems,
+  products,
   INVOICE_STATUS,
 } from "@opentab/db/schema";
 
@@ -69,6 +70,7 @@ import {
   markAsPaid,
   cancelInvoice,
   deleteInvoice,
+  updateInvoice,
 } from "@/app/(app)/invoices/actions";
 
 describe("invoices actions — cross-org isolation (#274)", () => {
@@ -248,6 +250,101 @@ describe("invoices actions — cross-org isolation (#274)", () => {
       .from(invoices)
       .where(eq(invoices.id, orgBInvoiceId));
     expect(row).toBeDefined();
+  });
+
+  // #274 carry-over: write-side FK validation. updateInvoice now
+  // refuses cross-org contactId / productId payloads BEFORE the
+  // UPDATE/INSERT runs.
+  it("updateInvoice refuses an Org B contactId on Org A's draft", async () => {
+    const orgADraft = await seedInvoiceFor(orgAId, INVOICE_STATUS.DRAFT, null);
+    const [orgBContact] = await dbHolder.current
+      .insert(contacts)
+      .values({
+        orgId: orgBId,
+        type: "client",
+        classification: "business",
+        displayName: "Org B Foreign Contact",
+      })
+      .returning();
+    getSessionMock.mockResolvedValue(ownerSession(orgAId));
+
+    const fd = new FormData();
+    fd.set("contactId", orgBContact.id); // cross-org FK
+    fd.set("issueDate", "2026-04-02");
+    fd.set("currencyCode", "EUR");
+    fd.set("contactName", "Spoofed");
+    fd.set(
+      "items",
+      JSON.stringify([
+        {
+          sortOrder: 0,
+          name: "Item",
+          quantity: "1",
+          unitPrice: "1.00",
+          taxRate: "0.00",
+        },
+      ]),
+    );
+
+    const result = await updateInvoice(orgADraft, fd);
+    expect(result.success).toBe(false);
+
+    // The contactId on Org A's invoice must not have been swapped to
+    // Org B's contact.
+    const [row] = await dbHolder.current
+      .select()
+      .from(invoices)
+      .where(eq(invoices.id, orgADraft));
+    expect(row.contactId).not.toBe(orgBContact.id);
+  });
+
+  it("updateInvoice refuses a cross-org productId in line items", async () => {
+    const orgADraft = await seedInvoiceFor(orgAId, INVOICE_STATUS.DRAFT, null);
+    const [orgAContact] = await dbHolder.current
+      .insert(contacts)
+      .values({
+        orgId: orgAId,
+        type: "client",
+        classification: "business",
+        displayName: "Org A Same-Org Contact",
+      })
+      .returning();
+    const [orgBProduct] = await dbHolder.current
+      .insert(products)
+      .values({ orgId: orgBId, name: "Org B Product (line FK)" })
+      .returning();
+    getSessionMock.mockResolvedValue(ownerSession(orgAId));
+
+    const fd = new FormData();
+    fd.set("contactId", orgAContact.id); // same-org
+    fd.set("issueDate", "2026-04-02");
+    fd.set("currencyCode", "EUR");
+    fd.set("contactName", "Org A");
+    fd.set(
+      "items",
+      JSON.stringify([
+        {
+          productId: orgBProduct.id, // cross-org line FK
+          sortOrder: 0,
+          name: "Item",
+          quantity: "1",
+          unitPrice: "1.00",
+          taxRate: "0.00",
+        },
+      ]),
+    );
+
+    const result = await updateInvoice(orgADraft, fd);
+    expect(result.success).toBe(false);
+
+    // No invoice_item with the cross-org productId was inserted.
+    const items = await dbHolder.current
+      .select()
+      .from(invoiceItems)
+      .where(eq(invoiceItems.invoiceId, orgADraft));
+    for (const item of items) {
+      expect(item.productId).not.toBe(orgBProduct.id);
+    }
   });
 });
 

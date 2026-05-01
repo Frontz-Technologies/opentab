@@ -15,6 +15,11 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { formatInvoiceNumber } from "@/lib/invoicing/numbering";
 import {
+  assertContactInOrg,
+  assertProductsInOrg,
+  CROSS_ORG_ACCESS_ERROR,
+} from "@/lib/security/assert-same-org";
+import {
   calculateLineTotal,
   calculateInvoiceTotals,
 } from "@/lib/invoicing/calculations";
@@ -141,6 +146,26 @@ export async function createQuote(formData: FormData) {
   }
 
   const data = parsed.data;
+
+  // #274 carry-over: validate contactId + every line-item productId
+  // belong to the session org BEFORE the INSERT. Mirror of the
+  // updateInvoice / createDraftInvoice guards.
+  try {
+    await assertContactInOrg(db, data.contactId, session.org.id);
+    const productIds = data.items
+      .map((i) => i.productId)
+      .filter((id): id is string => !!id);
+    await assertProductsInOrg(db, productIds, session.org.id);
+  } catch (err) {
+    if (err instanceof Error && err.message === CROSS_ORG_ACCESS_ERROR) {
+      return {
+        success: false,
+        error: { _: ["Referenced contact or product not found"] },
+      };
+    }
+    throw err;
+  }
+
   const totals = calculateInvoiceTotals(
     data.items.map((i) => ({
       quantity: i.quantity,
@@ -263,6 +288,26 @@ export async function updateQuote(id: string, formData: FormData) {
   }
 
   const data = parsed.data;
+
+  // #274 carry-over: validate contactId + every line-item productId
+  // belong to the session org BEFORE the UPDATE. Mirror of the
+  // createQuote guard.
+  try {
+    await assertContactInOrg(db, data.contactId, session.org.id);
+    const productIds = data.items
+      .map((i) => i.productId)
+      .filter((id): id is string => !!id);
+    await assertProductsInOrg(db, productIds, session.org.id);
+  } catch (err) {
+    if (err instanceof Error && err.message === CROSS_ORG_ACCESS_ERROR) {
+      return {
+        success: false,
+        error: { _: ["Referenced contact or product not found"] },
+      };
+    }
+    throw err;
+  }
+
   const totals = calculateInvoiceTotals(
     data.items.map((i) => ({
       quantity: i.quantity,

@@ -33,6 +33,11 @@ import {
   ENTITY_TYPE,
   activities,
 } from "@/lib/entities/activity";
+import {
+  assertContactInOrg,
+  assertProductsInOrg,
+  CROSS_ORG_ACCESS_ERROR,
+} from "@/lib/security/assert-same-org";
 
 const log = createLogger("invoices");
 
@@ -189,6 +194,27 @@ export async function updateInvoice(id: string, formData: FormData) {
 
   const data = parsed.data;
   const usesInclusiveTax = data.usesInclusiveTax;
+
+  // #274 carry-over: validate contactId + every line-item productId
+  // belong to the session org BEFORE the UPDATE. The Zod schema
+  // accepts any UUID; without this guard a cross-org id either trips
+  // the FK constraint (opaque error) or — for productId, which is
+  // nullable — silently links the line to another org's product.
+  try {
+    await assertContactInOrg(db, data.contactId, orgId);
+    const productIds = data.items
+      .map((i) => i.productId)
+      .filter((id): id is string => !!id);
+    await assertProductsInOrg(db, productIds, orgId);
+  } catch (err) {
+    if (err instanceof Error && err.message === CROSS_ORG_ACCESS_ERROR) {
+      return {
+        success: false,
+        error: { _: ["Referenced contact or product not found"] },
+      };
+    }
+    throw err;
+  }
 
   const totals = calculateInvoiceTotals(
     data.items.map((i) => ({

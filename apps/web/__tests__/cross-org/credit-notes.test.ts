@@ -14,6 +14,8 @@ import {
   contacts,
   invoices,
   creditNotes,
+  creditNoteItems,
+  products,
   CREDIT_NOTE_STATUS,
   CREDIT_NOTE_REASON,
 } from "@opentab/db/schema";
@@ -241,6 +243,7 @@ import {
   sendCreditNote,
   cancelCreditNote,
   deleteCreditNote,
+  createCreditNote,
 } from "@/app/(app)/credit-notes/actions";
 
 describe("credit-notes actions — cross-org isolation (#274)", () => {
@@ -388,5 +391,121 @@ describe("credit-notes actions — cross-org isolation (#274)", () => {
       .from(creditNotes)
       .where(eq(creditNotes.id, orgBCnId));
     expect(row).toBeDefined();
+  });
+
+  // #274 carry-over: write-side FK validation. createCreditNote now
+  // refuses cross-org invoiceId / productId payloads BEFORE the
+  // INSERT runs. (contactId was already validated pre-fix.)
+  it("createCreditNote refuses an Org B invoiceId from Org A's session", async () => {
+    const [orgAContact] = await dbHolder.current
+      .insert(contacts)
+      .values({
+        orgId: orgAId,
+        type: "client",
+        classification: "business",
+        displayName: "Org A FK Client",
+      })
+      .returning();
+    const [orgBContact] = await dbHolder.current
+      .insert(contacts)
+      .values({
+        orgId: orgBId,
+        type: "client",
+        classification: "business",
+        displayName: "Org B FK Client",
+      })
+      .returning();
+    const [orgBInvoice] = await dbHolder.current
+      .insert(invoices)
+      .values({
+        orgId: orgBId,
+        contactId: orgBContact.id,
+        invoiceNumber: "INV-B-CN-FK-0001",
+        issueDate: "2026-04-01",
+        currencyCode: "EUR",
+        contactName: "Org B Client",
+      })
+      .returning();
+
+    getSessionMock.mockResolvedValue(ownerSession(orgAId));
+
+    const fd = new FormData();
+    fd.set("contactId", orgAContact.id); // same-org
+    fd.set("invoiceId", orgBInvoice.id); // CROSS-ORG FK
+    fd.set("issueDate", "2026-04-02");
+    fd.set("currencyCode", "EUR");
+    fd.set("contactName", "Org A");
+    fd.set("reason", CREDIT_NOTE_REASON.CORRECTION);
+    fd.set(
+      "items",
+      JSON.stringify([
+        {
+          sortOrder: 0,
+          name: "Item",
+          quantity: "1",
+          unitPrice: "10.00",
+          taxRate: "0.00",
+        },
+      ]),
+    );
+
+    const result = await createCreditNote(fd);
+    expect(result.success).toBe(false);
+
+    // No credit note in Org A points at Org B's invoice.
+    const orgARows = await dbHolder.current
+      .select()
+      .from(creditNotes)
+      .where(eq(creditNotes.orgId, orgAId));
+    for (const row of orgARows) {
+      expect(row.invoiceId).not.toBe(orgBInvoice.id);
+    }
+  });
+
+  it("createCreditNote refuses a cross-org productId in line items", async () => {
+    const [orgAContact] = await dbHolder.current
+      .insert(contacts)
+      .values({
+        orgId: orgAId,
+        type: "client",
+        classification: "business",
+        displayName: "Org A Line FK Client",
+      })
+      .returning();
+    const [orgBProduct] = await dbHolder.current
+      .insert(products)
+      .values({ orgId: orgBId, name: "Org B Product (cn line FK)" })
+      .returning();
+
+    getSessionMock.mockResolvedValue(ownerSession(orgAId));
+
+    const fd = new FormData();
+    fd.set("contactId", orgAContact.id);
+    fd.set("issueDate", "2026-04-02");
+    fd.set("currencyCode", "EUR");
+    fd.set("contactName", "Org A");
+    fd.set("reason", CREDIT_NOTE_REASON.CORRECTION);
+    fd.set(
+      "items",
+      JSON.stringify([
+        {
+          productId: orgBProduct.id, // cross-org line FK
+          sortOrder: 0,
+          name: "Item",
+          quantity: "1",
+          unitPrice: "10.00",
+          taxRate: "0.00",
+        },
+      ]),
+    );
+
+    const result = await createCreditNote(fd);
+    expect(result.success).toBe(false);
+
+    // No credit-note item with the cross-org productId exists.
+    const allItems = await dbHolder.current.select().from(creditNoteItems);
+    for (const item of allItems) {
+      expect(item.productId).not.toBe(orgBProduct.id);
+    }
   });
 });
