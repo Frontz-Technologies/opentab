@@ -59,9 +59,7 @@ test.describe("Business Lookup (#280)", () => {
   test("expenses/new — button shown only with EU VAT in free-text mode", async () => {
     await page.goto("/expenses/new");
 
-    await expect(
-      page.getByRole("button", { name: "Lookup" }),
-    ).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Lookup" })).toHaveCount(0);
 
     const vatInput = page.getByPlaceholder("VAT / Tax ID");
     await vatInput.fill("BE0123456789");
