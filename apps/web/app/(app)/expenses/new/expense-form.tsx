@@ -281,7 +281,7 @@ export function ExpenseForm({
     try {
       const result = await uploadAndExtractReceipt(formData);
       if (!result.success) {
-        if (result.error === "duplicate" && result.duplicateExpenseId) {
+        if ("duplicateExpenseId" in result) {
           const duplicateId = result.duplicateExpenseId;
           toast.error(t("duplicateReceiptTitle"), {
             action: {
