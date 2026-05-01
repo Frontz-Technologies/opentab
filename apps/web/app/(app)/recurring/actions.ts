@@ -11,6 +11,11 @@ import { eq, and } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { calculateLineTotal } from "@/lib/invoicing/calculations";
+import {
+  assertContactInOrg,
+  assertProductsInOrg,
+  CROSS_ORG_ACCESS_ERROR,
+} from "@/lib/security/assert-same-org";
 
 const lineItemSchema = z.object({
   productId: z.string().uuid().optional().or(z.literal("")),
@@ -73,6 +78,27 @@ export async function createRecurring(formData: FormData) {
   }
 
   const data = parsed.data;
+
+  // #274 carry-over: validate contactId + every line-item productId
+  // belong to the session org BEFORE the INSERT. The Zod schema
+  // accepts any UUID; without these guards a cross-org id would
+  // either trip the FK constraint (opaque) or, for productId,
+  // silently link the line to another org's product.
+  try {
+    await assertContactInOrg(db, data.contactId, session.org.id);
+    const productIds = data.items
+      .map((i) => i.productId)
+      .filter((id): id is string => !!id);
+    await assertProductsInOrg(db, productIds, session.org.id);
+  } catch (err) {
+    if (err instanceof Error && err.message === CROSS_ORG_ACCESS_ERROR) {
+      return {
+        success: false,
+        error: { _: ["Referenced contact or product not found"] },
+      };
+    }
+    throw err;
+  }
 
   const [recurring] = await db
     .insert(recurringInvoices)
@@ -169,6 +195,25 @@ export async function updateRecurring(id: string, formData: FormData) {
   }
 
   const data = parsed.data;
+
+  // #274 carry-over: validate contactId + every line-item productId
+  // belong to the session org BEFORE the UPDATE. Mirror of
+  // createRecurring — same guards, same shape.
+  try {
+    await assertContactInOrg(db, data.contactId, session.org.id);
+    const productIds = data.items
+      .map((i) => i.productId)
+      .filter((id): id is string => !!id);
+    await assertProductsInOrg(db, productIds, session.org.id);
+  } catch (err) {
+    if (err instanceof Error && err.message === CROSS_ORG_ACCESS_ERROR) {
+      return {
+        success: false,
+        error: { _: ["Referenced contact or product not found"] },
+      };
+    }
+    throw err;
+  }
 
   await db
     .update(recurringInvoices)

@@ -11,6 +11,11 @@ import { eq, and } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { calculateLineTotal } from "@/lib/invoicing/calculations";
+import {
+  assertContactInOrg,
+  assertExpenseCategoryInOrg,
+  CROSS_ORG_ACCESS_ERROR,
+} from "@/lib/security/assert-same-org";
 
 const lineItemSchema = z.object({
   sortOrder: z.coerce.number().int().min(0),
@@ -73,6 +78,26 @@ export async function createRecurringExpense(formData: FormData) {
   }
 
   const data = parsed.data;
+
+  // #274 carry-over: validate contactId + categoryId belong to the
+  // session org BEFORE the INSERT. Both are nullable here — the Zod
+  // schema accepts any UUID without validating same-org membership.
+  try {
+    if (data.contactId) {
+      await assertContactInOrg(db, data.contactId, session.org.id);
+    }
+    if (data.categoryId) {
+      await assertExpenseCategoryInOrg(db, data.categoryId, session.org.id);
+    }
+  } catch (err) {
+    if (err instanceof Error && err.message === CROSS_ORG_ACCESS_ERROR) {
+      return {
+        success: false,
+        error: { _: ["Referenced contact or category not found"] },
+      };
+    }
+    throw err;
+  }
 
   const [recurring] = await db
     .insert(recurringExpenses)
@@ -170,6 +195,25 @@ export async function updateRecurringExpense(id: string, formData: FormData) {
   }
 
   const data = parsed.data;
+
+  // #274 carry-over: validate contactId + categoryId belong to the
+  // session org BEFORE the UPDATE. Mirror of createRecurringExpense.
+  try {
+    if (data.contactId) {
+      await assertContactInOrg(db, data.contactId, session.org.id);
+    }
+    if (data.categoryId) {
+      await assertExpenseCategoryInOrg(db, data.categoryId, session.org.id);
+    }
+  } catch (err) {
+    if (err instanceof Error && err.message === CROSS_ORG_ACCESS_ERROR) {
+      return {
+        success: false,
+        error: { _: ["Referenced contact or category not found"] },
+      };
+    }
+    throw err;
+  }
 
   await db
     .update(recurringExpenses)

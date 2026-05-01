@@ -11,6 +11,9 @@ import { eq } from "drizzle-orm";
 import { createTestDb } from "@opentab/db/test-utils";
 import {
   organisations,
+  contacts,
+  expenseCategories,
+  expenseGroups,
   recurringExpenses,
   recurringExpenseItems,
 } from "@opentab/db/schema";
@@ -41,7 +44,10 @@ vi.mock("@/lib/session", () => ({
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
-import { updateRecurringExpense } from "@/app/(app)/recurring-expenses/actions";
+import {
+  createRecurringExpense,
+  updateRecurringExpense,
+} from "@/app/(app)/recurring-expenses/actions";
 
 describe("updateRecurringExpense — cross-org isolation (#274)", () => {
   let teardown: () => Promise<void>;
@@ -122,6 +128,89 @@ describe("updateRecurringExpense — cross-org isolation (#274)", () => {
       },
     };
   }
+
+  it("createRecurringExpense refuses an Org B contactId from Org A's session (#274 carry-over)", async () => {
+    const [orgBContact] = await dbHolder.current
+      .insert(contacts)
+      .values({
+        orgId: orgBId,
+        type: "supplier",
+        classification: "business",
+        displayName: "Org B Foreign Supplier",
+      })
+      .returning();
+    getSessionMock.mockResolvedValue(ownerSession(orgAId));
+
+    const fd = new FormData();
+    fd.set("contactId", orgBContact.id); // CROSS-ORG FK
+    fd.set("frequency", "4");
+    fd.set("startDate", "2026-04-01");
+    fd.set("nextRunDate", "2026-05-01");
+    fd.set("currencyCode", "EUR");
+    fd.set(
+      "items",
+      JSON.stringify([
+        {
+          sortOrder: 0,
+          name: "Item",
+          quantity: "1",
+          unitPrice: "10.00",
+          taxRate: "0.00",
+        },
+      ]),
+    );
+
+    const result = await createRecurringExpense(fd);
+    expect(result.success).toBe(false);
+
+    // No Org A recurring expense was created.
+    const orgARows = await dbHolder.current
+      .select()
+      .from(recurringExpenses)
+      .where(eq(recurringExpenses.orgId, orgAId));
+    expect(orgARows).toHaveLength(0);
+  });
+
+  it("createRecurringExpense refuses an Org B categoryId from Org A's session (#274 carry-over)", async () => {
+    // Seed expense category in Org B.
+    await dbHolder.current
+      .insert(expenseGroups)
+      .values({ code: "other", nameEn: "Other" })
+      .onConflictDoNothing();
+    const [orgBCat] = await dbHolder.current
+      .insert(expenseCategories)
+      .values({
+        orgId: orgBId,
+        groupCode: "other",
+        code: "B-CAT-FK",
+        name: "Org B Cat",
+      })
+      .returning();
+
+    getSessionMock.mockResolvedValue(ownerSession(orgAId));
+
+    const fd = new FormData();
+    fd.set("categoryId", orgBCat.id); // CROSS-ORG FK
+    fd.set("frequency", "4");
+    fd.set("startDate", "2026-04-01");
+    fd.set("nextRunDate", "2026-05-01");
+    fd.set("currencyCode", "EUR");
+    fd.set(
+      "items",
+      JSON.stringify([
+        {
+          sortOrder: 0,
+          name: "Item",
+          quantity: "1",
+          unitPrice: "10.00",
+          taxRate: "0.00",
+        },
+      ]),
+    );
+
+    const result = await createRecurringExpense(fd);
+    expect(result.success).toBe(false);
+  });
 
   it("Org A calling updateRecurringExpense with Org B's id does NOT wipe Org B's items", async () => {
     getSessionMock.mockResolvedValue(ownerSession(orgAId));

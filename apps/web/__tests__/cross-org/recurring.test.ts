@@ -12,6 +12,7 @@ import { createTestDb } from "@opentab/db/test-utils";
 import {
   organisations,
   contacts,
+  products,
   recurringInvoices,
   recurringInvoiceItems,
 } from "@opentab/db/schema";
@@ -47,7 +48,10 @@ vi.mock("@/lib/session", () => ({
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
-import { updateRecurring } from "@/app/(app)/recurring/actions";
+import {
+  createRecurring,
+  updateRecurring,
+} from "@/app/(app)/recurring/actions";
 
 describe("updateRecurring — cross-org isolation (#274)", () => {
   let teardown: () => Promise<void>;
@@ -155,6 +159,78 @@ describe("updateRecurring — cross-org isolation (#274)", () => {
       },
     };
   }
+
+  it("createRecurring refuses an Org B contactId from Org A's session (#274 carry-over)", async () => {
+    const [orgBContact] = await dbHolder.current
+      .insert(contacts)
+      .values({
+        orgId: orgBId,
+        type: "client",
+        classification: "business",
+        displayName: "Org B Foreign Client",
+      })
+      .returning();
+    getSessionMock.mockResolvedValue(ownerSession(orgAId));
+
+    const fd = new FormData();
+    fd.set("contactId", orgBContact.id); // CROSS-ORG FK
+    fd.set("frequency", "4");
+    fd.set("startDate", "2026-04-02");
+    fd.set("nextSendDate", "2026-05-02");
+    fd.set("currencyCode", "EUR");
+    fd.set(
+      "items",
+      JSON.stringify([
+        {
+          sortOrder: 0,
+          name: "Item",
+          quantity: "1",
+          unitPrice: "10.00",
+          taxRate: "0.00",
+        },
+      ]),
+    );
+
+    const result = await createRecurring(fd);
+    expect(result.success).toBe(false);
+
+    const orgARows = await dbHolder.current
+      .select()
+      .from(recurringInvoices)
+      .where(eq(recurringInvoices.orgId, orgAId));
+    expect(orgARows).toHaveLength(0);
+  });
+
+  it("createRecurring refuses a cross-org productId in line items (#274 carry-over)", async () => {
+    const [orgBProduct] = await dbHolder.current
+      .insert(products)
+      .values({ orgId: orgBId, name: "Org B Recurring Product" })
+      .returning();
+    getSessionMock.mockResolvedValue(ownerSession(orgAId));
+
+    const fd = new FormData();
+    fd.set("contactId", orgARawContactId); // same-org
+    fd.set("frequency", "4");
+    fd.set("startDate", "2026-04-02");
+    fd.set("nextSendDate", "2026-05-02");
+    fd.set("currencyCode", "EUR");
+    fd.set(
+      "items",
+      JSON.stringify([
+        {
+          productId: orgBProduct.id, // cross-org line FK
+          sortOrder: 0,
+          name: "Item",
+          quantity: "1",
+          unitPrice: "10.00",
+          taxRate: "0.00",
+        },
+      ]),
+    );
+
+    const result = await createRecurring(fd);
+    expect(result.success).toBe(false);
+  });
 
   it("Org A calling updateRecurring with Org B's id does NOT wipe Org B's items", async () => {
     getSessionMock.mockResolvedValue(ownerSession(orgAId));
