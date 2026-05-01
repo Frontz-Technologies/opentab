@@ -69,13 +69,20 @@ export async function saveMyDataCredentials(formData: FormData) {
   };
 
   if (existing) {
+    // #274 defence-in-depth: pair the id check with orgId so every
+    // mutation carries the org scope, not just the preceding SELECT.
     await db
       .update(countryIntegrationCredentials)
       .set({
         configJson,
         updatedAt: new Date(),
       })
-      .where(eq(countryIntegrationCredentials.id, existing.id));
+      .where(
+        and(
+          eq(countryIntegrationCredentials.id, existing.id),
+          eq(countryIntegrationCredentials.orgId, session.org.id),
+        ),
+      );
     log.info("credentials updated", {
       orgId: session.org.id,
       kind: MYDATA,
@@ -135,10 +142,17 @@ export async function testMyDataConnection() {
   });
 
   if (result.ok) {
+    // #274 defence-in-depth: scope the lastValidatedAt update by orgId
+    // even though `cred` was just selected with orgId already.
     await db
       .update(countryIntegrationCredentials)
       .set({ lastValidatedAt: new Date(), updatedAt: new Date() })
-      .where(eq(countryIntegrationCredentials.id, cred.id));
+      .where(
+        and(
+          eq(countryIntegrationCredentials.id, cred.id),
+          eq(countryIntegrationCredentials.orgId, session.org.id),
+        ),
+      );
     return { success: true };
   }
 

@@ -24,6 +24,11 @@ import { computeFileHash } from "@/lib/expenses/duplicate-detection";
 import { matchSupplier } from "@/lib/expenses/supplier-matching";
 import { ensureCategoriesSeeded } from "@/lib/expenses/category-seed";
 import { createDraftExpense } from "@/lib/expenses/draft-expenses";
+import {
+  assertContactInOrg,
+  assertExpenseCategoryInOrg,
+  CROSS_ORG_ACCESS_ERROR,
+} from "@/lib/security/assert-same-org";
 import { getFxRate } from "@/lib/fx/get-rate";
 import {
   isSupportedCurrency,
@@ -94,7 +99,9 @@ async function generateExpenseNumber(orgId: string): Promise<string> {
     await tx
       .update(invoiceSequences)
       .set({ nextNumber: seq.nextNumber + 1 })
-      .where(eq(invoiceSequences.id, seq.id));
+      .where(
+        and(eq(invoiceSequences.id, seq.id), eq(invoiceSequences.orgId, orgId)),
+      );
 
     return number;
   });
@@ -168,28 +175,45 @@ export interface UploadedFileInfo {
   fileHash: string;
 }
 
-export interface UploadReceiptResult {
-  success: boolean;
-  error?: string;
-  duplicateExpenseId?: string;
-  fileInfo?: UploadedFileInfo;
-  extractedData?: {
-    vendorName: string | null;
-    vendorVat: string | null;
-    date: string | null;
-    totalAmount: string | null;
-    currency: string | null;
-    description: string | null;
-    categoryId: string | null;
-    lineItems: {
-      name: string;
-      quantity: string;
-      unitPrice: string;
-      taxRate: string;
-    }[];
-  } | null;
-  supplierMatch?: { contactId: string; displayName: string } | null;
-}
+export type ReceiptExtractedData = {
+  vendorName: string | null;
+  vendorVat: string | null;
+  date: string | null;
+  totalAmount: string | null;
+  currency: string | null;
+  description: string | null;
+  categoryId: string | null;
+  lineItems: {
+    name: string;
+    quantity: string;
+    unitPrice: string;
+    taxRate: string;
+  }[];
+};
+
+export type ReceiptSupplierMatch = {
+  contactId: string;
+  displayName: string;
+};
+
+export type UploadReceiptResult =
+  | {
+      success: true;
+      fileInfo: UploadedFileInfo;
+      extractedData: ReceiptExtractedData | null;
+      supplierMatch: ReceiptSupplierMatch | null;
+    }
+  | {
+      // PR #276 unblocker — Sonner "Open existing expense" toast
+      // needs the parent expenseId on the duplicate-receipt branch.
+      // Safe to project because the SELECT below joins through
+      // expense.orgId, so the matched expense is guaranteed
+      // same-org.
+      success: false;
+      error: "duplicate";
+      duplicateExpenseId: string;
+    }
+  | { success: false; error: string };
 
 export async function uploadAndExtractReceipt(
   formData: FormData,
@@ -213,17 +237,32 @@ export async function uploadAndExtractReceipt(
   const buffer = Buffer.from(await file.arrayBuffer());
   const hash = computeFileHash(buffer);
 
-  // Check for duplicates
+  // Check for duplicates — scope by orgId so a hash collision in
+  // another org doesn't leak existence (and isn't blocked here).
+  // expenseAttachments has no orgId column, so we JOIN through
+  // expenses, which carries orgId. Project expenseId so the client
+  // can offer "open existing expense" UX (PR #276) — safe because
+  // the JOIN already filters to same-org rows.
   const [duplicate] = await db
-    .select()
+    .select({
+      id: expenseAttachments.id,
+      expenseId: expenseAttachments.expenseId,
+    })
     .from(expenseAttachments)
-    .where(eq(expenseAttachments.fileHash, hash))
+    .innerJoin(expenses, eq(expenses.id, expenseAttachments.expenseId))
+    .where(
+      and(
+        eq(expenseAttachments.fileHash, hash),
+        eq(expenses.orgId, session.org.id),
+      ),
+    )
     .limit(1);
 
   if (duplicate) {
     log.info("duplicate receipt detected", {
       orgId: session.org.id,
       fileHash: hash,
+      duplicateExpenseId: duplicate.expenseId,
     });
     return {
       success: false as const,
@@ -253,8 +292,8 @@ export async function uploadAndExtractReceipt(
   };
 
   // Try AI extraction if enabled
-  let extractedData: UploadReceiptResult["extractedData"] = null;
-  let supplierMatch: UploadReceiptResult["supplierMatch"] = null;
+  let extractedData: ReceiptExtractedData | null = null;
+  let supplierMatch: ReceiptSupplierMatch | null = null;
 
   const extractionEnabled = await isReceiptExtractionEnabled(session.org.id);
   if (extractionEnabled) {
@@ -405,6 +444,29 @@ export async function updateExpense(id: string, formData: FormData) {
 
   const data = parsed.data;
   const usesInclusiveTax = data.usesInclusiveTax;
+
+  // #274 carry-over: validate contactId / categoryId belong to the
+  // session org BEFORE the UPDATE. The Zod schema accepts any UUID;
+  // without this guard a cross-org id would either crash on the FK
+  // constraint (opaque error) or, if both contacts.id and the
+  // wrong-org row exist, silently link the expense to another org's
+  // row. Mirror of the createDraftExpense check.
+  try {
+    if (data.contactId) {
+      await assertContactInOrg(db, data.contactId, session.org.id);
+    }
+    if (data.categoryId) {
+      await assertExpenseCategoryInOrg(db, data.categoryId, session.org.id);
+    }
+  } catch (err) {
+    if (err instanceof Error && err.message === CROSS_ORG_ACCESS_ERROR) {
+      return {
+        success: false,
+        error: { _: ["Referenced contact or category not found"] },
+      };
+    }
+    throw err;
+  }
 
   const totals = calculateInvoiceTotals(
     data.items.map((i) => ({

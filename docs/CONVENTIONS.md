@@ -68,6 +68,40 @@ export async function createInvoice(data: CreateInvoiceInput) { ... }
 
 ---
 
+## Cross-org safety
+
+Every Drizzle query against an org-owned entity table MUST include
+`eq(<table>.orgId, session.org.id)` (or a verified `orgId` parameter
+from a session-checked caller). Helpers that take `orgId` MUST verify
+the caller is operating on the same session's org. Inserts MUST set
+`orgId` from a verified source. UPDATE / DELETE statements MUST scope
+their WHERE clause by `orgId` even when a preceding SELECT was scoped
+(defence-in-depth — closes the TOCTOU window).
+
+**Org-owned tables** (non-exhaustive): `expenses`, `expense_attachment`,
+`expense_category`, `invoices`, `invoice_item`, `quotes`, `quote_item`,
+`credit_notes`, `credit_note_item`, `contacts`, `products`,
+`recurring_invoice`, `recurring_invoice_item`, `recurring_expense`,
+`recurring_expense_item`, `country_integration_credential`,
+`country_integration_submission`, `ai_settings`. Per-user tables like
+`user_preferences` filter by `userId`; the user belonging to the right
+org is implied by `getSession()`.
+
+**Org-agnostic tables** (safe without `orgId`): `fx_rate_cache`,
+`organisation` (queries scope by `id`), `auth.*` (Better Auth managed),
+`expense_group` (global system table keyed by `code`), `org_members`
+(uses `orgId` as a key by design).
+
+**Foreign-key same-org validation:** Cross-table FKs (`*.contactId`,
+`*.categoryId`, `*.invoiceId`, `*.productId`) MUST be validated as
+same-org on insert / update. The audit at #274 fixed read-path leaks
+caused by this gap; the write-side validation tracks separately.
+
+**Audit reference:** `docs/security/2026-04-30-cross-org-audit.md` and
+issue #274.
+
+---
+
 ## Import Order
 
 Within any file, imports are ordered:

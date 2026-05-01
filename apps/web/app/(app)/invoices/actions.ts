@@ -33,6 +33,11 @@ import {
   ENTITY_TYPE,
   activities,
 } from "@/lib/entities/activity";
+import {
+  assertContactInOrg,
+  assertProductsInOrg,
+  CROSS_ORG_ACCESS_ERROR,
+} from "@/lib/security/assert-same-org";
 
 const log = createLogger("invoices");
 
@@ -86,7 +91,7 @@ export async function createInvoice(formData: FormData) {
       await tx
         .update(invoices)
         .set({ status: INVOICE_STATUS.PUBLISHED, updatedAt: new Date() })
-        .where(eq(invoices.id, invoice.id));
+        .where(and(eq(invoices.id, invoice.id), eq(invoices.orgId, orgId)));
       return assignInvoiceNumberIfMissing(invoice.id, orgId, tx);
     });
   }
@@ -190,6 +195,27 @@ export async function updateInvoice(id: string, formData: FormData) {
   const data = parsed.data;
   const usesInclusiveTax = data.usesInclusiveTax;
 
+  // #274 carry-over: validate contactId + every line-item productId
+  // belong to the session org BEFORE the UPDATE. The Zod schema
+  // accepts any UUID; without this guard a cross-org id either trips
+  // the FK constraint (opaque error) or — for productId, which is
+  // nullable — silently links the line to another org's product.
+  try {
+    await assertContactInOrg(db, data.contactId, orgId);
+    const productIds = data.items
+      .map((i) => i.productId)
+      .filter((id): id is string => !!id);
+    await assertProductsInOrg(db, productIds, orgId);
+  } catch (err) {
+    if (err instanceof Error && err.message === CROSS_ORG_ACCESS_ERROR) {
+      return {
+        success: false,
+        error: { _: ["Referenced contact or product not found"] },
+      };
+    }
+    throw err;
+  }
+
   const totals = calculateInvoiceTotals(
     data.items.map((i) => ({
       quantity: i.quantity,
@@ -242,7 +268,9 @@ export async function updateInvoice(id: string, formData: FormData) {
     })
     .where(and(eq(invoices.id, id), eq(invoices.orgId, session.org.id)));
 
-  // Replace all line items
+  // Replace all line items. invoiceId is session-verified by the L141
+  // pre-check (eq(orgId, session.org.id)); invoice_item has no orgId
+  // column so the scope flows through the parent.
   await db.delete(invoiceItems).where(eq(invoiceItems.invoiceId, id));
 
   for (const item of data.items) {
@@ -333,7 +361,7 @@ export async function sendInvoice(id: string) {
         sentAt: new Date(),
         updatedAt: new Date(),
       })
-      .where(eq(invoices.id, id));
+      .where(and(eq(invoices.id, id), eq(invoices.orgId, orgId)));
     await assignInvoiceNumberIfMissing(id, orgId, tx);
   });
 
@@ -420,7 +448,7 @@ export async function publishInvoice(id: string) {
         status: INVOICE_STATUS.PUBLISHED,
         updatedAt: new Date(),
       })
-      .where(eq(invoices.id, id));
+      .where(and(eq(invoices.id, id), eq(invoices.orgId, orgId)));
     await assignInvoiceNumberIfMissing(id, orgId, tx);
   });
 
@@ -479,7 +507,7 @@ export async function markAsPaid(id: string) {
       paidAt: new Date(),
       updatedAt: new Date(),
     })
-    .where(eq(invoices.id, id));
+    .where(and(eq(invoices.id, id), eq(invoices.orgId, orgId)));
 
   log.info("invoice marked as paid", { orgId, invoiceId: id });
 
@@ -528,7 +556,7 @@ export async function cancelInvoice(id: string) {
       status: INVOICE_STATUS.CANCELLED,
       updatedAt: new Date(),
     })
-    .where(eq(invoices.id, id));
+    .where(and(eq(invoices.id, id), eq(invoices.orgId, orgId)));
 
   const cancellations = await cancelInvoiceOnPlugins(id, {
     id: session.org.id,

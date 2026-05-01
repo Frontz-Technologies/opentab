@@ -88,12 +88,14 @@ export async function assignInvoiceNumberIfMissing(
     await tx
       .update(invoiceSequences)
       .set({ nextNumber: seq.nextNumber + 1 })
-      .where(eq(invoiceSequences.id, seq.id));
+      .where(
+        and(eq(invoiceSequences.id, seq.id), eq(invoiceSequences.orgId, orgId)),
+      );
 
     await tx
       .update(invoices)
       .set({ invoiceNumber: number, updatedAt: new Date() })
-      .where(eq(invoices.id, invoiceId));
+      .where(and(eq(invoices.id, invoiceId), eq(invoices.orgId, orgId)));
 
     return number;
   });
