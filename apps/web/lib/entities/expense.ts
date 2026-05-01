@@ -14,7 +14,7 @@ export const expenseLineItemSchema = z.object({
 
 export const createExpenseSchema = z.object({
   contactId: z.string().uuid().optional().or(z.literal("")),
-  categoryId: z.string().uuid().optional().or(z.literal("")),
+  categoryId: z.string().min(1, "categoryRequired"),
   expenseDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   paymentDate: z
     .string()

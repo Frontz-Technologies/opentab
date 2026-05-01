@@ -1,9 +1,10 @@
 "use client";
 
 import { useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Trash2 } from "lucide-react";
+import { Copy, Trash2 } from "lucide-react";
 import type { Expense } from "@opentab/db/schema";
 import { Button } from "@/components/ui/button";
 import { deleteExpense } from "../actions";
@@ -19,6 +20,12 @@ export function ExpenseActions({ expense }: ExpenseActionsProps) {
 
   return (
     <div className="flex gap-2">
+      <Link href={`/expenses/new?from=${expense.id}`}>
+        <Button variant="outline" size="sm">
+          <Copy className="h-4 w-4 mr-1" />
+          {t("createLikeThis")}
+        </Button>
+      </Link>
       <Button
         variant="outline"
         size="sm"

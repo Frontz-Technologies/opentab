@@ -14,6 +14,7 @@ const validLineItem = {
 };
 
 const validExpense = {
+  categoryId: "11111111-1111-1111-1111-111111111111",
   expenseDate: "2026-04-20",
   items: [validLineItem],
 };

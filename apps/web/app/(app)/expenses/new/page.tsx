@@ -1,19 +1,33 @@
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
+import { z } from "zod";
 import { getSession } from "@/lib/session";
 import { db } from "@/lib/db";
 import { contacts, expenseCategories, expenseGroups } from "@opentab/db/schema";
 import { eq, and, asc } from "drizzle-orm";
 import { getCountryProvider } from "@/lib/country";
 import { ensureCategoriesSeeded } from "@/lib/expenses/category-seed";
+import { loadSeedFromSource } from "@/lib/expenses/seed-from-source";
 import { ExpenseForm } from "./expense-form";
 import { isReceiptExtractionEnabled } from "@/lib/actions/ai-settings";
 
-export default async function NewExpensePage() {
+const fromIdSchema = z.string().uuid();
+
+export default async function NewExpensePage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const session = await getSession();
   if (!session) redirect("/login");
 
   const t = await getTranslations("expenses");
+
+  const params = await searchParams;
+  const rawFromId = typeof params.from === "string" ? params.from : null;
+  const fromId =
+    rawFromId && fromIdSchema.safeParse(rawFromId).success ? rawFromId : null;
+  const seed = await loadSeedFromSource(db, session.org.id, fromId);
 
   await ensureCategoriesSeeded(session.org.id, session.org.countryCode);
 
@@ -58,6 +72,7 @@ export default async function NewExpensePage() {
         defaultCurrency={session.org.defaultCurrency}
         defaultTaxRate={defaultTaxRate}
         aiExtractionAvailable={aiExtractionAvailable}
+        seed={seed}
       />
     </div>
   );

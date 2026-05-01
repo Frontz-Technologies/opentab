@@ -9,8 +9,12 @@ import type { Expense } from "@opentab/db/schema";
 import { Input } from "@/components/ui/input";
 import { MoneyWithBase } from "@/components/ui/money-with-base";
 
+interface ExpenseRow extends Expense {
+  categoryName: string | null;
+}
+
 interface ExpenseListProps {
-  expenses: Expense[];
+  expenses: ExpenseRow[];
   baseCurrency: string;
 }
 
@@ -71,88 +75,81 @@ export function ExpenseList({ expenses, baseCurrency }: ExpenseListProps) {
                 <thead>
                   <tr className="border-b border-on-surface/10">
                     <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
-                      {t("number")}
+                      {t("expenseDate")}
                     </th>
                     <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
                       {t("supplier")}
                     </th>
                     <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
-                      {t("expenseDate")}
+                      {t("category")}
                     </th>
                     <th className="text-right px-4 py-3 font-label text-sm text-on-surface/60">
                       {t("total")}
                     </th>
-                    <th className="text-left px-4 py-3 font-label text-sm text-on-surface/60">
-                      {t("source")}
-                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((expense) => (
-                    <tr
-                      key={expense.id}
-                      className="border-b border-on-surface/5 hover:bg-surface-container-low transition-colors cursor-pointer"
-                      onClick={() => router.push(`/expenses/${expense.id}`)}
-                    >
-                      <td className="px-4 py-3">
-                        <Link
-                          href={`/expenses/${expense.id}`}
-                          className="text-on-surface hover:text-primary transition-colors font-medium font-mono text-sm"
-                        >
-                          {expense.expenseNumber}
-                        </Link>
-                      </td>
-                      <td className="px-4 py-3 text-on-surface text-sm">
-                        {expense.contactName || "\u2014"}
-                      </td>
-                      <td className="px-4 py-3 text-on-surface/60 text-sm">
-                        {expense.expenseDate}
-                      </td>
-                      <td className="px-4 py-3 text-on-surface text-sm text-right font-mono">
-                        <MoneyWithBase
-                          amount={expense.total}
-                          currencyCode={expense.currencyCode}
-                          exchangeRate={expense.exchangeRate}
-                          baseCurrency={baseCurrency}
-                        />
-                      </td>
-                      <td className="px-4 py-3 text-on-surface/60 text-sm capitalize">
-                        {expense.source}
-                      </td>
-                    </tr>
-                  ))}
+                  {filtered.map((expense) => {
+                    const supplier = expense.contactName ?? "—";
+                    return (
+                      <tr
+                        key={expense.id}
+                        className="border-b border-on-surface/5 hover:bg-surface-container-low transition-colors cursor-pointer"
+                        onClick={() => router.push(`/expenses/${expense.id}`)}
+                      >
+                        <td className="px-4 py-3 text-on-surface text-sm">
+                          {expense.expenseDate}
+                        </td>
+                        <td className="px-4 py-3 text-on-surface text-sm">
+                          {supplier}
+                        </td>
+                        <td className="px-4 py-3 text-on-surface/60 text-sm">
+                          {expense.categoryName ?? "—"}
+                        </td>
+                        <td className="px-4 py-3 text-on-surface text-sm text-right font-mono">
+                          <MoneyWithBase
+                            amount={expense.total}
+                            currencyCode={expense.currencyCode}
+                            exchangeRate={expense.exchangeRate}
+                            baseCurrency={baseCurrency}
+                          />
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
           </div>
 
           <div className="block md:hidden space-y-3">
-            {filtered.map((expense) => (
-              <Link
-                key={expense.id}
-                href={`/expenses/${expense.id}`}
-                className="block bg-surface-container rounded-xl p-4 hover:bg-surface-container-high transition-colors"
-              >
-                <div className="flex items-start justify-between mb-1">
-                  <span className="font-mono text-sm text-on-surface">
-                    {expense.expenseNumber}
+            {filtered.map((expense) => {
+              const supplier = expense.contactName ?? "—";
+              return (
+                <Link
+                  key={expense.id}
+                  href={`/expenses/${expense.id}`}
+                  className="block bg-surface-container rounded-xl p-4 hover:bg-surface-container-high transition-colors"
+                >
+                  <div className="flex items-start justify-between mb-1">
+                    <span className="text-xs text-on-surface-variant">
+                      {expense.expenseDate}
+                    </span>
+                    <MoneyWithBase
+                      amount={expense.total}
+                      currencyCode={expense.currencyCode}
+                      exchangeRate={expense.exchangeRate}
+                      baseCurrency={baseCurrency}
+                      className="font-label text-lg font-bold text-on-surface"
+                    />
+                  </div>
+                  <p className="text-sm text-on-surface mb-1">{supplier}</p>
+                  <span className="text-xs text-on-surface-variant">
+                    {expense.categoryName ?? "—"}
                   </span>
-                  <MoneyWithBase
-                    amount={expense.total}
-                    currencyCode={expense.currencyCode}
-                    exchangeRate={expense.exchangeRate}
-                    baseCurrency={baseCurrency}
-                    className="font-label text-lg font-bold text-on-surface"
-                  />
-                </div>
-                <p className="text-sm text-on-surface mb-2">
-                  {expense.contactName || expense.description || "\u2014"}
-                </p>
-                <span className="text-xs text-on-surface-variant">
-                  {expense.expenseDate}
-                </span>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
           </div>
         </>
       )}

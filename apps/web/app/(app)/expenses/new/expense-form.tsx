@@ -40,6 +40,7 @@ import {
   type LineItem,
 } from "@/components/invoicing/line-items-builder";
 import { buildAutofilledLineItems } from "@/lib/expenses/autofill-line-items";
+import type { ExpenseSeed } from "@/lib/expenses/seed-from-source";
 import { GROUP_TYPE_MARKER } from "@/lib/expenses/group-type";
 import {
   acceptExtractionPreview,
@@ -59,6 +60,27 @@ import {
 
 type UploadReceiptSuccess = Extract<UploadReceiptResult, { success: true }>;
 
+type FieldErrors = Record<string, string[] | undefined>;
+
+const KNOWN_ERROR_KEYS = ["categoryRequired"] as const;
+type KnownErrorKey = (typeof KNOWN_ERROR_KEYS)[number];
+
+function formatExpenseError(
+  error: FieldErrors | string | undefined,
+  t: (key: KnownErrorKey) => string,
+): string {
+  if (typeof error === "string") return error;
+  if (error) {
+    for (const messages of Object.values(error)) {
+      const first = messages?.[0];
+      if (first && (KNOWN_ERROR_KEYS as readonly string[]).includes(first)) {
+        return t(first as KnownErrorKey);
+      }
+    }
+  }
+  return JSON.stringify(error);
+}
+
 interface ExpenseFormProps {
   contacts: Contact[];
   groups: ExpenseGroup[];
@@ -66,6 +88,7 @@ interface ExpenseFormProps {
   defaultCurrency: string;
   defaultTaxRate: string;
   aiExtractionAvailable?: boolean;
+  seed?: ExpenseSeed | null;
 }
 
 export function ExpenseForm({
@@ -75,24 +98,30 @@ export function ExpenseForm({
   defaultCurrency,
   defaultTaxRate,
   aiExtractionAvailable = false,
+  seed = null,
 }: ExpenseFormProps) {
   const t = useTranslations("expenses");
   const locale = useLocale();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  const [contactId, setContactId] = useState("");
-  const [supplierName, setSupplierName] = useState("");
-  const [categoryId, setCategoryId] = useState("");
+  const [contactId, setContactId] = useState(seed?.contactId ?? "");
+  const [supplierName, setSupplierName] = useState(seed?.contactName ?? "");
+  const [categoryId, setCategoryId] = useState(seed?.categoryId ?? "");
+  // expenseDate intentionally NOT seeded — always defaults to today.
   const [expenseDate, setExpenseDate] = useState(
     new Date().toISOString().split("T")[0],
   );
   const [paymentDate, setPaymentDate] = useState("");
-  const [currencyCode, setCurrencyCode] = useState(defaultCurrency);
-  const [usesInclusiveTax, setUsesInclusiveTax] = useState(false);
+  const [currencyCode, setCurrencyCode] = useState(
+    seed?.currencyCode ?? defaultCurrency,
+  );
+  const [usesInclusiveTax, setUsesInclusiveTax] = useState(
+    seed?.usesInclusiveTax ?? false,
+  );
   const [supplierInvoiceNumber, setSupplierInvoiceNumber] = useState("");
-  const [description, setDescription] = useState("");
-  const [notes, setNotes] = useState("");
+  const [description, setDescription] = useState(seed?.description ?? "");
+  const [notes, setNotes] = useState(seed?.notes ?? "");
   const [items, setItems] = useState<LineItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [uploadedFile, setUploadedFile] = useState<UploadedFileInfo | null>(
@@ -273,6 +302,17 @@ export function ExpenseForm({
     try {
       const result = await uploadAndExtractReceipt(formData);
       if (!result.success) {
+        if ("duplicateExpenseId" in result) {
+          const duplicateId = result.duplicateExpenseId;
+          toast.error(t("duplicateReceiptTitle"), {
+            action: {
+              label: t("duplicateReceiptOpen"),
+              onClick: () => router.push(`/expenses/${duplicateId}`),
+            },
+          });
+          setIsUploading(false);
+          return;
+        }
         setError(result.error ?? "Upload failed");
         setIsUploading(false);
         return;
@@ -375,6 +415,10 @@ export function ExpenseForm({
   }
 
   function handleSubmit() {
+    if (!categoryId) {
+      setError(t("categoryRequired"));
+      return;
+    }
     if (items.length === 0) {
       setError(t("itemRequired"));
       return;
@@ -407,7 +451,7 @@ export function ExpenseForm({
           submittedRef.current = true;
           router.push("/expenses");
         } else {
-          setError(JSON.stringify(result.error));
+          setError(formatExpenseError(result.error, t));
         }
       } catch (err) {
         if (err instanceof Error && /no rate available/i.test(err.message)) {
@@ -616,7 +660,7 @@ export function ExpenseForm({
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-label text-on-surface/60 mb-1">
-              {t("category")}
+              {t("category")} <span className="text-tertiary">*</span>
             </label>
             {categories.length === 0 ? (
               <EmptyEntityHint
@@ -752,6 +796,7 @@ export function ExpenseForm({
           usesInclusiveTax={usesInclusiveTax}
           previewIds={previewLineItems}
           onItemEdit={handleExitItemPreview}
+          showDescription={false}
         />
       </div>
 
