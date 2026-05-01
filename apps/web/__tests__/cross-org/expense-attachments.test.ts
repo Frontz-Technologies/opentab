@@ -187,8 +187,12 @@ describe("uploadAndExtractReceipt duplicate guard — cross-org isolation (#274)
     expect(result.success).toBe(false);
     // PR #276 carry-over: duplicate-receipt branch now reports
     // error="duplicate" with the parent expenseId so the client can
-    // offer "open existing expense" UX. Discriminate the union.
-    if (!result.success && result.error === "duplicate") {
+    // offer "open existing expense" UX. The duplicate-branch object
+    // has a `duplicateExpenseId` property; runtime discriminate on
+    // its presence (the union has two failure shapes — string error
+    // vs the dup branch).
+    if (!result.success && "duplicateExpenseId" in result) {
+      expect(result.error).toBe("duplicate");
       expect(result.duplicateExpenseId).toBeDefined();
       // The dup is expected to point at the previously-seeded Org B
       // expense, which the test creates in beforeAll. The id matches
@@ -232,7 +236,7 @@ describe("uploadAndExtractReceipt duplicate guard — cross-org isolation (#274)
     const result = await uploadAndExtractReceipt(makeFormData());
 
     expect(result.success).toBe(false);
-    if (!result.success && result.error === "duplicate") {
+    if (!result.success && "duplicateExpenseId" in result) {
       // Critical: the projection must point at Org A's expense, not
       // Org B's pre-seeded expense with the same file hash.
       expect(result.duplicateExpenseId).toBe(orgAExpense.id);
