@@ -664,13 +664,13 @@ export function ExpenseForm({
           {t("supplier")}
         </h2>
         {contactId && selectedContact ? (
-          <div className="flex items-center justify-between rounded-md bg-surface-container-low px-3 py-2.5 border border-outline/10">
-            <div className="flex flex-col">
-              <span className="text-sm text-on-surface">
+          <div className="flex items-center justify-between gap-3 rounded-lg bg-surface-container-low px-3.5 py-3 border border-outline/15">
+            <div className="flex flex-col min-w-0">
+              <span className="text-sm font-medium text-on-surface truncate">
                 {selectedContact.displayName}
               </span>
               {selectedContact.vatNumber && (
-                <span className="text-xs text-on-surface-variant">
+                <span className="text-xs text-on-surface-variant font-mono tracking-tight">
                   {selectedContact.vatNumber}
                 </span>
               )}
@@ -684,7 +684,7 @@ export function ExpenseForm({
                 setSupplierVat("");
                 setVatMatchChecked(null);
               }}
-              className="text-xs text-on-surface-variant hover:text-on-surface"
+              className="shrink-0 text-xs text-on-surface-variant hover:text-on-surface px-2 py-1 rounded hover:bg-surface-container-high transition-colors"
             >
               {tCommon("clear")}
             </button>
@@ -743,15 +743,21 @@ export function ExpenseForm({
                 <button
                   type="button"
                   onClick={() => setQuickCreateOpen(true)}
-                  className="text-sm text-primary hover:underline self-start"
+                  className="group flex items-center gap-2 self-start rounded-md bg-primary/5 px-3 py-2 text-sm text-primary hover:bg-primary/10 transition-colors"
                 >
-                  💡 {t("addAsContact", { name: supplierName.trim() })}
+                  <Sparkles className="h-4 w-4 opacity-70 group-hover:opacity-100 transition-opacity" />
+                  <span>
+                    {t("addAsContact", { name: supplierName.trim() })}
+                  </span>
                 </button>
               )}
           </>
         )}
         {vatMatchToast && (
-          <p role="status" className="text-xs text-tertiary">
+          <p
+            role="status"
+            className="rounded-md border border-tertiary/20 bg-tertiary/10 px-3 py-2 text-xs text-tertiary"
+          >
             {t("vatMatchedSwitching", { name: vatMatchToast })}
           </p>
         )}

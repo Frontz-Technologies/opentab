@@ -57,11 +57,28 @@ export function SupplierCombobox({
       getLabel={(c) => c.displayName}
       matches={matchesSupplier}
       renderOption={(c) => (
-        <div className="flex flex-col">
-          <span className="text-on-surface">{c.displayName}</span>
-          {(c.company || c.vatNumber) && (
-            <span className="text-xs text-on-surface-variant">
-              {[c.company, c.vatNumber].filter(Boolean).join(" · ")}
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-col min-w-0">
+            <span className="text-on-surface truncate">{c.displayName}</span>
+            {(c.company &&
+              c.company.toLowerCase() !== c.displayName.toLowerCase()) ||
+            c.vatNumber ? (
+              <span className="text-xs text-on-surface-variant truncate">
+                {[
+                  c.company &&
+                  c.company.toLowerCase() !== c.displayName.toLowerCase()
+                    ? c.company
+                    : null,
+                  c.vatNumber,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </span>
+            ) : null}
+          </div>
+          {c.type === "both" && (
+            <span className="shrink-0 text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded-sm bg-tertiary/10 text-tertiary">
+              both
             </span>
           )}
         </div>
