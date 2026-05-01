@@ -19,10 +19,7 @@ export async function findContactByVat(vatNumber: string) {
     .select()
     .from(contacts)
     .where(
-      and(
-        eq(contacts.orgId, session.org.id),
-        eq(contacts.vatNumber, cleaned),
-      ),
+      and(eq(contacts.orgId, session.org.id), eq(contacts.vatNumber, cleaned)),
     )
     .limit(1);
 

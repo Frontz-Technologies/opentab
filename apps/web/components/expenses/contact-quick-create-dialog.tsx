@@ -95,7 +95,7 @@ export function ContactQuickCreateDialog({
           <Input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder={t("displayName")}
+            placeholder={t("contactName")}
             required
           />
           <Input

@@ -315,6 +315,7 @@
   "contacts": {
     "title": "Contactos",
     "addContact": "Agregar contacto",
+    "addContactDialogTitle": "Añadir nuevo contacto",
     "import": "Importar",
     "editContact": "Editar contacto",
     "noContacts": "Aún no hay contactos",
@@ -702,6 +703,9 @@
     "manageCategories": "Gestionar categorías",
     "supplierNameFreeText": "O ingrese nombre del proveedor",
     "supplierNamePlaceholder": "ej. Cafetería, Estacionamiento, Suministros",
+    "selectOrTypeSupplier": "Selecciona o escribe un proveedor",
+    "addAsContact": "Añade «{name}» a tus contactos",
+    "vatMatchedSwitching": "El NIF coincide con un contacto existente, cambiando a «{name}»",
     "category": "Categoría",
     "selectCategory": "Seleccionar una categoría",
     "searchCategory": "Buscar categoría…",

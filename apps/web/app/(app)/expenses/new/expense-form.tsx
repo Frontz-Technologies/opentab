@@ -19,13 +19,6 @@ import { Input } from "@/components/ui/input";
 import { CurrencyCombobox } from "@/components/ui/currency-combobox";
 import type { SupportedCurrencyCode } from "@/lib/currency/supported";
 import { DatePicker } from "@/components/ui/date-picker";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { CategoryCombobox } from "./category-combobox";
 import {
   Dialog,
@@ -55,11 +48,15 @@ import {
   uploadAndExtractReceipt,
   cleanupTempAttachment,
   lookupVat,
+  findContactByVat,
+  createSupplierContact,
   type UploadedFileInfo,
   type UploadReceiptResult,
 } from "../actions";
 import { isCountrySupportedByAnySource } from "@/lib/business-lookup/registry";
 import { detectCountryFromTaxId } from "@/lib/utils";
+import { SupplierCombobox } from "@/components/expenses/supplier-combobox";
+import { ContactQuickCreateDialog } from "@/components/expenses/contact-quick-create-dialog";
 
 type UploadReceiptSuccess = Extract<UploadReceiptResult, { success: true }>;
 
@@ -113,6 +110,9 @@ export function ExpenseForm({
   const [supplierName, setSupplierName] = useState(seed?.contactName ?? "");
   const [supplierVat, setSupplierVat] = useState("");
   const [supplierLookupPending, setSupplierLookupPending] = useState(false);
+  const [vatMatchToast, setVatMatchToast] = useState<string | null>(null);
+  const [quickCreateOpen, setQuickCreateOpen] = useState(false);
+  const [vatMatchChecked, setVatMatchChecked] = useState<string | null>(null);
   const [categoryId, setCategoryId] = useState(seed?.categoryId ?? "");
   // expenseDate intentionally NOT seeded — always defaults to today.
   const [expenseDate, setExpenseDate] = useState(
@@ -152,6 +152,31 @@ export function ExpenseForm({
   const tCommon = useTranslations("common");
 
   const selectedContact = contacts.find((c) => c.id === contactId);
+
+  // Auto-promote to a matching contact when the VAT field exactly
+  // matches one we've already saved. Runs both for typed VAT and for
+  // VAT values that AI extraction or Business Lookup populate via the
+  // same `setSupplierVat`. Debounced to avoid hammering the action on
+  // every keystroke.
+  useEffect(() => {
+    const trimmed = supplierVat.trim().replace(/\s/g, "").toUpperCase();
+    if (!trimmed) return;
+    if (contactId) return;
+    if (vatMatchChecked === trimmed) return;
+    const handle = setTimeout(async () => {
+      const match = await findContactByVat(trimmed);
+      setVatMatchChecked(trimmed);
+      if (match) {
+        setContactId(match.id);
+        setSupplierName(match.displayName ?? "");
+        setSupplierVat(match.vatNumber ?? "");
+        if (match.defaultCurrency) setCurrencyCode(match.defaultCurrency);
+        setVatMatchToast(match.displayName ?? "");
+        setTimeout(() => setVatMatchToast(null), 4000);
+      }
+    }, 300);
+    return () => clearTimeout(handle);
+  }, [supplierVat, contactId, vatMatchChecked]);
 
   // Track whether the form has unsaved data
   const isDirty =
@@ -638,56 +663,55 @@ export function ExpenseForm({
         <h2 className="font-headline text-lg font-semibold text-on-surface">
           {t("supplier")}
         </h2>
-        <div className={fieldWrapperClass("contactId")}>
-          <Select
-            value={contactId || undefined}
-            onValueChange={(v) => {
-              handleExitFieldPreview("contactId");
-              const next = v;
-              setContactId(next);
-              if (next) {
+        {contactId && selectedContact ? (
+          <div className="flex items-center justify-between rounded-md bg-surface-container-low px-3 py-2.5 border border-outline/10">
+            <div className="flex flex-col">
+              <span className="text-sm text-on-surface">
+                {selectedContact.displayName}
+              </span>
+              {selectedContact.vatNumber && (
+                <span className="text-xs text-on-surface-variant">
+                  {selectedContact.vatNumber}
+                </span>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                handleExitFieldPreview("contactId");
+                setContactId("");
                 setSupplierName("");
                 setSupplierVat("");
-              }
-              const contact = contacts.find((c) => c.id === next);
-              if (contact?.defaultCurrency)
-                setCurrencyCode(contact.defaultCurrency);
-            }}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder={t("selectSupplier")} />
-            </SelectTrigger>
-            <SelectContent>
-              {contacts
-                .filter((c) => c.type === "supplier" || c.type === "both")
-                .map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.displayName}
-                  </SelectItem>
-                ))}
-            </SelectContent>
-          </Select>
-        </div>
-        {!contactId && (
-          <div>
-            <label className="block text-sm font-label text-on-surface/60 mb-1">
-              {t("supplierNameFreeText")}
-            </label>
+                setVatMatchChecked(null);
+              }}
+              className="text-xs text-on-surface-variant hover:text-on-surface"
+            >
+              {tCommon("clear")}
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className={fieldWrapperClass("supplierName")}>
+              <SupplierCombobox
+                value={supplierName}
+                onChange={(v) => {
+                  handleExitFieldPreview("supplierName");
+                  setSupplierName(v);
+                }}
+                onSelect={(c) => {
+                  setContactId(c.id);
+                  setSupplierName(c.displayName);
+                  setSupplierVat(c.vatNumber ?? "");
+                  const full = contacts.find((cc) => cc.id === c.id);
+                  if (full?.defaultCurrency)
+                    setCurrencyCode(full.defaultCurrency);
+                }}
+                contacts={contacts}
+                placeholder={t("selectOrTypeSupplier")}
+              />
+            </div>
             <div className="flex flex-col sm:flex-row gap-2">
-              <div
-                className={`sm:w-[60%] ${fieldWrapperClass("supplierName")}`}
-              >
-                <Input
-                  value={supplierName}
-                  onChange={(e) => {
-                    handleExitFieldPreview("supplierName");
-                    setSupplierName(e.target.value);
-                  }}
-                  onFocus={() => handleExitFieldPreview("supplierName")}
-                  placeholder={t("supplierNamePlaceholder")}
-                />
-              </div>
-              <div className={`sm:w-[30%] ${fieldWrapperClass("supplierVat")}`}>
+              <div className={`sm:w-[60%] ${fieldWrapperClass("supplierVat")}`}>
                 <Input
                   value={supplierVat}
                   onChange={(e) => {
@@ -706,15 +730,46 @@ export function ExpenseForm({
                   type="button"
                   onClick={handleSupplierLookup}
                   disabled={supplierLookupPending}
-                  className="sm:w-[10%] h-10 px-3 rounded-md bg-surface-container-high text-on-surface font-label text-sm hover:bg-surface-container-highest transition-colors disabled:opacity-60 whitespace-nowrap"
+                  className="sm:w-[40%] h-10 px-3 rounded-md bg-surface-container-high text-on-surface font-label text-sm hover:bg-surface-container-highest transition-colors disabled:opacity-60 whitespace-nowrap"
                 >
                   {supplierLookupPending ? "..." : tContacts("vatLookup")}
                 </button>
               )}
             </div>
-          </div>
+            {supplierName.trim() &&
+              supplierVat.trim() &&
+              vatMatchChecked ===
+                supplierVat.trim().replace(/\s/g, "").toUpperCase() && (
+                <button
+                  type="button"
+                  onClick={() => setQuickCreateOpen(true)}
+                  className="text-sm text-primary hover:underline self-start"
+                >
+                  💡 {t("addAsContact", { name: supplierName.trim() })}
+                </button>
+              )}
+          </>
+        )}
+        {vatMatchToast && (
+          <p role="status" className="text-xs text-tertiary">
+            {t("vatMatchedSwitching", { name: vatMatchToast })}
+          </p>
         )}
       </div>
+      <ContactQuickCreateDialog
+        open={quickCreateOpen}
+        onOpenChange={setQuickCreateOpen}
+        prefill={{
+          supplierName,
+          supplierVat,
+        }}
+        createSupplierContact={createSupplierContact}
+        onSaved={(c) => {
+          setContactId(c.id);
+          setSupplierName(c.displayName);
+          setSupplierVat(c.vatNumber ?? "");
+        }}
+      />
 
       <div className="bg-surface-container rounded-xl p-6 space-y-4">
         <h2 className="font-headline text-lg font-semibold text-on-surface">

@@ -315,6 +315,7 @@
   "contacts": {
     "title": "Επαφές",
     "addContact": "Προσθήκη Επαφής",
+    "addContactDialogTitle": "Προσθήκη νέας επαφής",
     "import": "Εισαγωγή",
     "editContact": "Επεξεργασία Επαφής",
     "noContacts": "Δεν υπάρχουν επαφές",
@@ -703,6 +704,9 @@
     "manageCategories": "Διαχείριση κατηγοριών",
     "supplierNameFreeText": "Ή εισάγετε όνομα προμηθευτή",
     "supplierNamePlaceholder": "π.χ. Καφετέρια, Πάρκινγκ, Γραφική ύλη",
+    "selectOrTypeSupplier": "Επιλέξτε ή πληκτρολογήστε προμηθευτή",
+    "addAsContact": "Προσθήκη του «{name}» στις επαφές σας",
+    "vatMatchedSwitching": "Ο ΑΦΜ ταιριάζει με υπάρχουσα επαφή, μετάβαση στο «{name}»",
     "category": "Κατηγορία",
     "selectCategory": "Επιλέξτε κατηγορία",
     "searchCategory": "Αναζήτηση κατηγορίας…",

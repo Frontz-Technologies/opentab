@@ -315,6 +315,7 @@
   "contacts": {
     "title": "Contacts",
     "addContact": "Add Contact",
+    "addContactDialogTitle": "Add new contact",
     "import": "Import",
     "editContact": "Edit Contact",
     "noContacts": "No contacts yet",
@@ -703,6 +704,9 @@
     "manageCategories": "Manage categories",
     "supplierNameFreeText": "Or enter supplier name",
     "supplierNamePlaceholder": "e.g. Coffee shop, Parking, Office supplies",
+    "selectOrTypeSupplier": "Select or type a supplier",
+    "addAsContact": "Add {name} to your contacts",
+    "vatMatchedSwitching": "VAT matches existing contact, switching to {name}",
     "category": "Category",
     "selectCategory": "Select a category",
     "searchCategory": "Search category…",

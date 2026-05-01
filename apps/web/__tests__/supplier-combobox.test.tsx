@@ -103,9 +103,7 @@ describe("SupplierCombobox", () => {
       target: { value: "Acme" },
     });
     fireEvent.mouseDown(screen.getByText("Acme Coffee"));
-    expect(onSelect).toHaveBeenCalledWith(
-      expect.objectContaining({ id: "1" }),
-    );
+    expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ id: "1" }));
     expect(onChange).toHaveBeenLastCalledWith("Acme Coffee");
   });
 });
