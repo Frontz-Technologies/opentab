@@ -201,7 +201,12 @@ export async function submitCreditNoteThroughPlugins(
           attemptCount: 1,
           updatedAt: new Date(),
         })
-        .where(eq(countryIntegrationSubmissions.id, submission.id));
+        .where(
+          and(
+            eq(countryIntegrationSubmissions.id, submission.id),
+            eq(countryIntegrationSubmissions.orgId, orgCtx.id),
+          ),
+        );
       if (integration.kind === "mydata") {
         await recordActivity({
           orgId: orgCtx.id,
@@ -238,7 +243,12 @@ export async function submitCreditNoteThroughPlugins(
           submittedAt: new Date(),
           updatedAt: new Date(),
         })
-        .where(eq(countryIntegrationSubmissions.id, submission.id));
+        .where(
+          and(
+            eq(countryIntegrationSubmissions.id, submission.id),
+            eq(countryIntegrationSubmissions.orgId, orgCtx.id),
+          ),
+        );
       if (integration.kind === "mydata") {
         await recordActivity({
           orgId: orgCtx.id,
@@ -265,7 +275,12 @@ export async function submitCreditNoteThroughPlugins(
           attemptCount: 1,
           updatedAt: new Date(),
         })
-        .where(eq(countryIntegrationSubmissions.id, submission.id));
+        .where(
+          and(
+            eq(countryIntegrationSubmissions.id, submission.id),
+            eq(countryIntegrationSubmissions.orgId, orgCtx.id),
+          ),
+        );
       if (integration.kind === "mydata") {
         await recordActivity({
           orgId: orgCtx.id,

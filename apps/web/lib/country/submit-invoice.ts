@@ -232,7 +232,12 @@ export async function submitInvoiceThroughPlugins(
           attemptCount: 1,
           updatedAt: new Date(),
         })
-        .where(eq(countryIntegrationSubmissions.id, submission.id));
+        .where(
+          and(
+            eq(countryIntegrationSubmissions.id, submission.id),
+            eq(countryIntegrationSubmissions.orgId, orgCtx.id),
+          ),
+        );
       if (integration.kind === "mydata") {
         await recordActivity({
           orgId: orgCtx.id,
@@ -277,12 +282,22 @@ export async function submitInvoiceThroughPlugins(
           submittedAt: new Date(),
           updatedAt: new Date(),
         })
-        .where(eq(countryIntegrationSubmissions.id, submission.id));
+        .where(
+          and(
+            eq(countryIntegrationSubmissions.id, submission.id),
+            eq(countryIntegrationSubmissions.orgId, orgCtx.id),
+          ),
+        );
       if (credId) {
         await db
           .update(countryIntegrationCredentials)
           .set({ lastValidatedAt: new Date(), updatedAt: new Date() })
-          .where(eq(countryIntegrationCredentials.id, credId));
+          .where(
+            and(
+              eq(countryIntegrationCredentials.id, credId),
+              eq(countryIntegrationCredentials.orgId, orgCtx.id),
+            ),
+          );
       }
       if (integration.kind === "mydata") {
         await recordActivity({
@@ -310,7 +325,12 @@ export async function submitInvoiceThroughPlugins(
           attemptCount: 1,
           updatedAt: new Date(),
         })
-        .where(eq(countryIntegrationSubmissions.id, submission.id));
+        .where(
+          and(
+            eq(countryIntegrationSubmissions.id, submission.id),
+            eq(countryIntegrationSubmissions.orgId, orgCtx.id),
+          ),
+        );
       if (integration.kind === "mydata") {
         await recordActivity({
           orgId: orgCtx.id,
@@ -441,7 +461,12 @@ export async function cancelInvoiceOnPlugins(
           responseJson: result.responsePayload ?? null,
           updatedAt: new Date(),
         })
-        .where(eq(countryIntegrationSubmissions.id, latest.id));
+        .where(
+          and(
+            eq(countryIntegrationSubmissions.id, latest.id),
+            eq(countryIntegrationSubmissions.orgId, orgCtx.id),
+          ),
+        );
     }
 
     results.push({
