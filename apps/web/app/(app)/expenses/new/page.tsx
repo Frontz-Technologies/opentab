@@ -25,7 +25,9 @@ export default async function NewExpensePage({
 
   const params = await searchParams;
   const rawFromId = typeof params.from === "string" ? params.from : null;
-  const fromId = rawFromId ? fromIdSchema.safeParse(rawFromId).data ?? null : null;
+  const fromId = rawFromId
+    ? (fromIdSchema.safeParse(rawFromId).data ?? null)
+    : null;
   const seed = await loadSeedFromSource(db, session.org.id, fromId);
 
   await ensureCategoriesSeeded(session.org.id, session.org.countryCode);
