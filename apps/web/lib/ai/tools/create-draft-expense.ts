@@ -15,6 +15,8 @@ const createDraftExpenseParameters = z.object({
   currencyCode: z.string().length(3).optional(),
   usesInclusiveTax: z.boolean().optional(),
   supplierInvoiceNumber: z.string().optional(),
+  contactName: z.string().max(255).optional(),
+  contactVatNumber: z.string().max(50).optional(),
   description: z.string().optional(),
   notes: z.string().optional(),
   items: z.array(
@@ -37,6 +39,8 @@ function normalizeArgs(args: z.infer<typeof createDraftExpenseParameters>) {
     currencyCode: args.currencyCode ?? "EUR",
     usesInclusiveTax: args.usesInclusiveTax ?? false,
     supplierInvoiceNumber: args.supplierInvoiceNumber ?? "",
+    contactName: args.contactName ?? "",
+    contactVatNumber: args.contactVatNumber ?? "",
     description: args.description ?? "",
     notes: args.notes ?? "",
     items: args.items.map((item, index) => ({
@@ -76,7 +80,9 @@ function buildConfirmation(
         `Line items: ${args.items.length}`,
         args.contactId
           ? `Supplier ID: ${args.contactId}`
-          : "No supplier linked",
+          : args.contactName
+            ? `Supplier: ${args.contactName}`
+            : "No supplier linked",
       ],
     },
   };
