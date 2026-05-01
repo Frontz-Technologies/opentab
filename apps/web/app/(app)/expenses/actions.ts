@@ -6,8 +6,30 @@ import { lookupVat as lookupVatAction } from "../contacts/actions";
 export async function lookupVat(vatNumber: string) {
   return lookupVatAction(vatNumber);
 }
+
+export async function findContactByVat(vatNumber: string) {
+  const cleaned = vatNumber.trim().replace(/\s/g, "").toUpperCase();
+  if (!cleaned) return null;
+
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+
+  const rows = await db
+    .select()
+    .from(contacts)
+    .where(
+      and(
+        eq(contacts.orgId, session.org.id),
+        eq(contacts.vatNumber, cleaned),
+      ),
+    )
+    .limit(1);
+
+  return rows[0] ?? null;
+}
 import { getSession } from "@/lib/session";
 import {
+  contacts,
   expenseAttachments,
   expenseCategories,
   invoiceSequences,
