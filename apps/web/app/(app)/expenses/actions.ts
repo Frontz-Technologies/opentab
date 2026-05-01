@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { lookupVat as lookupVatAction } from "../contacts/actions";
+import { detectCountryFromTaxId } from "@/lib/utils";
 
 export async function lookupVat(vatNumber: string) {
   return lookupVatAction(vatNumber);
@@ -26,6 +27,58 @@ export async function findContactByVat(vatNumber: string) {
     .limit(1);
 
   return rows[0] ?? null;
+}
+
+export async function createSupplierContact(input: {
+  supplierName: string;
+  supplierVat: string;
+  address?: string;
+  city?: string;
+  postalCode?: string;
+  taxOffice?: string;
+}) {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+
+  if (!input.supplierName.trim()) {
+    return { success: false as const, error: "Name is required" };
+  }
+
+  const cleanedVat = input.supplierVat.trim().replace(/\s/g, "").toUpperCase();
+  const detectedCountry = cleanedVat
+    ? detectCountryFromTaxId(cleanedVat)
+    : null;
+
+  const trimmedName = input.supplierName.trim();
+  const [contact] = await db
+    .insert(contacts)
+    .values({
+      orgId: session.org.id,
+      type: "supplier",
+      classification: "business",
+      displayName: trimmedName,
+      company: trimmedName,
+      vatNumber: cleanedVat || null,
+      countryCode: detectedCountry || session.org.countryCode || null,
+      addressLine1: input.address?.trim() || null,
+      city: input.city?.trim() || null,
+      postalCode: input.postalCode?.trim() || null,
+      taxOffice: input.taxOffice?.trim() || null,
+    })
+    .returning();
+
+  revalidatePath("/contacts");
+
+  return {
+    success: true as const,
+    contact: {
+      id: contact.id,
+      displayName: contact.displayName,
+      company: contact.company,
+      vatNumber: contact.vatNumber,
+      type: contact.type,
+    },
+  };
 }
 import { getSession } from "@/lib/session";
 import {
