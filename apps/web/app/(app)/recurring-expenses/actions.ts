@@ -11,6 +11,11 @@ import { eq, and } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { calculateLineTotal } from "@/lib/invoicing/calculations";
+import {
+  assertContactInOrg,
+  assertExpenseCategoryInOrg,
+  CROSS_ORG_ACCESS_ERROR,
+} from "@/lib/security/assert-same-org";
 
 const lineItemSchema = z.object({
   sortOrder: z.coerce.number().int().min(0),
@@ -74,6 +79,26 @@ export async function createRecurringExpense(formData: FormData) {
 
   const data = parsed.data;
 
+  // #274 carry-over: validate contactId + categoryId belong to the
+  // session org BEFORE the INSERT. Both are nullable here — the Zod
+  // schema accepts any UUID without validating same-org membership.
+  try {
+    if (data.contactId) {
+      await assertContactInOrg(db, data.contactId, session.org.id);
+    }
+    if (data.categoryId) {
+      await assertExpenseCategoryInOrg(db, data.categoryId, session.org.id);
+    }
+  } catch (err) {
+    if (err instanceof Error && err.message === CROSS_ORG_ACCESS_ERROR) {
+      return {
+        success: false,
+        error: { _: ["Referenced contact or category not found"] },
+      };
+    }
+    throw err;
+  }
+
   const [recurring] = await db
     .insert(recurringExpenses)
     .values({
@@ -121,6 +146,27 @@ export async function updateRecurringExpense(id: string, formData: FormData) {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
 
+  // #274: pre-check that the recurring expense belongs to this org
+  // BEFORE deleting its items. Without this guard, a cross-org id
+  // would silently no-op the parent UPDATE (which is correctly
+  // scoped) yet the subsequent
+  // `delete(recurringExpenseItems).where(recurringExpenseId = id)`
+  // would still wipe another org's line items, since
+  // recurringExpenseItems has no orgId column. Mirror of the
+  // updateInvoice / updateRecurring pre-check shape.
+  const [existing] = await db
+    .select()
+    .from(recurringExpenses)
+    .where(
+      and(
+        eq(recurringExpenses.id, id),
+        eq(recurringExpenses.orgId, session.org.id),
+      ),
+    );
+  if (!existing) {
+    return { success: false, error: { _: ["Recurring expense not found"] } };
+  }
+
   let rawItems: unknown;
   try {
     rawItems = JSON.parse((formData.get("items") as string) ?? "[]");
@@ -149,6 +195,25 @@ export async function updateRecurringExpense(id: string, formData: FormData) {
   }
 
   const data = parsed.data;
+
+  // #274 carry-over: validate contactId + categoryId belong to the
+  // session org BEFORE the UPDATE. Mirror of createRecurringExpense.
+  try {
+    if (data.contactId) {
+      await assertContactInOrg(db, data.contactId, session.org.id);
+    }
+    if (data.categoryId) {
+      await assertExpenseCategoryInOrg(db, data.categoryId, session.org.id);
+    }
+  } catch (err) {
+    if (err instanceof Error && err.message === CROSS_ORG_ACCESS_ERROR) {
+      return {
+        success: false,
+        error: { _: ["Referenced contact or category not found"] },
+      };
+    }
+    throw err;
+  }
 
   await db
     .update(recurringExpenses)

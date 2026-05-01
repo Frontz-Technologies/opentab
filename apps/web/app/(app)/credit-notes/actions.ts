@@ -30,6 +30,12 @@ import { assignCreditNoteNumberIfMissing } from "@/lib/invoicing/credit-note-num
 import { recordActivity } from "@/lib/activities/record";
 import { submitCreditNoteThroughPlugins } from "@/lib/country/submit-credit-note";
 import { createLogger } from "@/lib/logging/logger";
+import {
+  assertContactInOrg,
+  assertInvoiceInOrg,
+  assertProductsInOrg,
+  CROSS_ORG_ACCESS_ERROR,
+} from "@/lib/security/assert-same-org";
 
 const log = createLogger("credit-notes");
 
@@ -84,6 +90,30 @@ export async function createCreditNote(formData: FormData) {
     .where(and(eq(contacts.id, data.contactId), eq(contacts.orgId, orgId)));
   if (!contact) {
     return { success: false, error: { contactId: ["Contact not found"] } };
+  }
+
+  // #274 carry-over: validate the optional invoiceId + every
+  // line-item productId belong to the session org BEFORE the
+  // INSERT. The Zod schema accepts any UUID; without these guards a
+  // cross-org id would either trip the FK constraint (opaque) or,
+  // for productId, silently link the line to another org's product.
+  // contactId is already same-org-scoped by the SELECT above.
+  try {
+    if (data.invoiceId) {
+      await assertInvoiceInOrg(db, data.invoiceId, orgId);
+    }
+    const productIds = data.items
+      .map((i) => i.productId)
+      .filter((id): id is string => !!id);
+    await assertProductsInOrg(db, productIds, orgId);
+  } catch (err) {
+    if (err instanceof Error && err.message === CROSS_ORG_ACCESS_ERROR) {
+      return {
+        success: false,
+        error: { _: ["Referenced invoice or product not found"] },
+      };
+    }
+    throw err;
   }
 
   // Snapshot the FX rate at save time so historical reports stay
@@ -230,6 +260,29 @@ export async function updateCreditNote(id: string, formData: FormData) {
   }
 
   const data = parsed.data;
+
+  // #274 carry-over: validate contactId + the optional invoiceId +
+  // every line-item productId belong to the session org BEFORE the
+  // UPDATE. Mirror of the createCreditNote guard.
+  try {
+    await assertContactInOrg(db, data.contactId, orgId);
+    if (data.invoiceId) {
+      await assertInvoiceInOrg(db, data.invoiceId, orgId);
+    }
+    const productIds = data.items
+      .map((i) => i.productId)
+      .filter((id): id is string => !!id);
+    await assertProductsInOrg(db, productIds, orgId);
+  } catch (err) {
+    if (err instanceof Error && err.message === CROSS_ORG_ACCESS_ERROR) {
+      return {
+        success: false,
+        error: { _: ["Referenced contact, invoice or product not found"] },
+      };
+    }
+    throw err;
+  }
+
   const totals = calculateInvoiceTotals(
     data.items.map((i) => ({
       quantity: i.quantity,
@@ -286,8 +339,11 @@ export async function updateCreditNote(id: string, formData: FormData) {
         terms: data.terms || null,
         updatedAt: new Date(),
       })
-      .where(eq(creditNotes.id, id));
+      .where(and(eq(creditNotes.id, id), eq(creditNotes.orgId, orgId)));
 
+    // creditNoteItems has no orgId column. The L195 pre-check
+    // verified orgId, so creditNoteId is session-verified; scope flows
+    // through the parent.
     await tx
       .delete(creditNoteItems)
       .where(eq(creditNoteItems.creditNoteId, id));
@@ -344,7 +400,7 @@ export async function publishCreditNote(id: string) {
         status: CREDIT_NOTE_STATUS.PUBLISHED,
         updatedAt: new Date(),
       })
-      .where(eq(creditNotes.id, id));
+      .where(and(eq(creditNotes.id, id), eq(creditNotes.orgId, orgId)));
     await assignCreditNoteNumberIfMissing(id, orgId, tx);
   });
 
@@ -393,7 +449,7 @@ export async function sendCreditNote(id: string) {
         sentAt: new Date(),
         updatedAt: new Date(),
       })
-      .where(eq(creditNotes.id, id));
+      .where(and(eq(creditNotes.id, id), eq(creditNotes.orgId, orgId)));
     await assignCreditNoteNumberIfMissing(id, orgId, tx);
   });
 
@@ -442,7 +498,7 @@ export async function cancelCreditNote(id: string) {
   await db
     .update(creditNotes)
     .set({ status: CREDIT_NOTE_STATUS.CANCELLED, updatedAt: new Date() })
-    .where(eq(creditNotes.id, id));
+    .where(and(eq(creditNotes.id, id), eq(creditNotes.orgId, orgId)));
 
   await recordActivity({
     orgId,
@@ -486,7 +542,9 @@ export async function deleteCreditNote(id: string) {
           eq(activities.entityId, id),
         ),
       );
-    await tx.delete(creditNotes).where(eq(creditNotes.id, id));
+    await tx
+      .delete(creditNotes)
+      .where(and(eq(creditNotes.id, id), eq(creditNotes.orgId, orgId)));
   });
 
   await recordActivity({

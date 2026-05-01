@@ -11,6 +11,11 @@ import { eq, and } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { calculateLineTotal } from "@/lib/invoicing/calculations";
+import {
+  assertContactInOrg,
+  assertProductsInOrg,
+  CROSS_ORG_ACCESS_ERROR,
+} from "@/lib/security/assert-same-org";
 
 const lineItemSchema = z.object({
   productId: z.string().uuid().optional().or(z.literal("")),
@@ -74,6 +79,27 @@ export async function createRecurring(formData: FormData) {
 
   const data = parsed.data;
 
+  // #274 carry-over: validate contactId + every line-item productId
+  // belong to the session org BEFORE the INSERT. The Zod schema
+  // accepts any UUID; without these guards a cross-org id would
+  // either trip the FK constraint (opaque) or, for productId,
+  // silently link the line to another org's product.
+  try {
+    await assertContactInOrg(db, data.contactId, session.org.id);
+    const productIds = data.items
+      .map((i) => i.productId)
+      .filter((id): id is string => !!id);
+    await assertProductsInOrg(db, productIds, session.org.id);
+  } catch (err) {
+    if (err instanceof Error && err.message === CROSS_ORG_ACCESS_ERROR) {
+      return {
+        success: false,
+        error: { _: ["Referenced contact or product not found"] },
+      };
+    }
+    throw err;
+  }
+
   const [recurring] = await db
     .insert(recurringInvoices)
     .values({
@@ -123,6 +149,26 @@ export async function updateRecurring(id: string, formData: FormData) {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
 
+  // #274: pre-check the recurring invoice belongs to this org BEFORE
+  // touching its line items. Without this guard, a cross-org id would
+  // no-op the parent UPDATE (which is correctly scoped) but the
+  // subsequent `delete(recurringInvoiceItems).where(recurringInvoiceId
+  // = id)` would still wipe another org's items, since
+  // recurringInvoiceItems has no orgId column. Mirror of the
+  // updateInvoice / updateCreditNote pre-check shape.
+  const [existing] = await db
+    .select()
+    .from(recurringInvoices)
+    .where(
+      and(
+        eq(recurringInvoices.id, id),
+        eq(recurringInvoices.orgId, session.org.id),
+      ),
+    );
+  if (!existing) {
+    return { success: false, error: { _: ["Recurring invoice not found"] } };
+  }
+
   let rawItems: unknown;
   try {
     rawItems = JSON.parse((formData.get("items") as string) ?? "[]");
@@ -150,6 +196,25 @@ export async function updateRecurring(id: string, formData: FormData) {
 
   const data = parsed.data;
 
+  // #274 carry-over: validate contactId + every line-item productId
+  // belong to the session org BEFORE the UPDATE. Mirror of
+  // createRecurring — same guards, same shape.
+  try {
+    await assertContactInOrg(db, data.contactId, session.org.id);
+    const productIds = data.items
+      .map((i) => i.productId)
+      .filter((id): id is string => !!id);
+    await assertProductsInOrg(db, productIds, session.org.id);
+  } catch (err) {
+    if (err instanceof Error && err.message === CROSS_ORG_ACCESS_ERROR) {
+      return {
+        success: false,
+        error: { _: ["Referenced contact or product not found"] },
+      };
+    }
+    throw err;
+  }
+
   await db
     .update(recurringInvoices)
     .set({
@@ -173,6 +238,8 @@ export async function updateRecurring(id: string, formData: FormData) {
       ),
     );
 
+  // recurringInvoiceItems has no orgId column; the L<pre-check> guard
+  // above ensures `id` is session-verified before this DELETE runs.
   await db
     .delete(recurringInvoiceItems)
     .where(eq(recurringInvoiceItems.recurringInvoiceId, id));

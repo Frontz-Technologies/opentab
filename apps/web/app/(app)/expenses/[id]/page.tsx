@@ -50,7 +50,12 @@ export default async function ExpenseDetailPage({
     const [cat] = await db
       .select()
       .from(expenseCategories)
-      .where(eq(expenseCategories.id, expense.categoryId));
+      .where(
+        and(
+          eq(expenseCategories.id, expense.categoryId),
+          eq(expenseCategories.orgId, session.org.id),
+        ),
+      );
     categoryName = cat?.name ?? null;
   }
 

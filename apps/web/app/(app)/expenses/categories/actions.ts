@@ -186,7 +186,12 @@ export async function toggleCategory(id: string) {
   await db
     .update(expenseCategories)
     .set({ active: !cat.active, updatedAt: new Date() })
-    .where(eq(expenseCategories.id, id));
+    .where(
+      and(
+        eq(expenseCategories.id, id),
+        eq(expenseCategories.orgId, session.org.id),
+      ),
+    );
 
   revalidatePath("/expenses/categories");
   return { success: true };
