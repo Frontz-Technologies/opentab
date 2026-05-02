@@ -11,10 +11,7 @@ export interface CompanyLookupSource {
   supports(countryCode: string): boolean;
   /** Lower = tried first. Country-specific < pan-EU < global. */
   priority: number;
-  /**
-   * Anonymous sources return true; credentialed sources check env or
-   * per-org credentials. v1 ships only anonymous sources.
-   */
+  /** Whether this source can run in the current deployment (env, credentials). */
   isAvailable(orgId: string): Promise<boolean>;
   /** Performs the lookup. Returns null on miss; never throws during normal operation. */
   lookup(taxId: string, orgId: string): Promise<CompanyLookupResult | null>;

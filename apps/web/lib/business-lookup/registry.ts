@@ -1,9 +1,9 @@
-import { aadeSource } from "./sources/aade";
+import { gemiPublicSource } from "./sources/gemi-public";
 import { viesSource } from "./sources/vies";
 import type { CompanyLookupSource } from "./source";
 
 export const businessLookupSources: CompanyLookupSource[] = [
-  aadeSource,
+  gemiPublicSource,
   viesSource,
 ];
 
