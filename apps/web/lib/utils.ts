@@ -52,10 +52,11 @@ export function formatCurrencyCompact(
 }
 
 export function detectCountryFromTaxId(taxId: string): string | null {
-  const cleaned = taxId.trim().replace(/\s/g, "");
+  const cleaned = taxId.trim().replace(/\s/g, "").toUpperCase();
   if (/^\d{9}$/.test(cleaned)) return "GR";
   const euMatch = cleaned.match(/^([A-Z]{2})\d/);
   if (euMatch) {
+    const prefix = euMatch[1] === "EL" ? "GR" : euMatch[1];
     const euCountries = [
       "AT",
       "BE",
@@ -85,7 +86,7 @@ export function detectCountryFromTaxId(taxId: string): string | null {
       "ES",
       "SE",
     ];
-    if (euCountries.includes(euMatch[1])) return euMatch[1];
+    if (euCountries.includes(prefix)) return prefix;
   }
   return null;
 }
