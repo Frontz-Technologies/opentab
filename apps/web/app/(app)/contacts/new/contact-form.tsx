@@ -104,8 +104,7 @@ export function ContactForm({
         if (result.data.city) setCity(result.data.city);
         if (result.data.postalCode) setPostalCode(result.data.postalCode);
         if (result.data.taxOffice) setTaxOffice(result.data.taxOffice);
-        if (result.success && result.data?.arGemi)
-          setArGemi(result.data.arGemi);
+        if (result.data.arGemi) setArGemi(result.data.arGemi);
         setToast({ type: "success", message: t("vatLookupSuccess") });
       } else {
         setToast({
