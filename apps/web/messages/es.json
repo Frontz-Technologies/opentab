@@ -4,6 +4,7 @@
     "tagline": "Controle su negocio",
     "save": "Guardar cambios",
     "cancel": "Cancelar",
+    "clear": "Limpiar",
     "discard": "Descartar",
     "unsavedChangesTitle": "¿Descartar los cambios no guardados?",
     "unsavedChangesDescription": "Perderá todo lo que ha introducido en esta página. No se puede deshacer.",

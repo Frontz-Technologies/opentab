@@ -116,6 +116,30 @@ function coerceString(v: unknown, fallback: string): string {
   return fallback;
 }
 
+// Normalize a money-shaped LLM value to satisfy `^\d+(\.\d{1,N})?$`.
+// Model compliance with the prompt's format rules is probabilistic; this
+// is the safety net for raw OCR strings like "3,99" or "3.99 €".
+function normalizeMoneyString(
+  v: unknown,
+  fallback: string,
+  maxDecimals: number,
+): string {
+  let raw: string;
+  if (v == null) return fallback;
+  if (typeof v === "number") raw = String(v);
+  else if (typeof v === "string") raw = v;
+  else return fallback;
+
+  const cleaned = raw
+    .trim()
+    .replace(/[€$£¥]/g, "")
+    .replace(",", ".");
+  if (cleaned === "") return fallback;
+  const n = Number(cleaned);
+  if (!Number.isFinite(n) || n < 0) return fallback;
+  return Number(n.toFixed(maxDecimals)).toString();
+}
+
 /** Post-parse normalization — the Zod schema deliberately keeps raw
  * shape (union of string|number|null); this function turns it into the
  * tidy string-or-null form consumers expect. */
@@ -144,9 +168,9 @@ export function normalizeExtractedData(raw: {
     categoryCode: raw.categoryCode ?? null,
     lineItems: (raw.lineItems ?? []).map((li) => ({
       name: coerceString(li.name, ""),
-      quantity: coerceString(li.quantity, "1"),
-      unitPrice: coerceString(li.unitPrice, "0"),
-      taxRate: coerceString(li.taxRate, "0"),
+      quantity: normalizeMoneyString(li.quantity, "1", 4),
+      unitPrice: normalizeMoneyString(li.unitPrice, "0", 2),
+      taxRate: normalizeMoneyString(li.taxRate, "0", 2),
     })),
   };
 }
@@ -223,6 +247,13 @@ Required JSON format:
   "categoryCode": "string code from the list below, or null",
   "lineItems": [{"name": "string", "quantity": "number", "unitPrice": "number", "taxRate": "number"}]
 }${categoryBlock}
+
+Numeric fields (totalAmount, quantity, unitPrice, taxRate) must be plain
+decimals: period as the decimal separator, no currency symbols, no thousand
+separators. Round unitPrice, taxRate, and totalAmount to at most 2 decimals;
+quantity to at most 4 decimals. Examples: 3.99 not "3,99" or "3.99 €";
+0.99 not "0.9975"; 24 not "24%"; 1 not "1.00 pcs". taxRate is the VAT
+percentage (e.g. 24, 13, 6, 0), not the VAT amount.
 
 Return ONLY valid JSON.`;
 }
