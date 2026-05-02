@@ -24,7 +24,7 @@ const companySettingsSchema = z.object({
   postalCode: z.string().max(20).optional().default(""),
   region: z.string().max(100).optional().default(""),
   phone: z.string().max(50).optional().default(""),
-  email: z.string().max(255).email().optional().or(z.literal("")),
+  email: z.string().email().max(255).optional().or(z.literal("")),
 });
 
 export async function updateCompanySettings(formData: FormData) {

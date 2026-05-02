@@ -1,7 +1,9 @@
+import { startOfYear, endOfYear, subYears } from "date-fns";
+
 export function getLastYearRange(today: Date): { start: Date; end: Date } {
-  const y = today.getFullYear() - 1;
+  const lastYear = subYears(today, 1);
   return {
-    start: new Date(y, 0, 1),
-    end: new Date(y, 11, 31),
+    start: startOfYear(lastYear),
+    end: endOfYear(lastYear),
   };
 }
