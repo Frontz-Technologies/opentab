@@ -6,7 +6,12 @@ import {
   type ModelCapabilities,
 } from "@/lib/actions/ai-settings";
 import { createLogger } from "@/lib/logging/logger";
+import { normalizeMoneyString } from "@/lib/validation/money";
 import { isFeatureEnabled } from "../ai/features";
+
+// Re-export for any external callers that imported this from
+// lib/expenses/ai-extraction (canonical home is lib/validation/money).
+export { normalizeMoneyString };
 
 const log = createLogger("ai-extraction");
 
@@ -116,29 +121,6 @@ function coerceString(v: unknown, fallback: string): string {
   return fallback;
 }
 
-// Normalize a money-shaped LLM value to satisfy `^\d+(\.\d{1,N})?$`.
-// Model compliance with the prompt's format rules is probabilistic; this
-// is the safety net for raw OCR strings like "3,99" or "3.99 €".
-function normalizeMoneyString(
-  v: unknown,
-  fallback: string,
-  maxDecimals: number,
-): string {
-  let raw: string;
-  if (v == null) return fallback;
-  if (typeof v === "number") raw = String(v);
-  else if (typeof v === "string") raw = v;
-  else return fallback;
-
-  const cleaned = raw
-    .trim()
-    .replace(/[€$£¥]/g, "")
-    .replace(",", ".");
-  if (cleaned === "") return fallback;
-  const n = Number(cleaned);
-  if (!Number.isFinite(n) || n < 0) return fallback;
-  return Number(n.toFixed(maxDecimals)).toString();
-}
 
 /** Post-parse normalization — the Zod schema deliberately keeps raw
  * shape (union of string|number|null); this function turns it into the
