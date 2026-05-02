@@ -138,4 +138,34 @@ describe("gemiPublicSource", () => {
       expect.anything(),
     );
   });
+
+  it("strips the VIES EL prefix from canonical Greek VAT input", async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify({ payload: { autocomplete: [] } }), {
+        status: 200,
+      }),
+    );
+
+    await gemiPublicSource.lookup("EL802315517", "org-1");
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://publicity.businessportal.gr/api/autocomplete/802315517",
+      expect.anything(),
+    );
+  });
+
+  it("strips the EL prefix case-insensitively and with whitespace", async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify({ payload: { autocomplete: [] } }), {
+        status: 200,
+      }),
+    );
+
+    await gemiPublicSource.lookup("el 802 315 517", "org-1");
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://publicity.businessportal.gr/api/autocomplete/802315517",
+      expect.anything(),
+    );
+  });
 });

@@ -29,7 +29,10 @@ export const gemiPublicSource: CompanyLookupSource = {
   },
 
   async lookup(taxId: string) {
-    const cleaned = taxId.replace(/\s/g, "");
+    // GEMI's endpoint expects the bare 9-digit AFM. The /contacts/new VAT
+    // input placeholder is "EL123456789" so users routinely type the
+    // VIES-prefixed form; strip the prefix here so canonical input works.
+    const cleaned = taxId.replace(/\s/g, "").replace(/^EL/i, "");
     try {
       const response = await fetch(`${ENDPOINT}/${cleaned}`, {
         method: "POST",
