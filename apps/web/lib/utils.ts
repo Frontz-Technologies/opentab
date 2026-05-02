@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { randomBytes } from "crypto";
+import { localizeSeparators, type NumberFormat } from "./validation/money";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -24,25 +25,30 @@ export function generateUniqueSlug(base: string): string {
 // Formats a currency amount for at-a-glance display. Values ≥ 10,000
 // Use on dashboard KPI cards (compact for ≥10K, full precision below).
 // Never use on invoice / report / PDF surfaces — precision matters there.
+// numberFormat defaults to "eu" — server-side callers without access to
+// the user's preference get the org-default convention; client surfaces
+// should prefer <MoneyDisplay compact /> which reads the live setting.
 export function formatCurrencyCompact(
   amount: number,
   currency = "EUR",
+  numberFormat: NumberFormat = "eu",
 ): string {
   const abs = Math.abs(amount);
-  if (abs >= 10_000) {
-    return new Intl.NumberFormat("en", {
-      style: "currency",
-      currency,
-      notation: "compact",
-      maximumFractionDigits: 1,
-    }).format(amount);
-  }
-  return new Intl.NumberFormat("en", {
-    style: "currency",
-    currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount);
+  const base =
+    abs >= 10_000
+      ? new Intl.NumberFormat("en", {
+          style: "currency",
+          currency,
+          notation: "compact",
+          maximumFractionDigits: 1,
+        }).format(amount)
+      : new Intl.NumberFormat("en", {
+          style: "currency",
+          currency,
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(amount);
+  return localizeSeparators(base, numberFormat);
 }
 
 export function detectCountryFromTaxId(taxId: string): string | null {
