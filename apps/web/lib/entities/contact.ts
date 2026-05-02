@@ -23,6 +23,7 @@ export const createContactSchema = z.object({
   defaultLanguage: z.string().max(5).optional().default(""),
   defaultPaymentTerms: z.coerce.number().int().min(0).max(365).optional(),
   notes: z.string().optional().default(""),
+  arGemi: z.string().max(20).optional().or(z.literal("")),
 });
 
 export const updateContactSchema = createContactSchema;

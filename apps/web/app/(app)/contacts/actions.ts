@@ -53,6 +53,7 @@ export async function createContact(formData: FormData) {
     defaultLanguage: formData.get("defaultLanguage") ?? "",
     defaultPaymentTerms: formData.get("defaultPaymentTerms") || undefined,
     notes: formData.get("notes") ?? "",
+    arGemi: formData.get("arGemi") ?? "",
   });
 
   if (!parsed.success) {
@@ -98,6 +99,7 @@ export async function createContact(formData: FormData) {
       vatNumber: data.vatNumber || null,
       countryCode: detectedCountry || data.countryCode || null,
       taxOffice: data.taxOffice || null,
+      arGemi: data.arGemi || null,
       addressLine1: data.addressLine1 || null,
       addressLine2: data.addressLine2 || null,
       city: data.city || null,
@@ -148,6 +150,7 @@ export async function updateContact(id: string, formData: FormData) {
     defaultLanguage: formData.get("defaultLanguage") ?? "",
     defaultPaymentTerms: formData.get("defaultPaymentTerms") || undefined,
     notes: formData.get("notes") ?? "",
+    arGemi: formData.get("arGemi") ?? "",
   });
 
   if (!parsed.success) {
@@ -180,6 +183,7 @@ export async function updateContact(id: string, formData: FormData) {
       vatNumber: data.vatNumber || null,
       countryCode: detectedCountry || data.countryCode || null,
       taxOffice: data.taxOffice || null,
+      arGemi: data.arGemi || null,
       addressLine1: data.addressLine1 || null,
       addressLine2: data.addressLine2 || null,
       city: data.city || null,
