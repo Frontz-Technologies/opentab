@@ -10,8 +10,9 @@ import type { PnlReportData } from "@/lib/reports/types";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { getPnlReport, exportPnlCsv } from "../actions";
 import { ExpenseCategoryDonut } from "@/components/reports/charts/expense-category-donut";
+import { getLastYearRange } from "@/lib/reports/presets";
 
-type Preset = "month" | "quarter" | "year";
+type Preset = "month" | "quarter" | "year" | "lastYear";
 
 function formatEur(n: number): string {
   return `\u20AC${n.toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -96,6 +97,12 @@ export function PnlClient({
         s = new Date(now.getFullYear(), 0, 1);
         e = new Date(now.getFullYear(), 11, 31);
         break;
+      case "lastYear": {
+        const range = getLastYearRange(now);
+        s = range.start;
+        e = range.end;
+        break;
+      }
     }
     setActivePreset(preset);
     setStartDate(s.toISOString().slice(0, 10));
@@ -131,7 +138,7 @@ export function PnlClient({
           />
         </div>
         <div className="flex gap-1 ml-auto">
-          {(["month", "quarter", "year"] as const).map((p) => {
+          {(["month", "quarter", "year", "lastYear"] as const).map((p) => {
             const active = activePreset === p;
             return (
               <button
