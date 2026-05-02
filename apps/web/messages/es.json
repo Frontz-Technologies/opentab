@@ -18,7 +18,8 @@
     "currencyEmpty": "Ninguna moneda coincide",
     "rateHint": "1 {from} ≈ {rate} {to} (tasa de {date}, BCE)",
     "rateHintStale": "Usando la tasa de {date} (fuente en vivo no disponible)",
-    "rateUnavailable": "No se pudo obtener la tasa para {currency}. Vuelve a intentarlo en breve o cambia la moneda."
+    "rateUnavailable": "No se pudo obtener la tasa para {currency}. Vuelve a intentarlo en breve o cambia la moneda.",
+    "requiredFieldHint": "Campo obligatorio"
   },
   "nav": {
     "ai": "IA",

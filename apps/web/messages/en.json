@@ -18,7 +18,8 @@
     "rateUnavailable": "Couldn't fetch the exchange rate for {currency}. Try again shortly, or change the currency.",
     "soonBadge": "Soon",
     "pickRange": "Pick a range",
-    "pickDate": "Pick a date"
+    "pickDate": "Pick a date",
+    "requiredFieldHint": "Required field"
   },
   "nav": {
     "ai": "AI",
