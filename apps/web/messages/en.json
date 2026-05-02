@@ -158,6 +158,7 @@
     "postalCode": "Postal code",
     "region": "Region",
     "phone": "Phone",
+    "email": "Contact email",
     "logo": "Logo",
     "logoPlaceholder": "Logo upload coming soon",
     "greekAfmDetected": "Greek business detected. Greek features will be available in future updates.",

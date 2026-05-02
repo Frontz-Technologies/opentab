@@ -158,6 +158,7 @@
     "postalCode": "Código postal",
     "region": "Región",
     "phone": "Teléfono",
+    "email": "Email de contacto",
     "logo": "Logotipo",
     "logoPlaceholder": "Carga de logotipo próximamente",
     "greekAfmDetected": "Empresa griega detectada. Las funciones para Grecia estarán disponibles en futuras actualizaciones.",

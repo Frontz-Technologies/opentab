@@ -106,6 +106,7 @@ export interface CompanyFormData {
   postalCode: string;
   region: string;
   phone: string;
+  email: string;
 }
 
 interface CompanyFormProps {
@@ -331,6 +332,15 @@ export function CompanyForm({ initialData }: CompanyFormProps) {
                 className={inputClass}
                 placeholder="+30 210 0000000"
                 defaultValue={initialData.phone}
+              />
+            </Field>
+            <Field label={t("email")}>
+              <input
+                type="email"
+                name="email"
+                className={inputClass}
+                placeholder="contact@acme.com"
+                defaultValue={initialData.email}
               />
             </Field>
           </div>
