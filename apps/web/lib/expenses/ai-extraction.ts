@@ -121,7 +121,6 @@ function coerceString(v: unknown, fallback: string): string {
   return fallback;
 }
 
-
 /** Post-parse normalization — the Zod schema deliberately keeps raw
  * shape (union of string|number|null); this function turns it into the
  * tidy string-or-null form consumers expect. */

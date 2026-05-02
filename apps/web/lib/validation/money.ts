@@ -57,14 +57,12 @@ export const quantityString = z.preprocess(
 
 export type NumberFormat = "us" | "eu" | "fr";
 
-const SEPARATORS: Record<
-  NumberFormat,
-  { decimal: string; thousand: string }
-> = {
-  us: { decimal: ".", thousand: "," },
-  eu: { decimal: ",", thousand: "." },
-  fr: { decimal: ",", thousand: " " },
-};
+const SEPARATORS: Record<NumberFormat, { decimal: string; thousand: string }> =
+  {
+    us: { decimal: ".", thousand: "," },
+    eu: { decimal: ",", thousand: "." },
+    fr: { decimal: ",", thousand: " " },
+  };
 
 // Sentinel character (Unicode private-use area) used during separator swap
 // to avoid collision when the target thousand separator is "," or ".".
