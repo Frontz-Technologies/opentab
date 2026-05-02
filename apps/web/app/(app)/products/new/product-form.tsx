@@ -61,9 +61,7 @@ export function ProductForm({ product, vatRates }: ProductFormProps) {
     type: "success" | "error";
     message: string;
   } | null>(null);
-  const [unitPrice, setUnitPrice] = useState<string>(
-    product?.unitPrice ?? "",
-  );
+  const [unitPrice, setUnitPrice] = useState<string>(product?.unitPrice ?? "");
   const [unit, setUnit] = useState<string>(product?.unit ?? "item");
   const [taxCategory, setTaxCategory] = useState<string>(
     product?.taxCategory ?? "standard",

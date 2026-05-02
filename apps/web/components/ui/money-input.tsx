@@ -6,14 +6,12 @@ import { cn } from "@/lib/utils";
 import { useNumberFormat } from "@/components/providers/number-format-provider";
 import type { NumberFormat } from "@/lib/validation/money";
 
-const SEPARATORS: Record<
-  NumberFormat,
-  { decimal: string; thousand: string }
-> = {
-  us: { decimal: ".", thousand: "," },
-  eu: { decimal: ",", thousand: "." },
-  fr: { decimal: ",", thousand: " " },
-};
+const SEPARATORS: Record<NumberFormat, { decimal: string; thousand: string }> =
+  {
+    us: { decimal: ".", thousand: "," },
+    eu: { decimal: ",", thousand: "." },
+    fr: { decimal: ",", thousand: " " },
+  };
 
 type MoneyInputProps = {
   value: string;
