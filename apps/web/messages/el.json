@@ -240,6 +240,7 @@
     "numberFormat": "Μορφή αριθμών",
     "numberFormatEu": "1.234,56 (Ευρωπαϊκή)",
     "numberFormatUs": "1,234.56 (Αμερικανική)",
+    "numberFormatFr": "1 234,56 (Γαλλική/Σκανδιναβική)",
     "notifications": "Ειδοποιήσεις",
     "notifyInvoicePaid": "Email όταν εξοφληθεί ένα τιμολόγιο",
     "notifyExpenseApproved": "Email όταν εγκριθεί μια δαπάνη",

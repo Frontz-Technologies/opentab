@@ -240,6 +240,7 @@
     "numberFormat": "Formato numérico",
     "numberFormatEu": "1.234,56 (Europeo)",
     "numberFormatUs": "1,234.56 (EE. UU.)",
+    "numberFormatFr": "1 234,56 (Francés/Nórdico)",
     "notifications": "Notificaciones",
     "notifyInvoicePaid": "Correo cuando una factura es pagada",
     "notifyExpenseApproved": "Correo cuando un gasto es aprobado",
