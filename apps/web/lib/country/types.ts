@@ -22,6 +22,8 @@ export interface CompanyLookupResult {
   postalCode?: string;
   taxOffice?: string;
   activity?: string;
+  arGemi?: string;
+  companyStatus?: string;
 }
 
 export interface TaxBracket {
