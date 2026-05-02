@@ -18,7 +18,10 @@
     "currencyEmpty": "Ninguna moneda coincide",
     "rateHint": "1 {from} ≈ {rate} {to} (tasa de {date}, BCE)",
     "rateHintStale": "Usando la tasa de {date} (fuente en vivo no disponible)",
-    "rateUnavailable": "No se pudo obtener la tasa para {currency}. Vuelve a intentarlo en breve o cambia la moneda."
+    "rateUnavailable": "No se pudo obtener la tasa para {currency}. Vuelve a intentarlo en breve o cambia la moneda.",
+    "requiredFieldHint": "Campo obligatorio",
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña"
   },
   "nav": {
     "ai": "IA",
@@ -155,6 +158,7 @@
     "postalCode": "Código postal",
     "region": "Región",
     "phone": "Teléfono",
+    "email": "Email de contacto",
     "logo": "Logotipo",
     "logoPlaceholder": "Carga de logotipo próximamente",
     "greekAfmDetected": "Empresa griega detectada. Las funciones para Grecia estarán disponibles en futuras actualizaciones.",
@@ -814,6 +818,7 @@
     "period30Days": "30 días",
     "periodQuarter": "Este trimestre",
     "periodYear": "Este año",
+    "periodLastYear": "Año pasado",
     "periodAll": "Todo",
     "revenue": "Ingresos",
     "expenses": "Gastos",

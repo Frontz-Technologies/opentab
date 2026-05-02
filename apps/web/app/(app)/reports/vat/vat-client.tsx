@@ -7,8 +7,9 @@ import { type DateRange } from "react-day-picker";
 import type { VatReportData } from "@/lib/reports/types";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { getVatReport } from "../actions";
+import { getLastYearRange } from "@/lib/reports/presets";
 
-type Preset = "month" | "lastMonth" | "quarter" | "year";
+type Preset = "month" | "lastMonth" | "quarter" | "year" | "lastYear";
 
 function formatEur(n: number): string {
   return `€${n.toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -58,6 +59,12 @@ export function VatClient({
         s = new Date(now.getFullYear(), 0, 1);
         e = new Date(now.getFullYear(), 11, 31);
         break;
+      case "lastYear": {
+        const range = getLastYearRange(now);
+        s = range.start;
+        e = range.end;
+        break;
+      }
     }
     setActivePreset(preset);
     setStartDate(s.toISOString().slice(0, 10));
@@ -82,6 +89,7 @@ export function VatClient({
     { key: "lastMonth", label: t("periodLastMonth") },
     { key: "quarter", label: t("periodQuarter") },
     { key: "year", label: t("periodYear") },
+    { key: "lastYear", label: t("periodLastYear") },
   ];
 
   return (

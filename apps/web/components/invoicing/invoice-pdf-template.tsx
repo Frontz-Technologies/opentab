@@ -76,6 +76,7 @@ export function renderInvoicePdfHtml({
       ${org.addressLine1 ? `<p>${escapeHtml(org.addressLine1)}</p>` : ""}
       ${org.city ? `<p>${escapeHtml(org.city)} ${escapeHtml(org.postalCode ?? "")}</p>` : ""}
       ${org.phone ? `<p>${escapeHtml(org.phone)}</p>` : ""}
+      ${org.email ? `<p>${escapeHtml(org.email)}</p>` : ""}
     </div>
     <div class="header-right">
       <h2>INVOICE</h2>

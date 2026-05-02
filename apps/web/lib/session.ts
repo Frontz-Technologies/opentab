@@ -21,6 +21,7 @@ export type SessionContext = {
     postalCode: string | null;
     region: string | null;
     phone: string | null;
+    email: string | null;
     setupCompletedSteps: string[];
     isDemo: boolean;
   };
@@ -72,6 +73,7 @@ export async function getSession(): Promise<SessionContext | null> {
       postalCode: org.postalCode ?? null,
       region: org.region ?? null,
       phone: org.phone ?? null,
+      email: org.email ?? null,
       setupCompletedSteps: (org.setupCompletedSteps as string[]) || [],
       isDemo: org.isDemo,
     },

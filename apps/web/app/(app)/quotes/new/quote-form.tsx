@@ -23,6 +23,7 @@ import {
   type LineItem,
 } from "@/components/invoicing/line-items-builder";
 import { EmptyEntityHint } from "@/components/forms/empty-entity-hint";
+import { RequiredFieldsHint } from "@/components/forms/required-fields-hint";
 import { createQuote } from "../actions";
 
 interface QuoteFormProps {
@@ -299,6 +300,7 @@ export function QuoteForm({
         </div>
       </div>
 
+      <RequiredFieldsHint />
       <div className="flex justify-end">
         <Button onClick={handleSubmit} disabled={isPending}>
           {isPending ? t("saving") : t("saveAsDraft")}

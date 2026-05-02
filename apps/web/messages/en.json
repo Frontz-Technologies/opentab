@@ -18,7 +18,10 @@
     "rateUnavailable": "Couldn't fetch the exchange rate for {currency}. Try again shortly, or change the currency.",
     "soonBadge": "Soon",
     "pickRange": "Pick a range",
-    "pickDate": "Pick a date"
+    "pickDate": "Pick a date",
+    "requiredFieldHint": "Required field",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
   },
   "nav": {
     "ai": "AI",
@@ -155,6 +158,7 @@
     "postalCode": "Postal code",
     "region": "Region",
     "phone": "Phone",
+    "email": "Contact email",
     "logo": "Logo",
     "logoPlaceholder": "Logo upload coming soon",
     "greekAfmDetected": "Greek business detected. Greek features will be available in future updates.",
@@ -815,6 +819,7 @@
     "period30Days": "30 Days",
     "periodQuarter": "This Quarter",
     "periodYear": "This Year",
+    "periodLastYear": "Last year",
     "periodAll": "All Time",
     "revenue": "Revenue",
     "expenses": "Expenses",

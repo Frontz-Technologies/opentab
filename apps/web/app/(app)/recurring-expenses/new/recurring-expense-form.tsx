@@ -27,6 +27,7 @@ import {
   type LineItem,
 } from "@/components/invoicing/line-items-builder";
 import { EmptyEntityHint } from "@/components/forms/empty-entity-hint";
+import { RequiredFieldsHint } from "@/components/forms/required-fields-hint";
 import { createRecurringExpense } from "../actions";
 
 interface RecurringExpenseFormProps {
@@ -317,6 +318,7 @@ export function RecurringExpenseForm({
         </div>
       </div>
 
+      <RequiredFieldsHint />
       <div className="flex justify-end">
         <Button onClick={handleSubmit} disabled={isPending}>
           {isPending ? tExp("saving") : t("save")}

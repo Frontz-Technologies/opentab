@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
 import { UnsavedChangesGuard } from "@/components/forms/unsaved-changes-guard";
 import { EmptyEntityHint } from "@/components/forms/empty-entity-hint";
+import { RequiredFieldsHint } from "@/components/forms/required-fields-hint";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Hourglass, Upload, Paperclip, X, Info, Sparkles } from "lucide-react";
@@ -894,6 +895,7 @@ export function ExpenseForm({
         </div>
       </div>
 
+      <RequiredFieldsHint />
       <div className="flex items-center justify-end gap-2">
         <Button
           variant="outline"

@@ -31,6 +31,7 @@ export default async function OrganisationSettingsPage() {
             postalCode: session.org.postalCode ?? "",
             region: session.org.region ?? "",
             phone: session.org.phone ?? "",
+            email: session.org.email ?? "",
           }}
         />
       </main>

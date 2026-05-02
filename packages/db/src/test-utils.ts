@@ -51,6 +51,7 @@ async function pushSchema(pglite: PGlite) {
       "postal_code" varchar(20),
       "region" varchar(100),
       "phone" varchar(50),
+      "email" varchar(255),
       "logo_url" text,
       "tax_settings" jsonb,
       "setup_completed_steps" jsonb NOT NULL DEFAULT '[]',

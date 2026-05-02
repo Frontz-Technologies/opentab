@@ -1,0 +1,1 @@
+ALTER TABLE "organisation" ADD COLUMN "email" varchar(255);

@@ -31,6 +31,7 @@ import {
   type LineItem,
 } from "@/components/invoicing/line-items-builder";
 import { EmptyEntityHint } from "@/components/forms/empty-entity-hint";
+import { RequiredFieldsHint } from "@/components/forms/required-fields-hint";
 import { createInvoice } from "../actions";
 import { createContact } from "../../contacts/actions";
 
@@ -479,6 +480,7 @@ export function InvoiceForm({
         </div>
       </div>
 
+      <RequiredFieldsHint />
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:gap-3 sm:justify-end">
         <Button
           variant="outline"
