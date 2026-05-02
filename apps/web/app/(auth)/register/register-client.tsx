@@ -9,6 +9,7 @@ import { signUp } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/ui/password-input";
 import { FormError } from "@/components/auth/form-error";
 
 interface RegisterClientProps {
@@ -120,9 +121,8 @@ export function RegisterClient({
           <Label htmlFor="password" className="text-on-surface-variant">
             {t("password")}
           </Label>
-          <Input
+          <PasswordInput
             id="password"
-            type="password"
             placeholder={t("passwordAtLeast8")}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -135,9 +135,8 @@ export function RegisterClient({
           <Label htmlFor="confirmPassword" className="text-on-surface-variant">
             {t("confirmPassword")}
           </Label>
-          <Input
+          <PasswordInput
             id="confirmPassword"
-            type="password"
             placeholder="••••••••"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}

@@ -7,8 +7,8 @@ import { useTranslations } from "next-intl";
 import { Landmark, Loader2 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/ui/password-input";
 import { FormError } from "@/components/auth/form-error";
 
 function ResetPasswordForm() {
@@ -110,9 +110,8 @@ function ResetPasswordForm() {
           <Label htmlFor="password" className="text-on-surface-variant">
             {t("resetNewLabel")}
           </Label>
-          <Input
+          <PasswordInput
             id="password"
-            type="password"
             placeholder={t("passwordAtLeast8")}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -125,9 +124,8 @@ function ResetPasswordForm() {
           <Label htmlFor="confirmPassword" className="text-on-surface-variant">
             {t("resetConfirmLabel")}
           </Label>
-          <Input
+          <PasswordInput
             id="confirmPassword"
-            type="password"
             placeholder="••••••••"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}

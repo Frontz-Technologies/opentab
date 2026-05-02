@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { UserCircle2 } from "lucide-react";
 import { SettingsSection } from "@/components/settings/settings-section";
+import { PasswordInput } from "@/components/ui/password-input";
 import { updateProfile, changePassword } from "./actions";
 
 const inputClass =
@@ -130,8 +131,7 @@ export function AccountForm({ initialData }: AccountFormProps) {
               <label className="block font-medium text-sm text-on-surface">
                 {t("currentPassword")}
               </label>
-              <input
-                type="password"
+              <PasswordInput
                 name="currentPassword"
                 className={inputClass}
                 required
@@ -141,8 +141,7 @@ export function AccountForm({ initialData }: AccountFormProps) {
               <label className="block font-medium text-sm text-on-surface">
                 {t("newPassword")}
               </label>
-              <input
-                type="password"
+              <PasswordInput
                 name="newPassword"
                 className={inputClass}
                 required
@@ -152,8 +151,7 @@ export function AccountForm({ initialData }: AccountFormProps) {
               <label className="block font-medium text-sm text-on-surface">
                 {t("confirmPassword")}
               </label>
-              <input
-                type="password"
+              <PasswordInput
                 name="confirmPassword"
                 className={inputClass}
                 required

@@ -9,6 +9,7 @@ import { signIn } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/ui/password-input";
 import { FormError } from "@/components/auth/form-error";
 import { getDemoCredentialsAction } from "./actions";
 
@@ -157,9 +158,8 @@ export function LoginForm({ legalFooter }: LoginFormProps) {
               {t("forgotPassword")}
             </Link>
           </div>
-          <Input
+          <PasswordInput
             id="password"
-            type="password"
             placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
