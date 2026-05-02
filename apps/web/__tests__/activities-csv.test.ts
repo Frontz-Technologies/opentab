@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { activitiesToCsv, type CsvActivityRow } from "../lib/activities/csv";
 
-describe("activitiesToCsv (#131) — RFC-4180 serializer", () => {
+describe("activitiesToCsv — RFC-4180 serializer", () => {
   it("emits the header even when there are no rows", () => {
     const csv = activitiesToCsv([]);
     expect(csv).toBe(

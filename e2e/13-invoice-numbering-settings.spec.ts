@@ -9,7 +9,7 @@ import { registerTestUser, loginTestUser } from "./helpers";
 //   apps/web/__tests__/invoicing-numbering-actions.test.ts
 test.describe.configure({ mode: "serial", retries: 1 });
 
-test.describe("Invoice numbering settings (#138)", () => {
+test.describe("Invoice numbering settings", () => {
   let page: Page;
 
   test.beforeAll(async ({ browser }) => {

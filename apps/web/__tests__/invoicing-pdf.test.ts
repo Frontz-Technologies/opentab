@@ -43,7 +43,7 @@ function networkError(code: string): Error {
   return err;
 }
 
-describe("generatePdfFromHtml — Gotenberg wrapper resilience (#155)", () => {
+describe("generatePdfFromHtml — Gotenberg wrapper resilience", () => {
   it("returns the PDF bytes on a successful first call", async () => {
     const fetchMock = vi.fn(async () => okResponse());
     vi.stubGlobal("fetch", fetchMock);
@@ -96,7 +96,7 @@ describe("generatePdfFromHtml — Gotenberg wrapper resilience (#155)", () => {
     expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 
-  it("throws after 3 consecutive transient NETWORK failures with the same /3 attempts/ shape (#155 tester follow-up)", async () => {
+  it("throws after 3 consecutive transient NETWORK failures with the same /3 attempts/ shape", async () => {
     // Mirror of the HTTP-502 case for the network-error path. The
     // catch branch must break out of the loop on
     // transient-exhaustion so both paths produce the synthesised

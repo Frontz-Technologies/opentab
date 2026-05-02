@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { renderInvoiceNumberPattern } from "../lib/invoicing/numbering";
 
-describe("renderInvoiceNumberPattern (#138)", () => {
+describe("renderInvoiceNumberPattern", () => {
   const baseOpts = {
     pattern: "",
     prefix: "INV-",

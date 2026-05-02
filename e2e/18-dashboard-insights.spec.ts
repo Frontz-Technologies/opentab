@@ -14,7 +14,7 @@ import { registerTestUser, loginTestUser } from "./helpers";
 // by the server renders with a non-empty <svg> child.
 test.describe.configure({ mode: "serial", retries: 1 });
 
-test.describe("Dashboard insights — RSC regression guard (#271)", () => {
+test.describe("Dashboard insights — RSC regression guard", () => {
   let page: Page;
 
   test.beforeAll(async ({ browser }) => {

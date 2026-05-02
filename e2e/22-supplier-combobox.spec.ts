@@ -6,7 +6,7 @@ test.describe.configure({ mode: "serial" });
 const SEED_NAME = "Combobox Seed Supplier";
 const SEED_VAT = "EL999111222";
 
-test.describe("Supplier combobox (#281)", () => {
+test.describe("Supplier combobox", () => {
   let page: Page;
 
   test.beforeAll(async ({ browser }) => {

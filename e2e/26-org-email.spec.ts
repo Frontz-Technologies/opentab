@@ -3,7 +3,7 @@ import { registerTestUser, loginTestUser } from "./helpers";
 
 test.describe.configure({ mode: "serial" });
 
-test.describe("Organisation contact email (#285)", () => {
+test.describe("Organisation contact email", () => {
   let page: Page;
 
   test.beforeAll(async ({ browser }) => {

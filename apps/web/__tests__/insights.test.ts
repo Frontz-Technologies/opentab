@@ -210,7 +210,7 @@ describe("expenseSpikeInsight", () => {
   });
 });
 
-describe("InsightCard.icon shape (#271 regression)", () => {
+describe("InsightCard.icon shape", () => {
   // Insights cards are produced server-side and serialised into the RSC
   // payload for the dashboard Client Component. Component references
   // (`LucideIcon`) cannot cross that boundary — the runtime throws

@@ -14,7 +14,7 @@ import { registerTestUser, loginTestUser } from "./helpers";
 //      were written.
 test.describe.configure({ mode: "serial", retries: 1 });
 
-test.describe("Credit notes happy path (#133)", () => {
+test.describe("Credit notes happy path", () => {
   let page: Page;
   let invoiceId: string;
   let creditNoteId: string;

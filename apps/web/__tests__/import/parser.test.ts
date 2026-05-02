@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { parseCsv } from "../../lib/import/core/parser";
 
-describe("parseCsv (#215)", () => {
+describe("parseCsv", () => {
   it("parses a comma-delimited UTF-8 CSV with header row", async () => {
     const buffer = Buffer.from(
       "first_name,last_name,email\nAda,Lovelace,ada@example.com\nGrace,Hopper,grace@example.com\n",

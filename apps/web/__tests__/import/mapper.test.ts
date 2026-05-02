@@ -7,7 +7,7 @@ const aliases = {
   lastName: ["last name", "last_name"],
 };
 
-describe("autoMap (#215)", () => {
+describe("autoMap", () => {
   it("auto-detects mappings via the alias table", () => {
     const result = autoMap(["First Name", "Last Name", "EMAIL"], aliases);
     expect(result).toEqual({
@@ -23,7 +23,7 @@ describe("autoMap (#215)", () => {
   });
 });
 
-describe("applyOverrides (#215)", () => {
+describe("applyOverrides", () => {
   it("user overrides take precedence over auto-mapped values", () => {
     const auto = { EMAIL: "email", "First Name": "firstName" };
     const overrides = { EMAIL: "lastName" };

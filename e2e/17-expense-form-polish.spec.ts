@@ -3,7 +3,7 @@ import { registerTestUser } from "./helpers";
 
 test.describe.configure({ mode: "serial", retries: 1 });
 
-test.describe("Expense form polish (#252)", () => {
+test.describe("Expense form polish", () => {
   let page: Page;
 
   test.beforeAll(async ({ browser }) => {

@@ -34,7 +34,7 @@ import { registerTestUser, loginTestUser } from "./helpers";
 // loudly in that environment rather than producing a false green.
 test.describe.configure({ mode: "serial", retries: 1 });
 
-test.describe("Multi-currency expense happy path (#272)", () => {
+test.describe("Multi-currency expense happy path", () => {
   let page: Page;
   let expenseDetailUrl: string | null = null;
 

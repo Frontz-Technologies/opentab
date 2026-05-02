@@ -58,7 +58,7 @@ vi.mock("@/lib/actions/ai-settings", () => ({
 
 import { uploadAndExtractReceipt } from "@/app/(app)/expenses/actions";
 
-describe("uploadAndExtractReceipt duplicate guard — cross-org isolation (#274)", () => {
+describe("uploadAndExtractReceipt duplicate guard — cross-org isolation", () => {
   let teardown: () => Promise<void>;
   let orgAId: string;
   let orgBId: string;

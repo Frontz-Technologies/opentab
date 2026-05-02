@@ -12,7 +12,7 @@ import {
 import { populateOrgDemo } from "../lib/demo/populate";
 import { DEMO_ORG } from "../lib/demo/data-pool";
 
-describe("populateOrgDemo count invariant (#119 follow-up)", () => {
+describe("populateOrgDemo count invariant", () => {
   let db: Awaited<ReturnType<typeof createTestDb>>["db"];
   let teardown: () => Promise<void>;
 

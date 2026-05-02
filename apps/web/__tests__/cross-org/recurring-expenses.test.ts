@@ -49,7 +49,7 @@ import {
   updateRecurringExpense,
 } from "@/app/(app)/recurring-expenses/actions";
 
-describe("updateRecurringExpense — cross-org isolation (#274)", () => {
+describe("updateRecurringExpense — cross-org isolation", () => {
   let teardown: () => Promise<void>;
   let orgAId: string;
   let orgBId: string;
@@ -129,7 +129,7 @@ describe("updateRecurringExpense — cross-org isolation (#274)", () => {
     };
   }
 
-  it("createRecurringExpense refuses an Org B contactId from Org A's session (#274 carry-over)", async () => {
+  it("createRecurringExpense refuses an Org B contactId from Org A's session", async () => {
     const [orgBContact] = await dbHolder.current
       .insert(contacts)
       .values({
@@ -171,7 +171,7 @@ describe("updateRecurringExpense — cross-org isolation (#274)", () => {
     expect(orgARows).toHaveLength(0);
   });
 
-  it("createRecurringExpense refuses an Org B categoryId from Org A's session (#274 carry-over)", async () => {
+  it("createRecurringExpense refuses an Org B categoryId from Org A's session", async () => {
     // Seed expense category in Org B.
     await dbHolder.current
       .insert(expenseGroups)

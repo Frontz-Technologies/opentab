@@ -45,7 +45,7 @@ vi.mock("@/lib/logging/logger", () => ({
   }),
 }));
 
-describe("extractReceiptData — NoObjectGeneratedError observability (#175)", () => {
+describe("extractReceiptData — NoObjectGeneratedError observability", () => {
   beforeEach(() => {
     process.env.FEATURE_AI_EXTRACTION = "on";
     generateObjectMock.mockReset();

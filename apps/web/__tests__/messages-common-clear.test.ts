@@ -8,7 +8,7 @@ import es from "../messages/es.json";
 // through to the literal "common.clear" + a runtime IntlError. Pin
 // presence in every shipped locale so a future translation edit
 // cannot drop it silently.
-describe("common.clear locale parity (#284)", () => {
+describe("common.clear locale parity", () => {
   const locales = { en, el, es };
 
   it.each(Object.keys(locales))("%s has a non-empty common.clear", (loc) => {

@@ -9,7 +9,7 @@ import { createDraftExpenseInputSchema } from "../lib/expenses/draft-expenses";
 // `createDraftExpenseInputSchema`. Anchored to the full pipeline — not
 // just `.parse()` — so a regression in either normalizer or schema is
 // caught.
-describe("ai extraction money normalization (#284)", () => {
+describe("ai extraction money normalization", () => {
   const item = (overrides: Partial<Record<string, unknown>> = {}) => ({
     name: "Item",
     quantity: 1,

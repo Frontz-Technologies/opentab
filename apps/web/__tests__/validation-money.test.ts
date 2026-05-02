@@ -7,7 +7,7 @@ import {
   localizeSeparators,
 } from "../lib/validation/money";
 
-describe("normalizeMoneyString (#284 financial-input-hardening)", () => {
+describe("normalizeMoneyString", () => {
   it("rounds >2-decimal values to 2 decimals when maxDecimals=2", () => {
     expect(normalizeMoneyString(0.9975, "0", 2)).toBe("1");
   });
@@ -43,7 +43,7 @@ describe("normalizeMoneyString (#284 financial-input-hardening)", () => {
   });
 });
 
-describe("moneyString / taxRateString / quantityString Zod helpers (#284)", () => {
+describe("moneyString / taxRateString / quantityString Zod helpers", () => {
   it("moneyString accepts a clean 2dp string (trailing zero dropped to satisfy the regex)", () => {
     expect(moneyString.parse("12.50")).toBe("12.5");
   });
@@ -69,7 +69,7 @@ describe("moneyString / taxRateString / quantityString Zod helpers (#284)", () =
   });
 });
 
-describe("localizeSeparators (#284)", () => {
+describe("localizeSeparators", () => {
   it("returns canonical us format unchanged", () => {
     expect(localizeSeparators("1,234.56", "us")).toBe("1,234.56");
   });

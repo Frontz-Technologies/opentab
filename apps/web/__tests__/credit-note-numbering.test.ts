@@ -11,7 +11,7 @@ import {
 } from "@opentab/db/schema";
 import { assignCreditNoteNumberIfMissing } from "../lib/invoicing/credit-note-numbering";
 
-describe("assignCreditNoteNumberIfMissing (#133)", () => {
+describe("assignCreditNoteNumberIfMissing", () => {
   let db: Awaited<ReturnType<typeof createTestDb>>["db"];
   let teardown: () => Promise<void>;
   let orgId: string;

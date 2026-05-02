@@ -42,7 +42,7 @@ vi.mock("@/lib/session", () => ({
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
-describe("country_integration_credential — cross-org defence-in-depth (#274)", () => {
+describe("country_integration_credential — cross-org defence-in-depth", () => {
   let teardown: () => Promise<void>;
   let orgAId: string;
   let orgBId: string;

@@ -22,7 +22,7 @@ beforeEach(() => {
   QueueMock.mockImplementation(() => ({ add: addMock }));
 });
 
-describe("enqueue (#85)", () => {
+describe("enqueue", () => {
   it("creates one Queue per name and calls .add with the payload + retry opts", async () => {
     const { enqueue } = await import("../../lib/jobs/queues");
 

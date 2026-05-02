@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { EXPENSE_GROUPS_SEED } from "@opentab/db/schema";
 import { GROUP_TYPE_MARKER } from "../lib/expenses/group-type";
 
-describe("expense-group type mapping (#140)", () => {
+describe("expense-group type mapping", () => {
   it("every seeded group has a non-null type value", () => {
     for (const g of EXPENSE_GROUPS_SEED) {
       expect(g.type, `group "${g.code}" missing type`).toBeTruthy();

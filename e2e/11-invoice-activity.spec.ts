@@ -12,7 +12,7 @@ import { registerTestUser, loginTestUser } from "./helpers";
 // each transition.
 test.describe.configure({ mode: "serial", retries: 1 });
 
-test.describe("Invoice activity log CSV (#131)", () => {
+test.describe("Invoice activity log CSV", () => {
   let page: Page;
   let invoiceId: string;
 

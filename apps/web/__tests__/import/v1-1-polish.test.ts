@@ -73,7 +73,7 @@ async function commitFromRows(
   });
 }
 
-describe("import v1.1 polish — auto-create + empty-number (#220)", () => {
+describe("import v1.1 polish — auto-create + empty-number", () => {
   let teardown: () => Promise<void>;
   let orgId: string;
 

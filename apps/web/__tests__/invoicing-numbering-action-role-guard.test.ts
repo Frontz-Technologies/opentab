@@ -32,7 +32,7 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 import { updateInvoiceNumbering } from "../app/(app)/settings/numbering/actions";
 
-describe("updateInvoiceNumbering role guard (#138 / PR #213 fix)", () => {
+describe("updateInvoiceNumbering role guard", () => {
   beforeEach(() => {
     getSessionMock.mockReset();
     dbSpy.mockReset();

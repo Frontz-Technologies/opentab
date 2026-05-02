@@ -39,7 +39,7 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 import { deleteApiKey } from "@/lib/actions/ai-settings";
 
-describe("aiSettings — cross-org isolation (#274)", () => {
+describe("aiSettings — cross-org isolation", () => {
   let teardown: () => Promise<void>;
   let orgAId: string;
   let orgBId: string;

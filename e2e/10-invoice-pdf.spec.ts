@@ -28,7 +28,7 @@ async function gotenbergReachable(): Promise<boolean> {
   }
 }
 
-test.describe("Invoice PDF route (#155)", () => {
+test.describe("Invoice PDF route", () => {
   let page: Page;
   let invoiceId: string;
   let gotenbergUp = false;

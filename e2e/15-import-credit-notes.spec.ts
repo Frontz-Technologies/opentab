@@ -10,7 +10,7 @@ import { registerTestUser, loginTestUser } from "./helpers";
 //   4. Re-import — confirm idempotency dedup
 test.describe.configure({ mode: "serial", retries: 1 });
 
-test.describe("Credit notes CSV import (#215 PR-B)", () => {
+test.describe("Credit notes CSV import", () => {
   let page: Page;
 
   test.beforeAll(async ({ browser }) => {

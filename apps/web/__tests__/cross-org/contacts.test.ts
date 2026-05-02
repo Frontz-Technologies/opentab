@@ -41,7 +41,7 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 import { updateContact, deleteContact } from "@/app/(app)/contacts/actions";
 
-describe("contacts actions — cross-org isolation (#274)", () => {
+describe("contacts actions — cross-org isolation", () => {
   let teardown: () => Promise<void>;
   let orgAId: string;
   let orgBId: string;

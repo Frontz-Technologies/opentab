@@ -31,7 +31,7 @@ beforeEach(() => {
   delete process.env.ENABLE_QUEUE_DASHBOARD;
 });
 
-describe("/admin/queues gate (#85)", () => {
+describe("/admin/queues gate", () => {
   it("404s when ENABLE_QUEUE_DASHBOARD is unset", async () => {
     getSessionMock.mockResolvedValue({
       org: { id: "o" },

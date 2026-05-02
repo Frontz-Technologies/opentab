@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 
-test.describe("Password reveal (#285)", () => {
+test.describe("Password reveal", () => {
   let page: Page;
 
   test.beforeAll(async ({ browser }) => {

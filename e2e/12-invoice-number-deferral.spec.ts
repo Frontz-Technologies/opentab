@@ -10,7 +10,7 @@ import { registerTestUser, loginTestUser } from "./helpers";
 // assigned and the chip flipped from DRAFT to PUBLISHED.
 test.describe.configure({ mode: "serial", retries: 1 });
 
-test.describe("Invoice number deferral (#132)", () => {
+test.describe("Invoice number deferral", () => {
   let page: Page;
   let invoiceId: string;
 

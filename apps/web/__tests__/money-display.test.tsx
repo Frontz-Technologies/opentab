@@ -10,7 +10,7 @@ function renderWith(format: "us" | "eu" | "fr", node: React.ReactElement) {
   );
 }
 
-describe("MoneyDisplay (#281)", () => {
+describe("MoneyDisplay", () => {
   it("renders us format with EUR", () => {
     renderWith("us", <MoneyDisplay amount={1234.56} currencyCode="EUR" />);
     expect(screen.getByText(/1,234\.56/)).toBeDefined();

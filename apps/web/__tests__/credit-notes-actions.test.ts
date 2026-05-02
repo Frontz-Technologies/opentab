@@ -4,7 +4,7 @@ import {
   CREDIT_NOTE_REASON,
 } from "../lib/entities/credit-note";
 
-describe("createCreditNoteSchema (#133)", () => {
+describe("createCreditNoteSchema", () => {
   const validBase = {
     contactId: "12345678-1234-4234-9234-123456789012",
     issueDate: "2026-04-25",

@@ -21,7 +21,7 @@ const descriptor: ImporterDescriptor<{
   idempotencyKeyParts: (row, orgId) => [orgId, row.email.toLowerCase()],
 };
 
-describe("validateRows (#215)", () => {
+describe("validateRows", () => {
   it("returns ok for a row that parses cleanly", () => {
     const rows = [{ firstName: "Ada", email: "ada@example.com" }];
     const mapping = { firstName: "firstName", email: "email" };

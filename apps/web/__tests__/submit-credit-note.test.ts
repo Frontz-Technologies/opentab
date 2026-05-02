@@ -47,7 +47,7 @@ vi.mock("@/lib/activities/record", () => ({
 
 import { submitCreditNoteThroughPlugins } from "../lib/country/submit-credit-note";
 
-describe("submitCreditNoteThroughPlugins (#133 / PR #214 Critical fix)", () => {
+describe("submitCreditNoteThroughPlugins", () => {
   let teardown: () => Promise<void>;
   let orgId: string;
   let contactId: string;

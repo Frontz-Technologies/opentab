@@ -40,7 +40,7 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 import { toggleCategory } from "@/app/(app)/expenses/categories/actions";
 
-describe("toggleCategory — cross-org isolation (#274)", () => {
+describe("toggleCategory — cross-org isolation", () => {
   let teardown: () => Promise<void>;
   let orgAId: string;
   let orgBId: string;
@@ -153,7 +153,7 @@ describe("toggleCategory — cross-org isolation (#274)", () => {
 // Org B category, the join would leak Org B's category name into
 // Org A's UI. The fix scopes the lookup by session.org.id, so the
 // resulting categoryName is null when the row belongs to another org.
-describe("expense detail page category lookup — cross-org isolation (#274)", () => {
+describe("expense detail page category lookup — cross-org isolation", () => {
   let teardown: () => Promise<void>;
   let db: Awaited<ReturnType<typeof createTestDb>>["db"];
   let orgAId: string;

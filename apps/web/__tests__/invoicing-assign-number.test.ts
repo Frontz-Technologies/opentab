@@ -10,7 +10,7 @@ import {
 } from "@opentab/db/schema";
 import { assignInvoiceNumberIfMissing } from "../lib/invoicing/assign-invoice-number";
 
-describe("assignInvoiceNumberIfMissing (#132) — defer-to-publish numbering", () => {
+describe("assignInvoiceNumberIfMissing — defer-to-publish numbering", () => {
   let db: Awaited<ReturnType<typeof createTestDb>>["db"];
   let teardown: () => Promise<void>;
   let orgId: string;

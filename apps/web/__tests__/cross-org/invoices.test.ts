@@ -69,7 +69,7 @@ import {
   updateInvoice,
 } from "@/app/(app)/invoices/actions";
 
-describe("invoices actions — cross-org isolation (#274)", () => {
+describe("invoices actions — cross-org isolation", () => {
   let teardown: () => Promise<void>;
   let orgAId: string;
   let orgBId: string;
@@ -350,7 +350,7 @@ describe("invoices actions — cross-org isolation (#274)", () => {
 // orgId-checked, so the line-item read is safe by parent FK. This
 // test pins that contract: a scoped parent SELECT first, items
 // after, returns nothing for a foreign-org id.
-describe("invoice line-items via parent — cross-org isolation (#274)", () => {
+describe("invoice line-items via parent — cross-org isolation", () => {
   let db: Awaited<ReturnType<typeof createTestDb>>["db"];
   let teardown: () => Promise<void>;
   let orgAId: string;

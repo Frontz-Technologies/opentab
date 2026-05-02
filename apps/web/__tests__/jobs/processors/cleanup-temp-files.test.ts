@@ -3,7 +3,7 @@ import { mkdtemp, writeFile, mkdir, utimes, readdir, rm } from "fs/promises";
 import { join } from "path";
 import { tmpdir } from "os";
 
-describe("cleanup-temp-files processor (#85)", () => {
+describe("cleanup-temp-files processor", () => {
   let uploadsDir: string;
 
   beforeEach(async () => {

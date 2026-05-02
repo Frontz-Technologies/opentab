@@ -7,7 +7,7 @@ import { registerTestUser, loginTestUser } from "./helpers";
 // the same CSV produces 0 new contacts (idempotency dedup).
 test.describe.configure({ mode: "serial", retries: 1 });
 
-test.describe("Contacts CSV import (#215)", () => {
+test.describe("Contacts CSV import", () => {
   let page: Page;
 
   test.beforeAll(async ({ browser }) => {

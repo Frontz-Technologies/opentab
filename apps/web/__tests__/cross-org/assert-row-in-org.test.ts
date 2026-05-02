@@ -21,7 +21,7 @@ import {
 // to the supplied orgId. These tests freeze the contract for each of
 // the four wrappers (single-row + batch product variant).
 
-describe("assert-same-org helpers (#274)", () => {
+describe("assert-same-org helpers", () => {
   let db: Awaited<ReturnType<typeof createTestDb>>["db"];
   let teardown: () => Promise<void>;
   let orgAId: string;

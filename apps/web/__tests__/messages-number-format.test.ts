@@ -3,7 +3,7 @@ import en from "../messages/en.json";
 import el from "../messages/el.json";
 import es from "../messages/es.json";
 
-describe("numberFormat locale parity (#281)", () => {
+describe("numberFormat locale parity", () => {
   const locales = { en, el, es };
   it.each(Object.keys(locales))(
     "%s has non-empty numberFormatEu / numberFormatUs / numberFormatFr",

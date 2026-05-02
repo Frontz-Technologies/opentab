@@ -28,7 +28,7 @@ const descriptor: ImporterDescriptor<ContactInput> = {
   ],
 };
 
-describe("runImport (#215)", () => {
+describe("runImport", () => {
   let db: Awaited<ReturnType<typeof createTestDb>>["db"];
   let teardown: () => Promise<void>;
   let orgId: string;

@@ -35,7 +35,7 @@ import {
 // All three apply the same scope, so a single shape-test is enough
 // to prove the leak class is closed.
 
-describe("credit-note linked-invoice lookup — cross-org isolation (#274)", () => {
+describe("credit-note linked-invoice lookup — cross-org isolation", () => {
   let db: Awaited<ReturnType<typeof createTestDb>>["db"];
   let teardown: () => Promise<void>;
   let orgAId: string;
@@ -244,7 +244,7 @@ import {
   createCreditNote,
 } from "@/app/(app)/credit-notes/actions";
 
-describe("credit-notes actions — cross-org isolation (#274)", () => {
+describe("credit-notes actions — cross-org isolation", () => {
   let teardown: () => Promise<void>;
   let orgAId: string;
   let orgBId: string;

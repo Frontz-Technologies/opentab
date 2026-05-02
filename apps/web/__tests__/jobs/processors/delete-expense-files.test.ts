@@ -9,7 +9,7 @@ vi.mock("@/lib/expenses/file-storage", () => ({
 
 beforeEach(() => deleteTempFileMock.mockClear());
 
-describe("delete-expense-files processor (#85)", () => {
+describe("delete-expense-files processor", () => {
   it("calls deleteTempFile once per file path in the payload", async () => {
     const { processDeleteExpenseFiles } =
       await import("../../../lib/jobs/processors/delete-expense-files");

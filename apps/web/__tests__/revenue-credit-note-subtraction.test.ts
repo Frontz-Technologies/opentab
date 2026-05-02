@@ -13,7 +13,7 @@ import { getRevenue } from "../lib/reports/queries";
 
 // Revenue must subtract published+sent credit notes from the same
 // period. Cancelled credits and drafts must NOT subtract.
-describe("getRevenue (#133 — credit-note subtraction)", () => {
+describe("getRevenue", () => {
   let db: Awaited<ReturnType<typeof createTestDb>>["db"];
   let teardown: () => Promise<void>;
   let orgId: string;

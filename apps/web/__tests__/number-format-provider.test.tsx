@@ -11,7 +11,7 @@ function Probe() {
   return <span data-testid="fmt">{fmt}</span>;
 }
 
-describe("NumberFormatProvider (#281)", () => {
+describe("NumberFormatProvider", () => {
   it("renders the provided value", () => {
     render(
       <NumberFormatProvider value="fr">

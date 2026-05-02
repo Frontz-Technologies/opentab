@@ -53,7 +53,7 @@ import {
   updateRecurring,
 } from "@/app/(app)/recurring/actions";
 
-describe("updateRecurring — cross-org isolation (#274)", () => {
+describe("updateRecurring — cross-org isolation", () => {
   let teardown: () => Promise<void>;
   let orgAId: string;
   let orgBId: string;
@@ -160,7 +160,7 @@ describe("updateRecurring — cross-org isolation (#274)", () => {
     };
   }
 
-  it("createRecurring refuses an Org B contactId from Org A's session (#274 carry-over)", async () => {
+  it("createRecurring refuses an Org B contactId from Org A's session", async () => {
     const [orgBContact] = await dbHolder.current
       .insert(contacts)
       .values({
@@ -201,7 +201,7 @@ describe("updateRecurring — cross-org isolation (#274)", () => {
     expect(orgARows).toHaveLength(0);
   });
 
-  it("createRecurring refuses a cross-org productId in line items (#274 carry-over)", async () => {
+  it("createRecurring refuses a cross-org productId in line items", async () => {
     const [orgBProduct] = await dbHolder.current
       .insert(products)
       .values({ orgId: orgBId, name: "Org B Recurring Product" })

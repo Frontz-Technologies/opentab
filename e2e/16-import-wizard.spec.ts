@@ -65,7 +65,7 @@ test.describe("Import wizard happy path", () => {
   // Skipped in this branch — needs `pnpm e2e` against a built dev
   // server, which OOMs in the current sandbox. Un-skip when running
   // locally (or in CI with sufficient memory).
-  test.fixme("CSV import via storage round-trip handles >1MB payloads (#257)", async () => {
+  test.fixme("CSV import via storage round-trip handles >1MB payloads", async () => {
     const headers = Array.from({ length: 30 }, (_, i) => `field_${i}`);
     const rowCount = 200;
     const lines = [headers.join(",")];

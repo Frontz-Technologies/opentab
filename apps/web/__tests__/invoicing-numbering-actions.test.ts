@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { updateInvoiceNumberingSchema } from "../lib/entities/invoice-sequence";
 
-describe("updateInvoiceNumberingSchema (#138)", () => {
+describe("updateInvoiceNumberingSchema", () => {
   it("accepts valid simple-mode input (no pattern)", () => {
     const r = updateInvoiceNumberingSchema.safeParse({
       prefix: "INV-",

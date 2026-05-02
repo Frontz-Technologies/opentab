@@ -8,7 +8,7 @@ import { registerTestUser, loginTestUser } from "./helpers";
 // it).
 test.describe.configure({ mode: "serial", retries: 1 });
 
-test.describe("Async job queue — delete-expense-files (#85)", () => {
+test.describe("Async job queue — delete-expense-files", () => {
   let page: Page;
 
   test.beforeAll(async ({ browser }) => {

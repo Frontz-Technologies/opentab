@@ -57,7 +57,7 @@ vi.mock("@/lib/expenses/category-seed", () => ({
 
 import { createExpense, updateExpense } from "@/app/(app)/expenses/actions";
 
-describe("expenses actions — write-side FK validation (#274)", () => {
+describe("expenses actions — write-side FK validation", () => {
   let teardown: () => Promise<void>;
   let orgAId: string;
   let orgBId: string;

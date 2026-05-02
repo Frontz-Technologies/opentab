@@ -80,7 +80,7 @@ async function commitFromRows(
   });
 }
 
-describe("commitImport line-item insertion (#215 PR-B High)", () => {
+describe("commitImport line-item insertion", () => {
   let teardown: () => Promise<void>;
   let orgId: string;
   let contactId: string;
