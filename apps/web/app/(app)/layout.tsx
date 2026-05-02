@@ -26,11 +26,19 @@ export default async function AppLayout({
   const cookieStore = await cookies();
   const sidebarOpen = cookieStore.get("sidebar_state")?.value === "true";
 
-  const prefRows = await db
-    .select({ numberFormat: userPreferences.numberFormat })
-    .from(userPreferences)
-    .where(eq(userPreferences.userId, session.user.id));
-  const numberFormat = prefRows[0]?.numberFormat ?? "eu";
+  // Number format is presentation-only — a transient DB blip should never
+  // crash the whole authenticated app shell. Mirrors the locale fallback
+  // shape in apps/web/i18n/request.ts:37-41.
+  let numberFormat = "eu";
+  try {
+    const prefRows = await db
+      .select({ numberFormat: userPreferences.numberFormat })
+      .from(userPreferences)
+      .where(eq(userPreferences.userId, session.user.id));
+    numberFormat = prefRows[0]?.numberFormat ?? "eu";
+  } catch (err) {
+    console.warn("[AppLayout] numberFormat lookup failed, using eu", err);
+  }
 
   const provider = getCountryProvider(session.org.countryCode);
   const integrationNav = provider.integrations

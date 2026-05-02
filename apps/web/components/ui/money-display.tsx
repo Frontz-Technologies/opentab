@@ -13,6 +13,41 @@ type MoneyDisplayProps = {
   className?: string;
 } & Omit<ComponentPropsWithoutRef<"span">, "className" | "children">;
 
+// Intl.NumberFormat construction is non-trivial — it parses currency
+// metadata + locale rules. A line-items grid with N rows × 4 money cells
+// (qty * price, taxAmount, lineTotal, totals footer) re-runs the constructor
+// on every render. Cache by (currency, compact) so repeat renders reuse the
+// same formatter instance. Bounded by the small set of currencies an org
+// uses; Intl objects don't hold mutable state.
+const formatterCache = new Map<string, Intl.NumberFormat>();
+function getFormatter(
+  currencyCode: string,
+  compact: boolean,
+): Intl.NumberFormat {
+  const key = `${currencyCode}|${compact ? "c" : "f"}`;
+  let f = formatterCache.get(key);
+  if (!f) {
+    f = new Intl.NumberFormat(
+      "en",
+      compact
+        ? {
+            style: "currency",
+            currency: currencyCode,
+            notation: "compact",
+            maximumFractionDigits: 1,
+          }
+        : {
+            style: "currency",
+            currency: currencyCode,
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          },
+    );
+    formatterCache.set(key, f);
+  }
+  return f;
+}
+
 export function MoneyDisplay({
   amount,
   currencyCode,
@@ -33,21 +68,10 @@ export function MoneyDisplay({
     );
   }
 
-  const baseFormatted = compact
-    ? new Intl.NumberFormat("en", {
-        style: "currency",
-        currency: currencyCode,
-        notation: "compact",
-        maximumFractionDigits: 1,
-      }).format(n)
-    : new Intl.NumberFormat("en", {
-        style: "currency",
-        currency: currencyCode,
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }).format(n);
-
-  const localized = localizeSeparators(baseFormatted, fmt);
+  const localized = localizeSeparators(
+    getFormatter(currencyCode, compact).format(n),
+    fmt,
+  );
 
   return (
     <span className={cn("inline-block", alignClass, className)} {...rest}>

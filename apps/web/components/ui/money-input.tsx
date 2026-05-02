@@ -4,14 +4,7 @@ import { NumericFormat } from "react-number-format";
 import type { ComponentPropsWithoutRef } from "react";
 import { cn } from "@/lib/utils";
 import { useNumberFormat } from "@/components/providers/number-format-provider";
-import type { NumberFormat } from "@/lib/validation/money";
-
-const SEPARATORS: Record<NumberFormat, { decimal: string; thousand: string }> =
-  {
-    us: { decimal: ".", thousand: "," },
-    eu: { decimal: ",", thousand: "." },
-    fr: { decimal: ",", thousand: " " },
-  };
+import { SEPARATORS } from "@/lib/validation/money";
 
 type MoneyInputProps = {
   value: string;

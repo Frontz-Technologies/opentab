@@ -57,27 +57,29 @@ export const quantityString = z.preprocess(
 
 export type NumberFormat = "us" | "eu" | "fr";
 
-const SEPARATORS: Record<NumberFormat, { decimal: string; thousand: string }> =
-  {
-    us: { decimal: ".", thousand: "," },
-    eu: { decimal: ",", thousand: "." },
-    fr: { decimal: ",", thousand: " " },
-  };
+export const SEPARATORS: Record<
+  NumberFormat,
+  { decimal: string; thousand: string }
+> = {
+  us: { decimal: ".", thousand: "," },
+  eu: { decimal: ",", thousand: "." },
+  fr: { decimal: ",", thousand: " " },
+};
 
-// Sentinel character (Unicode private-use area) used during separator swap
-// to avoid collision when the target thousand separator is "," or ".".
+// Unicode private-use codepoint used as a sentinel during the swap. Safe
+// because Intl.NumberFormat("en", ...) only ever emits ASCII digits, "," ".",
+// currency symbols, whitespace, "K"/"M" suffixes and "-" — never U+E000.
 const SENTINEL = "";
 
-// Rewrites a canonical en-US-style numeric string ("1,234.56") into the
-// requested format. Display-only — never touches stored values. Operates
-// on the rendered output of Intl.NumberFormat("en", ...) so the input
-// shape is predictable.
 export function localizeSeparators(
   formatted: string,
   format: NumberFormat,
 ): string {
+  // The us format IS the canonical en output — skip the rewrite entirely.
+  // MoneyDisplay renders dozens of values per line-items grid, so cutting
+  // three regex passes for the most common branch is worthwhile.
+  if (format === "us") return formatted;
   const sep = SEPARATORS[format];
-  // Replace in two passes via sentinel char to avoid swap collisions.
   return formatted
     .replace(/,/g, SENTINEL)
     .replace(/\./g, sep.decimal)
