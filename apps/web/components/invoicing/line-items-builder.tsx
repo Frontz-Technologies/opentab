@@ -336,15 +336,30 @@ export function LineItemsBuilder({
           <div className="w-64 space-y-1 text-sm">
             <div className="flex justify-between text-on-surface/60">
               <span>{t("subtotal")}</span>
-              <span className="font-mono">{subtotal.toFixed(2)}</span>
+              <MoneyDisplay
+                amount={subtotal}
+                currencyCode={currencyCode}
+                align="right"
+                className="font-mono"
+              />
             </div>
             <div className="flex justify-between text-on-surface/60">
               <span>{t("taxAmount")}</span>
-              <span className="font-mono">{totalTax.toFixed(2)}</span>
+              <MoneyDisplay
+                amount={totalTax}
+                currencyCode={currencyCode}
+                align="right"
+                className="font-mono"
+              />
             </div>
             <div className="flex justify-between text-on-surface font-semibold border-t border-on-surface/10 pt-1">
               <span>{t("totalAmount")}</span>
-              <span className="font-mono">{total.toFixed(2)}</span>
+              <MoneyDisplay
+                amount={total}
+                currencyCode={currencyCode}
+                align="right"
+                className="font-mono"
+              />
             </div>
           </div>
         </div>
