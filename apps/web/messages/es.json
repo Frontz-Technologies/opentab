@@ -283,9 +283,10 @@
   },
   "settingsBusinessLookup": {
     "title": "Búsqueda de empresa",
-    "cardDescription": "Rellena automáticamente la información empresarial a partir del NIF/IVA. Fuentes: VIES (UE), ΑΑΔΕ (Grecia).",
+    "cardDescription": "Rellena automáticamente la información empresarial a partir del NIF/IVA. Fuentes: GEMI (registro griego, búsqueda pública) y VIES (UE).",
     "activeSources": "Fuentes activas",
-    "anonymous": "Anónima",
+    "enabled": "Activa",
+    "disabled": "Inactiva",
     "filledViaSource": "Rellenado desde {source}",
     "noBusinessFound": "No se encontró empresa para este NIF"
   },
