@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import type { Invoice } from "@opentab/db/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/ui/money-input";
 import { CurrencyCombobox } from "@/components/ui/currency-combobox";
 import type { SupportedCurrencyCode } from "@/lib/currency/supported";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -309,29 +310,26 @@ export function CreditNoteForm({
               onChange={(e) => updateItem(idx, { name: e.target.value })}
               required
             />
-            <Input
+            <MoneyInput
               id={`cn-item-qty-${idx}`}
               aria-label={t("quantity")}
-              type="number"
-              step="0.01"
+              decimalScale={4}
               value={item.quantity}
-              onChange={(e) => updateItem(idx, { quantity: e.target.value })}
+              onChange={(v) => updateItem(idx, { quantity: v })}
             />
-            <Input
+            <MoneyInput
               id={`cn-item-price-${idx}`}
               aria-label={t("unitPrice")}
-              type="number"
-              step="0.01"
+              decimalScale={2}
               value={item.unitPrice}
-              onChange={(e) => updateItem(idx, { unitPrice: e.target.value })}
+              onChange={(v) => updateItem(idx, { unitPrice: v })}
             />
-            <Input
+            <MoneyInput
               id={`cn-item-tax-${idx}`}
               aria-label={t("taxRate")}
-              type="number"
-              step="0.01"
+              decimalScale={2}
               value={item.taxRate}
-              onChange={(e) => updateItem(idx, { taxRate: e.target.value })}
+              onChange={(v) => updateItem(idx, { taxRate: v })}
             />
             {items.length > 1 && (
               <Button
