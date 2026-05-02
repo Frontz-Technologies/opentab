@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { RequiredFieldsHint } from "@/components/forms/required-fields-hint";
 import { createProduct, updateProduct } from "../actions";
 
 const inputClass =
@@ -243,6 +244,7 @@ export function ProductForm({ product, vatRates }: ProductFormProps) {
           </div>
         </section>
 
+        <RequiredFieldsHint />
         <div className="flex justify-end">
           <button
             type="submit"

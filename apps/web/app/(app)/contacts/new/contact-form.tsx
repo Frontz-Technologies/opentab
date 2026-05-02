@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { RequiredFieldsHint } from "@/components/forms/required-fields-hint";
 import { createContact, updateContact, lookupVat } from "../actions";
 import { isCountrySupportedByAnySource } from "@/lib/business-lookup/registry";
 import { detectCountryFromTaxId } from "@/lib/utils";
@@ -444,6 +445,7 @@ export function ContactForm({
           />
         </section>
 
+        <RequiredFieldsHint />
         <div className="flex justify-end">
           <button
             type="submit"
