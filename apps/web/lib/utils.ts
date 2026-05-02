@@ -2,6 +2,7 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { randomBytes } from "crypto";
 import { localizeSeparators, type NumberFormat } from "./validation/money";
+import { EU_COUNTRY_CODES, VIES_TO_ISO_PREFIX } from "./country/eu-codes";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -56,37 +57,8 @@ export function detectCountryFromTaxId(taxId: string): string | null {
   if (/^\d{9}$/.test(cleaned)) return "GR";
   const euMatch = cleaned.match(/^([A-Z]{2})\d/);
   if (euMatch) {
-    const prefix = euMatch[1] === "EL" ? "GR" : euMatch[1];
-    const euCountries = [
-      "AT",
-      "BE",
-      "BG",
-      "HR",
-      "CY",
-      "CZ",
-      "DK",
-      "EE",
-      "FI",
-      "FR",
-      "DE",
-      "GR",
-      "HU",
-      "IE",
-      "IT",
-      "LV",
-      "LT",
-      "LU",
-      "MT",
-      "NL",
-      "PL",
-      "PT",
-      "RO",
-      "SK",
-      "SI",
-      "ES",
-      "SE",
-    ];
-    if (euCountries.includes(prefix)) return prefix;
+    const prefix = VIES_TO_ISO_PREFIX.get(euMatch[1]) ?? euMatch[1];
+    if (EU_COUNTRY_CODES.has(prefix)) return prefix;
   }
   return null;
 }
