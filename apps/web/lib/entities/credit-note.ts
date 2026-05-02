@@ -1,5 +1,10 @@
 import { z } from "zod";
 import {
+  moneyString,
+  quantityString,
+  taxRateString,
+} from "@/lib/validation/money";
+import {
   creditNotes,
   creditNoteItems,
   CREDIT_NOTE_STATUS,
@@ -19,11 +24,11 @@ export const creditNoteLineItemSchema = z.object({
   sortOrder: z.coerce.number().int().min(0),
   name: z.string().min(1).max(255),
   description: z.string().optional().default(""),
-  quantity: z.string().regex(/^\d+(\.\d{1,4})?$/),
-  unitPrice: z.string().regex(/^\d+(\.\d{1,2})?$/),
+  quantity: quantityString,
+  unitPrice: moneyString,
   unit: z.string().max(50).optional().default(""),
   taxCategory: z.string().max(50).default("standard"),
-  taxRate: z.string().regex(/^\d+(\.\d{1,2})?$/),
+  taxRate: taxRateString,
 });
 
 export const createCreditNoteSchema = z.object({

@@ -1,5 +1,10 @@
 import { z } from "zod";
 import type { ImporterDescriptor } from "../core/types";
+import {
+  moneyString,
+  quantityString,
+  taxRateString,
+} from "@/lib/validation/money";
 
 // invoiceNumber is optional from v1.1 onward (#220). Empty number →
 // invoice imports as DRAFT, opentab assigns the number on first
@@ -19,16 +24,16 @@ export const invoiceRowSchema = z.object({
     .optional()
     .or(z.literal(""))
     .transform((v) => v || undefined),
-  total: z.string().regex(/^\d+(\.\d{1,2})?$/),
+  total: moneyString,
   currencyCode: z.string().length(3).default("EUR"),
   dueDate: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/)
     .optional(),
   itemName: z.string().min(1),
-  quantity: z.string().regex(/^\d+(\.\d{1,4})?$/),
-  unitPrice: z.string().regex(/^\d+(\.\d{1,2})?$/),
-  taxRate: z.string().regex(/^\d+(\.\d{1,2})?$/),
+  quantity: quantityString,
+  unitPrice: moneyString,
+  taxRate: taxRateString,
   unit: z
     .string()
     .optional()

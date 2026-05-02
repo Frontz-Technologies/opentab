@@ -20,14 +20,19 @@ import {
 } from "@/lib/currency/supported";
 import { assertExpenseCategoryInOrg } from "@/lib/security/assert-same-org";
 import { createExpenseSchema } from "@/lib/entities/expense";
+import {
+  moneyString,
+  quantityString,
+  taxRateString,
+} from "@/lib/validation/money";
 
 const draftExpenseItemSchema = z.object({
   sortOrder: z.coerce.number().int().min(0).default(0),
   name: z.string().min(1).max(255),
   description: z.string().optional().default(""),
-  quantity: z.string().regex(/^\d+(\.\d{1,4})?$/),
-  unitPrice: z.string().regex(/^\d+(\.\d{1,2})?$/),
-  taxRate: z.string().regex(/^\d+(\.\d{1,2})?$/),
+  quantity: quantityString,
+  unitPrice: moneyString,
+  taxRate: taxRateString,
 });
 
 // Derived from the action-layer `createExpenseSchema` so a future field
