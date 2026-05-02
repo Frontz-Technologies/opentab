@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import type { Product } from "@opentab/db/schema";
 import type { VatRate } from "@/lib/country";
 import { FormCheckbox } from "@/components/ui/form-checkbox";
+import { MoneyInput } from "@/components/ui/money-input";
 import {
   Select,
   SelectContent,
@@ -61,6 +62,7 @@ export function ProductForm({ product, vatRates }: ProductFormProps) {
     type: "success" | "error";
     message: string;
   } | null>(null);
+  const [unitPrice, setUnitPrice] = useState<string>(product?.unitPrice ?? "");
   const [unit, setUnit] = useState<string>(product?.unit ?? "item");
   const [taxCategory, setTaxCategory] = useState<string>(
     product?.taxCategory ?? "standard",
@@ -144,16 +146,15 @@ export function ProductForm({ product, vatRates }: ProductFormProps) {
           <SectionHeading>{t("unitPrice")}</SectionHeading>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <Field label={t("unitPrice")} required>
-              <input
-                type="number"
-                name="unitPrice"
-                className={inputClass}
+              <MoneyInput
+                value={unitPrice}
+                onChange={setUnitPrice}
+                decimalScale={2}
                 placeholder="100.00"
-                step="0.01"
-                min="0"
-                defaultValue={product?.unitPrice ?? ""}
-                required
+                aria-label={t("unitPrice")}
+                className="h-12 rounded-xl text-left bg-surface-container-lowest border-none px-4"
               />
+              <input type="hidden" name="unitPrice" value={unitPrice} />
             </Field>
             <Field label={t("unit")}>
               <Select value={unit} onValueChange={(v) => setUnit(v)}>

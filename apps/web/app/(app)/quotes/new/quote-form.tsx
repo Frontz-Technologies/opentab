@@ -272,6 +272,7 @@ export function QuoteForm({
           products={products}
           defaultTaxRate={defaultTaxRate}
           usesInclusiveTax={usesInclusiveTax}
+          currencyCode={currencyCode}
         />
       </div>
 

@@ -2,12 +2,123 @@
 
 import { revalidatePath } from "next/cache";
 import { lookupVat as lookupVatAction } from "../contacts/actions";
+import { detectCountryFromTaxId } from "@/lib/utils";
 
 export async function lookupVat(vatNumber: string) {
   return lookupVatAction(vatNumber);
 }
+
+export async function findContactByVat(vatNumber: string) {
+  const cleaned = vatNumber.trim().replace(/\s/g, "").toUpperCase();
+  if (!cleaned) return null;
+
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+
+  // Narrow projection — the form-side consumer only needs these fields
+  // (matches the SupplierContactOption shape + defaultCurrency for the
+  // currency-sync side-effect on auto-promote).
+  const rows = await db
+    .select({
+      id: contacts.id,
+      displayName: contacts.displayName,
+      company: contacts.company,
+      vatNumber: contacts.vatNumber,
+      type: contacts.type,
+      defaultCurrency: contacts.defaultCurrency,
+    })
+    .from(contacts)
+    .where(
+      and(eq(contacts.orgId, session.org.id), eq(contacts.vatNumber, cleaned)),
+    )
+    .limit(1);
+
+  return rows[0] ?? null;
+}
+
+export async function createSupplierContact(input: {
+  supplierName: string;
+  supplierVat: string;
+  address?: string;
+  city?: string;
+  postalCode?: string;
+  taxOffice?: string;
+}) {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+
+  if (!input.supplierName.trim()) {
+    return { success: false as const, error: "Name is required" };
+  }
+
+  const cleanedVat = input.supplierVat.trim().replace(/\s/g, "").toUpperCase();
+
+  // Pre-insert dedupe: if a contact with this VAT already exists,
+  // return it instead of creating a duplicate. Closes the race window
+  // where two users in the same org submit the dialog with the same
+  // VAT — the second writer gets the first writer's row instead of a
+  // duplicate. (The (orgId, vatNumber) index is non-unique today, so
+  // we can't rely on a 23505 catch.)
+  if (cleanedVat) {
+    const existing = await db
+      .select({
+        id: contacts.id,
+        displayName: contacts.displayName,
+        company: contacts.company,
+        vatNumber: contacts.vatNumber,
+        type: contacts.type,
+      })
+      .from(contacts)
+      .where(
+        and(
+          eq(contacts.orgId, session.org.id),
+          eq(contacts.vatNumber, cleanedVat),
+        ),
+      )
+      .limit(1);
+    if (existing[0]) {
+      return { success: true as const, contact: existing[0] };
+    }
+  }
+
+  const detectedCountry = cleanedVat
+    ? detectCountryFromTaxId(cleanedVat)
+    : null;
+
+  const trimmedName = input.supplierName.trim();
+  const [contact] = await db
+    .insert(contacts)
+    .values({
+      orgId: session.org.id,
+      type: "supplier",
+      classification: "business",
+      displayName: trimmedName,
+      company: trimmedName,
+      vatNumber: cleanedVat || null,
+      countryCode: detectedCountry || session.org.countryCode || null,
+      addressLine1: input.address?.trim() || null,
+      city: input.city?.trim() || null,
+      postalCode: input.postalCode?.trim() || null,
+      taxOffice: input.taxOffice?.trim() || null,
+    })
+    .returning();
+
+  revalidatePath("/contacts");
+
+  return {
+    success: true as const,
+    contact: {
+      id: contact.id,
+      displayName: contact.displayName,
+      company: contact.company,
+      vatNumber: contact.vatNumber,
+      type: contact.type,
+    },
+  };
+}
 import { getSession } from "@/lib/session";
 import {
+  contacts,
   expenseAttachments,
   expenseCategories,
   invoiceSequences,

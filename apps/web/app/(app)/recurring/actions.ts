@@ -16,17 +16,22 @@ import {
   assertProductsInOrg,
   CROSS_ORG_ACCESS_ERROR,
 } from "@/lib/security/assert-same-org";
+import {
+  moneyString,
+  quantityString,
+  taxRateString,
+} from "@/lib/validation/money";
 
 const lineItemSchema = z.object({
   productId: z.string().uuid().optional().or(z.literal("")),
   sortOrder: z.coerce.number().int().min(0),
   name: z.string().min(1).max(255),
   description: z.string().optional().default(""),
-  quantity: z.string().regex(/^\d+(\.\d{1,4})?$/),
-  unitPrice: z.string().regex(/^\d+(\.\d{1,2})?$/),
+  quantity: quantityString,
+  unitPrice: moneyString,
   unit: z.string().max(50).optional().default(""),
   taxCategory: z.string().max(50).default("standard"),
-  taxRate: z.string().regex(/^\d+(\.\d{1,2})?$/),
+  taxRate: taxRateString,
 });
 
 const recurringSchema = z.object({

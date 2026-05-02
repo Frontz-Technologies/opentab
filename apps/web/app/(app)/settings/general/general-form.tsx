@@ -98,6 +98,7 @@ export function GeneralForm({ initialData }: GeneralFormProps) {
           <SelectContent>
             <SelectItem value="eu">{t("numberFormatEu")}</SelectItem>
             <SelectItem value="us">{t("numberFormatUs")}</SelectItem>
+            <SelectItem value="fr">{t("numberFormatFr")}</SelectItem>
           </SelectContent>
         </Select>
         <input type="hidden" name="numberFormat" value={numberFormat} />

@@ -25,6 +25,11 @@ describe("detectCountryFromTaxId", () => {
   it("does not detect non-EU prefixes", () => {
     expect(detectCountryFromTaxId("US123456789")).toBeNull();
   });
+  it('maps Greek VIES prefix "EL" to ISO country code "GR"', () => {
+    expect(detectCountryFromTaxId("EL802315517")).toBe("GR");
+    expect(detectCountryFromTaxId("EL 802 315 517")).toBe("GR");
+    expect(detectCountryFromTaxId("el802315517")).toBe("GR");
+  });
 });
 
 describe("slugify", () => {

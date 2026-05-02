@@ -6,7 +6,12 @@ import {
   type ModelCapabilities,
 } from "@/lib/actions/ai-settings";
 import { createLogger } from "@/lib/logging/logger";
+import { normalizeMoneyString } from "@/lib/validation/money";
 import { isFeatureEnabled } from "../ai/features";
+
+// Re-export for any external callers that imported this from
+// lib/expenses/ai-extraction (canonical home is lib/validation/money).
+export { normalizeMoneyString };
 
 const log = createLogger("ai-extraction");
 
@@ -144,9 +149,9 @@ export function normalizeExtractedData(raw: {
     categoryCode: raw.categoryCode ?? null,
     lineItems: (raw.lineItems ?? []).map((li) => ({
       name: coerceString(li.name, ""),
-      quantity: coerceString(li.quantity, "1"),
-      unitPrice: coerceString(li.unitPrice, "0"),
-      taxRate: coerceString(li.taxRate, "0"),
+      quantity: normalizeMoneyString(li.quantity, "1", 4),
+      unitPrice: normalizeMoneyString(li.unitPrice, "0", 2),
+      taxRate: normalizeMoneyString(li.taxRate, "0", 2),
     })),
   };
 }
@@ -223,6 +228,13 @@ Required JSON format:
   "categoryCode": "string code from the list below, or null",
   "lineItems": [{"name": "string", "quantity": "number", "unitPrice": "number", "taxRate": "number"}]
 }${categoryBlock}
+
+Numeric fields (totalAmount, quantity, unitPrice, taxRate) must be plain
+decimals: period as the decimal separator, no currency symbols, no thousand
+separators. Round unitPrice, taxRate, and totalAmount to at most 2 decimals;
+quantity to at most 4 decimals. Examples: 3.99 not "3,99" or "3.99 €";
+0.99 not "0.9975"; 24 not "24%"; 1 not "1.00 pcs". taxRate is the VAT
+percentage (e.g. 24, 13, 6, 0), not the VAT amount.
 
 Return ONLY valid JSON.`;
 }

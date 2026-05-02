@@ -284,7 +284,11 @@ body {
   --accent-foreground: #1a1a1a;
   --destructive: #b3261e;
   --border: #c2cfc6;
-  --input: #c2cfc6;
+  /* Form-control fill — collapsed onto the brand "input fills" surface
+     (docs/DESIGN.md:48) so every primitive that uses bg-input shares one
+     neutral surface. Mint is reserved for the AI-extracted highlight
+     (bg-primary/10) so that signal stays distinct. */
+  --input: var(--color-surface-container-lowest);
   --ring: #087055;
   --chart-1: #087055;
   --chart-2: #10b981;
@@ -319,7 +323,9 @@ body {
   --accent-foreground: #e5e2e1;
   --destructive: #fc7c78;
   --border: #3c4a42;
-  --input: #3c4a42;
+  /* See light-mode comment above; same intent in dark — neutral fill,
+     mint reserved for the AI-extracted highlight. */
+  --input: var(--color-surface-container-lowest);
   --ring: #4edea3;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);

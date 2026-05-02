@@ -438,6 +438,7 @@ export function InvoiceForm({
           products={products}
           defaultTaxRate={defaultTaxRate}
           usesInclusiveTax={usesInclusiveTax}
+          currencyCode={currencyCode}
         />
       </div>
 

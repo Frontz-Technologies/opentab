@@ -290,6 +290,7 @@ export function RecurringExpenseForm({
           products={[]}
           defaultTaxRate={defaultTaxRate}
           usesInclusiveTax={usesInclusiveTax}
+          currencyCode={currencyCode}
         />
       </div>
 

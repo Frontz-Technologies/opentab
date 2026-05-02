@@ -8,6 +8,7 @@
 // it lands in their books.
 import type { ComponentPropsWithoutRef } from "react";
 import { cn } from "@/lib/utils";
+import { MoneyDisplay } from "@/components/ui/money-display";
 
 type MoneyWithBaseProps = {
   amount: string | number; // raw entity amount (string from numeric column or number)
@@ -22,13 +23,6 @@ type MoneyWithBaseProps = {
   align?: "right" | "left";
   className?: string;
 } & Omit<ComponentPropsWithoutRef<"span">, "className">;
-
-function formatAmount(n: number): string {
-  return n.toLocaleString("en", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
 
 export function MoneyWithBase({
   amount,
@@ -49,7 +43,6 @@ export function MoneyWithBase({
   const alignClass = align === "right" ? "text-right" : "text-left";
 
   if (isForeign && !rateValid) {
-    // Once-per-mount warn so we don't spam a list with hundreds of rows.
     console.warn(
       "MoneyWithBase: non-finite exchangeRate, rendering placeholder",
       { exchangeRate, currencyCode, baseCurrency },
@@ -61,13 +54,19 @@ export function MoneyWithBase({
       {...rest}
       className={cn("inline-flex flex-col", alignClass, className)}
     >
-      <span>
-        {currencyCode} {formatAmount(original)}
-      </span>
+      <MoneyDisplay
+        amount={original}
+        currencyCode={currencyCode}
+        align={align}
+      />
       {isForeign && (
         <span className="text-on-surface-variant text-xs">
           {"≈ "}
-          {baseCurrency} {rateValid ? formatAmount(original * rateNumber) : "—"}
+          <MoneyDisplay
+            amount={rateValid ? original * rateNumber : Number.NaN}
+            currencyCode={baseCurrency}
+            align={align}
+          />
         </span>
       )}
     </span>

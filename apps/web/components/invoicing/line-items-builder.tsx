@@ -6,6 +6,8 @@ import { ArrowDown, ArrowUp, Package, Plus, X } from "lucide-react";
 import type { Product } from "@opentab/db/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/ui/money-input";
+import { MoneyDisplay } from "@/components/ui/money-display";
 import { calculateLineTotal } from "@/lib/invoicing/calculations";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +32,8 @@ interface LineItemsBuilderProps {
   products?: Product[];
   defaultTaxRate: string;
   usesInclusiveTax: boolean;
+  /** ISO currency code for formatting taxAmount / lineTotal cells. */
+  currencyCode?: string;
   /** Line-item IDs currently in receipt-extraction preview state. */
   previewIds?: Set<string>;
   /** Fires the first time a previewed row's cell is edited. */
@@ -72,6 +76,7 @@ export function LineItemsBuilder({
   products,
   defaultTaxRate,
   usesInclusiveTax,
+  currencyCode = "EUR",
   previewIds,
   onItemEdit,
   showDescription = true,
@@ -266,36 +271,36 @@ export function LineItemsBuilder({
                   />
                 )}
               </div>
-              <Input
-                type="number"
+              <MoneyInput
                 value={item.quantity}
-                onChange={(e) => updateItem(index, "quantity", e.target.value)}
-                className="h-8 text-sm text-right font-mono"
-                min="0"
-                step="0.01"
+                onChange={(v) => updateItem(index, "quantity", v)}
+                decimalScale={4}
+                aria-label={t("quantity")}
               />
-              <Input
-                type="number"
+              <MoneyInput
                 value={item.unitPrice}
-                onChange={(e) => updateItem(index, "unitPrice", e.target.value)}
-                className="h-8 text-sm text-right font-mono"
-                min="0"
-                step="0.01"
+                onChange={(v) => updateItem(index, "unitPrice", v)}
+                decimalScale={2}
+                aria-label={t("unitPrice")}
               />
-              <Input
-                type="number"
+              <MoneyInput
                 value={item.taxRate}
-                onChange={(e) => updateItem(index, "taxRate", e.target.value)}
-                className="h-8 text-sm text-right font-mono"
-                min="0"
-                step="0.01"
+                onChange={(v) => updateItem(index, "taxRate", v)}
+                decimalScale={2}
+                aria-label={t("taxRate")}
               />
-              <span className="text-sm text-on-surface/60 font-mono text-right px-2">
-                {item.taxAmount}
-              </span>
-              <span className="text-sm text-on-surface font-mono text-right font-medium px-2">
-                {item.lineTotal}
-              </span>
+              <MoneyDisplay
+                amount={item.taxAmount}
+                currencyCode={currencyCode}
+                align="right"
+                className="text-sm text-on-surface/60 font-mono px-2"
+              />
+              <MoneyDisplay
+                amount={item.lineTotal}
+                currencyCode={currencyCode}
+                align="right"
+                className="text-sm text-on-surface font-mono font-medium px-2"
+              />
               <div className="flex flex-col gap-0.5">
                 <button
                   type="button"
@@ -331,15 +336,30 @@ export function LineItemsBuilder({
           <div className="w-64 space-y-1 text-sm">
             <div className="flex justify-between text-on-surface/60">
               <span>{t("subtotal")}</span>
-              <span className="font-mono">{subtotal.toFixed(2)}</span>
+              <MoneyDisplay
+                amount={subtotal}
+                currencyCode={currencyCode}
+                align="right"
+                className="font-mono"
+              />
             </div>
             <div className="flex justify-between text-on-surface/60">
               <span>{t("taxAmount")}</span>
-              <span className="font-mono">{totalTax.toFixed(2)}</span>
+              <MoneyDisplay
+                amount={totalTax}
+                currencyCode={currencyCode}
+                align="right"
+                className="font-mono"
+              />
             </div>
             <div className="flex justify-between text-on-surface font-semibold border-t border-on-surface/10 pt-1">
               <span>{t("totalAmount")}</span>
-              <span className="font-mono">{total.toFixed(2)}</span>
+              <MoneyDisplay
+                amount={total}
+                currencyCode={currencyCode}
+                align="right"
+                className="font-mono"
+              />
             </div>
           </div>
         </div>
