@@ -285,9 +285,10 @@
   },
   "settingsBusinessLookup": {
     "title": "Business Lookup",
-    "cardDescription": "Auto-fills business info from VAT/tax IDs. Sources: VIES (EU), ΑΑΔΕ (Greece).",
+    "cardDescription": "Auto-fills business info from VAT/tax IDs. Sources: GEMI (Greek registry, public lookup) and VIES (EU).",
     "activeSources": "Active sources",
-    "anonymous": "Anonymous",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
     "filledViaSource": "Filled from {source}",
     "noBusinessFound": "No business found for this tax ID"
   },

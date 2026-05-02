@@ -27,12 +27,23 @@ export default async function BusinessLookupSettingsPage() {
             </p>
             <h3 className="font-medium mb-2">{t("activeSources")}</h3>
             <ul className="space-y-1 text-sm">
-              {businessLookupSources.map((source) => (
-                <li key={source.id} className="flex justify-between">
-                  <span>{source.displayName}</span>
-                  <span className="text-on-surface/50">{t("anonymous")}</span>
-                </li>
-              ))}
+              {await Promise.all(
+                businessLookupSources.map(async (source) => {
+                  const enabled = await source.isAvailable(session.org.id);
+                  return (
+                    <li key={source.id} className="flex justify-between">
+                      <span>{source.displayName}</span>
+                      <span
+                        className={
+                          enabled ? "text-on-surface/70" : "text-on-surface/40"
+                        }
+                      >
+                        {enabled ? t("enabled") : t("disabled")}
+                      </span>
+                    </li>
+                  );
+                }),
+              )}
             </ul>
           </div>
         </div>

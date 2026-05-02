@@ -3,7 +3,7 @@ import { registerTestUser, loginTestUser } from "./helpers";
 
 test.describe.configure({ mode: "serial" });
 
-test.describe("Business Lookup (#280)", () => {
+test.describe("Business Lookup (#280 + #287)", () => {
   let page: Page;
 
   test.beforeAll(async ({ browser }) => {
@@ -69,6 +69,42 @@ test.describe("Business Lookup (#280)", () => {
     await expect(page.getByRole("button", { name: "Lookup" })).toHaveCount(0);
   });
 
+  test("contacts/new — Greek AFM via GEMI public lookup autofills name", async () => {
+    await page.route(
+      "https://publicity.businessportal.gr/api/autocomplete/802315517",
+      async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            payload: {
+              autocomplete: [
+                {
+                  id: 0,
+                  arGemi: 174184603000,
+                  title: "FRONTZ TECHNOLOGIES",
+                  co_name: "ΦΡΟΝΤΖΟΣ ΙΩΑΝΝΗΣ ΚΑΙ ΣΙΑ Ε.Ε.",
+                  afm: "802315517",
+                  companyStatus: "Ενεργή",
+                  companyStatusId: 3,
+                  type: "Επιχείρηση",
+                },
+              ],
+            },
+          }),
+        });
+      },
+    );
+
+    await page.goto("/contacts/new");
+    await page.locator('input[name="vatNumber"]').fill("802315517");
+    await page.getByRole("button", { name: "Lookup" }).click();
+
+    await expect(page.locator('input[name="company"]')).toHaveValue(
+      "ΦΡΟΝΤΖΟΣ ΙΩΑΝΝΗΣ ΚΑΙ ΣΙΑ Ε.Ε.",
+    );
+  });
+
   test("integrations page shows Business Lookup card", async () => {
     await page.goto("/settings/integrations");
 
@@ -78,7 +114,9 @@ test.describe("Business Lookup (#280)", () => {
     await page.waitForURL("**/settings/integrations/business-lookup");
 
     await expect(page.getByText("Active sources")).toBeVisible();
+    await expect(page.getByText("GEMI (public lookup)")).toBeVisible();
     await expect(page.getByText("VIES (EU VAT")).toBeVisible();
-    await expect(page.getByText("ΑΑΔΕ")).toBeVisible();
+    // Status badge
+    await expect(page.getByText(/^Enabled$/i).first()).toBeVisible();
   });
 });

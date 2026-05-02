@@ -91,6 +91,7 @@ export function ContactForm({
   const [defaultLanguage, setDefaultLanguage] = useState<string>(
     contact?.defaultLanguage ?? "",
   );
+  const [arGemi, setArGemi] = useState<string>(contact?.arGemi ?? "");
 
   async function handleLookup() {
     if (!vatValue.trim()) return;
@@ -103,6 +104,7 @@ export function ContactForm({
         if (result.data.city) setCity(result.data.city);
         if (result.data.postalCode) setPostalCode(result.data.postalCode);
         if (result.data.taxOffice) setTaxOffice(result.data.taxOffice);
+        if (result.data.arGemi) setArGemi(result.data.arGemi);
         setToast({ type: "success", message: t("vatLookupSuccess") });
       } else {
         setToast({
@@ -295,6 +297,7 @@ export function ContactForm({
               name="countryCode"
               value={contact?.countryCode ?? ""}
             />
+            <input type="hidden" name="arGemi" value={arGemi} />
             {capabilities.taxOfficeList && taxOffices && (
               <Field label={t("taxOffice")}>
                 <Select

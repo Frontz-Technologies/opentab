@@ -46,6 +46,7 @@ export const contacts = pgTable(
     vatValidated: boolean("vat_validated").notNull().default(false),
     countryCode: varchar("country_code", { length: 2 }),
     taxOffice: varchar("tax_office", { length: 255 }),
+    arGemi: varchar("ar_gemi", { length: 20 }),
     addressLine1: varchar("address_line1", { length: 255 }),
     addressLine2: varchar("address_line2", { length: 255 }),
     city: varchar("city", { length: 100 }),
