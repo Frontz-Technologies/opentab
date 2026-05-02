@@ -18,7 +18,10 @@ type MoneyInputProps = {
   "aria-invalid"?: boolean;
 } & Omit<
   ComponentPropsWithoutRef<"input">,
-  "value" | "onChange" | "type" | "step"
+  // react-number-format's NumericFormat narrows defaultValue to
+  // string | number | null; <input>'s defaultValue allows readonly string[]
+  // (the multi-select shape). Drop it from the spread so the union is safe.
+  "value" | "onChange" | "type" | "step" | "defaultValue"
 >;
 
 export function MoneyInput({
