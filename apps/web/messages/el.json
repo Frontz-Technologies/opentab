@@ -19,7 +19,9 @@
     "soonBadge": "Σύντομα",
     "pickRange": "Επιλέξτε εύρος",
     "pickDate": "Επιλέξτε ημερομηνία",
-    "requiredFieldHint": "Υποχρεωτικό πεδίο"
+    "requiredFieldHint": "Υποχρεωτικό πεδίο",
+    "showPassword": "Εμφάνιση κωδικού",
+    "hidePassword": "Απόκρυψη κωδικού"
   },
   "nav": {
     "ai": "AI",

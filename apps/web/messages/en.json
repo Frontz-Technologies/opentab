@@ -19,7 +19,9 @@
     "soonBadge": "Soon",
     "pickRange": "Pick a range",
     "pickDate": "Pick a date",
-    "requiredFieldHint": "Required field"
+    "requiredFieldHint": "Required field",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
   },
   "nav": {
     "ai": "AI",
