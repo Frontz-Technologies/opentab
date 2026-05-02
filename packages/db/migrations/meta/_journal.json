@@ -15,6 +15,13 @@
       "when": 1777707134530,
       "tag": "0001_add_org_email",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1777748562315,
+      "tag": "0002_add_contact_ar_gemi",
+      "breakpoints": true
     }
   ]
 }

@@ -125,6 +125,7 @@ async function pushSchema(pglite: PGlite) {
       "vat_validated" boolean NOT NULL DEFAULT false,
       "country_code" varchar(2),
       "tax_office" varchar(255),
+      "ar_gemi" varchar(20),
       "address_line1" varchar(255),
       "address_line2" varchar(255),
       "city" varchar(100),

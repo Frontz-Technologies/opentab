@@ -1,0 +1,1 @@
+ALTER TABLE "contact" ADD COLUMN "ar_gemi" varchar(20);
