@@ -6,11 +6,11 @@ import {
   taxRateString,
 } from "@/lib/validation/money";
 
-// invoiceNumber is optional from v1.1 onward (#220). Empty number →
-// invoice imports as DRAFT, opentab assigns the number on first
-// publish using the deferred-numbering pattern from #132. The
-// idempotency-key fn falls back to a contact+date+total fingerprint
-// for empty-number rows so re-importing the same CSV is still safe.
+// invoiceNumber is optional from v1.1 onward. Empty number → invoice
+// imports as DRAFT, opentab assigns the number on first publish using
+// the deferred-numbering pattern. The idempotency-key fn falls back
+// to a contact+date+total fingerprint for empty-number rows so
+// re-importing the same CSV is still safe.
 export const invoiceRowSchema = z.object({
   invoiceNumber: z
     .string()
@@ -84,10 +84,10 @@ export const invoicesImporter: ImporterDescriptor<InvoiceRow> = {
   idempotencyKeyParts: (row, orgId) =>
     row.invoiceNumber
       ? [orgId, "num", row.invoiceNumber.toLowerCase()]
-      : // Empty-number fallback (v1.1, #220): contact+date+total
-        // fingerprint. Prefix with a tag ("nonum") so an empty-number
-        // row whose fingerprint accidentally collides with a numbered
-        // row's "num" key cannot dedup against it.
+      : // Empty-number fallback: contact+date+total fingerprint.
+        // Prefix with a tag ("nonum") so an empty-number row whose
+        // fingerprint accidentally collides with a numbered row's
+        // "num" key cannot dedup against it.
         [
           orgId,
           "nonum",

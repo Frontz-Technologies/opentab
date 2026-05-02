@@ -1,9 +1,9 @@
 import { test, expect, type Page } from "@playwright/test";
 import { registerTestUser, loginTestUser } from "./helpers";
 
-// Smoke test for #138 — change the prefix in Settings, then create
-// + publish an invoice, and assert the assigned number reflects the
-// new prefix. Failure-surface coverage (placeholder grammar, schema
+// Smoke test: change the prefix in Settings, then create + publish
+// an invoice, and assert the assigned number reflects the new
+// prefix. Failure-surface coverage (placeholder grammar, schema
 // validation) is in the unit tests:
 //   apps/web/__tests__/invoicing-numbering-pattern.test.ts
 //   apps/web/__tests__/invoicing-numbering-actions.test.ts
@@ -64,8 +64,8 @@ test.describe("Invoice numbering settings (#138)", () => {
     await page.getByText("Numbering Test Client").first().click();
     await page.waitForURL(/\/invoices\/[a-z0-9-]+/i, { timeout: 10000 });
 
-    // Publish (#132 may have landed; if so the action is "Publish",
-    // if not the invoice already has a number from creation).
+    // Publish if the action is exposed; otherwise the invoice already
+    // has a number from creation.
     const publishBtn = page.getByRole("button", { name: /^Publish/i });
     if (await publishBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
       page.on("dialog", (d) => d.accept());

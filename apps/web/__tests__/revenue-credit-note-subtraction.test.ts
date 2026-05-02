@@ -11,8 +11,8 @@ import {
 } from "@opentab/db/schema";
 import { getRevenue } from "../lib/reports/queries";
 
-// #133 regression: revenue must subtract published+sent credit notes
-// from the same period. Cancelled credits and drafts must NOT subtract.
+// Revenue must subtract published+sent credit notes from the same
+// period. Cancelled credits and drafts must NOT subtract.
 describe("getRevenue (#133 — credit-note subtraction)", () => {
   let db: Awaited<ReturnType<typeof createTestDb>>["db"];
   let teardown: () => Promise<void>;

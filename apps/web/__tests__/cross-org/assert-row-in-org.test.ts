@@ -16,7 +16,7 @@ import {
   CROSS_ORG_ACCESS_ERROR,
 } from "@/lib/security/assert-same-org";
 
-// Issue #274 — write-side FK same-org validation. The helpers throw
+// Write-side FK same-org validation. The helpers throw
 // `Error("cross-org-access")` when the requested id does not belong
 // to the supplied orgId. These tests freeze the contract for each of
 // the four wrappers (single-row + batch product variant).

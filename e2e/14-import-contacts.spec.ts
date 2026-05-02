@@ -1,10 +1,10 @@
 import { test, expect, type Page } from "@playwright/test";
 import { registerTestUser, loginTestUser } from "./helpers";
 
-// #215 happy-path. Owner uploads a small contacts CSV, accepts the
-// auto-mapped columns, previews 2 rows, commits, and asserts both
-// rows land in the contacts list. Then re-importing the same CSV
-// produces 0 new contacts (idempotency dedup).
+// Contacts CSV import happy-path. Owner uploads a small contacts
+// CSV, accepts the auto-mapped columns, previews 2 rows, commits,
+// and asserts both rows land in the contacts list. Then re-importing
+// the same CSV produces 0 new contacts (idempotency dedup).
 test.describe.configure({ mode: "serial", retries: 1 });
 
 test.describe("Contacts CSV import (#215)", () => {

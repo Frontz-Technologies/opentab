@@ -52,11 +52,10 @@ describe("cleanup-temp-files processor (#85)", () => {
     expect(result.deleted).toBe(0);
   });
 
-  // Tester PR #216 Medium #1 regression. A poisoned Redis value with
-  // ageHours <= 0 made `cutoff` a future timestamp → every file under
-  // every org's tmp/ became "older than cutoff" → mass-delete. The
-  // processor must reject non-positive (and absurdly large) values
-  // before touching the filesystem.
+  // A poisoned Redis value with ageHours <= 0 makes `cutoff` a future
+  // timestamp → every file under every org's tmp/ becomes "older than
+  // cutoff" → mass-delete. The processor must reject non-positive
+  // (and absurdly large) values before touching the filesystem.
   it("throws on ageHours <= 0 instead of mass-deleting fresh files", async () => {
     const orgDir = join(uploadsDir, "org-1", "expenses", "tmp");
     await mkdir(orgDir, { recursive: true });

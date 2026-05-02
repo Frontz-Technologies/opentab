@@ -19,13 +19,13 @@ import {
   expenseAttachments,
 } from "@opentab/db/schema";
 
-// Issue #274 — cross-org audit. The duplicate-receipt guard at
-// uploadAndExtractReceipt previously matched expense_attachment.file_hash
-// with no scope, so an attachment owned by Org B would block Org A from
-// uploading the same file. Worse: it leaked existence (the error message
-// "This file has already been uploaded" confirms B has that file).
+// Cross-org isolation for the duplicate-receipt guard at
+// uploadAndExtractReceipt. The matcher must scope file_hash to the
+// caller's org or it would (a) block Org A from uploading a file Org
+// B already has and (b) leak existence ("This file has already been
+// uploaded" confirms B has that file).
 //
-// expense_attachment has no orgId column — the fix joins through
+// expense_attachment has no orgId column — the lookup joins through
 // expense.orgId.
 
 const { dbHolder, getSessionMock } = vi.hoisted(() => ({
@@ -185,12 +185,11 @@ describe("uploadAndExtractReceipt duplicate guard — cross-org isolation (#274)
     const result = await uploadAndExtractReceipt(makeFormData());
 
     expect(result.success).toBe(false);
-    // PR #276 carry-over: duplicate-receipt branch now reports
-    // error="duplicate" with the parent expenseId so the client can
-    // offer "open existing expense" UX. The duplicate-branch object
-    // has a `duplicateExpenseId` property; runtime discriminate on
-    // its presence (the union has two failure shapes — string error
-    // vs the dup branch).
+    // Duplicate-receipt branch reports error="duplicate" with the
+    // parent expenseId so the client can offer "open existing expense"
+    // UX. The duplicate-branch object has a `duplicateExpenseId`
+    // property; runtime discriminate on its presence (the union has
+    // two failure shapes — string error vs the dup branch).
     if (!result.success && "duplicateExpenseId" in result) {
       expect(result.error).toBe("duplicate");
       expect(result.duplicateExpenseId).toBeDefined();

@@ -1,10 +1,11 @@
 import { test, expect, type Page } from "@playwright/test";
 import { registerTestUser, loginTestUser } from "./helpers";
 
-// #85 happy-path. Drives expense create with a file attachment, then
-// deletes the expense and asserts the worker processes the
-// delete-expense-files job within 10s. Requires the worker container
-// to be running (docker-compose dev stack handles it).
+// Async-delete happy-path. Drives expense create with a file
+// attachment, then deletes the expense and asserts the worker
+// processes the delete-expense-files job within 10s. Requires the
+// worker container to be running (docker-compose dev stack handles
+// it).
 test.describe.configure({ mode: "serial", retries: 1 });
 
 test.describe("Async job queue — delete-expense-files (#85)", () => {

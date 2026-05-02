@@ -11,12 +11,10 @@ import { eq } from "drizzle-orm";
 import { createTestDb } from "@opentab/db/test-utils";
 import { organisations, aiSettings } from "@opentab/db/schema";
 
-// Issue #274 (Phase D) — defence-in-depth on aiSettings updates.
-// updateAiSettings previously updated by `eq(id, existing.id)` only;
-// `existing` was selected by orgId (good) but the mutation now also
-// carries orgId in the WHERE. deleteApiKey was also tightened to
-// throw Forbidden on a caller-supplied orgId mismatch (replacing the
-// opaque double-eq self-canceling WHERE).
+// Defence-in-depth on aiSettings updates. updateAiSettings selects
+// `existing` by orgId (good) and the mutation also carries orgId in
+// the WHERE. deleteApiKey throws Forbidden on a caller-supplied orgId
+// mismatch.
 
 const { dbHolder, getSessionMock } = vi.hoisted(() => ({
   dbHolder: {

@@ -129,13 +129,13 @@ export async function createDraftExpense(
         .limit(1)
     : [];
 
-  // #274 carry-over: validate categoryId belongs to the session org
-  // BEFORE the insert. Contact is already same-org-scoped above, so
-  // its FK is verified by the SELECT pattern. The schema accepts any
-  // UUID for categoryId — without this check a cross-org id would
-  // hit the FK constraint at write time (which throws an opaque DB
-  // error and leaves no audit trail) or, worse, silently succeed if
-  // the row exists.
+  // Validate categoryId belongs to the session org BEFORE the insert.
+  // Contact is already same-org-scoped above, so its FK is verified
+  // by the SELECT pattern. The schema accepts any UUID for
+  // categoryId — without this check a cross-org id would hit the FK
+  // constraint at write time (which throws an opaque DB error and
+  // leaves no audit trail) or, worse, silently succeed if the row
+  // exists.
   if (data.categoryId) {
     await assertExpenseCategoryInOrg(db, data.categoryId, orgId);
   }

@@ -7,9 +7,9 @@ type Database = typeof db;
 type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
 type DbOrTx = Database | Transaction;
 
-// Idempotent invoice-number reservation (#132). Called from
-// publishInvoice / sendInvoice / createInvoice(publish=true). Drafts
-// no longer hold a number until they transition out of DRAFT.
+// Idempotent invoice-number reservation. Called from publishInvoice
+// / sendInvoice / createInvoice(publish=true). Drafts do not hold a
+// number until they transition out of DRAFT.
 //
 // Race-safety:
 //   - Same invoice, two concurrent publishes: the FOR UPDATE on the
@@ -33,9 +33,8 @@ export async function assignInvoiceNumberIfMissing(
   dbInstance: DbOrTx = db,
 ): Promise<string> {
   // Ensure a sequence row exists. Single upsert against the unique
-  // (orgId, type) index — replaces the SELECT-then-INSERT pair that
-  // raced when two concurrent first-time publishes both took the
-  // INSERT branch (mirror of PR #213's settings/numbering fix).
+  // (orgId, type) index — a SELECT-then-INSERT pair would race when
+  // two concurrent first-time publishes both took the INSERT branch.
   await dbInstance
     .insert(invoiceSequences)
     .values({ orgId, type: "invoice", prefix: "INV-" })

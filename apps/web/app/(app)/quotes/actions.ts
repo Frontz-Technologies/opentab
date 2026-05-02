@@ -154,9 +154,9 @@ export async function createQuote(formData: FormData) {
 
   const data = parsed.data;
 
-  // #274 carry-over: validate contactId + every line-item productId
-  // belong to the session org BEFORE the INSERT. Mirror of the
-  // updateInvoice / createDraftInvoice guards.
+  // Validate contactId + every line-item productId belong to the
+  // session org BEFORE the INSERT. Mirror of the updateInvoice /
+  // createDraftInvoice guards.
   try {
     await assertContactInOrg(db, data.contactId, session.org.id);
     const productIds = data.items
@@ -296,9 +296,8 @@ export async function updateQuote(id: string, formData: FormData) {
 
   const data = parsed.data;
 
-  // #274 carry-over: validate contactId + every line-item productId
-  // belong to the session org BEFORE the UPDATE. Mirror of the
-  // createQuote guard.
+  // Validate contactId + every line-item productId belong to the
+  // session org BEFORE the UPDATE. Mirror of the createQuote guard.
   try {
     await assertContactInOrg(db, data.contactId, session.org.id);
     const productIds = data.items
@@ -455,8 +454,8 @@ export async function convertToInvoice(id: string) {
     .from(quoteItems)
     .where(eq(quoteItems.quoteId, id));
 
-  // #132: quote → invoice conversion creates a DRAFT invoice — no
-  // number is allocated until the user publishes/sends it.
+  // Quote → invoice conversion creates a DRAFT invoice — no number
+  // is allocated until the user publishes/sends it.
   const [invoice] = await db
     .insert(invoices)
     .values({

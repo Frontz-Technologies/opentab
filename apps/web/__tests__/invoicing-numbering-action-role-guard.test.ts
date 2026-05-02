@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// Tester PR #213 High #2 regression. updateInvoiceNumbering must
-// reject non-admin/non-owner sessions before touching the DB. Every
-// other Organisation-section action enforces the same gate; this
-// test proves the action mirrors that contract.
+// updateInvoiceNumbering must reject non-admin/non-owner sessions
+// before touching the DB. Every other Organisation-section action
+// enforces the same gate; this test proves the action mirrors that
+// contract.
 const { getSessionMock, dbSpy } = vi.hoisted(() => ({
   getSessionMock: vi.fn(),
   dbSpy: vi.fn(),

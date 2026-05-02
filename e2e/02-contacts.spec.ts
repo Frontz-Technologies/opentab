@@ -23,7 +23,7 @@ test.describe("Contacts", () => {
     await page.goto("/contacts");
     // `{ exact: true }` prevents the matcher from also picking up the
     // empty-state "No contacts yet" h3 (substring match includes the
-    // word "Contacts"). See #179 tester follow-up.
+    // word "Contacts").
     await expect(
       page.getByRole("heading", { name: "Contacts", exact: true }),
     ).toBeVisible();

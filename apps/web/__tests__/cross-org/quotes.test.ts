@@ -17,13 +17,11 @@ import {
   QUOTE_STATUS,
 } from "@opentab/db/schema";
 
-// Issue #274 (Phase B) — defence-in-depth on quotes/actions.ts.
-// convertToInvoice's UPDATE used `eq(quotes.id, id)` only; the
-// pre-check at the top of the action gated authorisation, but
-// every other quote mutation in the file already paired
-// `eq(quotes.id, id)` AND `eq(quotes.orgId, session.org.id)` on
-// the WHERE. The fix aligns convertToInvoice with the rest of
-// the file.
+// Defence-in-depth on quotes/actions.ts. convertToInvoice's UPDATE
+// must pair `eq(quotes.id, id)` with `eq(quotes.orgId, session.org.id)`
+// on the WHERE — like every other quote mutation in the file — so the
+// pre-check at the top of the action is not the only authorisation
+// gate.
 
 const { dbHolder, getSessionMock } = vi.hoisted(() => ({
   dbHolder: {

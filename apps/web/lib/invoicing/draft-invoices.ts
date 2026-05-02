@@ -92,11 +92,11 @@ export async function createDraftInvoice(
     throw new Error("Contact not found");
   }
 
-  // #274 carry-over: validate every line-item productId belongs to
-  // the org. The Zod schema accepts any UUID for productId; without
-  // this batch check a cross-org id would either trip the FK
-  // constraint (opaque) or silently link the line to another org's
-  // product. Mirror of the updateInvoice carry-over.
+  // Validate every line-item productId belongs to the org. The Zod
+  // schema accepts any UUID for productId; without this batch check
+  // a cross-org id would either trip the FK constraint (opaque) or
+  // silently link the line to another org's product. Mirror of the
+  // updateInvoice guard.
   const productIds = data.items
     .map((i) => i.productId)
     .filter((id): id is string => !!id);
@@ -145,8 +145,8 @@ export async function createDraftInvoice(
     exchangeRate = fx.rate.toFixed(6);
   }
 
-  // #132: drafts no longer reserve an invoice number. The number is
-  // assigned on the first publish/send via assignInvoiceNumberIfMissing.
+  // Drafts do not reserve an invoice number. The number is assigned
+  // on the first publish/send via assignInvoiceNumberIfMissing.
   const [invoice] = await db
     .insert(invoices)
     .values({

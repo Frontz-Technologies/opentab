@@ -48,12 +48,12 @@ export default async function CreditNoteDetailPage({
     .where(eq(creditNoteItems.creditNoteId, id))
     .orderBy(asc(creditNoteItems.sortOrder));
 
-  // #274: scope the parent-invoice lookup by orgId. cn.invoiceId is a
-  // foreign-key field that the create/update flow does not validate as
-  // same-org (the schema accepts any UUID). Without the orgId clause,
-  // an attacker who set cn.invoiceId to another org's invoice would
-  // see that org's invoice number rendered in the credit-note detail
-  // page. Mirror of Phase A's expenses/[id]/page.tsx category fix.
+  // Scope the parent-invoice lookup by orgId. cn.invoiceId is a
+  // foreign-key field that the create/update flow does not validate
+  // as same-org (the schema accepts any UUID). Without the orgId
+  // clause, an attacker who set cn.invoiceId to another org's invoice
+  // would see that org's invoice number rendered in the credit-note
+  // detail page.
   let linkedInvoiceNumber: string | null = null;
   if (cn.invoiceId) {
     const [inv] = await db

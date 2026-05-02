@@ -9,9 +9,9 @@ import {
 } from "drizzle-orm/pg-core";
 
 // Accounting classification for expense groups. Drives P&L grouping,
-// VAT-report splits (input VAT on purchases vs. operating), and (future)
-// GL-account routing. Applied universally — GAAP + IFRS agree on this
-// COGS / OpEx / Asset / Other split. See #140.
+// VAT-report splits (input VAT on purchases vs. operating), and
+// (future) GL-account routing. Applied universally — GAAP + IFRS
+// agree on this COGS / OpEx / Asset / Other split.
 export const expenseGroupTypeEnum = pgEnum("expense_group_type", [
   "operating_expense",
   "purchase",
@@ -183,7 +183,7 @@ export const EXPENSE_GROUPS_SEED: NewExpenseGroup[] = [
     sortOrder: 16,
     type: "other",
   },
-  // New groups added in #140 — universal to every country seed.
+  // Universal to every country seed.
   {
     code: "salaries",
     nameEn: "Salaries",

@@ -9,7 +9,7 @@ import { randomUUID } from "node:crypto";
  * process env. This gives every spec in the same `pnpm e2e` run the
  * same email (so cross-spec `loginTestUser` hits the user that
  * `registerTestUser` just created) while still rotating between runs
- * (so yesterday's leftover `e2e-*` rows never collide). See #178.
+ * (so yesterday's leftover `e2e-*` rows never collide).
  *
  * A local fallback UUID is used if the env var is unset — e.g. when
  * running a helper import outside Playwright for ad-hoc scripts.

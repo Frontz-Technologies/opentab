@@ -1,11 +1,10 @@
 import { test, expect, type Page } from "@playwright/test";
 import { registerTestUser, loginTestUser } from "./helpers";
 
-// retries:1 mitigates the dev-server instability class flagged in the
-// PR #179 tester follow-up (socket hang-up / page-closed mid-
-// navigation on the auth redirect chain). Short-term — the real fix
-// is a separate investigation into HMR recompile / shared
-// apiRequestContext keep-alive.
+// retries:1 mitigates a dev-server instability class (socket hang-up
+// / page-closed mid-navigation on the auth redirect chain).
+// Short-term — the real fix is a separate investigation into HMR
+// recompile / shared apiRequestContext keep-alive.
 test.describe.configure({ mode: "serial", retries: 1 });
 
 test.describe("Navigation", () => {
@@ -22,9 +21,8 @@ test.describe("Navigation", () => {
     // tree. The sidebar defaults to icon-collapsed, which strips label
     // spans (`group-data-[collapsible=icon]:hidden`) and breaks
     // `getByRole("link", { name: /Dashboard/ })`. Tests that require
-    // the collapsed rail (68) toggle it back explicitly; the expanded-
-    // persistence test (91) re-adds the same cookie. See #179 tester
-    // follow-up.
+    // the collapsed rail toggle it back explicitly; the
+    // expanded-persistence test re-adds the same cookie.
     await page
       .context()
       .addCookies([{ name: "sidebar_state", value: "true", url: page.url() }]);

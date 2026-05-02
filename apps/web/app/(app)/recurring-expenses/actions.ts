@@ -79,9 +79,9 @@ export async function createRecurringExpense(formData: FormData) {
 
   const data = parsed.data;
 
-  // #274 carry-over: validate contactId + categoryId belong to the
-  // session org BEFORE the INSERT. Both are nullable here — the Zod
-  // schema accepts any UUID without validating same-org membership.
+  // Validate contactId + categoryId belong to the session org
+  // BEFORE the INSERT. Both are nullable here — the Zod schema
+  // accepts any UUID without validating same-org membership.
   try {
     if (data.contactId) {
       await assertContactInOrg(db, data.contactId, session.org.id);
@@ -146,10 +146,10 @@ export async function updateRecurringExpense(id: string, formData: FormData) {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
 
-  // #274: pre-check that the recurring expense belongs to this org
-  // BEFORE deleting its items. Without this guard, a cross-org id
-  // would silently no-op the parent UPDATE (which is correctly
-  // scoped) yet the subsequent
+  // Pre-check that the recurring expense belongs to this org BEFORE
+  // deleting its items. Without this guard, a cross-org id would
+  // silently no-op the parent UPDATE (which is correctly scoped) yet
+  // the subsequent
   // `delete(recurringExpenseItems).where(recurringExpenseId = id)`
   // would still wipe another org's line items, since
   // recurringExpenseItems has no orgId column. Mirror of the
@@ -196,8 +196,8 @@ export async function updateRecurringExpense(id: string, formData: FormData) {
 
   const data = parsed.data;
 
-  // #274 carry-over: validate contactId + categoryId belong to the
-  // session org BEFORE the UPDATE. Mirror of createRecurringExpense.
+  // Validate contactId + categoryId belong to the session org
+  // BEFORE the UPDATE. Mirror of createRecurringExpense.
   try {
     if (data.contactId) {
       await assertContactInOrg(db, data.contactId, session.org.id);

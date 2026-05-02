@@ -1,7 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import { registerTestUser, loginTestUser } from "./helpers";
 
-// Happy-path coverage for credit notes (#133).
+// Happy-path coverage for credit notes.
 //
 // Flow:
 //   1. Seed a client + an invoice that the credit note will reference.

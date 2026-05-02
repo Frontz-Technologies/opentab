@@ -15,7 +15,7 @@ export interface RecordActivityInput {
   payload?: Record<string, unknown>;
 }
 
-// Best-effort audit writer (#131). Failure of this insert MUST NOT
+// Best-effort audit writer. Failure of this insert MUST NOT
 // propagate up to the caller — the parent action has already
 // committed its own DB write. The audit table being temporarily
 // unhealthy is acceptable; cancelling a successful invoice send

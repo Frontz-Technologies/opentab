@@ -1,8 +1,9 @@
 import { test, expect, type Page } from "@playwright/test";
 import { registerTestUser, loginTestUser } from "./helpers";
 
-// #215 PR-B happy-path. Credit-note imports require a contact to
-// already exist (matching invoice import behaviour). The flow:
+// Credit-note CSV import happy-path. Credit-note imports require a
+// contact to already exist (matching invoice import behaviour).
+// The flow:
 //   1. Create the contact via the existing contacts UI
 //   2. Upload a 1-row credit-note CSV
 //   3. Assert the row lands on /credit-notes

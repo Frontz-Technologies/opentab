@@ -99,10 +99,10 @@ export async function runImport<T extends Record<string, unknown>>(
   };
 }
 
-// CSV-injection guard (OWASP) — same shape as the lib/activities/csv.ts
-// fix from PR #211. Excel / Numbers / Sheets interpret a field whose
-// first character is one of `= + - @ \t \r` as a formula on import
-// (e.g. `=cmd|/c calc!A0`). Error CSV cells echo the user's own input
+// CSV-injection guard (OWASP) — same shape as lib/activities/csv.ts.
+// Excel / Numbers / Sheets interpret a field whose first character is
+// one of `= + - @ \t \r` as a formula on import (e.g.
+// `=cmd|/c calc!A0`). Error CSV cells echo the user's own input
 // straight back, so a hostile or accidentally-malformed value would
 // otherwise execute on open. Prefix such fields with a single
 // apostrophe — the apostrophe is consumed by the spreadsheet parser

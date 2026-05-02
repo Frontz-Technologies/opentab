@@ -1,7 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import { registerTestUser, loginTestUser } from "./helpers";
 
-// Happy-path coverage for the multi-currency expense flow (#272).
+// Happy-path coverage for the multi-currency expense flow.
 //
 // Flow:
 //   1. Sign in to a test EUR-base org. Fresh registrations default the

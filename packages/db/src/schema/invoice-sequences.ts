@@ -22,9 +22,9 @@ export const invoiceSequences = pgTable(
     nextNumber: integer("next_number").notNull().default(1),
     digitCount: integer("digit_count").notNull().default(4),
     includeYear: boolean("include_year").notNull().default(false),
-    // #138: optional placeholder template. When set, overrides
+    // Optional placeholder template. When set, overrides
     // prefix/digitCount/includeYear in the renderer. Null → simple-
-    // mode formatting (existing behaviour).
+    // mode formatting.
     pattern: text("pattern"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },

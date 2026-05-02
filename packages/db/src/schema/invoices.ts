@@ -35,8 +35,8 @@ export const invoices = pgTable(
       .notNull()
       .references(() => contacts.id),
     status: integer("status").notNull().default(INVOICE_STATUS.DRAFT),
-    // Nullable since #132: drafts no longer reserve a number. The
-    // number is assigned atomically on the first publish/send via
+    // Nullable: drafts hold no number. The number is assigned
+    // atomically on the first publish/send via
     // assignInvoiceNumberIfMissing(). The unique index on
     // (org_id, invoice_number) still enforces sequence uniqueness
     // once a number is set; Postgres allows multiple NULLs in a
@@ -77,8 +77,8 @@ export const invoices = pgTable(
     paidAt: timestamp("paid_at"),
     recurringInvoiceId: uuid("recurring_invoice_id"),
     quoteId: uuid("quote_id"),
-    // Per-org dedup key for CSV imports (#215). Null for any invoice
-    // not created via /import/invoices; partial unique index below.
+    // Per-org dedup key for CSV imports. Null for any invoice not
+    // created via /import/invoices; partial unique index below.
     importIdempotencyKey: varchar("import_idempotency_key", { length: 64 }),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),

@@ -121,7 +121,7 @@ describe("calculateInvoiceTotals", () => {
     expect(result.total).toBe("337.00");
   });
 
-  // #23: Inclusive tax edge cases
+  // Inclusive tax edge cases
   it("inclusive tax: back-calculates correctly for 13% reduced rate", () => {
     const result = calculateLineTotal({
       quantity: "1",
@@ -166,7 +166,7 @@ describe("calculateInvoiceTotals", () => {
     expect(result.total).toBe("130.36");
   });
 
-  // #24: Multi-line item operations
+  // Multi-line item operations
   it("handles removing middle item from 3 items", () => {
     const items: LineItemInput[] = [
       { quantity: "1", unitPrice: "100.00", taxRate: "24.00" },

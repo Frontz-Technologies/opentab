@@ -4,12 +4,12 @@ import { createLogger } from "@/lib/logging/logger";
 
 const log = createLogger("job:delete-expense-files");
 
-// Boundary validation (tester PR #216 Medium #1, defence-in-depth).
-// Reject obviously-invalid payloads so a poisoned Redis value can't
-// trigger a path-traversal delete via a forged filePath. orgId +
-// expenseId are non-empty by contract; filePaths must start with the
-// org id (every storeFile call writes to `<orgId>/expenses/...`) and
-// must not contain a parent-directory segment.
+// Boundary validation, defence-in-depth. Reject obviously-invalid
+// payloads so a poisoned Redis value can't trigger a path-traversal
+// delete via a forged filePath. orgId + expenseId are non-empty by
+// contract; filePaths must start with the org id (every storeFile
+// call writes to `<orgId>/expenses/...`) and must not contain a
+// parent-directory segment.
 const deleteExpenseFilesPayloadSchema = z
   .object({
     orgId: z.string().min(1),

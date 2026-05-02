@@ -6,8 +6,8 @@ import type { ImporterDescriptor } from "../core/types";
 // - `parentInvoiceNumber` (optional back-ref; engine looks up the
 //   parent at commit-time and links if found, never auto-creates)
 //
-// creditNoteNumber is optional from v1.1 (#220) — empty number →
-// imports as DRAFT, opentab assigns the number on first publish.
+// creditNoteNumber is optional from v1.1 — empty number → imports as
+// DRAFT, opentab assigns the number on first publish.
 export const creditNoteRowSchema = z.object({
   creditNoteNumber: z
     .string()
@@ -108,8 +108,8 @@ export const creditNotesImporter: ImporterDescriptor<CreditNoteRow> = {
   idempotencyKeyParts: (row, orgId) =>
     row.creditNoteNumber
       ? [orgId, "num", row.creditNoteNumber.toLowerCase()]
-      : // Empty-number fallback (v1.1, #220): contact+date+total
-        // fingerprint. "nonum" tag prevents collision with "num" keys.
+      : // Empty-number fallback: contact+date+total fingerprint.
+        // "nonum" tag prevents collision with "num" keys.
         [
           orgId,
           "nonum",

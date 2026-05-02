@@ -56,8 +56,8 @@ export const contacts = pgTable(
     defaultLanguage: varchar("default_language", { length: 5 }),
     defaultPaymentTerms: integer("default_payment_terms"),
     notes: text("notes"),
-    // Per-org dedup key for CSV imports (#215). Null for any contact
-    // not created via /import/contacts; partial unique index below.
+    // Per-org dedup key for CSV imports. Null for any contact not
+    // created via /import/contacts; partial unique index below.
     importIdempotencyKey: varchar("import_idempotency_key", { length: 64 }),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),

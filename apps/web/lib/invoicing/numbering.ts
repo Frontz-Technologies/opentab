@@ -3,8 +3,8 @@
 //
 // Server-only DB-touching `assignInvoiceNumberIfMissing` lives in
 // `./assign-invoice-number.ts` to keep this module client-bundlable;
-// otherwise the postgres driver's `fs` / `perf_hooks` imports break
-// the Next.js client bundle (PR #213 conflict-resolution fallout).
+// otherwise the postgres driver's `fs` / `perf_hooks` imports would
+// break the Next.js client bundle.
 
 export interface NumberFormatOptions {
   prefix: string;

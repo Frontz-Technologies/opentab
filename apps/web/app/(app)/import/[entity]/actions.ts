@@ -147,8 +147,8 @@ function buildInsertForEntity(entityKey: string, orgId: string) {
         contactVatNumber: row.supplierVat ?? null,
         // randomUUID() — collision-safe (~122 bits of entropy) so a
         // 5000-row batch can't trip the unique (org_id, expense_number)
-        // index that the prior Date.now() + 5-char base36 default
-        // could (tester PR #218 Medium #2).
+        // index. A Date.now() + 5-char base36 default is not safe at
+        // this batch size.
         expenseNumber: row.expenseNumber ?? `IMPORT-${randomUUID()}`,
         source: "import",
         description: row.notes ?? null,
@@ -157,9 +157,9 @@ function buildInsertForEntity(entityKey: string, orgId: string) {
       return (row: Record<string, unknown>) => ({
         orgId,
         contactId: row.__contactId,
-        // Empty-number rows import as DRAFT (v1.1, #220) — opentab
-        // assigns the number on first publish via #132's deferred-
-        // numbering pattern. Numbered rows import as SENT.
+        // Empty-number rows import as DRAFT — opentab assigns the
+        // number on first publish via the deferred-numbering pattern.
+        // Numbered rows import as SENT.
         status: row.invoiceNumber ? 2 : 1,
         invoiceNumber: row.invoiceNumber ?? null,
         issueDate: row.issueDate,
@@ -260,12 +260,12 @@ export async function commitImport(args: CommitArgs) {
   // contactNames; rows whose contact isn't found get demoted to
   // "blocked" so the batch insert doesn't trip the FK. For credit
   // notes we ALSO opportunistically link parent invoices by number
-  // (link-only, never auto-create the parent — see spec #215).
+  // (link-only, never auto-create the parent).
   let resolved = validated;
   if (args.entityKey === "invoices" || args.entityKey === "credit-notes") {
-    // autoCreateToggles.contact defaults to true (v1.1, #220) — most
-    // imports want the auto-create-on-the-fly behaviour. Set to false
-    // in the wizard for strict mode.
+    // autoCreateToggles.contact defaults to true — most imports want
+    // the auto-create-on-the-fly behaviour. Set to false in the
+    // wizard for strict mode.
     const autoCreateContact = args.autoCreateToggles.contact !== false;
     resolved = await resolveInvoiceContactIds(
       orgId,
@@ -286,9 +286,9 @@ export async function commitImport(args: CommitArgs) {
     buildInsert: buildInsertForEntity(args.entityKey, orgId),
   });
 
-  // Line-item insertion for invoices + credit notes (tester PR #219
-  // High). The runner handles only the header rows; without this
-  // post-pass, multi-row CSVs would land header-only because the
+  // Line-item insertion for invoices + credit notes. The runner
+  // handles only the header rows; without this post-pass, multi-row
+  // CSVs would land header-only because the
   // ON-CONFLICT-DO-NOTHING dedup on the header's idempotency key
   // swallows the second row before it can become a line item.
   if (args.entityKey === "invoices" || args.entityKey === "credit-notes") {
@@ -353,13 +353,13 @@ export async function cleanupImport(args: { importId: string }) {
 //   1. Build the unique-name set from ok rows.
 //   2. SELECT existing contacts in one query.
 //   3. For names that didn't resolve:
-//      - If autoCreate is true (v1.1, #220) → INSERT a stub contact
-//        (displayName + vatNumber from the row, type=client, no
-//        email/phone). Stub gets its own import_idempotency_key so
-//        re-importing the same CSV reuses the auto-created contact
-//        instead of creating a fresh one.
-//      - If autoCreate is false → demote the row to "blocked" with
-//        a clear "create the contact first" message (v1 behaviour).
+//      - If autoCreate is true → INSERT a stub contact (displayName +
+//        vatNumber from the row, type=client, no email/phone). Stub
+//        gets its own import_idempotency_key so re-importing the same
+//        CSV reuses the auto-created contact instead of creating a
+//        fresh one.
+//      - If autoCreate is false → demote the row to "blocked" with a
+//        clear "create the contact first" message.
 async function resolveInvoiceContactIds(
   orgId: string,
   rows: RowResult<Record<string, unknown>>[],
@@ -456,11 +456,11 @@ async function resolveInvoiceContactIds(
   });
 }
 
-// Opportunistic parent-invoice link by invoiceNumber. Per the spec
-// #215, credit-note imports never AUTO-CREATE the parent — they
-// just link if found. Rows whose `parentInvoiceNumber` is set but
-// can't be resolved are kept (with __parentInvoiceId = undefined,
-// so the column lands as NULL — standalone credit note).
+// Opportunistic parent-invoice link by invoiceNumber. Credit-note
+// imports never AUTO-CREATE the parent — they just link if found.
+// Rows whose `parentInvoiceNumber` is set but can't be resolved are
+// kept (with __parentInvoiceId = undefined, so the column lands as
+// NULL — standalone credit note).
 async function linkParentInvoiceIds(
   orgId: string,
   rows: RowResult<Record<string, unknown>>[],
@@ -532,10 +532,9 @@ async function insertLineItemsForHeaderImport(
   if (okRows.length === 0) return;
 
   // Match headers by import_idempotency_key — works for both
-  // numbered and empty-number rows (v1.1, #220), since the engine
-  // sets the key on every insert. Compute the key inline using the
-  // descriptor's idempotencyKeyParts fn so it matches what the
-  // runner used.
+  // numbered and empty-number rows, since the engine sets the key on
+  // every insert. Compute the key inline using the descriptor's
+  // idempotencyKeyParts fn so it matches what the runner used.
   const importer = getImporter(entityKey);
   const keysByGroup = new Map<string, string>(); // group-natural-key → idempotency-key
   function keyForGroup(g: { header: Record<string, unknown> }): string {

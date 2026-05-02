@@ -17,10 +17,10 @@ import {
   expenses,
 } from "@opentab/db/schema";
 
-// Issue #274 — write-side FK validation carry-overs (#274). The
-// createDraftExpense / updateExpense paths accepted any UUID on
-// `contactId` and `categoryId`. Without a same-org pre-check, a
-// crafted form payload could either trip the FK constraint (opaque
+// Write-side FK validation. The createDraftExpense / updateExpense
+// paths must reject any UUID on `contactId` and `categoryId` that
+// does not belong to the caller's org. Without a same-org pre-check,
+// a crafted form payload could either trip the FK constraint (opaque
 // crash) or — for the nullable categoryId on a real existing row —
 // silently link the expense to another org's category.
 //

@@ -60,11 +60,11 @@ test.describe("Import wizard happy path", () => {
     await expect(page.getByText(/Import complete/i)).toBeVisible();
   });
 
-  // CSV storage round-trip happy-path (#257). Uploads a CSV beyond the
-  // old Server Action 1MB body limit and asserts the wizard reaches Done.
-  // Skipped in this branch — needs `pnpm e2e` against a built dev server,
-  // which OOMs in the current sandbox. Un-skip when running locally
-  // (or in CI with sufficient memory).
+  // CSV storage round-trip happy-path. Uploads a CSV beyond the
+  // Server Action 1MB body limit and asserts the wizard reaches Done.
+  // Skipped in this branch — needs `pnpm e2e` against a built dev
+  // server, which OOMs in the current sandbox. Un-skip when running
+  // locally (or in CI with sufficient memory).
   test.fixme("CSV import via storage round-trip handles >1MB payloads (#257)", async () => {
     const headers = Array.from({ length: 30 }, (_, i) => `field_${i}`);
     const rowCount = 200;

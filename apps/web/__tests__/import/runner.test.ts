@@ -162,11 +162,10 @@ describe("runImport (#215)", () => {
     expect(result.errorCsv).toContain("displayName: required");
   });
 
-  // Tester PR #218 Medium #1 regression. The error CSV echoes the
-  // user's own input back to them; cell values starting with =/+/-/@/
-  // \t/\r need an apostrophe prefix or Excel/Sheets/Numbers will
-  // execute them as formulas on open. Same OWASP guard pattern as
-  // PR #211's fix to lib/activities/csv.ts.
+  // The error CSV echoes the user's own input back to them; cell
+  // values starting with =/+/-/@/\t/\r need an apostrophe prefix or
+  // Excel/Sheets/Numbers will execute them as formulas on open. Same
+  // OWASP guard pattern as lib/activities/csv.ts.
   it("guards error-CSV cells against CSV-injection (apostrophe prefix on =, +, -, @, \\t, \\r)", async () => {
     const result = await runImport({
       orgId,

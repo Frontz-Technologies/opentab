@@ -4,8 +4,7 @@ import { activities } from "@opentab/db/schema";
 export { activities };
 export type { Activity, NewActivity } from "@opentab/db/schema";
 
-// Polymorphic entity tag. Invoice + credit_note are written today;
-// reserved names for future entities (#131 spec — non-goals section).
+// Polymorphic entity tag. Invoice + credit_note are written today.
 export const ENTITY_TYPE = {
   INVOICE: "invoice",
   CREDIT_NOTE: "credit_note",

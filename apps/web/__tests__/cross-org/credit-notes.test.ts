@@ -20,17 +20,15 @@ import {
   CREDIT_NOTE_REASON,
 } from "@opentab/db/schema";
 
-// Issue #274 (Phase B) — cross-org audit. The credit-note detail page
-// renders the linked invoice's number when cn.invoiceId is set. The
-// schema (createCreditNoteSchema) accepts ANY UUID for invoiceId
-// without verifying same-org membership, so an attacker can store an
-// Org B invoice id on an Org A credit note. The pre-fix lookup
-// queried `eq(invoices.id, cn.invoiceId)` with no orgId scope and
-// would render Org B's invoice number in Org A's UI.
+// Cross-org isolation for the credit-note linked-invoice lookup. The
+// detail page renders the linked invoice's number when cn.invoiceId
+// is set. createCreditNoteSchema accepts ANY UUID for invoiceId
+// without verifying same-org membership, so an attacker could store an
+// Org B invoice id on an Org A credit note. Without orgId scope on
+// the lookup, Org B's invoice number would render in Org A's UI.
 //
 // Direct-query parity test: mirrors the page/PDF/submit-credit-note
-// reads that the fix scopes by orgId. Three sites read cn.invoiceId
-// downstream:
+// reads that scope by orgId. Three sites read cn.invoiceId downstream:
 //   - app/(app)/credit-notes/[id]/page.tsx — rendered as a Link
 //   - app/api/credit-notes/[id]/pdf/route.ts — embedded in the PDF
 //   - lib/country/submit-credit-note.ts — sent in the plugin payload
@@ -393,9 +391,9 @@ describe("credit-notes actions — cross-org isolation (#274)", () => {
     expect(row).toBeDefined();
   });
 
-  // #274 carry-over: write-side FK validation. createCreditNote now
-  // refuses cross-org invoiceId / productId payloads BEFORE the
-  // INSERT runs. (contactId was already validated pre-fix.)
+  // Write-side FK validation: createCreditNote refuses cross-org
+  // invoiceId / productId payloads BEFORE the INSERT runs. (contactId
+  // is already validated.)
   it("createCreditNote refuses an Org B invoiceId from Org A's session", async () => {
     const [orgAContact] = await dbHolder.current
       .insert(contacts)

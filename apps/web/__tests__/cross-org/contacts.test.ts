@@ -11,12 +11,12 @@ import { eq } from "drizzle-orm";
 import { createTestDb } from "@opentab/db/test-utils";
 import { organisations, contacts } from "@opentab/db/schema";
 
-// Issue #274 (Phase C) — cross-org isolation for the contacts table.
-// All read/write call sites against `contact` already pair
-// `eq(contacts.id, …)` AND `eq(contacts.orgId, session.org.id)` on
-// their WHERE. These tests freeze that contract for `updateContact`
-// and `deleteContact` so a future regression that drops the orgId
-// clause would surface here, not in production.
+// Cross-org isolation for the contacts table. All read/write call
+// sites against `contact` pair `eq(contacts.id, …)` AND
+// `eq(contacts.orgId, session.org.id)` on their WHERE. These tests
+// freeze that contract for `updateContact` and `deleteContact` so a
+// future regression that drops the orgId clause would surface here,
+// not in production.
 
 const { dbHolder, getSessionMock } = vi.hoisted(() => ({
   dbHolder: {

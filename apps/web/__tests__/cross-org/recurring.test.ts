@@ -17,15 +17,15 @@ import {
   recurringInvoiceItems,
 } from "@opentab/db/schema";
 
-// Issue #274 (Phase D) — recurring invoice update path.
+// Cross-org isolation for the recurring invoice update path.
 //
-// updateRecurring scoped the parent UPDATE by orgId (good), but the
+// updateRecurring scopes the parent UPDATE by orgId, but the
 // subsequent `delete(recurringInvoiceItems).where(recurringInvoiceId
-// = id)` was unscoped. recurringInvoiceItems has no orgId column,
-// so a cross-org id would no-op the parent update yet still wipe
-// another org's line items via the DELETE. Fix: pre-check the
-// parent recurring invoice belongs to the session's org before
-// touching its line items (mirror of the updateInvoice shape).
+// = id)` is unscoped — recurringInvoiceItems has no orgId column, so
+// a cross-org id would no-op the parent update yet still wipe another
+// org's line items via the DELETE. We pre-check that the parent
+// recurring invoice belongs to the session's org before touching its
+// line items (mirror of the updateInvoice shape).
 
 const { dbHolder, getSessionMock } = vi.hoisted(() => ({
   dbHolder: {

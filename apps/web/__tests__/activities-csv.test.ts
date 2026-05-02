@@ -83,9 +83,9 @@ describe("activitiesToCsv (#131) — RFC-4180 serializer", () => {
   });
 
   it("guards against CSV-injection on actor_email starting with a formula trigger", async () => {
-    // Tester finding on PR #211: actor_email with leading `=` `+`
-    // `-` `@` `\t` `\r` is interpreted as a formula by Excel /
-    // Numbers / Sheets. Prefix with `'` per OWASP.
+    // actor_email with leading `=` `+` `-` `@` `\t` `\r` is
+    // interpreted as a formula by Excel / Numbers / Sheets.
+    // Prefix with `'` per OWASP.
     const csv = activitiesToCsv([
       {
         createdAt: new Date("2026-04-25T13:00:00Z"),
