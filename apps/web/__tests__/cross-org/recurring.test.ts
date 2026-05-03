@@ -17,15 +17,15 @@ import {
   recurringInvoiceItems,
 } from "@opentab/db/schema";
 
-// Issue #274 (Phase D) — recurring invoice update path.
+// Cross-org isolation for the recurring invoice update path.
 //
-// updateRecurring scoped the parent UPDATE by orgId (good), but the
+// updateRecurring scopes the parent UPDATE by orgId, but the
 // subsequent `delete(recurringInvoiceItems).where(recurringInvoiceId
-// = id)` was unscoped. recurringInvoiceItems has no orgId column,
-// so a cross-org id would no-op the parent update yet still wipe
-// another org's line items via the DELETE. Fix: pre-check the
-// parent recurring invoice belongs to the session's org before
-// touching its line items (mirror of the updateInvoice shape).
+// = id)` is unscoped — recurringInvoiceItems has no orgId column, so
+// a cross-org id would no-op the parent update yet still wipe another
+// org's line items via the DELETE. We pre-check that the parent
+// recurring invoice belongs to the session's org before touching its
+// line items (mirror of the updateInvoice shape).
 
 const { dbHolder, getSessionMock } = vi.hoisted(() => ({
   dbHolder: {
@@ -53,7 +53,7 @@ import {
   updateRecurring,
 } from "@/app/(app)/recurring/actions";
 
-describe("updateRecurring — cross-org isolation (#274)", () => {
+describe("updateRecurring — cross-org isolation", () => {
   let teardown: () => Promise<void>;
   let orgAId: string;
   let orgBId: string;
@@ -160,7 +160,7 @@ describe("updateRecurring — cross-org isolation (#274)", () => {
     };
   }
 
-  it("createRecurring refuses an Org B contactId from Org A's session (#274 carry-over)", async () => {
+  it("createRecurring refuses an Org B contactId from Org A's session", async () => {
     const [orgBContact] = await dbHolder.current
       .insert(contacts)
       .values({
@@ -201,7 +201,7 @@ describe("updateRecurring — cross-org isolation (#274)", () => {
     expect(orgARows).toHaveLength(0);
   });
 
-  it("createRecurring refuses a cross-org productId in line items (#274 carry-over)", async () => {
+  it("createRecurring refuses a cross-org productId in line items", async () => {
     const [orgBProduct] = await dbHolder.current
       .insert(products)
       .values({ orgId: orgBId, name: "Org B Recurring Product" })

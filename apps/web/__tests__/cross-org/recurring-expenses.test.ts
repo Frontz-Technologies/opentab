@@ -18,9 +18,9 @@ import {
   recurringExpenseItems,
 } from "@opentab/db/schema";
 
-// Issue #274 (Phase D) — recurring expense update path.
-// Same shape as the recurring invoices fix: the parent UPDATE was
-// scoped, but the line-item DELETE was not. Pre-check the parent
+// Cross-org isolation for the recurring expense update path. Same
+// shape as recurring invoices: the parent UPDATE is scoped by orgId,
+// but the line-item DELETE is not — so we pre-check that the parent
 // belongs to the session's org before touching items.
 
 const { dbHolder, getSessionMock } = vi.hoisted(() => ({
@@ -49,7 +49,7 @@ import {
   updateRecurringExpense,
 } from "@/app/(app)/recurring-expenses/actions";
 
-describe("updateRecurringExpense — cross-org isolation (#274)", () => {
+describe("updateRecurringExpense — cross-org isolation", () => {
   let teardown: () => Promise<void>;
   let orgAId: string;
   let orgBId: string;
@@ -129,7 +129,7 @@ describe("updateRecurringExpense — cross-org isolation (#274)", () => {
     };
   }
 
-  it("createRecurringExpense refuses an Org B contactId from Org A's session (#274 carry-over)", async () => {
+  it("createRecurringExpense refuses an Org B contactId from Org A's session", async () => {
     const [orgBContact] = await dbHolder.current
       .insert(contacts)
       .values({
@@ -171,7 +171,7 @@ describe("updateRecurringExpense — cross-org isolation (#274)", () => {
     expect(orgARows).toHaveLength(0);
   });
 
-  it("createRecurringExpense refuses an Org B categoryId from Org A's session (#274 carry-over)", async () => {
+  it("createRecurringExpense refuses an Org B categoryId from Org A's session", async () => {
     // Seed expense category in Org B.
     await dbHolder.current
       .insert(expenseGroups)

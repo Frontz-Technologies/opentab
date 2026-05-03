@@ -27,7 +27,7 @@ function Wrap(props: {
   );
 }
 
-describe("MoneyInput (#281)", () => {
+describe("MoneyInput", () => {
   it("us: pasting 1234.56 emits canonical 1234.56", () => {
     const onChange = vi.fn();
     render(<Wrap format="us" onChange={onChange} />);

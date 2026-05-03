@@ -3,7 +3,7 @@ import { registerTestUser, loginTestUser } from "./helpers";
 
 test.describe.configure({ mode: "serial" });
 
-test.describe("Business Lookup (#280 + #287)", () => {
+test.describe("Business Lookup", () => {
   let page: Page;
 
   test.beforeAll(async ({ browser }) => {

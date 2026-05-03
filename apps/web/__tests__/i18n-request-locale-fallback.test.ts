@@ -65,7 +65,7 @@ async function loadHandler() {
   }>;
 }
 
-describe("i18n/request locale resolution (#264)", () => {
+describe("i18n/request locale resolution", () => {
   it("uses the cookie when present and valid", async () => {
     cookieGet.mockReturnValue({ value: "el" });
 

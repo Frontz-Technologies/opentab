@@ -25,7 +25,7 @@ import {
   getSampleCsv,
 } from "../../app/(app)/import/[entity]/actions";
 
-describe("commitImport / getSampleCsv role guard (#215)", () => {
+describe("commitImport / getSampleCsv role guard", () => {
   beforeEach(() => {
     getSessionMock.mockReset();
     dbSpy.mockReset();

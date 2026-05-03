@@ -209,6 +209,25 @@ deploy — no manual migration step.
 
 ---
 
+## Comment hygiene
+
+Comments and test labels describe present-tense **behaviour**, not the historical PR or issue that introduced the code. The git history is the right home for "this is here because PR #N showed the race"; the code itself should explain what's load-bearing today.
+
+**Rules:**
+
+- No `(#NNN)`, `PR #NNN`, `tester PR #NNN`, `carry-over from #N`, or `post-#N` framing in comments or test names.
+- Keep comments that capture non-obvious **why** — Postgres semantics, race-window guards, Drizzle index requirements, AI-extraction edge cases. Strip the issue references inside them.
+- Delete comments whose only content was a GitHub-internal reference. The git blame keeps the trail.
+
+**Verification snippet:**
+
+```sh
+# Should return only string-content references (CSS hex, HTML entities) — never inline comments or test labels.
+git grep -nE '#[0-9]{2,4}' apps packages e2e -- '*.ts' '*.tsx'
+```
+
+---
+
 ## Testing
 
 ### TDD — Tests First

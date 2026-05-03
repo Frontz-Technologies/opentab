@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { resolveHeader } from "../../lib/import/core/alias-table";
 
-describe("resolveHeader (#215)", () => {
+describe("resolveHeader", () => {
   const aliases = {
     email: ["email", "e-mail", "e mail", "correo"],
     vatNumber: ["vat", "vat #", "vat number", "afm"],

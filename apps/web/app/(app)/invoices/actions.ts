@@ -81,10 +81,10 @@ export async function createInvoice(formData: FormData) {
 
   const publish = formData.get("publish") === "true";
   // If publish flag is set, immediately transition to PUBLISHED and
-  // assign the invoice number (#132 — drafts hold no number).
-  // Wrapped in a transaction (tester finding on PR #212): if the
-  // number-assign throws, the status flip is rolled back so the
-  // invoice never appears as PUBLISHED with `invoice_number = null`.
+  // assign the invoice number — drafts hold no number. Wrapped in a
+  // transaction: if the number-assign throws, the status flip is
+  // rolled back so the invoice never appears as PUBLISHED with
+  // `invoice_number = null`.
   let assignedNumber: string | null = null;
   if (publish) {
     assignedNumber = await db.transaction(async (tx) => {
@@ -195,11 +195,11 @@ export async function updateInvoice(id: string, formData: FormData) {
   const data = parsed.data;
   const usesInclusiveTax = data.usesInclusiveTax;
 
-  // #274 carry-over: validate contactId + every line-item productId
-  // belong to the session org BEFORE the UPDATE. The Zod schema
-  // accepts any UUID; without this guard a cross-org id either trips
-  // the FK constraint (opaque error) or — for productId, which is
-  // nullable — silently links the line to another org's product.
+  // Validate contactId + every line-item productId belong to the
+  // session org BEFORE the UPDATE. The Zod schema accepts any UUID;
+  // without this guard a cross-org id either trips the FK constraint
+  // (opaque error) or — for productId, which is nullable — silently
+  // links the line to another org's product.
   try {
     await assertContactInOrg(db, data.contactId, orgId);
     const productIds = data.items
@@ -348,11 +348,11 @@ export async function sendInvoice(id: string) {
     };
   }
 
-  // #132 + tester finding on PR #212: status flip + number assignment
-  // run in a single transaction. If the helper throws, the SENT
-  // transition is rolled back so the invoice never appears as SENT
-  // with `invoice_number = null`. Helper is idempotent — no-op if
-  // the number is already set (e.g. previously published before send).
+  // Status flip + number assignment run in a single transaction. If
+  // the helper throws, the SENT transition is rolled back so the
+  // invoice never appears as SENT with `invoice_number = null`. The
+  // helper is idempotent — no-op if the number is already set (e.g.
+  // already published before send).
   await db.transaction(async (tx) => {
     await tx
       .update(invoices)
@@ -437,10 +437,9 @@ export async function publishInvoice(id: string) {
     return { success: false, error: "Only draft invoices can be published" };
   }
 
-  // #132 + tester finding on PR #212: status flip + number assignment
-  // run in a single transaction. If the helper throws, the PUBLISHED
-  // transition is rolled back so the invoice never appears as
-  // PUBLISHED with `invoice_number = null`.
+  // Status flip + number assignment run in a single transaction. If
+  // the helper throws, the PUBLISHED transition is rolled back so the
+  // invoice never appears as PUBLISHED with `invoice_number = null`.
   await db.transaction(async (tx) => {
     await tx
       .update(invoices)
@@ -614,13 +613,13 @@ export async function deleteInvoice(id: string) {
     return { success: false, error: "Only draft invoices can be deleted" };
   }
 
-  // App-layer cascade in a single transaction (tester finding on
-  // PR #211): without the transaction, an invoice-delete failure
-  // after a successful activities-delete leaves the invoice live but
-  // its audit history gone. The transaction either commits both or
-  // rolls back both. The tombstone `recordActivity` call below stays
-  // best-effort outside the transaction — it shouldn't gate the
-  // user's delete on the audit table being healthy.
+  // App-layer cascade in a single transaction. Without the
+  // transaction, an invoice-delete failure after a successful
+  // activities-delete would leave the invoice live but its audit
+  // history gone. The transaction either commits both or rolls back
+  // both. The tombstone `recordActivity` call below stays best-effort
+  // outside the transaction — it shouldn't gate the user's delete on
+  // the audit table being healthy.
   await db.transaction(async (tx) => {
     await tx
       .delete(activities)

@@ -453,9 +453,9 @@ async function seedInvoices(
       }
       const balance = (parseFloat(total) - parseFloat(amountPaid)).toFixed(2);
 
-      // #132: drafts (status=1) seed with no invoice number — they
-      // hold a slot in the table but don't reserve a number until
-      // they're published/sent. This mirrors what real users see now.
+      // Drafts (status=1) seed with no invoice number — they hold a
+      // slot in the table but don't reserve a number until they're
+      // published/sent. This mirrors real run-time behaviour.
       const seededNumber =
         status === 1 ? null : `INV-${year}-${String(number).padStart(4, "0")}`;
       const [inv] = await db
@@ -502,8 +502,8 @@ async function seedInvoices(
         })),
       );
 
-      // Activity backfill (#131): synthesize a plausible audit trail
-      // matching this invoice's terminal status. created → (sent) →
+      // Activity backfill: synthesize a plausible audit trail matching
+      // this invoice's terminal status. created → (sent) →
       // (paid|cancelled). Timestamps are anchored to issueDate /
       // paidAt so the CSV reads like a real timeline. status codes:
       // 1=DRAFT, 2=SENT, 3=PARTIAL, 4=PAID, 5=CANCELLED.
@@ -560,9 +560,9 @@ async function seedInvoices(
       }
       await db.insert(activities).values(activityRows);
 
-      // #132: only non-DRAFT seeded invoices consume a sequence
-      // number — drafts hold the row but no number, matching the
-      // real run-time behaviour after this issue.
+      // Only non-DRAFT seeded invoices consume a sequence number —
+      // drafts hold the row but no number, matching real run-time
+      // behaviour.
       if (status !== 1) number++;
     }
   }
@@ -586,7 +586,7 @@ const CREDIT_NOTE_REASONS = [
 // Picks up to CREDIT_NOTE_COUNT PAID/SENT invoices and issues a
 // SENT credit note against each. Each credit refunds a single random
 // line (not the full invoice) so the dashboard P&L still shows
-// positive net revenue. Activity rows are backfilled per #131.
+// positive net revenue. Activity rows are backfilled.
 async function seedCreditNotes(
   db: Db,
   orgId: string,

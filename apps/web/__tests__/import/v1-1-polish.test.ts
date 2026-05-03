@@ -10,7 +10,7 @@ import {
   CREDIT_NOTE_STATUS,
 } from "@opentab/db/schema";
 
-// v1.1 import polish (#220):
+// v1.1 import polish:
 // 1. Auto-create-missing-contact when toggle is ON
 // 2. Empty-invoice-number → status = DRAFT, idempotency falls back
 //    to a contact+date+total fingerprint
@@ -73,7 +73,7 @@ async function commitFromRows(
   });
 }
 
-describe("import v1.1 polish — auto-create + empty-number (#220)", () => {
+describe("import v1.1 polish — auto-create + empty-number", () => {
   let teardown: () => Promise<void>;
   let orgId: string;
 

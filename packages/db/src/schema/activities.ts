@@ -10,10 +10,11 @@ import {
 import { organisations } from "./organisations";
 import { users } from "./users";
 
-// Polymorphic audit log. One row per state-changing event on any entity
-// (#131). v1 writers cover the 7 invoice Server Actions + the 3 myDATA
-// lifecycle transitions; the table accepts any entity_type from day 1
-// so future quote / expense / payment audits land without a migration.
+// Polymorphic audit log. One row per state-changing event on any
+// entity. v1 writers cover the 7 invoice Server Actions + the 3
+// myDATA lifecycle transitions; the table accepts any entity_type
+// from day 1 so future quote / expense / payment audits land without
+// a migration.
 //
 // `entityId` has no FK constraint because the target table varies by
 // `entityType`. Orphans on parent delete are cleaned up at the

@@ -2,13 +2,14 @@ import { describe, it, expect } from "vitest";
 import { normalizeExtractedData } from "../lib/expenses/ai-extraction";
 import { createDraftExpenseInputSchema } from "../lib/expenses/draft-expenses";
 
-// Regression for PR #284 QA bug 2: when an AI extraction returns line-item
-// `unitPrice` / `taxRate` / `quantity` strings the server-side regex rejects
-// (commas, currency symbols, > max-decimal precision), the normalize layer
-// must clean them up so the resulting object satisfies
-// `createDraftExpenseInputSchema`. Anchored to the full pipeline — not just
-// `.parse()` — so a regression in either normalizer or schema is caught.
-describe("ai extraction money normalization (#284)", () => {
+// When an AI extraction returns line-item `unitPrice` / `taxRate` /
+// `quantity` strings the server-side regex rejects (commas, currency
+// symbols, > max-decimal precision), the normalize layer must clean
+// them up so the resulting object satisfies
+// `createDraftExpenseInputSchema`. Anchored to the full pipeline — not
+// just `.parse()` — so a regression in either normalizer or schema is
+// caught.
+describe("ai extraction money normalization", () => {
   const item = (overrides: Partial<Record<string, unknown>> = {}) => ({
     name: "Item",
     quantity: 1,

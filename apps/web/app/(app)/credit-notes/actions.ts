@@ -92,12 +92,12 @@ export async function createCreditNote(formData: FormData) {
     return { success: false, error: { contactId: ["Contact not found"] } };
   }
 
-  // #274 carry-over: validate the optional invoiceId + every
-  // line-item productId belong to the session org BEFORE the
-  // INSERT. The Zod schema accepts any UUID; without these guards a
-  // cross-org id would either trip the FK constraint (opaque) or,
-  // for productId, silently link the line to another org's product.
-  // contactId is already same-org-scoped by the SELECT above.
+  // Validate the optional invoiceId + every line-item productId
+  // belong to the session org BEFORE the INSERT. The Zod schema
+  // accepts any UUID; without these guards a cross-org id would
+  // either trip the FK constraint (opaque) or, for productId,
+  // silently link the line to another org's product. contactId is
+  // already same-org-scoped by the SELECT above.
   try {
     if (data.invoiceId) {
       await assertInvoiceInOrg(db, data.invoiceId, orgId);
@@ -134,9 +134,9 @@ export async function createCreditNote(formData: FormData) {
     exchangeRate = fx.rate.toFixed(6);
   }
 
-  // Header + N item rows in a single transaction (PR #211 lesson) so a
-  // mid-loop failure (e.g. numeric overflow on an item) rolls back the
-  // header and the user is not left with a half-built credit note.
+  // Header + N item rows in a single transaction so a mid-loop
+  // failure (e.g. numeric overflow on an item) rolls back the header
+  // and the user is not left with a half-built credit note.
   const creditNote = await db.transaction(async (tx) => {
     const [cn] = await tx
       .insert(creditNotes)
@@ -261,9 +261,9 @@ export async function updateCreditNote(id: string, formData: FormData) {
 
   const data = parsed.data;
 
-  // #274 carry-over: validate contactId + the optional invoiceId +
-  // every line-item productId belong to the session org BEFORE the
-  // UPDATE. Mirror of the createCreditNote guard.
+  // Validate contactId + the optional invoiceId + every line-item
+  // productId belong to the session org BEFORE the UPDATE. Mirror of
+  // the createCreditNote guard.
   try {
     await assertContactInOrg(db, data.contactId, orgId);
     if (data.invoiceId) {
@@ -311,11 +311,11 @@ export async function updateCreditNote(id: string, formData: FormData) {
     nextExchangeRate = fx.rate.toFixed(6);
   }
 
-  // Wrap header update + delete-then-reinsert items in one transaction so a
-  // mid-loop failure cannot leave the credit note with the old items deleted
-  // and only a prefix of the new items inserted (PR #211 lesson, applied to
-  // the edit path which is more dangerous than create — the deletion comes
-  // BEFORE the inserts).
+  // Wrap header update + delete-then-reinsert items in one
+  // transaction so a mid-loop failure cannot leave the credit note
+  // with the old items deleted and only a prefix of the new items
+  // inserted. The edit path is more dangerous than create — the
+  // deletion comes BEFORE the inserts.
   await db.transaction(async (tx) => {
     await tx
       .update(creditNotes)
@@ -531,8 +531,8 @@ export async function deleteCreditNote(id: string) {
     };
   }
 
-  // Activities-cascade + invoice-delete in one transaction (per the
-  // PR #211 lesson). Tombstone activity outside the tx, best-effort.
+  // Activities-cascade + invoice-delete in one transaction.
+  // Tombstone activity outside the tx, best-effort.
   await db.transaction(async (tx) => {
     await tx
       .delete(activities)

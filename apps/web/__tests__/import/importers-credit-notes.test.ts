@@ -4,7 +4,7 @@ import {
   groupRowsByCreditNote,
 } from "../../lib/import/importers/credit-notes";
 
-describe("credit-notes importer descriptor (#215 PR-B)", () => {
+describe("credit-notes importer descriptor", () => {
   it("requires creditNoteNumber + issueDate + contactName + total + reason + line", () => {
     const r = creditNotesImporter.rowSchema.safeParse({
       creditNoteNumber: "CN-0001",
@@ -50,7 +50,7 @@ describe("credit-notes importer descriptor (#215 PR-B)", () => {
     expect(k).toEqual(["org-1", "num", "cn-0001"]);
   });
 
-  it("idempotency key falls back to contact+date+total fingerprint when number is empty (v1.1, #220)", () => {
+  it("idempotency key falls back to contact+date+total fingerprint when number is empty (v1.1)", () => {
     const k = creditNotesImporter.idempotencyKeyParts(
       {
         contactName: "Acme Co",
@@ -70,7 +70,7 @@ describe("credit-notes importer descriptor (#215 PR-B)", () => {
   });
 });
 
-describe("groupRowsByCreditNote (#215 PR-B)", () => {
+describe("groupRowsByCreditNote", () => {
   it("groups rows whose creditNoteNumber repeats into one credit note", () => {
     const rows = [
       {

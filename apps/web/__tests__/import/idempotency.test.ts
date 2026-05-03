@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { computeIdempotencyKey } from "../../lib/import/core/idempotency";
 
-describe("computeIdempotencyKey (#215)", () => {
+describe("computeIdempotencyKey", () => {
   it("is deterministic across calls", () => {
     const a = computeIdempotencyKey(["org-1", "ada@example.com"]);
     const b = computeIdempotencyKey(["org-1", "ada@example.com"]);

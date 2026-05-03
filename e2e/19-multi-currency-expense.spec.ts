@@ -1,7 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import { registerTestUser, loginTestUser } from "./helpers";
 
-// Happy-path coverage for the multi-currency expense flow (#272).
+// Happy-path coverage for the multi-currency expense flow.
 //
 // Flow:
 //   1. Sign in to a test EUR-base org. Fresh registrations default the
@@ -34,7 +34,7 @@ import { registerTestUser, loginTestUser } from "./helpers";
 // loudly in that environment rather than producing a false green.
 test.describe.configure({ mode: "serial", retries: 1 });
 
-test.describe("Multi-currency expense happy path (#272)", () => {
+test.describe("Multi-currency expense happy path", () => {
   let page: Page;
   let expenseDetailUrl: string | null = null;
 

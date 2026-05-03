@@ -54,8 +54,8 @@ function buildInput(
   items: (typeof invoiceItems.$inferSelect)[],
   credentials: unknown,
 ): IntegrationInvoiceInput {
-  // #132: invoice_number is nullable on drafts. submit-invoice
-  // only runs from sendInvoice / scheduler paths AFTER
+  // invoice_number is nullable on drafts. submit-invoice only runs
+  // from sendInvoice / scheduler paths AFTER
   // assignInvoiceNumberIfMissing has assigned a number, so this
   // should never fire — guard defensively rather than crash on a
   // hypothetical mis-ordering.
@@ -196,9 +196,9 @@ export async function submitInvoiceThroughPlugins(
       })
       .returning();
 
-    // Audit log (#131): only myDATA in v1; future country plugins
-    // get their own activity types when they land. The kind check
-    // keeps ACTIVITY_TYPE a closed union.
+    // Audit log: only myDATA in v1; future country plugins get their
+    // own activity types when they land. The kind check keeps
+    // ACTIVITY_TYPE a closed union.
     if (integration.kind === "mydata") {
       await recordActivity({
         orgId: orgCtx.id,

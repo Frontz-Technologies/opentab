@@ -69,7 +69,7 @@ export async function saveMyDataCredentials(formData: FormData) {
   };
 
   if (existing) {
-    // #274 defence-in-depth: pair the id check with orgId so every
+    // Defence-in-depth: pair the id check with orgId so every
     // mutation carries the org scope, not just the preceding SELECT.
     await db
       .update(countryIntegrationCredentials)
@@ -142,7 +142,7 @@ export async function testMyDataConnection() {
   });
 
   if (result.ok) {
-    // #274 defence-in-depth: scope the lastValidatedAt update by orgId
+    // Defence-in-depth: scope the lastValidatedAt update by orgId
     // even though `cred` was just selected with orgId already.
     await db
       .update(countryIntegrationCredentials)

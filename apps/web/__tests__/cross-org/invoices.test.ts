@@ -18,21 +18,17 @@ import {
   INVOICE_STATUS,
 } from "@opentab/db/schema";
 
-// Issue #274 (Phase B) — defence-in-depth on invoices/actions.ts.
-// publishInvoice / sendInvoice / markAsPaid / cancelInvoice / the
-// transaction inside createInvoice all pre-fetched the invoice with
-// an orgId-scoped SELECT, but the subsequent UPDATE used only
-// `eq(invoices.id, id)`. Phase A's `toggleCategory` had the same
-// shape — the pre-check gates auth, but a TOCTOU window or any
-// future caller dropping the pre-check would let a foreign-org id
-// flip another org's invoice. The fix adds eq(invoices.orgId,
-// session.org.id) to every UPDATE WHERE so the mutation itself is
-// the authority.
+// Defence-in-depth on invoices/actions.ts. publishInvoice /
+// sendInvoice / markAsPaid / cancelInvoice / the transaction inside
+// createInvoice pre-fetch the invoice with an orgId-scoped SELECT,
+// but every subsequent UPDATE must also carry
+// eq(invoices.orgId, session.org.id) so the mutation itself is the
+// authority — a pre-check alone has TOCTOU exposure and breaks if a
+// future caller drops it.
 //
-// These tests assert the MUTATION fails to reach Org B's row. They
-// stay green pre-fix (because the pre-check rejects the action and
-// returns success=false), so the assertions check Org B's row state
-// directly, not just the action return value.
+// These tests assert the MUTATION fails to reach Org B's row, so the
+// assertions check Org B's row state directly, not just the action
+// return value.
 
 const { dbHolder, getSessionMock } = vi.hoisted(() => ({
   dbHolder: {
@@ -73,7 +69,7 @@ import {
   updateInvoice,
 } from "@/app/(app)/invoices/actions";
 
-describe("invoices actions — cross-org isolation (#274)", () => {
+describe("invoices actions — cross-org isolation", () => {
   let teardown: () => Promise<void>;
   let orgAId: string;
   let orgBId: string;
@@ -252,9 +248,8 @@ describe("invoices actions — cross-org isolation (#274)", () => {
     expect(row).toBeDefined();
   });
 
-  // #274 carry-over: write-side FK validation. updateInvoice now
-  // refuses cross-org contactId / productId payloads BEFORE the
-  // UPDATE/INSERT runs.
+  // Write-side FK validation: updateInvoice refuses cross-org
+  // contactId / productId payloads BEFORE the UPDATE/INSERT runs.
   it("updateInvoice refuses an Org B contactId on Org A's draft", async () => {
     const orgADraft = await seedInvoiceFor(orgAId, INVOICE_STATUS.DRAFT, null);
     const [orgBContact] = await dbHolder.current
@@ -355,7 +350,7 @@ describe("invoices actions — cross-org isolation (#274)", () => {
 // orgId-checked, so the line-item read is safe by parent FK. This
 // test pins that contract: a scoped parent SELECT first, items
 // after, returns nothing for a foreign-org id.
-describe("invoice line-items via parent — cross-org isolation (#274)", () => {
+describe("invoice line-items via parent — cross-org isolation", () => {
   let db: Awaited<ReturnType<typeof createTestDb>>["db"];
   let teardown: () => Promise<void>;
   let orgAId: string;

@@ -14,7 +14,7 @@ import { getFeatureModel, type AiFeature } from "@/lib/ai/features";
 
 const log = createLogger("ai-settings");
 
-// One-shot boot warning for operators upgrading from the pre-#246 env
+// One-shot boot warning for operators upgrading from the older env
 // surface. The old `OPENROUTER_MODEL` knob is no longer read — point
 // them at the per-feature replacement so they don't sit confused with
 // a stale env var that silently does nothing.
@@ -173,10 +173,10 @@ export async function updateAiSettings(input: unknown) {
     : (encryptedKey?.last4 ?? existing?.apiKeyLast4 ?? null);
 
   if (existing) {
-    // #274 defence-in-depth: pair the id check with orgId on the UPDATE
-    // WHERE. `existing` was just fetched by orgId via getAiSettingsRow,
-    // but the mutation itself should carry orgId so any future
-    // caller-shape change keeps the org scope.
+    // Defence-in-depth: pair the id check with orgId on the UPDATE
+    // WHERE. `existing` was just fetched by orgId via
+    // getAiSettingsRow, but the mutation itself should carry orgId so
+    // any future caller-shape change keeps the org scope.
     await db
       .update(aiSettings)
       .set({
@@ -220,12 +220,10 @@ export async function deleteApiKey(orgId: string) {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
   assertSettingsAdmin(session.role);
-  // #274: explicit cross-org guard. Previously the WHERE used
-  // `and(eq(orgId, orgId), eq(orgId, session.org.id))` which only
-  // matched when caller-supplied orgId equalled the session org —
-  // technically safe but semantically opaque. Reject the call up
-  // front so the intent is obvious to readers and the DB sees a
-  // single, clearly-scoped UPDATE.
+  // Explicit cross-org guard. Reject the call up front when the
+  // caller-supplied orgId does not match the session org so the
+  // intent is obvious to readers and the DB sees a single,
+  // clearly-scoped UPDATE.
   if (orgId !== session.org.id) throw new Error("Forbidden");
 
   await db

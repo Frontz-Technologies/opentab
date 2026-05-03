@@ -8,7 +8,7 @@ import {
 } from "@opentab/db/schema";
 import { seedExpenseCategories } from "../lib/expenses/category-seed";
 
-describe("seedExpenseCategories race safety (#170)", () => {
+describe("seedExpenseCategories race safety", () => {
   let db: Awaited<ReturnType<typeof createTestDb>>["db"];
   let teardown: () => Promise<void>;
 
@@ -83,7 +83,7 @@ describe("seedExpenseCategories race safety (#170)", () => {
     expect(cats.length).toBe(20);
   });
 
-  it("re-seeding upserts groups so type/name corrections propagate (#140)", async () => {
+  it("re-seeding upserts groups so type/name corrections propagate", async () => {
     // Simulate the real dev-DB drift case: pretend a previous-wave seed
     // inserted `taxes_contributions` with the column-default type
     // ('operating_expense'). A subsequent seed run must correct it via

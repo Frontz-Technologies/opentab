@@ -38,7 +38,7 @@ function makeInvoice(): Invoice {
 
 const items: InvoiceItem[] = [];
 
-describe("invoice PDF From block — org email line (#285)", () => {
+describe("invoice PDF From block — org email line", () => {
   it("emits the org email line in the From block when org.email is set", () => {
     const html = renderInvoicePdfHtml({
       invoice: makeInvoice(),

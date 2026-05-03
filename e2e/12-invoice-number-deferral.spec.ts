@@ -1,7 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import { registerTestUser, loginTestUser } from "./helpers";
 
-// Smoke test for #132 — invoice number is deferred to publish.
+// Smoke test for the invoice-number-deferred-to-publish behaviour.
 // Failure-surface coverage (idempotency + concurrent-publish race
 // safety) is in the unit test at:
 //   apps/web/__tests__/invoicing-assign-number.test.ts
@@ -10,7 +10,7 @@ import { registerTestUser, loginTestUser } from "./helpers";
 // assigned and the chip flipped from DRAFT to PUBLISHED.
 test.describe.configure({ mode: "serial", retries: 1 });
 
-test.describe("Invoice number deferral (#132)", () => {
+test.describe("Invoice number deferral", () => {
   let page: Page;
   let invoiceId: string;
 

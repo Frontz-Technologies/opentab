@@ -1,8 +1,8 @@
 import { test, expect, type Page } from "@playwright/test";
 import { registerTestUser, loginTestUser } from "./helpers";
 
-// Smoke test for /api/invoices/[id]/activity.csv (#131). Failure-
-// surface coverage (RFC-4180 quoting, system-row formatting, helper
+// Smoke test for /api/invoices/[id]/activity.csv. Failure-surface
+// coverage (RFC-4180 quoting, system-row formatting, helper
 // best-effort behaviour) is in the unit tests at:
 //   apps/web/__tests__/activities-record.test.ts
 //   apps/web/__tests__/activities-csv.test.ts
@@ -12,7 +12,7 @@ import { registerTestUser, loginTestUser } from "./helpers";
 // each transition.
 test.describe.configure({ mode: "serial", retries: 1 });
 
-test.describe("Invoice activity log CSV (#131)", () => {
+test.describe("Invoice activity log CSV", () => {
   let page: Page;
   let invoiceId: string;
 

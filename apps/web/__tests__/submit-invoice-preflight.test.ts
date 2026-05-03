@@ -10,7 +10,7 @@ import {
 } from "@opentab/db/schema";
 import { persistPreflightFailure } from "../lib/country/submit-invoice";
 
-describe("persistPreflightFailure (#153)", () => {
+describe("persistPreflightFailure", () => {
   let db: Awaited<ReturnType<typeof createTestDb>>["db"];
   let teardown: () => Promise<void>;
   let orgId: string;

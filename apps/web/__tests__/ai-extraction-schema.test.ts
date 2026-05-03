@@ -13,7 +13,7 @@ import {
 const toJsonSchema = (s: unknown): unknown =>
   (z as unknown as { toJSONSchema: (s: unknown) => unknown }).toJSONSchema(s);
 
-describe("buildExtractionSchema (#173)", () => {
+describe("buildExtractionSchema", () => {
   it("does not throw when building with no categories", () => {
     expect(() => buildExtractionSchema([])).not.toThrow();
   });
@@ -72,7 +72,7 @@ describe("buildExtractionSchema (#173)", () => {
   });
 });
 
-describe("normalizeExtractedData (#173)", () => {
+describe("normalizeExtractedData", () => {
   it("coerces numeric values to strings and keeps nulls", () => {
     const out = normalizeExtractedData({
       vendorName: "Acme",

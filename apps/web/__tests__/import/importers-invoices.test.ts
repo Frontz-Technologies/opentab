@@ -4,7 +4,7 @@ import {
   groupRowsByInvoice,
 } from "../../lib/import/importers/invoices";
 
-describe("invoices importer descriptor (#215)", () => {
+describe("invoices importer descriptor", () => {
   it("requires invoiceNumber + issueDate + contactName + total", () => {
     const r = invoicesImporter.rowSchema.safeParse({
       invoiceNumber: "INV-0001",
@@ -34,7 +34,7 @@ describe("invoices importer descriptor (#215)", () => {
     expect(k).toEqual(["org-1", "num", "inv-0001"]);
   });
 
-  it("idempotency key falls back to contact+date+total fingerprint when number is empty (v1.1, #220)", () => {
+  it("idempotency key falls back to contact+date+total fingerprint when number is empty (v1.1)", () => {
     const k = invoicesImporter.idempotencyKeyParts(
       {
         contactName: "Acme Co",
@@ -47,7 +47,7 @@ describe("invoices importer descriptor (#215)", () => {
   });
 });
 
-describe("groupRowsByInvoice (#215)", () => {
+describe("groupRowsByInvoice", () => {
   it("groups rows whose invoiceNumber repeats into one invoice with multiple lines", () => {
     const rows = [
       {

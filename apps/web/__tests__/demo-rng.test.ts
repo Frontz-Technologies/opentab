@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { createRng } from "../lib/demo/rng";
 
-describe("createRng (#119)", () => {
+describe("createRng", () => {
   it("produces the same sequence given the same seed", () => {
     const a = createRng(0xdeadbeef);
     const b = createRng(0xdeadbeef);

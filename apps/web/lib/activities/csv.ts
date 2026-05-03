@@ -1,6 +1,6 @@
-// Per-invoice activity CSV serializer (#131). Output is RFC-4180:
-// CRLF line endings, header row, fields containing `,` `"` `\r` `\n`
-// are wrapped in double-quotes with internal `"` doubled to `""`.
+// Per-invoice activity CSV serializer. Output is RFC-4180: CRLF line
+// endings, header row, fields containing `,` `"` `\r` `\n` are
+// wrapped in double-quotes with internal `"` doubled to `""`.
 
 export interface CsvActivityRow {
   createdAt: Date;

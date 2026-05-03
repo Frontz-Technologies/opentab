@@ -9,7 +9,7 @@ vi.mock("@/lib/expenses/file-storage", () => ({
 
 beforeEach(() => deleteTempFileMock.mockClear());
 
-describe("delete-expense-files processor (#85)", () => {
+describe("delete-expense-files processor", () => {
   it("calls deleteTempFile once per file path in the payload", async () => {
     const { processDeleteExpenseFiles } =
       await import("../../../lib/jobs/processors/delete-expense-files");
@@ -40,9 +40,9 @@ describe("delete-expense-files processor (#85)", () => {
     expect(result.deleted).toBe(3);
   });
 
-  // Tester PR #216 Medium #1 regression — defence-in-depth. The
-  // processor must reject obviously-invalid payloads at the boundary
-  // so a poisoned Redis value can't trigger a path-traversal delete.
+  // Defence-in-depth at the boundary: the processor must reject
+  // obviously-invalid payloads so a poisoned Redis value can't
+  // trigger a path-traversal delete.
   it("throws on missing orgId / expenseId / filePaths shape", async () => {
     const { processDeleteExpenseFiles } =
       await import("../../../lib/jobs/processors/delete-expense-files");

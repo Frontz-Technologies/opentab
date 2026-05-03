@@ -1,20 +1,20 @@
 import { test, expect, type Page } from "@playwright/test";
 import { registerTestUser, loginTestUser } from "./helpers";
 
-// Regression guard for #271. The icon-system migration changed
-// InsightCard.icon from `string` to `LucideIcon` (a function reference);
-// the dashboard insights pipeline runs in a Server Component and ships
-// its output to <DashboardClient> ("use client"), so the React Server
-// Components serializer rejected the function references with
+// Regression guard for the dashboard insight icon serialization.
+// InsightCard.icon is a `LucideIcon` (a function reference); the
+// dashboard insights pipeline runs in a Server Component and ships
+// its output to <DashboardClient> ("use client"), so passing function
+// references would trip the React Server Components serializer:
 //   "Only plain objects can be passed to Client Components from Server
 //    Components."
-// CI's Lint, Test & Build job missed it because the failure only fires
-// at request time. This spec navigates to /dashboard, asserts no RSC
-// serialization errors land in the console, and confirms each insight
-// card produced by the server renders with a non-empty <svg> child.
+// The failure only fires at request time, so unit tests don't catch
+// it. This spec navigates to /dashboard, asserts no RSC serialization
+// errors land in the console, and confirms each insight card produced
+// by the server renders with a non-empty <svg> child.
 test.describe.configure({ mode: "serial", retries: 1 });
 
-test.describe("Dashboard insights — RSC regression guard (#271)", () => {
+test.describe("Dashboard insights — RSC regression guard", () => {
   let page: Page;
 
   test.beforeAll(async ({ browser }) => {

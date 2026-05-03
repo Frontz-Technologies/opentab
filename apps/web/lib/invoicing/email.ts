@@ -8,7 +8,6 @@ interface EmailContent {
 
 /**
  * Generate the invoice email body. Beta uses a static template only.
- * The full editable-template feature lives in issue #223.
  */
 export async function generateInvoiceEmail(
   invoice: Invoice,

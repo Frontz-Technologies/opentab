@@ -11,13 +11,11 @@ import { eq } from "drizzle-orm";
 import { createTestDb } from "@opentab/db/test-utils";
 import { organisations, expenseCategories } from "@opentab/db/schema";
 
-// Issue #274 — cross-org audit. toggleCategory previously verified
-// orgId on the SELECT pre-check but not on the UPDATE itself. The
-// update used `eq(expenseCategories.id, id)` only, so a TOCTOU race
-// (or any future caller that drops the pre-check) could flip another
-// org's category active flag.
-//
-// Defence-in-depth: every mutation must include orgId in its WHERE.
+// Cross-org isolation for toggleCategory. The UPDATE must carry
+// orgId in its WHERE alongside the id — a SELECT pre-check alone is
+// not enough because of TOCTOU and because future callers may drop
+// the pre-check. Defence-in-depth: every mutation must include orgId
+// in its WHERE.
 
 const { dbHolder, getSessionMock } = vi.hoisted(() => ({
   dbHolder: {
@@ -42,7 +40,7 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 import { toggleCategory } from "@/app/(app)/expenses/categories/actions";
 
-describe("toggleCategory — cross-org isolation (#274)", () => {
+describe("toggleCategory — cross-org isolation", () => {
   let teardown: () => Promise<void>;
   let orgAId: string;
   let orgBId: string;
@@ -155,7 +153,7 @@ describe("toggleCategory — cross-org isolation (#274)", () => {
 // Org B category, the join would leak Org B's category name into
 // Org A's UI. The fix scopes the lookup by session.org.id, so the
 // resulting categoryName is null when the row belongs to another org.
-describe("expense detail page category lookup — cross-org isolation (#274)", () => {
+describe("expense detail page category lookup — cross-org isolation", () => {
   let teardown: () => Promise<void>;
   let db: Awaited<ReturnType<typeof createTestDb>>["db"];
   let orgAId: string;

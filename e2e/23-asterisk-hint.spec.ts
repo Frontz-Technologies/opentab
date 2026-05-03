@@ -3,7 +3,7 @@ import { registerTestUser, loginTestUser } from "./helpers";
 
 test.describe.configure({ mode: "serial" });
 
-test.describe("Required-field hint (#285)", () => {
+test.describe("Required-field hint", () => {
   let page: Page;
 
   test.beforeAll(async ({ browser }) => {

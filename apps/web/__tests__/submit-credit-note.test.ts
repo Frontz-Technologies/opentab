@@ -11,11 +11,11 @@ import {
   CREDIT_NOTE_REASON,
 } from "@opentab/db/schema";
 
-// Tester PR #214 Critical regression. The orchestrator used to write
-// the credit-note UUID into country_integration_submission.invoice_id
-// — a column whose FK references invoice(id). Every "Send" on a
-// credit-note for a myDATA-configured GR org failed with an FK
-// violation, but no test exercised this path so CI was silent.
+// The submit orchestrator must write the credit-note UUID into
+// country_integration_submission.credit_note_id and leave invoice_id
+// null. The invoice_id column's FK references invoice(id), so writing
+// a credit-note UUID there fails with an FK violation on every "Send"
+// for a myDATA-configured GR org.
 //
 // This test seeds a credit note + a stub myDATA-shaped integration
 // that returns ok:true, then asserts the row inserts cleanly with
@@ -47,7 +47,7 @@ vi.mock("@/lib/activities/record", () => ({
 
 import { submitCreditNoteThroughPlugins } from "../lib/country/submit-credit-note";
 
-describe("submitCreditNoteThroughPlugins (#133 / PR #214 Critical fix)", () => {
+describe("submitCreditNoteThroughPlugins", () => {
   let teardown: () => Promise<void>;
   let orgId: string;
   let contactId: string;

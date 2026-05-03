@@ -8,7 +8,7 @@ import { type FullConfig, request } from "@playwright/test";
  * Colima dev VM. Playwright has no awareness of compile state, so
  * `e2e/01-auth.spec.ts`'s first `page.goto("/login")` times out, and
  * every downstream spec's `beforeAll` cascades (`registerTestUser` /
- * `loginTestUser` hit cold auth endpoints and fail). See #176.
+ * `loginTestUser` hit cold auth endpoints and fail).
  *
  * This setup fires throwaway requests at each cold route so Next has
  * compiled them before any test runs. We do not care whether the
@@ -26,8 +26,7 @@ const WARMUP_ROUTES: Array<{
   // Auth-gated routes that specs navigate to after login. Cold-compile
   // on first visit otherwise lands inside a spec's test body and blows
   // the test timeout. Unauthenticated GETs get redirected to /login,
-  // which is fine — middleware + the page component still compile. See
-  // PR #179 tester report (spec 03 `/products` cold-compile stall).
+  // which is fine — middleware + the page component still compile.
   { method: "GET", path: "/products" },
   { method: "GET", path: "/contacts" },
   { method: "GET", path: "/invoices" },

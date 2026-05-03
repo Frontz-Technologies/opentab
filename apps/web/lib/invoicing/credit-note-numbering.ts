@@ -7,9 +7,9 @@ type Database = typeof db;
 type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
 type DbOrTx = Database | Transaction;
 
-// Idempotent credit-note number reservation (#133). Mirrors the
-// invoice helper from #132 — same FOR UPDATE semantics, different
-// table + sequence row keyed on type='credit_note'.
+// Idempotent credit-note number reservation. Mirrors the invoice
+// helper — same FOR UPDATE semantics, different table + sequence row
+// keyed on type='credit_note'.
 //
 // Race-safety:
 //   - Same credit note, two concurrent publishes: the FOR UPDATE on
@@ -27,9 +27,8 @@ export async function assignCreditNoteNumberIfMissing(
   dbInstance: DbOrTx = db,
 ): Promise<string> {
   // Ensure a sequence row exists. Single upsert against the unique
-  // (orgId, type) index — replaces the SELECT-then-INSERT pair that
-  // raced when two concurrent first-time publishes both took the
-  // INSERT branch (mirror of PR #213's fix on settings/numbering).
+  // (orgId, type) index — a SELECT-then-INSERT pair would race when
+  // two concurrent first-time publishes both took the INSERT branch.
   await dbInstance
     .insert(invoiceSequences)
     .values({ orgId, type: "credit_note", prefix: "CN-" })

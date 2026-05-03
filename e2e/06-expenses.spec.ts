@@ -1,11 +1,10 @@
 import { test, expect, type Page } from "@playwright/test";
 import { registerTestUser, loginTestUser } from "./helpers";
 
-// retries:1 mitigates the dev-server instability class flagged in the
-// PR #179 tester follow-up (socket hang-up / page-closed mid-
-// navigation on the auth redirect chain). Short-term — the real fix
-// is a separate investigation into HMR recompile / shared
-// apiRequestContext keep-alive.
+// retries:1 mitigates a dev-server instability class (socket hang-up
+// / page-closed mid-navigation on the auth redirect chain).
+// Short-term — the real fix is a separate investigation into HMR
+// recompile / shared apiRequestContext keep-alive.
 test.describe.configure({ mode: "serial", retries: 1 });
 
 test.describe("Expenses", () => {

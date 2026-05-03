@@ -84,11 +84,11 @@ export async function createRecurring(formData: FormData) {
 
   const data = parsed.data;
 
-  // #274 carry-over: validate contactId + every line-item productId
-  // belong to the session org BEFORE the INSERT. The Zod schema
-  // accepts any UUID; without these guards a cross-org id would
-  // either trip the FK constraint (opaque) or, for productId,
-  // silently link the line to another org's product.
+  // Validate contactId + every line-item productId belong to the
+  // session org BEFORE the INSERT. The Zod schema accepts any UUID;
+  // without these guards a cross-org id would either trip the FK
+  // constraint (opaque) or, for productId, silently link the line
+  // to another org's product.
   try {
     await assertContactInOrg(db, data.contactId, session.org.id);
     const productIds = data.items
@@ -154,7 +154,7 @@ export async function updateRecurring(id: string, formData: FormData) {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
 
-  // #274: pre-check the recurring invoice belongs to this org BEFORE
+  // Pre-check the recurring invoice belongs to this org BEFORE
   // touching its line items. Without this guard, a cross-org id would
   // no-op the parent UPDATE (which is correctly scoped) but the
   // subsequent `delete(recurringInvoiceItems).where(recurringInvoiceId
@@ -201,9 +201,9 @@ export async function updateRecurring(id: string, formData: FormData) {
 
   const data = parsed.data;
 
-  // #274 carry-over: validate contactId + every line-item productId
-  // belong to the session org BEFORE the UPDATE. Mirror of
-  // createRecurring — same guards, same shape.
+  // Validate contactId + every line-item productId belong to the
+  // session org BEFORE the UPDATE. Mirror of createRecurring — same
+  // guards, same shape.
   try {
     await assertContactInOrg(db, data.contactId, session.org.id);
     const productIds = data.items

@@ -39,7 +39,7 @@ beforeEach(() => {
 
 const { recordActivity } = await import("../lib/activities/record");
 
-describe("recordActivity (#131) — best-effort writer", () => {
+describe("recordActivity — best-effort writer", () => {
   it("inserts one activity row when the DB is healthy", async () => {
     await recordActivity({
       orgId: "org-1",

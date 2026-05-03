@@ -320,11 +320,10 @@ export type UploadReceiptResult =
       supplierMatch: ReceiptSupplierMatch | null;
     }
   | {
-      // PR #276 unblocker — Sonner "Open existing expense" toast
-      // needs the parent expenseId on the duplicate-receipt branch.
-      // Safe to project because the SELECT below joins through
-      // expense.orgId, so the matched expense is guaranteed
-      // same-org.
+      // Sonner "Open existing expense" toast needs the parent
+      // expenseId on the duplicate-receipt branch. Safe to project
+      // because the SELECT below joins through expense.orgId, so the
+      // matched expense is guaranteed same-org.
       success: false;
       error: "duplicate";
       duplicateExpenseId: string;
@@ -357,8 +356,8 @@ export async function uploadAndExtractReceipt(
   // another org doesn't leak existence (and isn't blocked here).
   // expenseAttachments has no orgId column, so we JOIN through
   // expenses, which carries orgId. Project expenseId so the client
-  // can offer "open existing expense" UX (PR #276) — safe because
-  // the JOIN already filters to same-org rows.
+  // can offer "open existing expense" UX — safe because the JOIN
+  // already filters to same-org rows.
   const [duplicate] = await db
     .select({
       id: expenseAttachments.id,
@@ -561,12 +560,12 @@ export async function updateExpense(id: string, formData: FormData) {
   const data = parsed.data;
   const usesInclusiveTax = data.usesInclusiveTax;
 
-  // #274 carry-over: validate contactId / categoryId belong to the
-  // session org BEFORE the UPDATE. The Zod schema accepts any UUID;
-  // without this guard a cross-org id would either crash on the FK
-  // constraint (opaque error) or, if both contacts.id and the
-  // wrong-org row exist, silently link the expense to another org's
-  // row. Mirror of the createDraftExpense check.
+  // Validate contactId / categoryId belong to the session org BEFORE
+  // the UPDATE. The Zod schema accepts any UUID; without this guard
+  // a cross-org id would either crash on the FK constraint (opaque
+  // error) or, if both contacts.id and the wrong-org row exist,
+  // silently link the expense to another org's row. Mirror of the
+  // createDraftExpense check.
   try {
     if (data.contactId) {
       await assertContactInOrg(db, data.contactId, session.org.id);
@@ -676,7 +675,7 @@ export async function deleteExpense(id: string) {
   // Collect file paths BEFORE the DB delete (the cascade will drop
   // the attachment rows and we'd lose the paths). The actual file
   // deletion is enqueued so the action returns fast — the worker
-  // owns the storage cleanup (#85).
+  // owns the storage cleanup.
   const attachments = await db
     .select({ filePath: expenseAttachments.filePath })
     .from(expenseAttachments)
@@ -687,11 +686,11 @@ export async function deleteExpense(id: string) {
     .where(and(eq(expenses.id, id), eq(expenses.orgId, session.org.id)));
 
   if (attachments.length > 0) {
-    // Best-effort enqueue (tester PR #216 Medium #2). Redis being
-    // unreachable at delete time would otherwise throw a 500 to the
-    // user even though the expense row is already gone. Swallow,
-    // log, and continue — cleanup-temp-files (24h repeatable) is
-    // the safety net that sweeps up the orphaned files.
+    // Best-effort enqueue. Redis being unreachable at delete time
+    // would otherwise throw a 500 to the user even though the
+    // expense row is already gone. Swallow, log, and continue —
+    // cleanup-temp-files (24h repeatable) is the safety net that
+    // sweeps up the orphaned files.
     try {
       const { enqueue } = await import("@/lib/jobs/queues");
       await enqueue("delete-expense-files", {

@@ -10,13 +10,12 @@ import { db as defaultDb } from "@/lib/db";
 type Db = typeof defaultDb;
 
 /**
- * Cross-org guard helpers (#274).
+ * Cross-org guard helpers.
  *
- * Read paths are closed by the audit at #274 (Phases A–D). These
- * helpers close the data-integrity gap on the WRITE side: every
- * cross-table FK accepted by an insert/update action is now verified
- * to belong to the session's org BEFORE the write hits the DB. Mirror
- * of the trusted-path invariant the audit log lists as a carry-over.
+ * These helpers close the data-integrity gap on the WRITE side: every
+ * cross-table FK accepted by an insert/update action is verified to
+ * belong to the session's org BEFORE the write hits the DB. Read
+ * paths apply the same scope at the SELECT site.
  *
  * Convention: throw `Error("cross-org-access")`. Callers either let it
  * propagate (matches the existing Forbidden pattern; the action will

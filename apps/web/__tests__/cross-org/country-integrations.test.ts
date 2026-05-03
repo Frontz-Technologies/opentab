@@ -14,15 +14,12 @@ import {
   countryIntegrationCredentials,
 } from "@opentab/db/schema";
 
-// Issue #274 (Phase D) — defence-in-depth on
-// country_integration_credential UPDATE paths in
+// Defence-in-depth on country_integration_credential UPDATE paths in
 // settings/integrations/mydata/actions.ts and the generic
-// settings/integrations/[slug]/actions.ts. Both files SELECTed the
-// existing row by orgId (good) but the subsequent UPDATE used
-// `eq(id, …)` only. The TOCTOU window is small but the
-// cross-org-audit policy is "every mutation carries orgId", so this
-// test freezes the contract: an UPDATE that touches another org's
-// credential row must affect zero rows when the WHERE is scoped.
+// settings/integrations/[slug]/actions.ts. The policy is "every
+// mutation carries orgId", so this test freezes the contract: an
+// UPDATE that touches another org's credential row must affect zero
+// rows when the WHERE is scoped.
 
 const { dbHolder, getSessionMock } = vi.hoisted(() => ({
   dbHolder: {
@@ -45,7 +42,7 @@ vi.mock("@/lib/session", () => ({
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
-describe("country_integration_credential — cross-org defence-in-depth (#274)", () => {
+describe("country_integration_credential — cross-org defence-in-depth", () => {
   let teardown: () => Promise<void>;
   let orgAId: string;
   let orgBId: string;

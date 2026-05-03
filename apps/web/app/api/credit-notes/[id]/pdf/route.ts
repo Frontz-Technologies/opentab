@@ -56,12 +56,12 @@ export async function GET(
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    // #274: scope the parent-invoice lookup by orgId. creditNote.invoiceId
+    // Scope the parent-invoice lookup by orgId. creditNote.invoiceId
     // is a foreign-key field that the create/update flow does not
     // validate as same-org (the schema accepts any UUID). Without the
-    // orgId clause, an attacker who set creditNote.invoiceId to another
-    // org's invoice would have that org's invoice number embedded in
-    // the rendered PDF. Mirror of the credit-notes/[id]/page.tsx fix.
+    // orgId clause, an attacker who set creditNote.invoiceId to
+    // another org's invoice would have that org's invoice number
+    // embedded in the rendered PDF.
     let invoiceNumber: string | null = null;
     if (creditNote.invoiceId) {
       const [inv] = await db

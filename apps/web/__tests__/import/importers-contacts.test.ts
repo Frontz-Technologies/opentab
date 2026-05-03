@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { contactsImporter } from "../../lib/import/importers/contacts";
 
-describe("contacts importer descriptor (#215)", () => {
+describe("contacts importer descriptor", () => {
   it("derives displayName from company when present", () => {
     const r = contactsImporter.rowSchema.safeParse({
       company: "Acme",

@@ -10,12 +10,11 @@ import {
   creditNoteItems,
 } from "@opentab/db/schema";
 
-// Tester PR #219 High regression. The previous unit-tests asserted on
-// the descriptor + grouping helper in isolation; nothing exercised
-// the end-to-end commit path. Result: invoices and credit-notes
-// imports landed header-only, line items silently dropped via the
-// idempotency dedup. This test commits a 2-line CSV through the real
-// commitImport pipeline (mocked session/db) and asserts BOTH the
+// End-to-end import commit regression. Asserting on the descriptor +
+// grouping helper in isolation is not enough: invoices and credit-notes
+// imports can land header-only with line items silently dropped via
+// the idempotency dedup. This test commits a 2-line CSV through the
+// real commitImport pipeline (mocked session/db) and asserts BOTH the
 // header table AND the items table get rows.
 
 const { dbHolder, getSessionMock, fakeFileBuffer } = vi.hoisted(() => ({
@@ -81,7 +80,7 @@ async function commitFromRows(
   });
 }
 
-describe("commitImport line-item insertion (#215 PR-B High)", () => {
+describe("commitImport line-item insertion", () => {
   let teardown: () => Promise<void>;
   let orgId: string;
   let contactId: string;

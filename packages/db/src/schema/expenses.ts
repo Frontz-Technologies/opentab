@@ -59,8 +59,8 @@ export const expenses = pgTable(
     recurringExpenseId: uuid("recurring_expense_id"),
     source: varchar("source", { length: 20 }).notNull().default("manual"),
     fileHash: varchar("file_hash", { length: 64 }),
-    // Per-org dedup key for CSV imports (#215). Null for any expense
-    // not created via /import/expenses; partial unique index below.
+    // Per-org dedup key for CSV imports. Null for any expense not
+    // created via /import/expenses; partial unique index below.
     importIdempotencyKey: varchar("import_idempotency_key", { length: 64 }),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),

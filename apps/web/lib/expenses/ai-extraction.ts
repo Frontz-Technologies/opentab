@@ -18,10 +18,10 @@ const log = createLogger("ai-extraction");
 const loggedSchemaKeys = new Set<string>();
 
 // Dump the JSON-Schema form of the extraction schema once per
-// category-code set per process. #175 diagnostic step 2: we need to
-// inspect what the provider's structured-output layer actually sees —
-// the Zod → JSON-Schema conversion can silently produce shapes (oneOf,
-// nullable expansions, enum constraints) that a given model rejects.
+// category-code set per process — diagnostic. We need to inspect what
+// the provider's structured-output layer actually sees: the Zod →
+// JSON-Schema conversion can silently produce shapes (oneOf, nullable
+// expansions, enum constraints) that a given model rejects.
 function logSchemaOnce(categoryCodes: readonly string[]): void {
   const key = [...categoryCodes].sort().join(",");
   if (loggedSchemaKeys.has(key)) return;
@@ -305,10 +305,10 @@ export async function extractReceiptData(
     } catch (structuredErr) {
       if (!NoObjectGeneratedError.isInstance(structuredErr))
         throw structuredErr;
-      // Surface the raw model output so #175 diagnostic step 1 can
-      // distinguish markdown-wrapped JSON, garbage, and schema-shape
-      // mismatch. Clipped to 1 KB — receipts are well under this; we
-      // only need a shape hint, not the full payload.
+      // Surface the raw model output to distinguish markdown-wrapped
+      // JSON, garbage, and schema-shape mismatch. Clipped to 1 KB —
+      // receipts are well under this; we only need a shape hint, not
+      // the full payload.
       const rawText =
         typeof (structuredErr as { text?: unknown }).text === "string"
           ? (structuredErr as { text: string }).text

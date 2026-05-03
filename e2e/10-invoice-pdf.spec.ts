@@ -4,7 +4,7 @@ import { registerTestUser, loginTestUser } from "./helpers";
 // Smoke test for /api/invoices/[id]/pdf — golden path through the
 // Gotenberg wrapper. Failure-surface coverage (timeout / retry /
 // transient-vs-deterministic classification) is in the unit test at
-// apps/web/__tests__/invoicing-pdf.test.ts (#155).
+// apps/web/__tests__/invoicing-pdf.test.ts.
 //
 // This spec needs a reachable Gotenberg instance. The Playwright
 // webServer config does not start one, so devs must either:
@@ -28,7 +28,7 @@ async function gotenbergReachable(): Promise<boolean> {
   }
 }
 
-test.describe("Invoice PDF route (#155)", () => {
+test.describe("Invoice PDF route", () => {
   let page: Page;
   let invoiceId: string;
   let gotenbergUp = false;

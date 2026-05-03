@@ -169,8 +169,8 @@ export interface IntegrationInvoiceInput {
   credentials: unknown;
 }
 
-// Credit note submission shape (#133). Mirrors IntegrationInvoiceInput
-// but adds the back-reference to the original invoice so plugins that
+// Credit note submission shape. Mirrors IntegrationInvoiceInput but
+// adds the back-reference to the original invoice so plugins that
 // need it (myDATA: parent MARK number) can include it in the payload.
 export interface IntegrationCreditNoteInput {
   orgId: string;
@@ -257,9 +257,9 @@ export interface Integration {
   validate?(input: IntegrationInvoiceInput): Promise<IntegrationValidateResult>;
   submit?(input: IntegrationInvoiceInput): Promise<IntegrationSubmitResult>;
 
-  // Credit-note flow (#133). Sibling of submit() — separate so the
-  // existing invoice path is untouched. Refactor to a generic
-  // submitDocument() when a third doc type lands.
+  // Credit-note flow. Sibling of submit() — separate so the existing
+  // invoice path is untouched. Refactor to a generic submitDocument()
+  // when a third doc type lands.
   submitCreditNote?(
     input: IntegrationCreditNoteInput,
   ): Promise<IntegrationSubmitResult>;

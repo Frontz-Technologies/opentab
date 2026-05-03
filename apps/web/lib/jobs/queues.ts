@@ -36,11 +36,10 @@ function getQueue(name: QueueName): Queue {
 // Default retry policy: 3 attempts, exponential backoff starting 5s.
 // Override per-job via the third argument to enqueue() when needed.
 //
-// removeOnFail caps both age AND count (tester PR #216 Medium #3) so
-// a runaway producer that fails every job indefinitely cannot OOM
-// Redis before the 7-day window starts expiring. The 1000-job cap
-// matches removeOnComplete; high-volume queues should pass tighter
-// limits via the opts arg.
+// removeOnFail caps both age AND count so a runaway producer that
+// fails every job indefinitely cannot OOM Redis before the 7-day
+// window starts expiring. The 1000-job cap matches removeOnComplete;
+// high-volume queues should pass tighter limits via the opts arg.
 const DEFAULT_JOB_OPTS = {
   attempts: 3,
   backoff: { type: "exponential" as const, delay: 5000 },
@@ -58,8 +57,8 @@ export async function enqueue<Q extends QueueName>(
     ...opts,
   });
   // BullMQ assigns an id on every successful add. Treat the absence
-  // as a runtime invariant violation (tester PR #216 Low #1) so
-  // callers tracking jobs by id never get a silently-empty string.
+  // as a runtime invariant violation so callers tracking jobs by id
+  // never get a silently-empty string.
   if (!job.id) {
     throw new Error(`enqueue: BullMQ assigned no id for queue "${queue}"`);
   }

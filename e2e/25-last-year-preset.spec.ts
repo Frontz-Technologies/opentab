@@ -3,7 +3,7 @@ import { registerTestUser, loginTestUser } from "./helpers";
 
 test.describe.configure({ mode: "serial" });
 
-test.describe("Last Year preset (#285)", () => {
+test.describe("Last Year preset", () => {
   let page: Page;
 
   test.beforeAll(async ({ browser }) => {

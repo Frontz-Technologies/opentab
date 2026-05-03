@@ -361,10 +361,9 @@ export async function seedExpenseCategories(
   //   - Any new rows added to EXPENSE_GROUPS_SEED over time get inserted.
   //   - Any row-level changes to type/name/etc. overwrite the existing
   //     row on re-run.
-  // The prior "if groupCount === 0, insert" gate meant an environment
-  // that already had the first-wave 16 groups would never see the new
-  // groups or `type` values added in later waves — see #140 tester
-  // follow-up.
+  // A "if groupCount === 0, insert" gate would mean an environment
+  // that already had the first-wave 16 groups would never see new
+  // groups or `type` values added in later waves.
   const { expenseGroups, EXPENSE_GROUPS_SEED } =
     await import("@opentab/db/schema");
   await db

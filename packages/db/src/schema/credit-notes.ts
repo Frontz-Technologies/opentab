@@ -40,7 +40,7 @@ export const creditNotes = pgTable(
     contactId: uuid("contact_id")
       .notNull()
       .references(() => contacts.id),
-    // Nullable per #132 + #138: drafts hold no number; assigned on publish/send.
+    // Nullable: drafts hold no number; assigned on publish/send.
     creditNoteNumber: varchar("credit_note_number", { length: 50 }),
     // Original invoice this credits against. Nullable — standalone credits exist.
     invoiceId: uuid("invoice_id").references(() => invoices.id, {
@@ -73,9 +73,9 @@ export const creditNotes = pgTable(
     notes: text("notes"),
     terms: text("terms"),
     sentAt: timestamp("sent_at"),
-    // Per-org dedup key for CSV imports (#215). Null for any credit
-    // note not created via /import/credit-notes; partial unique
-    // index below.
+    // Per-org dedup key for CSV imports. Null for any credit note
+    // not created via /import/credit-notes; partial unique index
+    // below.
     importIdempotencyKey: varchar("import_idempotency_key", { length: 64 }),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),

@@ -5,12 +5,12 @@ import { createLogger } from "@/lib/logging/logger";
 
 const log = createLogger("job:cleanup-temp-files");
 
-// Boundary validation (tester PR #216 Medium #1). A poisoned Redis
-// value with ageHours <= 0 made `cutoff` a future timestamp, causing
-// every file under every org's tmp/ to look "older than cutoff" and
-// get unlinked. zod-parse rejects that at the door so BullMQ's retry
-// + failed-job machinery surfaces it as an alertable failure rather
-// than a silent mass-delete. 720h (30 days) cap is a sanity bound.
+// Boundary validation. A poisoned Redis value with ageHours <= 0
+// would make `cutoff` a future timestamp, causing every file under
+// every org's tmp/ to look "older than cutoff" and get unlinked.
+// zod-parse rejects that at the door so BullMQ's retry + failed-job
+// machinery surfaces it as an alertable failure rather than a silent
+// mass-delete. 720h (30 days) cap is a sanity bound.
 const cleanupPayloadSchema = z.object({
   ageHours: z.number().finite().int().positive().max(720),
 });

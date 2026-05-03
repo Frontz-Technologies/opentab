@@ -3,7 +3,7 @@ import { registerTestUser } from "./helpers";
 
 test.describe.configure({ mode: "serial", retries: 1 });
 
-test.describe("Expense form polish (#252)", () => {
+test.describe("Expense form polish", () => {
   let page: Page;
 
   test.beforeAll(async ({ browser }) => {
@@ -68,11 +68,11 @@ test.describe("Expense form polish (#252)", () => {
     );
   });
 
-  // Receipt-extraction inline preview state (#253). Skipped — tracked in #256.
-  // Unblock requires either e2e/fixtures/sample-receipt.pdf + Gemini key in
-  // the e2e dev-server stack, or a page.route() mock for the upload Server
-  // Action returning a canned UploadReceiptResult. State-transition logic
-  // is fully covered by the Vitest suite at
+  // Receipt-extraction inline preview state. Skipped — unblock
+  // requires either e2e/fixtures/sample-receipt.pdf + Gemini key in
+  // the e2e dev-server stack, or a page.route() mock for the upload
+  // Server Action returning a canned UploadReceiptResult.
+  // State-transition logic is fully covered by the Vitest suite at
   // apps/web/__tests__/extraction-preview-state.test.ts (13 tests).
 
   test.fixme("Apply commits the AI receipt-extraction preview", async () => {

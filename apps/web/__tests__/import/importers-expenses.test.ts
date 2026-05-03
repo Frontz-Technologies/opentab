@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { expensesImporter } from "../../lib/import/importers/expenses";
 
-describe("expenses importer descriptor (#215)", () => {
+describe("expenses importer descriptor", () => {
   it("requires expenseDate + total", () => {
     const r = expensesImporter.rowSchema.safeParse({});
     expect(r.success).toBe(false);

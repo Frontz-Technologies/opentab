@@ -43,7 +43,7 @@ function networkError(code: string): Error {
   return err;
 }
 
-describe("generatePdfFromHtml — Gotenberg wrapper resilience (#155)", () => {
+describe("generatePdfFromHtml — Gotenberg wrapper resilience", () => {
   it("returns the PDF bytes on a successful first call", async () => {
     const fetchMock = vi.fn(async () => okResponse());
     vi.stubGlobal("fetch", fetchMock);
@@ -96,14 +96,13 @@ describe("generatePdfFromHtml — Gotenberg wrapper resilience (#155)", () => {
     expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 
-  it("throws after 3 consecutive transient NETWORK failures with the same /3 attempts/ shape (#155 tester follow-up)", async () => {
-    // Mirror of the HTTP-502 case for the network-error path. Earlier
-    // the catch branch fell through to `throw err` on attempt 3,
-    // propagating the raw underlying TypeError verbatim and skipping
-    // the synthesised "after 3 attempts" message — the post-loop throw
-    // was unreachable for this class. Tester FIX #155: break out of
-    // the loop on transient-exhaustion so both paths produce a
-    // matching error shape.
+  it("throws after 3 consecutive transient NETWORK failures with the same /3 attempts/ shape", async () => {
+    // Mirror of the HTTP-502 case for the network-error path. The
+    // catch branch must break out of the loop on
+    // transient-exhaustion so both paths produce the synthesised
+    // "after 3 attempts" message; otherwise attempt 3 falls through
+    // to `throw err` and propagates the raw underlying TypeError
+    // verbatim, with the post-loop throw unreachable for this class.
     const fetchMock = vi.fn(async () => {
       throw networkError("ECONNREFUSED");
     });
