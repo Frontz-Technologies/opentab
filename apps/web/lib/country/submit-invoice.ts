@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import type { Db } from "@opentab/db";
 import {
   invoices,
   invoiceItems,
@@ -368,7 +369,7 @@ export async function persistPreflightFailure(
     kind: string;
     errorMessage: string;
   },
-  dbInstance: typeof db = db,
+  dbInstance: Db = db,
 ) {
   const [row] = await dbInstance
     .insert(countryIntegrationSubmissions)

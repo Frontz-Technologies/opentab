@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import { db } from "@/lib/db";
+import type { Db } from "@opentab/db";
 import type {
   RevenueByCientRow,
   TimeBucketRow,
@@ -7,7 +8,7 @@ import type {
   VatLineRow,
 } from "./types";
 
-type DbInstance = Pick<typeof db, "execute">;
+type DbInstance = Pick<Db, "execute">;
 
 // drizzle's `db.execute()` returns `RowList[]` for postgres-js but
 // `{ rows: RowList[] }` for PGlite. Normalise so test + prod agree.

@@ -6,8 +6,7 @@ import {
   products,
 } from "@opentab/db/schema";
 import { db as defaultDb } from "@/lib/db";
-
-type Db = typeof defaultDb;
+import type { Db } from "@opentab/db";
 
 /**
  * Cross-org guard helpers.

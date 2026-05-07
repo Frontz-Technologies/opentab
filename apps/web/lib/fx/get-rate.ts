@@ -1,13 +1,12 @@
 import { and, desc, eq, gte, lte } from "drizzle-orm";
 import { db as defaultDb } from "@/lib/db";
+import type { Db } from "@opentab/db";
 import { fxRateCache } from "@opentab/db/schema";
 import { getActiveFxProvider } from "./registry";
 import { FX_PIVOT } from "./constants";
 import type { SupportedCurrencyCode } from "@/lib/currency/supported";
 
 const FALLBACK_WINDOW_DAYS = 7;
-
-type Db = typeof defaultDb;
 
 export interface FxRateResult {
   rate: number;

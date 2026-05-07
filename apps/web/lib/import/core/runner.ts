@@ -1,5 +1,6 @@
 import { createLogger } from "@/lib/logging/logger";
 import { db as prodDb } from "@/lib/db";
+import type { Db } from "@opentab/db";
 import type { PgTable } from "drizzle-orm/pg-core";
 import type { ImporterDescriptor, ImportRunResult, RowResult } from "./types";
 
@@ -7,7 +8,7 @@ const log = createLogger("import:runner");
 
 const BATCH_SIZE = 100;
 
-export type DbInstance = typeof prodDb;
+export type DbInstance = Db;
 
 export interface RunImportArgs<T extends Record<string, unknown>> {
   orgId: string;

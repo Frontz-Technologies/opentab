@@ -1,11 +1,11 @@
 import { and, eq } from "drizzle-orm";
 import { creditNotes, invoiceSequences } from "@opentab/db/schema";
 import { db } from "@/lib/db";
+import type { Db } from "@opentab/db";
 import { formatInvoiceNumber } from "@/lib/invoicing/numbering";
 
-type Database = typeof db;
-type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
-type DbOrTx = Database | Transaction;
+type Transaction = Parameters<Parameters<Db["transaction"]>[0]>[0];
+type DbOrTx = Db | Transaction;
 
 // Idempotent credit-note number reservation. Mirrors the invoice
 // helper — same FOR UPDATE semantics, different table + sequence row

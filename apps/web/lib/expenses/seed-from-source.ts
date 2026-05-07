@@ -1,8 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { db as defaultDb } from "@/lib/db";
+import type { Db } from "@opentab/db";
 import { expenses } from "@opentab/db/schema";
-
-type Db = typeof defaultDb;
 
 /**
  * Seed payload for "Create like this" — clones the source expense's

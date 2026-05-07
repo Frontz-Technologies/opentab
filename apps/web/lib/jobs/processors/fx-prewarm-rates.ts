@@ -1,4 +1,5 @@
 import { db as defaultDb } from "@/lib/db";
+import type { Db } from "@opentab/db";
 import { fxRateCache } from "@opentab/db/schema";
 import { getActiveFxProvider } from "@/lib/fx/registry";
 import { FX_PIVOT } from "@/lib/fx/constants";
@@ -7,8 +8,6 @@ import type { JobPayload } from "../types";
 import { QUEUE } from "../types";
 
 const log = createLogger("fx-prewarm-rates");
-
-type Db = typeof defaultDb;
 
 function fmtDate(d: Date): string {
   return d.toISOString().slice(0, 10);

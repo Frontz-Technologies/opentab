@@ -1,11 +1,9 @@
 import { eq, sql } from "drizzle-orm";
 import * as schema from "@opentab/db/schema";
-import type { db as prodDb } from "@/lib/db";
+import type { Db } from "@opentab/db";
 import { calculateLineTotal } from "@/lib/invoicing/calculations";
 import { ensureCategoriesSeeded } from "@/lib/expenses/category-seed";
 import { createRng, type Rng } from "./rng";
-
-type Db = typeof prodDb;
 import {
   DEMO_ORG,
   CLIENTS,
