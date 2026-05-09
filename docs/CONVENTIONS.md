@@ -114,6 +114,8 @@ The codebase follows the **deep module** pattern (Ousterhout, popularised by Poc
 
 This is enforced by `eslint-plugin-boundaries` for modules on the strict-list (errors) and the rest of `apps/web/lib/*` (warnings, until each is migrated). The strict-list lives in `apps/web/eslint.config.mjs`; per-module migration PRs flip the module from warn to strict in the same diff.
 
+**Warning ceiling.** `pnpm lint` runs with `--max-warnings <N>` where `N` is the current count. CI fails if a PR adds new boundary warnings without removing existing ones. After each migration PR drops warnings, lower `N` in `apps/web/package.json` to match the new count — the new ceiling locks in the gain.
+
 ### Canonical layout
 
 A domain module looks like:

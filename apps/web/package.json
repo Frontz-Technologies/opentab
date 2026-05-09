@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings 231",
     "test": "vitest run",
     "worker": "tsx ./worker.ts",
     "check": "pnpm lint && pnpm exec tsc --noEmit && pnpm test"
