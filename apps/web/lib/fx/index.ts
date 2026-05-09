@@ -25,3 +25,8 @@ export {
  * Production code MUST NOT call this.
  */
 export { __setActiveFxProviderForTesting } from "./registry";
+
+export { runPrewarmRates } from "./jobs/prewarm-rates";
+export type { PrewarmResult } from "./jobs/prewarm-rates";
+export { runPruneCache } from "./jobs/prune-cache";
+export type { PruneResult } from "./jobs/prune-cache";

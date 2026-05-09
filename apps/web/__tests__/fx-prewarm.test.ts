@@ -10,7 +10,7 @@ import {
 import { createTestDb } from "@opentab/db/test-utils";
 import { fxRateCache } from "@opentab/db/schema";
 import { eq } from "drizzle-orm";
-import { processFxPrewarmRates } from "../lib/jobs/processors/fx-prewarm-rates";
+import { runPrewarmRates } from "../lib/fx";
 import { __setActiveFxProviderForTesting } from "../lib/fx/registry";
 import type { FxProvider } from "../lib/fx/provider";
 
@@ -25,7 +25,7 @@ const stubProvider = (impl: Partial<FxProvider> = {}): FxProvider =>
     ...impl,
   }) as FxProvider;
 
-describe("processFxPrewarmRates", () => {
+describe("runPrewarmRates", () => {
   let db: Awaited<ReturnType<typeof createTestDb>>["db"];
   let teardown: () => Promise<void>;
 
@@ -52,7 +52,7 @@ describe("processFxPrewarmRates", () => {
       }),
     );
 
-    await processFxPrewarmRates({}, db);
+    await runPrewarmRates(db);
 
     const rows = await db
       .select()
@@ -72,8 +72,8 @@ describe("processFxPrewarmRates", () => {
       }),
     );
 
-    await processFxPrewarmRates({}, db);
-    await processFxPrewarmRates({}, db);
+    await runPrewarmRates(db);
+    await runPrewarmRates(db);
 
     const rows = await db.select().from(fxRateCache);
     expect(rows).toHaveLength(1);

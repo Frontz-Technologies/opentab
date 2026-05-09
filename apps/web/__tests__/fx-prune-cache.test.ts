@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import { createTestDb } from "@opentab/db/test-utils";
 import { fxRateCache, expenses } from "@opentab/db/schema";
-import { processFxPruneCache } from "../lib/jobs/processors/fx-prune-cache";
+import { runPruneCache } from "../lib/fx";
 
-describe("processFxPruneCache", () => {
+describe("runPruneCache", () => {
   let db: Awaited<ReturnType<typeof createTestDb>>["db"];
   let teardown: () => Promise<void>;
 
@@ -41,7 +41,7 @@ describe("processFxPruneCache", () => {
       },
     ]);
 
-    await processFxPruneCache({ olderThanDays: 90 }, db);
+    await runPruneCache(90, db);
 
     const remaining = await db.select().from(fxRateCache);
     expect(remaining).toHaveLength(1);
@@ -50,7 +50,7 @@ describe("processFxPruneCache", () => {
 
   it("does not touch other tables (sentinel safety)", async () => {
     const before = await db.select({ id: expenses.id }).from(expenses);
-    await processFxPruneCache({ olderThanDays: 90 }, db);
+    await runPruneCache(90, db);
     const after = await db.select({ id: expenses.id }).from(expenses);
     expect(after.length).toBe(before.length);
   });
