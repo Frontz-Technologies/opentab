@@ -1,7 +1,11 @@
 /**
  * FX module — currency-rate lookups with cache → cross-rate → provider →
- * stale-fallback semantics. Public surface only; internals (providers,
- * cache helpers, jobs) are module-private.
+ * stale-fallback semantics.
+ *
+ * Public surface: rate lookup (`getFxRate` + legacy `getFxRateWithFallback`),
+ * sync currency metadata, the active-provider getter for settings UIs, and
+ * the BullMQ-job entry points called by `lib/jobs/processors/fx-*`. Internal
+ * to the module: provider classes, cache helpers, the FX_PIVOT constant.
  *
  * @example
  *   import { getFxRate, getFxRateWithFallback } from "@/lib/fx";
