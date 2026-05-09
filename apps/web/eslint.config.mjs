@@ -42,7 +42,7 @@ const eslintConfig = [
     ignores: ["__tests__/**"],
   },
   // ============================================================
-  // Deep-module boundary enforcement (#291)
+  // Deep-module boundary enforcement (#291) — eslint-plugin-boundaries v6
   // ============================================================
   {
     plugins: { boundaries },
@@ -59,24 +59,24 @@ const eslintConfig = [
       // Cross-module imports must go through the module's index.ts.
       // Warn level for all modules; strict-list modules get the same
       // rule at error level in the next config block.
-      "boundaries/element-types": [
+      "boundaries/dependencies": [
         "warn",
         {
           default: "allow",
           rules: [
             {
-              from: ["app", "components"],
-              disallow: [
-                ["lib-module", { specifiers: ["!index", "!index.ts"] }],
-              ],
+              from: { type: ["app", "components"] },
+              disallow: {
+                to: { type: "lib-module", internalPath: "!index.ts" },
+              },
               message:
                 "Cross-module imports must go through the module's index.ts. See docs/CONVENTIONS.md 'Module Structure'.",
             },
             {
-              from: ["lib-module"],
-              disallow: [
-                ["lib-module", { specifiers: ["!index", "!index.ts"] }],
-              ],
+              from: { type: "lib-module" },
+              disallow: {
+                to: { type: "lib-module", internalPath: "!index.ts" },
+              },
               message:
                 "Cross-module imports must go through the module's index.ts. See docs/CONVENTIONS.md 'Module Structure'.",
             },
@@ -92,16 +92,16 @@ const eslintConfig = [
       `lib/${m}/**/*.tsx`,
     ]),
     rules: {
-      "boundaries/element-types": [
+      "boundaries/dependencies": [
         "error",
         {
           default: "allow",
           rules: [
             {
-              from: ["lib-module"],
-              disallow: [
-                ["lib-module", { specifiers: ["!index", "!index.ts"] }],
-              ],
+              from: { type: "lib-module" },
+              disallow: {
+                to: { type: "lib-module", internalPath: "!index.ts" },
+              },
               message:
                 "Cross-module imports must go through the module's index.ts (strict module).",
             },
