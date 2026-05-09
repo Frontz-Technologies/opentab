@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { getFxRateWithFallback } from "@/lib/fx";
-import { isSupportedCurrency } from "@/lib/currency/supported";
+import { isSupportedCurrency } from "@/lib/currency";
 
 // Per-session rate limit: 30 requests / 60s window.
 //
