@@ -25,6 +25,7 @@ AI agent guide for the OpenTab repository.
 - Don't refactor things that aren't broken.
 - Match existing style, even if you'd do it differently.
 - If you notice unrelated issues, mention them — don't fix them.
+- For work in `apps/web/lib/<module>/`: follow the deep-module pattern documented in [`docs/CONVENTIONS.md#module-structure`](docs/CONVENTIONS.md#module-structure). Cross-module imports go through `index.ts` only; ESLint enforces this for modules on the strict-list (errors) and warns for the rest.
 
 ### 4. Goal-Driven Execution
 
@@ -119,6 +120,7 @@ e2e/                    # Playwright end-to-end tests
 | Design system (colours, typography, components) | `docs/DESIGN.md`                       |
 | System architecture and data flow               | `docs/ARCHITECTURE.md`                 |
 | Code conventions and patterns                   | `docs/CONVENTIONS.md`                  |
+| Module structure (deep-module pattern)          | `docs/CONVENTIONS.md#module-structure` |
 | Product specification                           | `.research/PRODUCT_SPEC.md`            |
 | Data model design                               | `.research/BRAINSTORM_DATA_MODEL.md`   |
 | Tech stack decisions                            | `.research/BRAINSTORM_TECH_STACK.md`   |
