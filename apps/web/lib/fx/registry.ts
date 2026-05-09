@@ -1,5 +1,5 @@
 import type { FxProvider } from "./provider";
-import { FrankfurterProvider } from "./frankfurter";
+import { FrankfurterProvider } from "./providers/frankfurter";
 
 let cached: FxProvider | null = null;
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { FrankfurterProvider } from "../lib/fx/frankfurter";
+import { FrankfurterProvider } from "../lib/fx/providers/frankfurter";
 
 describe("FrankfurterProvider", () => {
   beforeEach(() => {
@@ -171,5 +171,24 @@ describe("FrankfurterProvider", () => {
     const toParam = new URL(url).searchParams.get("to") ?? "";
     expect(toParam.split(",")).not.toContain("EUR");
     expect(toParam.split(",")).toContain("USD");
+  });
+
+  it("throws when the wire response lacks rates (Zod decode failure)", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        text: async () => "",
+        json: async () => ({ amount: 1, base: "EUR", date: "2026-01-15" }), // missing `rates`
+      }),
+    );
+    const provider = new FrankfurterProvider();
+    await expect(
+      provider.getRate(
+        new Date("2026-01-15T00:00:00Z"),
+        "EUR",
+        "USD",
+      ),
+    ).rejects.toThrow();
   });
 });

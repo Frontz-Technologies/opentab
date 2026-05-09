@@ -1,3 +1,4 @@
+import { z } from "zod";
 import {
   SUPPORTED_CURRENCIES,
   type SupportedCurrencyCode,
@@ -6,18 +7,42 @@ import type {
   FxProvider,
   FxRateLookup,
   FxRatesAgainstBaseLookup,
-} from "./provider";
+} from "../provider";
 
 const BASE_URL = "https://api.frankfurter.dev/v1";
 
 /** Format a Date as YYYY-MM-DD in UTC. Callers must pass a Date that
- *  represents the intended UTC midnight (typically constructed from a
- *  YYYY-MM-DD string via `new Date("2026-01-15T00:00:00Z")`). Passing a
- *  locally-constructed Date near midnight in a non-UTC zone will shift
- *  the resulting URL date. */
+ *  represents the intended UTC midnight. */
 function fmtDate(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
+
+const FrankfurterRateResponse = z.object({
+  amount: z.number(),
+  base: z.string(),
+  date: z.string(),
+  // Accept any number-typed value here (including NaN/Infinity); the
+  // runtime guards below reject non-finite-positive rates with a more
+  // specific error message. Zod v4's `z.number()` rejects NaN/Infinity
+  // by default, which would mask those guards.
+  rates: z.record(
+    z.string(),
+    z.custom<number>((v) => typeof v === "number"),
+  ),
+});
+
+const FrankfurterRatesAgainstBaseResponse = z.object({
+  base: z.string(),
+  date: z.string(),
+  // Accept any number-typed value here (including NaN/Infinity); the
+  // runtime guards below reject non-finite-positive rates with a more
+  // specific error message. Zod v4's `z.number()` rejects NaN/Infinity
+  // by default, which would mask those guards.
+  rates: z.record(
+    z.string(),
+    z.custom<number>((v) => typeof v === "number"),
+  ),
+});
 
 export class FrankfurterProvider implements FxProvider {
   readonly id = "frankfurter";
@@ -38,13 +63,17 @@ export class FrankfurterProvider implements FxProvider {
       const body = await res.text().catch(() => "");
       throw new Error(`Frankfurter ${res.status}: ${body.slice(0, 200)}`);
     }
-    const json = (await res.json()) as {
-      amount: number;
-      base: string;
-      date: string;
-      rates: Record<string, number>;
-    };
-    const rate = json.rates[to];
+    const raw: unknown = await res.json();
+    const decoded = FrankfurterRateResponse.safeParse(raw);
+    if (!decoded.success) {
+      const detail = decoded.error.issues
+        .map((i) => i.path.join("."))
+        .join(",");
+      throw new Error(
+        `Frankfurter response invalid: ${detail || "schema mismatch"}`,
+      );
+    }
+    const rate = decoded.data.rates[to];
     if (!Number.isFinite(rate) || rate <= 0) {
       throw new Error(
         `Frankfurter response invalid rate for ${to}: ${JSON.stringify(rate)}`,
@@ -52,7 +81,7 @@ export class FrankfurterProvider implements FxProvider {
     }
     return {
       requestedDate: date,
-      effectiveDate: new Date(`${json.date}T00:00:00Z`),
+      effectiveDate: new Date(`${decoded.data.date}T00:00:00Z`),
       rate,
     };
   }
@@ -70,23 +99,25 @@ export class FrankfurterProvider implements FxProvider {
       const body = await res.text().catch(() => "");
       throw new Error(`Frankfurter ${res.status}: ${body.slice(0, 200)}`);
     }
-    const json = (await res.json()) as {
-      base: string;
-      date: string;
-      rates: Record<string, number>;
-    };
-    if (typeof json.rates !== "object" || json.rates === null) {
-      throw new Error("Frankfurter response missing rates object");
+    const raw: unknown = await res.json();
+    const decoded = FrankfurterRatesAgainstBaseResponse.safeParse(raw);
+    if (!decoded.success) {
+      const detail = decoded.error.issues
+        .map((i) => i.path.join("."))
+        .join(",");
+      throw new Error(
+        `Frankfurter response invalid: ${detail || "schema mismatch"}`,
+      );
     }
-    if (!hasAtLeastOneFinitePositiveRate(json.rates)) {
+    if (!hasAtLeastOneFinitePositiveRate(decoded.data.rates)) {
       throw new Error(
         "Frankfurter response rates object has no finite positive rate",
       );
     }
     return {
       requestedDate: date,
-      effectiveDate: new Date(`${json.date}T00:00:00Z`),
-      rates: json.rates,
+      effectiveDate: new Date(`${decoded.data.date}T00:00:00Z`),
+      rates: decoded.data.rates,
     };
   }
 }
