@@ -3,6 +3,18 @@ import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 const nextConfig = require("eslint-config-next");
 const noUnscopedOrgQuery = require("./eslint-rules/no-unscoped-org-query.cjs");
+const boundaries = require("eslint-plugin-boundaries");
+
+// Modules on the strict-list get the boundary rule at error level.
+// Add a module here when its migration to the deep-module pattern lands.
+// See docs/CONVENTIONS.md "Module Structure" (added in a later task).
+const STRICT_LIB_MODULES = [
+  "logging",
+  "security",
+  "sentry",
+  "storage",
+  "business-lookup",
+];
 
 const eslintConfig = [
   ...nextConfig,
@@ -28,6 +40,75 @@ const eslintConfig = [
     // the production action refuses them. Excluding the rule keeps the
     // signal-to-noise ratio of the lint pass meaningful.
     ignores: ["__tests__/**"],
+  },
+  // ============================================================
+  // Deep-module boundary enforcement (#291)
+  // ============================================================
+  {
+    plugins: { boundaries },
+    settings: {
+      "boundaries/elements": [
+        { type: "lib-module", pattern: "lib/*", mode: "folder" },
+        { type: "app", pattern: "app/**", mode: "file" },
+        { type: "components", pattern: "components/*", mode: "folder" },
+        { type: "tests", pattern: "__tests__/**", mode: "file" },
+      ],
+      "boundaries/include": ["**/*.ts", "**/*.tsx", "**/*.mts"],
+    },
+    rules: {
+      // Cross-module imports must go through the module's index.ts.
+      // Warn level for all modules; strict-list modules get the same
+      // rule at error level in the next config block.
+      "boundaries/element-types": [
+        "warn",
+        {
+          default: "allow",
+          rules: [
+            {
+              from: ["app", "components"],
+              disallow: [
+                ["lib-module", { specifiers: ["!index", "!index.ts"] }],
+              ],
+              message:
+                "Cross-module imports must go through the module's index.ts. See docs/CONVENTIONS.md 'Module Structure'.",
+            },
+            {
+              from: ["lib-module"],
+              disallow: [
+                ["lib-module", { specifiers: ["!index", "!index.ts"] }],
+              ],
+              message:
+                "Cross-module imports must go through the module's index.ts. See docs/CONVENTIONS.md 'Module Structure'.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // Strict block: errors for files inside the strict-list modules.
+  {
+    files: STRICT_LIB_MODULES.flatMap((m) => [
+      `lib/${m}/**/*.ts`,
+      `lib/${m}/**/*.tsx`,
+    ]),
+    rules: {
+      "boundaries/element-types": [
+        "error",
+        {
+          default: "allow",
+          rules: [
+            {
+              from: ["lib-module"],
+              disallow: [
+                ["lib-module", { specifiers: ["!index", "!index.ts"] }],
+              ],
+              message:
+                "Cross-module imports must go through the module's index.ts (strict module).",
+            },
+          ],
+        },
+      ],
+    },
   },
 ];
 
