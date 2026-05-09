@@ -6,6 +6,7 @@
     "build": "turbo build",
     "test": "turbo test",
     "lint": "turbo lint",
+    "check": "turbo run check",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "db:generate": "turbo db:generate",
