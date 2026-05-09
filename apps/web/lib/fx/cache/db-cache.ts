@@ -78,9 +78,16 @@ export async function findRecentFallback(
 }
 
 /**
- * Write an fx rate to the cache. Idempotent — uses ON CONFLICT DO NOTHING
- * so concurrent fetches and manual seeds are both safe (manual seeds win
- * if they pre-exist).
+ * Write an fx rate to the cache. Idempotent — uses ON CONFLICT DO NOTHING.
+ *
+ * Safety: every writer (lazy-fetch from `getFxRate`, prewarm cron via
+ * `runPrewarmRates`) writes a rate that came from the SAME upstream
+ * provider for the SAME (date, from, to) tuple, so a duplicate insertion
+ * is by construction the same value — silently dropping the duplicate is
+ * correct. If a manual seed (test fixture or admin import) pre-exists,
+ * the seed wins; that's intentional. Any future writer that doesn't
+ * uphold the same-provider-same-tuple-same-rate invariant must reconsider
+ * whether ON CONFLICT DO NOTHING is the right behaviour.
  */
 export async function writeCache(
   db: Db,

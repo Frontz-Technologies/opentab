@@ -12,9 +12,18 @@ import type { FxRate, FxResult } from "./types";
 import type { SupportedCurrencyCode } from "@/lib/currency";
 
 /**
- * Returns the FX rate for `date` from `from` to `to`, querying cache → cross-rate
- * → live provider → stale-fallback in that order. Returns a discriminated outcome
- * — never throws on a missing rate.
+ * Returns the FX rate for `date` from `from` to `to`. Tries (in order):
+ *
+ *   1. Direct cache hit on `(date, from, to)`.
+ *   2. Cross-rate via the EUR pivot (cache hits on `EUR→from` AND `EUR→to`).
+ *   3. Live provider lookup (`getActiveFxProvider().getRate(...)`).
+ *
+ * If steps 1-3 all miss AND the live provider THREW, falls back to the most
+ * recent cached rate within `FX_FALLBACK_WINDOW_DAYS` days. The stale-fallback
+ * is a catch-path safety net, not a regular chain step — it only fires when
+ * the provider call itself failed.
+ *
+ * Returns a discriminated outcome — never throws on a missing rate.
  *
  * @example
  *   const r = await getFxRate(new Date("2026-01-15T00:00:00Z"), "EUR", "USD");
