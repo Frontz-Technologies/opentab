@@ -133,13 +133,35 @@ apps/web/__tests__/<module>-*.test.ts
 
 ### Public-surface rule
 
-`index.ts` re-exports a small named set: 1–3 functions, 2–5 types, optionally 1 metadata helper. Examples:
+`index.ts` re-exports a **small, deliberate named set** — every entry should answer "what does an outside consumer need?" If a module legitimately has multiple concerns (e.g. an orchestrator + a sync helper + a job entry point), expose one named export per concern, but resist adding everything just because it exists internally. Group by concern in the file (separate `export` blocks with a blank line between groups), and add TSDoc on every public name. Examples:
 
 ```ts
 // apps/web/lib/business-lookup/index.ts (target shape)
 export { lookupCompany } from "./orchestrator";
 export type { CompanyLookupResult, LookupError, LookupOutcome } from "./types";
 export { isCountrySupportedByAnySource } from "./registry";
+```
+
+For modules with broader concerns (orchestrator + jobs + settings-UI helpers), still group by concern:
+
+```ts
+// apps/web/lib/fx/index.ts (target shape)
+// Core lookup
+export { getFxRate, getFxRateWithFallback } from "./orchestrator";
+export type { FxRate, FxResult, FxError } from "./types";
+
+// Sync metadata for renders that can't await
+export { supportedCurrencies, isCurrencySupported } from "./registry";
+
+// Settings-UI helpers
+export { getActiveFxProvider } from "./registry";
+export type { FxProvider } from "./provider";
+
+// Job entry points (called from lib/jobs/processors/)
+export { runPrewarmRates } from "./jobs/prewarm-rates";
+export type { PrewarmResult } from "./jobs/prewarm-rates";
+export { runPruneCache } from "./jobs/prune-cache";
+export type { PruneResult } from "./jobs/prune-cache";
 ```
 
 **Never `export *` from `index.ts`.** That defeats the whole pattern.
