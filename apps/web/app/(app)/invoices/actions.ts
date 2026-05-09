@@ -21,7 +21,7 @@ import {
 } from "@/lib/invoicing/calculations";
 import { createDraftInvoice } from "@/lib/invoicing/draft-invoices";
 import { assignInvoiceNumberIfMissing } from "@/lib/invoicing/assign-invoice-number";
-import { getFxRate } from "@/lib/fx/get-rate";
+import { getFxRateWithFallback } from "@/lib/fx";
 import {
   isSupportedCurrency,
   type SupportedCurrencyCode,
@@ -236,7 +236,7 @@ export async function updateInvoice(id: string, formData: FormData) {
     isSupportedCurrency(data.currencyCode) &&
     isSupportedCurrency(session.org.defaultCurrency)
   ) {
-    const fx = await getFxRate(
+    const fx = await getFxRateWithFallback(
       new Date(`${data.issueDate}T00:00:00Z`),
       data.currencyCode as SupportedCurrencyCode,
       session.org.defaultCurrency as SupportedCurrencyCode,

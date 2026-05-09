@@ -13,7 +13,7 @@ import {
   calculateInvoiceTotals,
   calculateLineTotal,
 } from "@/lib/invoicing/calculations";
-import { getFxRate } from "@/lib/fx/get-rate";
+import { getFxRateWithFallback } from "@/lib/fx";
 import {
   isSupportedCurrency,
   type SupportedCurrencyCode,
@@ -169,7 +169,7 @@ export async function createDraftExpense(
     isSupportedCurrency(resolvedCurrency) &&
     isSupportedCurrency(orgDefaultCurrency)
   ) {
-    const fx = await getFxRate(
+    const fx = await getFxRateWithFallback(
       new Date(`${data.expenseDate}T00:00:00Z`),
       resolvedCurrency as SupportedCurrencyCode,
       orgDefaultCurrency as SupportedCurrencyCode,

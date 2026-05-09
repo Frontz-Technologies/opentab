@@ -30,3 +30,11 @@ export { runPrewarmRates } from "./jobs/prewarm-rates";
 export type { PrewarmResult } from "./jobs/prewarm-rates";
 export { runPruneCache } from "./jobs/prune-cache";
 export type { PruneResult } from "./jobs/prune-cache";
+
+/**
+ * Returns the active FX provider. Used by integration settings UIs to display
+ * provider id / name / hosting. Production-side rate fetching uses
+ * `getFxRate` / `getFxRateWithFallback` instead.
+ */
+export { getActiveFxProvider } from "./registry";
+export type { FxProvider } from "./provider";

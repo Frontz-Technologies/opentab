@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
-import { getFxRate } from "@/lib/fx/get-rate";
+import { getFxRateWithFallback } from "@/lib/fx";
 import { isSupportedCurrency } from "@/lib/currency/supported";
 
 // Per-session rate limit: 30 requests / 60s window.
@@ -55,7 +55,7 @@ export async function GET(req: Request) {
   }
 
   try {
-    const fx = await getFxRate(date, from, to);
+    const fx = await getFxRateWithFallback(date, from, to);
     return NextResponse.json({
       rate: fx.rate,
       effectiveDate: fx.effectiveDate.toISOString().slice(0, 10),
