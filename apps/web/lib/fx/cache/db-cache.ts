@@ -53,9 +53,7 @@ export async function findRecentFallback(
   from: SupportedCurrencyCode,
   to: SupportedCurrencyCode,
 ): Promise<{ rate: number; date: Date; source: string } | null> {
-  const since = new Date(
-    date.getTime() - FX_FALLBACK_WINDOW_DAYS * 86_400_000,
-  );
+  const since = new Date(date.getTime() - FX_FALLBACK_WINDOW_DAYS * 86_400_000);
   const rows = await db
     .select()
     .from(fxRateCache)

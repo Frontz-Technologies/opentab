@@ -19,10 +19,7 @@
  */
 export { getFxRate, getFxRateWithFallback } from "./orchestrator";
 export type { FxRate, FxResult, FxError } from "./types";
-export {
-  supportedCurrencies,
-  isCurrencySupported,
-} from "./registry";
+export { supportedCurrencies, isCurrencySupported } from "./registry";
 
 export { runPrewarmRates } from "./jobs/prewarm-rates";
 export type { PrewarmResult } from "./jobs/prewarm-rates";

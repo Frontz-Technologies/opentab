@@ -184,11 +184,7 @@ describe("FrankfurterProvider", () => {
     );
     const provider = new FrankfurterProvider();
     await expect(
-      provider.getRate(
-        new Date("2026-01-15T00:00:00Z"),
-        "EUR",
-        "USD",
-      ),
+      provider.getRate(new Date("2026-01-15T00:00:00Z"), "EUR", "USD"),
     ).rejects.toThrow();
   });
 });
