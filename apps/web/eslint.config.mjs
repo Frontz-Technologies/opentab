@@ -18,6 +18,7 @@ const STRICT_LIB_MODULES = [
   "security",
   "sentry",
   "storage",
+  "fx",
 ];
 
 const eslintConfig = [

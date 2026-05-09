@@ -1,4 +1,4 @@
-import type { SupportedCurrencyCode } from "@/lib/currency/supported";
+import type { SupportedCurrencyCode } from "@/lib/currency";
 
 export interface FxRateLookup {
   /** The date we asked the provider for. The provider may roll to the

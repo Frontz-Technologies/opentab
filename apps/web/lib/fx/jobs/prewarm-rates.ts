@@ -1,7 +1,7 @@
 import { db as defaultDb } from "@/lib/db";
 import type { Db } from "@opentab/db";
 import { fxRateCache } from "@opentab/db/schema";
-import { createLogger } from "@/lib/logging/logger";
+import { createLogger } from "@/lib/logging";
 import { getActiveFxProvider } from "../registry";
 import { FX_PIVOT } from "../constants";
 import { fmtDate } from "../cache/db-cache";

@@ -1,4 +1,4 @@
-import { SUPPORTED_CURRENCIES } from "@/lib/currency/supported";
+import { SUPPORTED_CURRENCIES } from "@/lib/currency";
 import type { FxProvider } from "./provider";
 import { FrankfurterProvider } from "./providers/frankfurter";
 

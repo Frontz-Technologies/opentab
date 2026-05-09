@@ -9,7 +9,7 @@ import {
   writeCache,
 } from "./cache/db-cache";
 import type { FxRate, FxResult } from "./types";
-import type { SupportedCurrencyCode } from "@/lib/currency/supported";
+import type { SupportedCurrencyCode } from "@/lib/currency";
 
 /**
  * Returns the FX rate for `date` from `from` to `to`, querying cache → cross-rate

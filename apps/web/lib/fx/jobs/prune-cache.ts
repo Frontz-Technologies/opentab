@@ -2,7 +2,7 @@ import { lt } from "drizzle-orm";
 import { db as defaultDb } from "@/lib/db";
 import type { Db } from "@opentab/db";
 import { fxRateCache } from "@opentab/db/schema";
-import { createLogger } from "@/lib/logging/logger";
+import { createLogger } from "@/lib/logging";
 
 const log = createLogger("fx-prune-cache");
 

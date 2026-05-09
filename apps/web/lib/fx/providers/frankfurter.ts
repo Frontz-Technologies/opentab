@@ -2,7 +2,7 @@ import { z } from "zod";
 import {
   SUPPORTED_CURRENCIES,
   type SupportedCurrencyCode,
-} from "@/lib/currency/supported";
+} from "@/lib/currency";
 import type {
   FxProvider,
   FxRateLookup,

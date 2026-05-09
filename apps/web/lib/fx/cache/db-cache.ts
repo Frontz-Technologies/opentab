@@ -2,7 +2,7 @@ import { and, desc, eq, gte, lte } from "drizzle-orm";
 import type { Db } from "@opentab/db";
 import { fxRateCache } from "@opentab/db/schema";
 import { FX_PIVOT } from "../constants";
-import type { SupportedCurrencyCode } from "@/lib/currency/supported";
+import type { SupportedCurrencyCode } from "@/lib/currency";
 
 export const FX_FALLBACK_WINDOW_DAYS = 7;
 
