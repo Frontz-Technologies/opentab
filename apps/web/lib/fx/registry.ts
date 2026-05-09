@@ -1,5 +1,6 @@
+import { SUPPORTED_CURRENCIES } from "@/lib/currency";
 import type { FxProvider } from "./provider";
-import { FrankfurterProvider } from "./frankfurter";
+import { FrankfurterProvider } from "./providers/frankfurter";
 
 let cached: FxProvider | null = null;
 
@@ -13,4 +14,14 @@ export function getActiveFxProvider(): FxProvider {
 /** Test-only escape hatch — set a stub provider for unit tests. */
 export function __setActiveFxProviderForTesting(p: FxProvider | null): void {
   cached = p;
+}
+
+/** Returns the list of currency codes supported by the FX module. */
+export function supportedCurrencies(): readonly string[] {
+  return SUPPORTED_CURRENCIES.map((c) => c.code);
+}
+
+/** Returns true iff the given code is supported by the FX module. */
+export function isCurrencySupported(code: string): boolean {
+  return SUPPORTED_CURRENCIES.some((c) => c.code === code);
 }

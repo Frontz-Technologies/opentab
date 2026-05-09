@@ -1,8 +1,7 @@
 import { db as defaultDb } from "@/lib/db";
+import type { Db } from "@opentab/db";
 import { expenseCategories } from "@opentab/db/schema";
 import { eq, count, sql } from "drizzle-orm";
-
-type Db = typeof defaultDb;
 
 type SeedCategoryData = {
   groupCode: string;

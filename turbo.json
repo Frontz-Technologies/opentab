@@ -40,6 +40,9 @@
     "lint": {
       "dependsOn": ["^build"]
     },
+    "check": {
+      "dependsOn": ["^build"]
+    },
     "db:generate": { "cache": false, "env": ["DATABASE_URL"] },
     "db:migrate": { "cache": false, "env": ["DATABASE_URL"] },
     "db:push": { "cache": false, "env": ["DATABASE_URL"] }

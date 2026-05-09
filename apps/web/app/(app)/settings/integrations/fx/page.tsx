@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/layout/page-header";
 import { getSession } from "@/lib/session";
-import { getActiveFxProvider } from "@/lib/fx/registry";
+import { getActiveFxProvider } from "@/lib/fx";
 
 export default async function FxProviderSettingsPage() {
   const session = await getSession();

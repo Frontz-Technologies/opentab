@@ -21,7 +21,7 @@ import {
   calculateInvoiceTotals,
   calculateLineTotal,
 } from "@/lib/invoicing/calculations";
-import { getFxRate } from "@/lib/fx/get-rate";
+import { getFxRateWithFallback } from "@/lib/fx";
 import {
   isSupportedCurrency,
   type SupportedCurrencyCode,
@@ -126,7 +126,7 @@ export async function createCreditNote(formData: FormData) {
     isSupportedCurrency(data.currencyCode) &&
     isSupportedCurrency(session.org.defaultCurrency)
   ) {
-    const fx = await getFxRate(
+    const fx = await getFxRateWithFallback(
       new Date(`${data.issueDate}T00:00:00Z`),
       data.currencyCode as SupportedCurrencyCode,
       session.org.defaultCurrency as SupportedCurrencyCode,
@@ -303,7 +303,7 @@ export async function updateCreditNote(id: string, formData: FormData) {
     isSupportedCurrency(data.currencyCode) &&
     isSupportedCurrency(session.org.defaultCurrency)
   ) {
-    const fx = await getFxRate(
+    const fx = await getFxRateWithFallback(
       new Date(`${data.issueDate}T00:00:00Z`),
       data.currencyCode as SupportedCurrencyCode,
       session.org.defaultCurrency as SupportedCurrencyCode,

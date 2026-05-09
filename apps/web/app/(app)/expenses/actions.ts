@@ -145,7 +145,7 @@ import {
   assertExpenseCategoryInOrg,
   CROSS_ORG_ACCESS_ERROR,
 } from "@/lib/security/assert-same-org";
-import { getFxRate } from "@/lib/fx/get-rate";
+import { getFxRateWithFallback } from "@/lib/fx";
 import {
   isSupportedCurrency,
   type SupportedCurrencyCode,
@@ -603,7 +603,7 @@ export async function updateExpense(id: string, formData: FormData) {
     isSupportedCurrency(data.currencyCode) &&
     isSupportedCurrency(session.org.defaultCurrency)
   ) {
-    const fx = await getFxRate(
+    const fx = await getFxRateWithFallback(
       new Date(`${data.expenseDate}T00:00:00Z`),
       data.currencyCode as SupportedCurrencyCode,
       session.org.defaultCurrency as SupportedCurrencyCode,

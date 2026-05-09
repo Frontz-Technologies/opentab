@@ -104,6 +104,109 @@ the audit history.
 
 ---
 
+## Module Structure
+
+The codebase follows the **deep module** pattern (Ousterhout, popularised by Pocock for AI-agent codebases). A module is a black box; outside code imports only from its `index.ts`.
+
+### The rule
+
+> A module under `apps/web/lib/<name>/` is a black box. Code outside the module imports it ONLY by `import { ... } from "@/lib/<name>"` — never by reaching into `@/lib/<name>/sub/file`.
+
+This is enforced by `eslint-plugin-boundaries` for modules on the strict-list (errors) and the rest of `apps/web/lib/*` (warnings, until each is migrated). The strict-list lives in `apps/web/eslint.config.mjs`; per-module migration PRs flip the module from warn to strict in the same diff.
+
+**Warning ceiling.** `pnpm lint` runs with `--max-warnings <N>` where `N` is the current count. CI fails if a PR adds new boundary warnings without removing existing ones. After each migration PR drops warnings, lower `N` in `apps/web/package.json` to match the new count — the new ceiling locks in the gain.
+
+### Canonical layout
+
+A domain module looks like:
+
+```
+apps/web/lib/<module>/
+  index.ts               # public surface — re-exports only
+  types.ts               # public types + tagged-error union
+  orchestrator.ts        # the entry function (e.g. lookupCompany, getFxRate)
+  registry.ts            # source / provider list + sync metadata helpers
+  <internal>.ts          # implementation details (helpers, internal utilities)
+  sources/ or providers/ # adapter pattern when multiple integrations exist
+  cache/                 # internal sub-module if there is caching logic
+  jobs/                  # business logic for scheduled/queued work (BullMQ adapter lives in lib/jobs/)
+apps/web/__tests__/<module>-*.test.ts
+```
+
+### Public-surface rule
+
+`index.ts` re-exports a **small, deliberate named set** — every entry should answer "what does an outside consumer need?" If a module legitimately has multiple concerns (e.g. an orchestrator + a sync helper + a job entry point), expose one named export per concern, but resist adding everything just because it exists internally. Group by concern in the file (separate `export` blocks with a blank line between groups), and add TSDoc on every public name. Examples:
+
+```ts
+// apps/web/lib/business-lookup/index.ts (target shape)
+export { lookupCompany } from "./orchestrator";
+export type { CompanyLookupResult, LookupError, LookupOutcome } from "./types";
+export { isCountrySupportedByAnySource } from "./registry";
+```
+
+For modules with broader concerns (orchestrator + jobs + settings-UI helpers), still group by concern:
+
+```ts
+// apps/web/lib/fx/index.ts (target shape)
+// Core lookup
+export { getFxRate, getFxRateWithFallback } from "./orchestrator";
+export type { FxRate, FxResult, FxError } from "./types";
+
+// Sync metadata for renders that can't await
+export { supportedCurrencies, isCurrencySupported } from "./registry";
+
+// Settings-UI helpers
+export { getActiveFxProvider } from "./registry";
+export type { FxProvider } from "./provider";
+
+// Job entry points (called from lib/jobs/processors/)
+export { runPrewarmRates } from "./jobs/prewarm-rates";
+export type { PrewarmResult } from "./jobs/prewarm-rates";
+export { runPruneCache } from "./jobs/prune-cache";
+export type { PruneResult } from "./jobs/prune-cache";
+```
+
+**Never `export *` from `index.ts`.** That defeats the whole pattern.
+
+### Tagged errors over thrown exceptions
+
+Source adapters never throw post-boundary. They return a discriminated outcome:
+
+```ts
+export type LookupOutcome<T> =
+  | { kind: "Hit"; value: T }
+  | { kind: "NotFound" }
+  | { kind: "NetworkTimeout" }
+  | { kind: "BadResponse"; detail: string }
+  | { kind: "ProviderUnavailable"; detail: string };
+```
+
+The orchestrator switches on `outcome.kind` exhaustively. Consumers of the public surface get back either a typed-error variant they can handle OR a Promise-throwing convenience wrapper — see `getFxRate` (outcome) vs `getFxRateWithFallback` (throws on error) in `lib/fx/`.
+
+### Wire-boundary decoding
+
+Every external HTTP/JSON response goes through Zod `safeParse` exactly once, at the source adapter. **No `as Type` casts on wire data.** Decode failures map to `BadResponse` with a path-based detail string.
+
+### Done checklist for a module migration
+
+A module is ready to be flipped from warn to strict when:
+
+- [ ] `pnpm check` passes (lint + typecheck + tests)
+- [ ] Outside code imports only `@/lib/<module>` (run `grep -rn "@/lib/<module>/" apps/web/app apps/web/components apps/web/lib --include="*.ts" --include="*.tsx" | grep -v "@/lib/<module>\""` — should be empty for production code; tests are exempt)
+- [ ] `index.ts` exports have TSDoc on every public name
+- [ ] At least one happy-path + one error-path test exists
+- [ ] Bundle-size and `tsc --noEmit` median (5 runs) before/after are recorded in the PR description
+
+### Recipe for adding a new module
+
+Copy `apps/web/lib/business-lookup/` (the canonical reference, post-migration). Rename. Fill in. Add the new module name to `STRICT_LIB_MODULES` in `apps/web/eslint.config.mjs` so it ships strict from day one. No scaffolding tool — the reference module is the scaffold.
+
+### Breaking the rule
+
+Tests under `apps/web/__tests__/` are exempt — they may import internals to stub source adapters. Production code is not. If a consumer legitimately needs deeper access (rare), promote what they need to the module's `index.ts` instead of widening the boundary rule.
+
+---
+
 ## Import Order
 
 Within any file, imports are ordered:
