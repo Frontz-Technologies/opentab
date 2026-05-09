@@ -1,12 +1,14 @@
-import { and, desc, eq, gte, lte } from "drizzle-orm";
 import { db as defaultDb } from "@/lib/db";
 import type { Db } from "@opentab/db";
-import { fxRateCache } from "@opentab/db/schema";
 import { getActiveFxProvider } from "./registry";
-import { FX_PIVOT } from "./constants";
+import {
+  fmtDate,
+  readCache,
+  tryCrossRate,
+  findRecentFallback,
+  writeCache,
+} from "./cache/db-cache";
 import type { SupportedCurrencyCode } from "@/lib/currency/supported";
-
-const FALLBACK_WINDOW_DAYS = 7;
 
 export interface FxRateResult {
   rate: number;
@@ -16,75 +18,6 @@ export interface FxRateResult {
   staleFallback: boolean;
   staleFallbackDate?: Date;
   source: string;
-}
-
-function fmtDate(d: Date): string {
-  return d.toISOString().slice(0, 10);
-}
-
-async function readCache(
-  db: Db,
-  date: string,
-  from: SupportedCurrencyCode,
-  to: SupportedCurrencyCode,
-): Promise<{ rate: number; source: string } | null> {
-  const rows = await db
-    .select()
-    .from(fxRateCache)
-    .where(
-      and(
-        eq(fxRateCache.date, date),
-        eq(fxRateCache.fromCurrency, from),
-        eq(fxRateCache.toCurrency, to),
-      ),
-    )
-    .limit(1);
-  if (rows.length === 0) return null;
-  return { rate: parseFloat(rows[0].rate), source: rows[0].source };
-}
-
-async function tryCrossRate(
-  db: Db,
-  date: string,
-  from: SupportedCurrencyCode,
-  to: SupportedCurrencyCode,
-): Promise<{ rate: number; source: string } | null> {
-  if (from === FX_PIVOT || to === FX_PIVOT) return null;
-  const eurFrom = await readCache(db, date, FX_PIVOT, from);
-  const eurTo = await readCache(db, date, FX_PIVOT, to);
-  if (!eurFrom || !eurTo) return null;
-  return {
-    rate: eurTo.rate / eurFrom.rate,
-    source: `cross-rate:${eurFrom.source}+${eurTo.source}`,
-  };
-}
-
-async function findRecentFallback(
-  db: Db,
-  date: Date,
-  from: SupportedCurrencyCode,
-  to: SupportedCurrencyCode,
-): Promise<{ rate: number; date: Date; source: string } | null> {
-  const since = new Date(date.getTime() - FALLBACK_WINDOW_DAYS * 86_400_000);
-  const rows = await db
-    .select()
-    .from(fxRateCache)
-    .where(
-      and(
-        eq(fxRateCache.fromCurrency, from),
-        eq(fxRateCache.toCurrency, to),
-        gte(fxRateCache.date, fmtDate(since)),
-        lte(fxRateCache.date, fmtDate(date)),
-      ),
-    )
-    .orderBy(desc(fxRateCache.date))
-    .limit(1);
-  if (rows.length === 0) return null;
-  return {
-    rate: parseFloat(rows[0].rate),
-    date: new Date(`${rows[0].date}T00:00:00Z`),
-    source: rows[0].source,
-  };
 }
 
 export async function getFxRate(
@@ -127,20 +60,14 @@ export async function getFxRate(
   const provider = getActiveFxProvider();
   try {
     const lookup = await provider.getRate(date, from, to);
-    // Lazy-fetch is the only writer to fx_rate_cache (cron pre-warm uses
-    // the same path). Concurrent fetches for the same (date, from, to) all
-    // resolve to the same provider rate, so silently dropping the duplicate
-    // is safe. If a manual seed pre-exists, the seed wins — that's intentional.
-    await dbInstance
-      .insert(fxRateCache)
-      .values({
-        date: fmtDate(lookup.effectiveDate),
-        fromCurrency: from,
-        toCurrency: to,
-        rate: lookup.rate.toFixed(9),
-        source: provider.id,
-      })
-      .onConflictDoNothing();
+    await writeCache(
+      dbInstance,
+      lookup.effectiveDate,
+      from,
+      to,
+      lookup.rate,
+      provider.id,
+    );
     return {
       rate: lookup.rate,
       effectiveDate: lookup.effectiveDate,
