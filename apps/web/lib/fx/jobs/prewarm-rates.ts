@@ -8,6 +8,13 @@ import { fmtDate } from "../cache/db-cache";
 
 const log = createLogger("fx-prewarm-rates");
 
+/**
+ * Summary returned by a successful `runPrewarmRates` call.
+ *
+ * - `count`: number of rate rows written (one per quote currency).
+ * - `date`: the ECB effective date as YYYY-MM-DD (may differ from "today" on weekends/holidays).
+ * - `provider`: id of the provider that supplied the rates.
+ */
 export interface PrewarmResult {
   count: number;
   date: string;
@@ -19,7 +26,11 @@ export interface PrewarmResult {
  * and inserting one row per quote currency. Idempotent — re-runs use ON
  * CONFLICT DO NOTHING so concurrent invocations are safe.
  *
- * @throws if the provider returns no rates (signals an upstream outage).
+ * @throws if the provider rejects (HTTP non-OK or wire-decode failure) — the
+ *   error propagates to the BullMQ worker, which records the failure and may
+ *   retry per the queue's backoff policy.
+ * @throws if the provider returns an empty `rates` map (signals an upstream
+ *   outage; treated as a hard fail, not a transient error).
  */
 export async function runPrewarmRates(
   dbInstance: Db = defaultDb,

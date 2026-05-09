@@ -17,6 +17,15 @@ export interface FxRatesAgainstBaseLookup {
   rates: Record<string, number>;
 }
 
+/**
+ * Contract for an FX-rate provider. The orchestrator queries `getRate` for
+ * single-pair lookups; the prewarm cron uses `getRatesAgainstBase` to pull
+ * a whole day's rates against EUR in one call.
+ *
+ * Implementations live in `apps/web/lib/fx/providers/` and are wired into
+ * the runtime via `apps/web/lib/fx/registry.ts`. v1 hard-codes the
+ * `FrankfurterProvider`; v2 will read from settings.
+ */
 export interface FxProvider {
   readonly id: string;
   readonly displayName: string;
