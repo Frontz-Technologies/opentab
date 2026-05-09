@@ -6,10 +6,6 @@
  * if you just want the rate or a thrown error.
  */
 
-/**
- * A single FX rate result. Carried by the `Hit` and `StaleFallbackUsed`
- * variants of `FxResult`.
- */
 export interface FxRate {
   /** The rate as a number (e.g. 1.08 for EUR→USD on 2026-01-15). */
   rate: number;

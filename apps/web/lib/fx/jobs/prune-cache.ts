@@ -7,10 +7,8 @@ import { createLogger } from "@/lib/logging";
 const log = createLogger("fx-prune-cache");
 
 /**
- * Summary returned by a successful `runPruneCache` call.
- *
- * - `cutoff`: the YYYY-MM-DD date below which rows were deleted.
- * - `olderThanDays`: the input parameter, echoed back for log correlation.
+ * Summary returned by `runPruneCache`. `cutoff` is the YYYY-MM-DD date below
+ * which rows were deleted; `olderThanDays` is the input echoed back for logs.
  */
 export interface PruneResult {
   cutoff: string;
