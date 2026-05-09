@@ -8,12 +8,16 @@ const boundaries = require("eslint-plugin-boundaries");
 // Modules on the strict-list get the boundary rule at error level.
 // Add a module here when its migration to the deep-module pattern lands.
 // See docs/CONVENTIONS.md "Module Structure" (added in a later task).
+//
+// Note: business-lookup is intentionally NOT on the strict-list yet —
+// it currently imports sub-paths of lib/country/ and lib/logging/ which
+// haven't been migrated. Once those are migrated (or business-lookup is
+// itself reshaped to use only their indexes), add it here.
 const STRICT_LIB_MODULES = [
   "logging",
   "security",
   "sentry",
   "storage",
-  "business-lookup",
 ];
 
 const eslintConfig = [
