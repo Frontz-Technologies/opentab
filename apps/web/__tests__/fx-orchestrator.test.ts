@@ -10,7 +10,7 @@ import {
 import { createTestDb } from "@opentab/db/test-utils";
 import { fxRateCache } from "@opentab/db/schema";
 import { eq, and } from "drizzle-orm";
-import { getFxRate } from "../lib/fx/get-rate";
+import { getFxRate, getFxRateWithFallback } from "../lib/fx/orchestrator";
 import { __setActiveFxProviderForTesting } from "../lib/fx/registry";
 import type { FxProvider } from "../lib/fx/provider";
 
@@ -50,7 +50,8 @@ describe("getFxRate", () => {
     });
     __setActiveFxProviderForTesting(provider);
     const r = await getFxRate(new Date("2026-01-15"), "EUR", "EUR", db);
-    expect(r.rate).toBe(1);
+    expect(r.kind).toBe("Hit");
+    if (r.kind === "Hit") expect(r.value.rate).toBe(1);
     expect(provider.getRate).not.toHaveBeenCalled();
   });
 
@@ -68,7 +69,8 @@ describe("getFxRate", () => {
     __setActiveFxProviderForTesting(provider);
 
     const r = await getFxRate(new Date("2026-01-15"), "USD", "EUR", db);
-    expect(r.rate).toBe(0.92);
+    expect(r.kind).toBe("Hit");
+    if (r.kind === "Hit") expect(r.value.rate).toBe(0.92);
     expect(provider.getRate).not.toHaveBeenCalled();
   });
 
@@ -95,7 +97,8 @@ describe("getFxRate", () => {
     __setActiveFxProviderForTesting(provider);
 
     const r = await getFxRate(new Date("2026-01-15"), "USD", "GBP", db);
-    expect(r.rate).toBeCloseTo(0.85 / 1.08, 6);
+    expect(r.kind).toBe("Hit");
+    if (r.kind === "Hit") expect(r.value.rate).toBeCloseTo(0.85 / 1.08, 6);
   });
 
   it("lazy-fetches via provider on cache miss + cross-rate miss", async () => {
@@ -109,7 +112,8 @@ describe("getFxRate", () => {
     __setActiveFxProviderForTesting(provider);
 
     const r = await getFxRate(new Date("2026-01-15"), "USD", "EUR", db);
-    expect(r.rate).toBe(0.92);
+    expect(r.kind).toBe("Hit");
+    if (r.kind === "Hit") expect(r.value.rate).toBe(0.92);
     expect(provider.getRate).toHaveBeenCalledOnce();
 
     const rows = await db
@@ -140,19 +144,37 @@ describe("getFxRate", () => {
     __setActiveFxProviderForTesting(provider);
 
     const r = await getFxRate(new Date("2026-01-15"), "USD", "EUR", db);
-    expect(r.rate).toBe(0.91);
-    expect(r.staleFallback).toBe(true);
-    expect(r.staleFallbackDate?.toISOString().slice(0, 10)).toBe("2026-01-10");
+    expect(r.kind).toBe("StaleFallbackUsed");
+    if (r.kind === "StaleFallbackUsed") {
+      expect(r.value.rate).toBe(0.91);
+      expect(r.value.effectiveDate.toISOString().slice(0, 10)).toBe(
+        "2026-01-10",
+      );
+    }
   });
 
-  it("throws when provider fails AND no recent cached rate exists", async () => {
+  it("returns an error variant when provider fails AND no recent cached rate exists", async () => {
     const provider = stubProvider({
       getRate: vi.fn().mockRejectedValue(new Error("Frankfurter 503")),
     });
     __setActiveFxProviderForTesting(provider);
 
+    const r = await getFxRate(new Date("2026-01-15"), "USD", "EUR", db);
+    expect([
+      "NoRateAvailable",
+      "ProviderBadResponse",
+      "ProviderTimeout",
+    ]).toContain(r.kind);
+  });
+
+  it("getFxRateWithFallback throws when no rate is available (legacy semantics)", async () => {
+    __setActiveFxProviderForTesting(
+      stubProvider({
+        getRate: vi.fn().mockRejectedValue(new Error("Frankfurter 503")),
+      }),
+    );
     await expect(
-      getFxRate(new Date("2026-01-15"), "USD", "EUR", db),
-    ).rejects.toThrow(/no rate available/i);
+      getFxRateWithFallback(new Date("2026-01-15"), "USD", "EUR", db),
+    ).rejects.toThrow();
   });
 });
