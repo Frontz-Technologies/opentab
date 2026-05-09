@@ -20,12 +20,6 @@ export {
   isCurrencySupported,
 } from "./registry";
 
-/**
- * Test-only escape hatch — set a stub provider for unit tests.
- * Production code MUST NOT call this.
- */
-export { __setActiveFxProviderForTesting } from "./registry";
-
 export { runPrewarmRates } from "./jobs/prewarm-rates";
 export type { PrewarmResult } from "./jobs/prewarm-rates";
 export { runPruneCache } from "./jobs/prune-cache";

@@ -9,11 +9,9 @@ import {
 } from "vitest";
 import { createTestDb } from "@opentab/db/test-utils";
 import { fxRateCache } from "@opentab/db/schema";
-import {
-  getFxRate,
-  __setActiveFxProviderForTesting,
-} from "../lib/fx";
+import { getFxRate } from "../lib/fx";
 import type { FxProvider } from "../lib/fx";
+import { __setActiveFxProviderForTesting } from "../lib/fx/registry";
 
 const stubProvider = (impl: Partial<FxProvider> = {}): FxProvider =>
   ({
