@@ -37,6 +37,9 @@ export const useAiChatStore = create<AiChatStore>((set) => ({
       const messages = await submitAiChatMessage({
         input: trimmedInput,
         messages: useAiChatStore.getState().messages,
+        onProgress: (progress) => {
+          set({ messages: progress.slice(-50) });
+        },
       });
 
       set({
@@ -62,6 +65,9 @@ export const useAiChatStore = create<AiChatStore>((set) => ({
       const messages = await confirmAiToolCall({
         messages: useAiChatStore.getState().messages,
         confirmToolCall,
+        onProgress: (progress) => {
+          set({ messages: progress.slice(-50) });
+        },
       });
 
       set({
