@@ -39,6 +39,7 @@ export async function register() {
       tracesSampleRate: 0,
       debug: false,
       beforeSend,
+      _experiments: { enableLogs: true },
     });
   }
 
@@ -49,6 +50,7 @@ export async function register() {
       environment: process.env.SENTRY_ENVIRONMENT ?? process.env.NODE_ENV,
       tracesSampleRate: 0,
       beforeSend,
+      _experiments: { enableLogs: true },
     });
   }
 }

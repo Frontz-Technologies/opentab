@@ -33,6 +33,24 @@ function shouldLog(level: LogLevel): boolean {
   return LOG_LEVELS[level] >= LOG_LEVELS[MIN_LEVEL];
 }
 
+function shouldForward(level: LogLevel): boolean {
+  const configured = process.env.LOG_FORWARD_LEVEL?.toLowerCase();
+  if (!configured) return false;
+  if (configured === "off" || configured === "none") return false;
+
+  const forwardLevel =
+    configured === "debug" ||
+    configured === "info" ||
+    configured === "warn" ||
+    configured === "error"
+      ? configured
+      : "off";
+
+  if (forwardLevel === "off") return false;
+
+  return LOG_LEVELS[level] >= LOG_LEVELS[forwardLevel];
+}
+
 /** Fields that must never appear in log output. */
 const REDACTED_KEYS = new Set([
   "apiKey",
@@ -55,19 +73,68 @@ const REDACTED_KEYS = new Set([
   "responseXml",
 ]);
 
-function sanitize(data: Record<string, unknown>): Record<string, unknown> {
+const REMOTE_LOG_REDACTED_KEYS = new Set([
+  ...REDACTED_KEYS,
+  "bcc",
+  "body",
+  "cc",
+  "fileName",
+  "filename",
+  "from",
+  "html",
+  "rawResponse",
+  "requestBody",
+  "subject",
+  "text",
+  "to",
+]);
+
+function sanitizeValue(value: unknown, keys: Set<string>): unknown {
+  if (Array.isArray(value)) {
+    return value.map((item) => sanitizeValue(item, keys));
+  }
+  if (value && typeof value === "object") {
+    return sanitize(value as Record<string, unknown>, keys);
+  }
+  return value;
+}
+
+function sanitize(
+  data: Record<string, unknown>,
+  keys = REDACTED_KEYS,
+): Record<string, unknown> {
   const clean: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(data)) {
-    if (REDACTED_KEYS.has(key) || REDACTED_KEYS.has(key.toLowerCase())) {
+    if (keys.has(key) || keys.has(key.toLowerCase())) {
       clean[key] = "[REDACTED]";
-    } else if (value && typeof value === "object" && !Array.isArray(value)) {
-      clean[key] = sanitize(value as Record<string, unknown>);
     } else {
-      clean[key] = value;
+      clean[key] = sanitizeValue(value, keys);
     }
   }
   return clean;
 }
+
+interface LogEvent {
+  ts: string;
+  level: LogLevel;
+  module: string;
+  msg: string;
+  attrs: Record<string, unknown>;
+  remoteAttrs: Record<string, unknown>;
+}
+
+// Module-scoped cached SDK promise. Single allocation at module load;
+// every emit() awaits the same resolved value via .then().
+//
+// .catch(() => null) keeps the logger usable in test/dev/edge runtimes
+// without the SDK installed. We do NOT gate on process.env.SENTRY_DSN —
+// when DSN is unset, instrumentation.ts simply doesn't call Sentry.init,
+// so Sentry.logger is either undefined or a no-op; the optional chaining
+// in emit() handles that. Always-importing also keeps the existing
+// vi.mock("@sentry/nextjs") test pattern from PR #239 working without
+// per-test env stubs.
+const sentryReady: Promise<typeof import("@sentry/nextjs") | null> =
+  import("@sentry/nextjs").catch(() => null);
 
 function emit(
   level: LogLevel,
@@ -77,49 +144,35 @@ function emit(
 ) {
   if (!shouldLog(level)) return;
 
-  // Sanitize once and reuse for both the stdout JSON line and the Sentry
-  // extras. If sanitize ever grows from "redact-by-keyname" into something
-  // that mutates or normalises (e.g. trims long strings), the two surfaces
-  // would otherwise diverge.
-  const safe = data ? sanitize(data) : null;
-
-  const entry = {
+  // Sanitize once and reuse for every sink. If sanitize ever grows from
+  // "redact-by-keyname" into something that mutates or normalises (e.g. trims
+  // long strings), the surfaces would otherwise diverge.
+  const event: LogEvent = {
     ts: new Date().toISOString(),
     level,
     module,
     msg: message,
-    ...(safe ?? {}),
+    attrs: data ? sanitize(data) : {},
+    remoteAttrs: data ? sanitize(data, REMOTE_LOG_REDACTED_KEYS) : {},
   };
 
-  const output = JSON.stringify(entry);
+  writeConsole(event);
+  writeGlitchTipIssue(event);
+  writeGlitchTipLog(event);
+}
 
-  switch (level) {
+function writeConsole(event: LogEvent) {
+  const output = JSON.stringify({
+    ts: event.ts,
+    level: event.level,
+    module: event.module,
+    msg: event.msg,
+    ...event.attrs,
+  });
+
+  switch (event.level) {
     case "error":
       console.error(output);
-      // Pipe error-level logs to Sentry/GlitchTip with module-scoped
-      // fingerprint so the same failure deduplicates into one issue.
-      //
-      // Convention: log messages are STATIC strings ("email send failed",
-      // "redis connection lost"); dynamic data goes in `data`. The
-      // fingerprint `[module, message]` only dedupes well when callers
-      // honour this — interpolating IDs into the message
-      // (e.g. `failed to fetch invoice ${id}`) splits the issue list per
-      // ID and defeats the dedup. Code review for new log.error sites.
-      //
-      // Dynamic import keeps the logger usable in test/dev without the
-      // SDK installed; .catch() swallows missing-module in those envs.
-      void import("@sentry/nextjs")
-        .then((Sentry) => {
-          Sentry.withScope((scope) => {
-            scope.setTag("module", module);
-            scope.setExtras(safe ?? {});
-            scope.setFingerprint([module, message]);
-            Sentry.captureException(new Error(message));
-          });
-        })
-        .catch(() => {
-          // Sentry not present (dev/test/edge runtime without SDK) — no-op.
-        });
       break;
     case "warn":
       console.warn(output);
@@ -127,6 +180,52 @@ function emit(
     default:
       console.log(output);
   }
+}
+
+function writeGlitchTipIssue(event: LogEvent) {
+  if (!process.env.SENTRY_DSN) return;
+  if (event.level !== "error") return;
+
+  // Issues-tab pipe (PR #239). Uses the cached SDK promise instead of a fresh
+  // import() per call. The module-scoped fingerprint keeps static log messages
+  // deduped into one issue; dynamic data belongs in attrs.
+  void sentryReady
+    .then((Sentry) => {
+      if (!Sentry) return;
+      Sentry.withScope((scope) => {
+        scope.setTag("module", event.module);
+        scope.setExtras(event.attrs);
+        scope.setFingerprint([event.module, event.msg]);
+        Sentry.captureException(new Error(event.msg));
+      });
+    })
+    .catch(() => {
+      // Sentry not present (dev/test/edge runtime without SDK) — no-op.
+    });
+}
+
+function writeGlitchTipLog(event: LogEvent) {
+  if (!process.env.SENTRY_DSN) return;
+  if (!shouldForward(event.level)) return;
+
+  // Logs-tab pipe (issue #247). Ships info/warn/error to GlitchTip's
+  // separate Logs ingestion endpoint via Sentry.logger.*. LOG_FORWARD_LEVEL
+  // can be raised to warn/error, or set to off/none, without a code deploy.
+  // Optional chaining handles: SDK absent (Sentry === null), Sentry.logger
+  // undefined (older SDK or experiment removed), or the specific level fn
+  // missing.
+  void sentryReady
+    .then((Sentry) => {
+      Sentry?.logger?.[event.level]?.(event.msg, {
+        module: event.module,
+        ...event.remoteAttrs,
+      });
+    })
+    .catch(() => {
+      // Sentry.logger threw (malformed extras, transport error). Silent —
+      // stdout JSON line already wrote, and we don't want error-on-error
+      // escalation crashing Node 22's unhandledRejection.
+    });
 }
 
 export interface Logger {
